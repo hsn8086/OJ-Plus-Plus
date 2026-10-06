@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NowcoderBetter
 // @namespace    https://github.com/hsn8086/NowcoderBetter
-// @version      0.5.0
+// @version      0.5.1
 // @author       hsn8086
 // @description  OJ-Plus-Plus：AI 题面翻译、Markdown 视图与一键复制
 // @license      GPL-3.0

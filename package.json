@@ -9,9 +9,10 @@
     "build": "vite build && node tools/legacy-userscript.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test test/*.test.ts",
-    "check": "pnpm typecheck && pnpm test && pnpm build",
+    "check": "pnpm typecheck && pnpm test && pnpm build && pnpm verify-dist",
     "test:browser": "node test/browser.mjs",
-    "screenshots": "node test/browser.mjs --screenshots"
+    "screenshots": "node test/browser.mjs --screenshots",
+    "verify-dist": "node tools/verify-dist.mjs"
   },
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
