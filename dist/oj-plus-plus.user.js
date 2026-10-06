@@ -1,14 +1,14 @@
 // ==UserScript==
-// @name         NowcoderBetter
-// @namespace    https://github.com/hsn8086/NowcoderBetter
+// @name         OJ++
+// @namespace    https://github.com/hsn8086/OJ-Plus-Plus
 // @version      0.3.0
 // @author       hsn8086
 // @description  OJ-Plus-Plus：AI 题面翻译、Markdown 视图与一键复制
 // @license      GPL-3.0
 // @homepageURL  https://github.com/hsn8086/OJ-Plus-Plus
 // @supportURL   https://github.com/hsn8086/OJ-Plus-Plus/issues
-// @downloadURL  https://raw.githubusercontent.com/hsn8086/OJ-Plus-Plus/main/dist/nowcoder-better.user.js
-// @updateURL    https://raw.githubusercontent.com/hsn8086/OJ-Plus-Plus/main/dist/nowcoder-better.user.js
+// @downloadURL  https://raw.githubusercontent.com/hsn8086/OJ-Plus-Plus/main/dist/oj-plus-plus.user.js
+// @updateURL    https://raw.githubusercontent.com/hsn8086/OJ-Plus-Plus/main/dist/oj-plus-plus.user.js
 // @match        https://ac.nowcoder.com/*
 // @match        https://www.nowcoder.com/*
 // @connect      *

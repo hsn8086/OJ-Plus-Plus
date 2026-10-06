@@ -2,42 +2,12 @@ import MarkdownIt from 'markdown-it';
 import katex from 'katex';
 import TurndownService from 'turndown';
 
-/**
- * 牛客把公式渲染成 <img src="https://.../equation?tex=...">，
- * 这里把它还原成 $latex$，这样 AI 能原样保留、KaTeX 能重新渲染。
- */
-function equationFromImg(img: HTMLImageElement): string | null {
-  const alt = img.getAttribute('alt')?.trim();
-  const src = img.getAttribute('src') ?? '';
-  if (alt && /equation|tex/i.test(src)) return alt;
-  const match = /[?&]tex=([^&]+)/.exec(src);
-  if (match) {
-    try {
-      return decodeURIComponent(match[1]);
-    } catch {
-      return match[1];
-    }
-  }
-  return null;
-}
-
 function createTurndown(): TurndownService {
   const td = new TurndownService({
     headingStyle: 'atx',
     codeBlockStyle: 'fenced',
     bulletListMarker: '-',
     emDelimiter: '*',
-  });
-
-  // 公式图片 → LaTeX
-  td.addRule('equation', {
-    filter: (node) =>
-      node.nodeName === 'IMG' &&
-      equationFromImg(node as HTMLImageElement) !== null,
-    replacement: (_content, node) => {
-      const latex = equationFromImg(node as HTMLImageElement) ?? '';
-      return `$${latex}$`;
-    },
   });
 
   // 折叠块 / 无意义容器直接展开
@@ -70,6 +40,11 @@ function createTurndown(): TurndownService {
     replacement: (content) => `~~${content}~~`,
   });
 
+  // 站点适配器还原出的 LaTeX 不应被 Turndown 再次转义。
+  td.addRule('math', {
+    filter: (node) => node.nodeName === 'SPAN' && (node as HTMLElement).hasAttribute('data-ojpp-math'),
+    replacement: (_content, node) => `$${node.textContent ?? ''}$`,
+  });
   return td;
 }
 
@@ -117,9 +92,11 @@ function addGfmTables(td: TurndownService): void {
 
 const turndown = createTurndown();
 
-/** 把 DOM 片段转成 markdown */
-export function htmlToMarkdown(node: HTMLElement): string {
-  return turndown.turndown(node).replace(/\n{3,}/g, '\n\n').trim();
+/** 站点预处理只作用于副本，页面 DOM 和事件监听保持原样。 */
+export function htmlToMarkdown(node: HTMLElement, prepareContent: (root: HTMLElement) => void): string {
+  const clone = node.cloneNode(true) as HTMLElement;
+  prepareContent(clone);
+  return turndown.turndown(clone).replace(/\n{3,}/g, '\n\n').trim();
 }
 
 /** markdown-it + $...$ / $$...$$ 数学公式 */
@@ -239,10 +216,10 @@ let katexCssInjected = false;
 export function ensureKatexStyles(): void {
   if (katexCssInjected) return;
   katexCssInjected = true;
-  if (document.querySelector('link[data-ncb-katex]')) return;
+  if (document.querySelector('link[data-ojpp-katex]')) return;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = KATEX_CSS_URL;
-  link.dataset.ncbKatex = '1';
+  link.dataset.ojppKatex = '1';
   document.head.appendChild(link);
 }

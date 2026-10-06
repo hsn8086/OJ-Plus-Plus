@@ -1,0 +1,155 @@
+// 离线浏览器回归：实际 userscript 构建 + GM 沙箱；另一站点 DOM + 浏览器平台。
+// 协议拼包由单元测试覆盖，这里只验证适配边界和用户交互，不检查图标数或 CSS 像素。
+import assert from 'node:assert/strict';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { chromium } from 'playwright';
+import { build } from 'vite';
+
+const root = new URL('../', import.meta.url);
+const bundle = await readFile(new URL('dist/oj-plus-plus.user.js', root), 'utf8');
+const fixture = await readFile(new URL('test/fixtures/nowcoder.html', root), 'utf8');
+const screenshots = process.argv.includes('--screenshots');
+const executableCandidates = [
+  process.env.OJPP_CHROME,
+  `${process.env.HOME}/Library/Caches/ms-playwright/chromium-1234/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing`,
+  chromium.executablePath(),
+].filter(Boolean);
+const executablePath = executableCandidates.find((path) => existsSync(path));
+const browser = await chromium.launch(executablePath ? { executablePath } : {});
+const settings = {
+  version: 1, activeProviderId: 'p1',
+  providers: [{ id: 'p1', name: '演示接口', protocol: 'openai-chat', baseUrl: 'https://api.fixture.test/v1', apiKey: 'demo-key', model: 'gpt-6-luna', headers: {}, body: {}, reasoning: { enabled: null, effort: '' } }],
+  targetLang: '简体中文', extraPrompt: '', translateWholeBlock: true, autoTranslate: false, timeoutMs: 30000, retries: 0,
+};
+const response = { choices: [{ message: { content: '给定两个整数，求它们的和 $a+b$。\n\n在一行中输出结果。' } }] };
+
+async function pageWithFixture(url, html) {
+  const page = await browser.newPage({ viewport: { width: 1180, height: 880 } });
+  await page.route('**/*', async (route) => {
+    const requestURL = new URL(route.request().url());
+    if (requestURL.href === url) return route.fulfill({ contentType: 'text/html', body: html });
+    if (requestURL.hostname === 'api.fixture.test') return route.fulfill({ json: response, headers: { 'Access-Control-Allow-Origin': '*' } });
+    if (requestURL.hostname === 'cdn.jsdelivr.net') {
+      const asset = requestURL.pathname.split('/dist/')[1];
+      if (asset && !asset.includes('..')) {
+        return route.fulfill({ body: await readFile(new URL(`node_modules/katex/dist/${asset}`, root)), contentType: asset.endsWith('.css') ? 'text/css' : 'font/woff2', headers: { 'Access-Control-Allow-Origin': '*' } });
+      }
+    }
+    if (requestURL.pathname === '/equation') {
+      return route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="24"><text x="1" y="18" font-size="18">a+b</text></svg>' });
+    }
+    return route.abort();
+  });
+  await page.goto(url);
+  return page;
+}
+
+async function translate(page) {
+  await page.getByRole('button', { name: /^(AI 翻译|重新翻译)$/ }).first().click();
+  await page.waitForFunction(() => document.querySelector('.ojpp-translate-btn')?.dataset.state === 'done');
+}
+
+try {
+  const page = await pageWithFixture('https://ac.nowcoder.com/acm/contest/100000/A', fixture);
+  const main = await page.locator('main').evaluate((node) => { const html = node.outerHTML; node.remove(); return html; });
+  await page.evaluate(({ bundle, settings, response }) => {
+    const store = new Map([['ncb:settings', settings]]);
+    const state = window.__testState = { store, requests: [], clipboard: '', delay: 10, aborted: 0 };
+    // 只有词法作用域里有 GM API；page.fetch 故意失败，以捕获 CORS 回退回归。
+    window.fetch = () => { throw new Error('userscript must use GM transport'); };
+    const run = new Function('GM_getValue', 'GM_setValue', 'GM_setClipboard', 'GM_xmlhttpRequest', bundle);
+    run(
+      (key, fallback) => structuredClone(store.get(key) ?? fallback),
+      (key, value) => store.set(key, structuredClone(value)),
+      (text) => { state.clipboard = text; },
+      (options) => {
+        state.requests.push(JSON.parse(options.data));
+        const timer = setTimeout(() => options.onload({ status: 200, statusText: 'OK', responseText: JSON.stringify(response) }), state.delay);
+        return { abort() { clearTimeout(timer); state.aborted += 1; options.onabort?.(); } };
+      },
+    );
+  }, { bundle, settings, response });
+  await page.waitForFunction(() => window.__testState.store.has('ojpp:settings'));
+  await page.evaluate((html) => document.body.insertAdjacentHTML('beforeend', html), main);
+  await page.getByRole('button', { name: 'AI 翻译', exact: true }).first().waitFor();
+
+  // Markdown 视图与复制始终读取原始 DOM，公式交给站点适配器还原。
+  await page.getByRole('button', { name: 'Markdown 视图', exact: true }).first().click();
+  await page.getByRole('button', { name: '复制原文', exact: true }).first().click();
+  assert.match(await page.evaluate(() => window.__testState.clipboard), /\$a\+b\$/);
+  await page.getByRole('button', { name: '返回原始内容', exact: true }).click();
+
+  // 连续输入、拖选到面板外、立即正常点击遮罩，以及保存后即时切换模型。
+  await page.getByRole('button', { name: 'OJ++ 设置', exact: true }).click();
+  await page.getByRole('button', { name: '提供商', exact: true }).click();
+  const name = page.getByLabel('备注名', { exact: true });
+  await name.fill('');
+  await name.pressSequentially('Provider ABC');
+  assert.equal(await name.inputValue(), 'Provider ABC');
+  assert.equal(await name.evaluate((node) => node === document.activeElement), true);
+  await name.scrollIntoViewIfNeeded();
+  const box = await name.boundingBox();
+  await page.mouse.move(box.x + 20, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(20, 800, { steps: 8 });
+  await page.mouse.up();
+  assert.equal(await page.getByRole('dialog').count(), 1);
+  await page.mouse.click(20, 800);
+  assert.equal(await page.getByRole('dialog').count(), 0);
+
+  await page.getByRole('button', { name: 'OJ++ 设置', exact: true }).click();
+  await page.getByRole('button', { name: '提供商', exact: true }).click();
+  await page.getByLabel('模型', { exact: true }).fill('updated-model');
+  await page.getByRole('button', { name: '保存', exact: true }).click();
+  await page.getByRole('dialog').waitFor({ state: 'detached' });
+  await translate(page);
+  assert.equal(await page.evaluate(() => window.__testState.requests.at(-1).model), 'updated-model');
+  assert.match(await page.evaluate(() => window.__testState.requests.at(-1).messages.at(-1).content), /\$a\+b\$/);
+  assert.ok(await page.locator('.ojpp-result .katex').count() > 0);
+  await page.getByRole('button', { name: '复制译文', exact: true }).click();
+  assert.match(await page.evaluate(() => window.__testState.clipboard), /\$a\+b\$/);
+  await translate(page);
+  assert.equal(await page.locator('.ojpp-result').count(), 1);
+
+  await page.evaluate(() => { window.__testState.delay = 5000; });
+  await page.getByRole('button', { name: '重新翻译', exact: true }).click();
+  await page.getByRole('button', { name: '翻译中，点击中止', exact: true }).click();
+  await page.waitForFunction(() => window.__testState.aborted === 1);
+  await page.locator('.ojpp-result').waitFor({ state: 'detached' });
+  console.log('✓ userscript：旧配置迁移、动态题面、公式与复制、设置交互、即时配置、取消与重译');
+
+  if (screenshots) {
+    await page.evaluate(() => { window.__testState.delay = 10; });
+    await translate(page);
+    await page.evaluate(() => {
+      document.querySelector('.ojpp-toast')?.remove();
+      window.scrollTo(0, 0);
+    });
+    await mkdir(new URL('docs/images/', root), { recursive: true });
+    await page.screenshot({ path: new URL('docs/images/translate.png', root).pathname });
+    await page.getByRole('button', { name: 'OJ++ 设置', exact: true }).click();
+    await page.getByRole('button', { name: '提供商', exact: true }).click();
+    await page.screenshot({ path: new URL('docs/images/settings-provider.png', root).pathname });
+  }
+  await page.close();
+
+  // 使用另一个站点契约与真实 browser 平台；不加载 GM 或牛客适配器。
+  const built = await build({ configFile: false, logLevel: 'silent', build: {
+    write: false, minify: false,
+    lib: { entry: new URL('test/fixtures/alternate.ts', root).pathname, name: 'OJPPTest', formats: ['iife'] },
+  } });
+  const output = (Array.isArray(built) ? built[0] : built).output.find((file) => file.type === 'chunk').code;
+  const alternate = await pageWithFixture('https://fixture.test/problem', '<nav></nav><h1>另一站点</h1><article>Find the sum.</article>');
+  await alternate.evaluate((settings) => localStorage.setItem('ojpp:settings', JSON.stringify(settings)), settings);
+  await alternate.addScriptTag({ content: output });
+  await alternate.evaluate(async () => { window.stopApp = await OJPPTest.start(); });
+  await translate(alternate);
+  assert.match(await alternate.locator('.ojpp-result-body').textContent(), /给定两个整数/);
+  await alternate.evaluate(() => window.stopApp());
+  assert.equal(await alternate.locator('.ojpp-toolbar, .ojpp-result, .ojpp-settings-btn').count(), 0);
+  await alternate.close();
+  console.log('✓ 通用应用：另一站点 DOM + browser 平台、异步存储、fetch 请求、卸载清理');
+} finally {
+  await browser.close();
+}

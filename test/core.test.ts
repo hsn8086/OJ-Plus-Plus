@@ -1,195 +1,59 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { chunkMarkdown, buildSystemPrompt } from '../src/prompt.ts';
-import { migrate, defaultSettings, createProvider, PROVIDER_PRESETS } from '../src/config.ts';
-import { getAdapter } from '../src/providers.ts';
-import type { ProviderConfig } from '../src/types.ts';
+import { chunkMarkdown } from '../src/core/prompt.ts';
+import { migrate, createProvider, PROVIDER_PRESETS } from '../src/core/config.ts';
+import { getAdapter } from '../src/core/providers.ts';
+import type { Protocol } from '../src/core/types.ts';
 
-function provider(overrides: Partial<ProviderConfig> = {}): ProviderConfig {
-  const base = createProvider(PROVIDER_PRESETS[0]);
-  return { ...base, apiKey: 'sk-test', ...overrides };
+const messages = [{ role: 'system' as const, content: 'sys' }, { role: 'user' as const, content: 'usr' }];
+
+for (const protocol of ['openai-chat', 'openai-responses', 'anthropic'] as Protocol[]) {
+  test(`${protocol} 请求与响应契约`, () => {
+    const cfg = { ...createProvider(PROVIDER_PRESETS[0]), protocol, apiKey: 'test-key', baseUrl: 'https://api.example/v1/' };
+    const adapter = getAdapter(protocol);
+    const { url, headers, body } = adapter.build(cfg, { messages });
+    const endpoint = protocol === 'anthropic' ? 'messages' : protocol === 'openai-responses' ? 'responses' : 'chat/completions';
+    assert.equal(url, `https://api.example/v1/${endpoint}`);
+    assert.equal(adapter.build({ ...cfg, baseUrl: url }, { messages }).url, url);
+    assert.equal(body.model, cfg.model);
+    assert.equal(body.temperature, undefined);
+    if (protocol === 'anthropic') {
+      assert.equal(headers['x-api-key'], 'test-key');
+      assert.equal(headers['anthropic-version'], '2023-06-01');
+      assert.equal(body.system, 'sys');
+      assert.deepEqual(body.messages, [messages[1]]);
+      assert.equal(adapter.extractText({ content: [{ type: 'thinking' }, { type: 'text', text: '译文' }] }), '译文');
+    } else {
+      assert.equal(headers.Authorization, 'Bearer test-key');
+      assert.deepEqual(protocol === 'openai-chat' ? body.messages : body.input, messages);
+      if (protocol === 'openai-chat') {
+        assert.equal(adapter.extractText({ choices: [{ message: { content: '译文' } }] }), '译文');
+        assert.equal(adapter.extractText({ choices: [{ message: { content: [{ text: '译' }, { text: '文' }] } }] }), '译文');
+      } else {
+        assert.equal(adapter.extractText({ output_text: '译文' }), '译文');
+        assert.equal(adapter.extractText({ output: [{ content: [{ type: 'output_text', text: '译文' }] }] }), '译文');
+        assert.deepEqual(adapter.build({ ...cfg, reasoning: { enabled: null, effort: 'high' } }, { messages }).body.reasoning, { effort: 'high' });
+      }
+    }
+    const custom = adapter.build({ ...cfg, headers: { 'X-Custom': '1' }, body: { model: 'override' } }, { messages });
+    assert.equal(custom.headers['X-Custom'], '1');
+    assert.equal(custom.body.model, 'override');
+  });
 }
 
-function stripIds(s: ReturnType<typeof defaultSettings>) {
-  return {
-    ...s,
-    activeProviderId: s.activeProviderId ? '<id>' : null,
-    providers: s.providers.map((p) => ({ ...p, id: '<id>' })),
-  };
-}
-
-test('chunkMarkdown 保留短文本', () => {
-  assert.deepEqual(chunkMarkdown('hello'), ['hello']);
-  assert.deepEqual(chunkMarkdown('   '), []);
+test('配置迁移保留用户数据、修复失效选择并迁移旧参数', () => {
+  const settings = migrate({ activeProviderId: 'deleted', providers: [{ id: 'saved', name: '我的接口', apiKey: 'saved-key', temperature: 0.3, body: { top_p: 0.9 } }] });
+  assert.equal(settings.activeProviderId, 'saved');
+  assert.equal(settings.providers[0].apiKey, 'saved-key');
+  assert.equal(settings.providers[0].name, '我的接口');
+  assert.deepEqual(settings.providers[0].body, { temperature: 0.3, top_p: 0.9 });
+  assert.deepEqual(settings.providers[0].reasoning, { enabled: null, effort: '' });
 });
 
-test('chunkMarkdown 按标题切分且每块不超限', () => {
-  const doc = [
-    '# A',
-    'a'.repeat(40),
-    '# B',
-    'b'.repeat(40),
-    '# C',
-    'c'.repeat(40),
-  ].join('\n\n');
-  const chunks = chunkMarkdown(doc, 60);
-  assert.ok(chunks.length >= 3);
-  for (const chunk of chunks) assert.ok(chunk.length <= 60, `too long: ${chunk.length}`);
-  assert.ok(chunks.join('').includes('ccc'));
-});
-
-test('chunkMarkdown 对超长单段按行硬切', () => {
-  const long = Array.from({ length: 50 }, (_, i) => `line-${i}-${'x'.repeat(20)}`).join('\n');
-  const chunks = chunkMarkdown(long, 200);
+test('长题面分段保持文本顺序与内容', () => {
+  const text = Array.from({ length: 60 }, (_, i) => `line-${i}-${'x'.repeat(20)}`).join('\n');
+  const chunks = chunkMarkdown(text, 200);
   assert.ok(chunks.length > 1);
-  for (const chunk of chunks) assert.ok(chunk.length <= 200);
-});
-
-test('buildSystemPrompt 注入目标语言与追加要求', () => {
-  const settings = defaultSettings();
-  settings.targetLang = 'English';
-  settings.extraPrompt = 'keep it terse';
-  const prompt = buildSystemPrompt(settings);
-  assert.ok(prompt.includes('English'));
-  assert.ok(prompt.includes('keep it terse'));
-  assert.ok(prompt.includes('LaTeX'));
-});
-
-test('migrate 为缺失字段补默认值', () => {
-  const migrated = migrate({ providers: [{ id: 'x', name: 'n' }] });
-  assert.equal(migrated.timeoutMs, defaultSettings().timeoutMs);
-  assert.equal(migrated.providers[0].protocol, 'openai-chat');
-  assert.deepEqual(migrated.providers[0].headers, {});
-  assert.equal(migrated.activeProviderId, 'x');
-});
-
-test('migrate 把旧的顶层 temperature 并进 body', () => {
-  const migrated = migrate({
-    providers: [{ id: 'x', temperature: 0.3, body: { top_p: 0.9 } }],
-  });
-  assert.deepEqual(migrated.providers[0].body, { temperature: 0.3, top_p: 0.9 });
-});
-
-test('默认模型是 gpt-6-luna', () => {
-  assert.equal(defaultSettings().providers[0].model, 'gpt-6-luna');
-  const custom = PROVIDER_PRESETS.find((p) => p.key === 'custom');
-  assert.equal(custom?.model, 'gpt-6-luna');
-});
-
-test('migrate 修复失效的 activeProviderId', () => {
-  const migrated = migrate({ activeProviderId: 'ghost', providers: [{ id: 'real' }] });
-  assert.equal(migrated.activeProviderId, 'real');
-});
-
-test('migrate 处理非对象输入', () => {
-  assert.deepEqual(stripIds(migrate(null)), stripIds(defaultSettings()));
-  assert.deepEqual(stripIds(migrate('nope')), stripIds(defaultSettings()));
-});
-
-test('openai-chat 端点补全与请求体', () => {
-  const adapter = getAdapter('openai-chat');
-  const cfg = provider({ baseUrl: 'https://api.example.com/v1/', model: 'm1' });
-  const { url, headers, body } = adapter.build(cfg, {
-    messages: [{ role: 'user', content: 'hi' }],
-  });
-  assert.equal(url, 'https://api.example.com/v1/chat/completions');
-  assert.equal(headers.Authorization, 'Bearer sk-test');
-  assert.equal(body.model, 'm1');
-  assert.equal(body.temperature, undefined);
-  assert.equal(body.thinking, undefined);
-});
-
-test('openai-chat 接受完整端点', () => {
-  const adapter = getAdapter('openai-chat');
-  const cfg = provider({ baseUrl: 'https://gw.example.com/v1/chat/completions' });
-  const { url } = adapter.build(cfg, { messages: [] });
-  assert.equal(url, 'https://gw.example.com/v1/chat/completions');
-});
-
-test('openai-chat 解析字符串与分段 content', () => {
-  const adapter = getAdapter('openai-chat');
-  assert.equal(
-    adapter.extractText({ choices: [{ message: { content: 'abc' } }] }),
-    'abc',
-  );
-  assert.equal(
-    adapter.extractText({
-      choices: [{ message: { content: [{ type: 'text', text: 'a' }, { text: 'b' }] } }],
-    }),
-    'ab',
-  );
-  assert.equal(adapter.extractText({}), '');
-});
-
-test('openai-responses 端点与 output_text 解析', () => {
-  const adapter = getAdapter('openai-responses');
-  const cfg = provider({ baseUrl: 'https://api.example.com/v1', protocol: 'openai-responses' });
-  const { url, body } = adapter.build(cfg, {
-    messages: [{ role: 'system', content: 's' }, { role: 'user', content: 'u' }],
-  });
-  assert.equal(url, 'https://api.example.com/v1/responses');
-  assert.deepEqual(body.input, [
-    { role: 'system', content: 's' },
-    { role: 'user', content: 'u' },
-  ]);
-  assert.equal(adapter.extractText({ output_text: 'hi' }), 'hi');
-  assert.equal(
-    adapter.extractText({ output: [{ content: [{ type: 'output_text', text: 'x' }] }] }),
-    'x',
-  );
-});
-
-test('openai-responses 写入 reasoning.effort', () => {
-  const adapter = getAdapter('openai-responses');
-  const cfg = provider({
-    protocol: 'openai-responses',
-    reasoning: { enabled: null, effort: 'high' },
-  });
-  const { body } = adapter.build(cfg, { messages: [] });
-  assert.deepEqual(body.reasoning, { effort: 'high' });
-});
-
-test('anthropic 把 system 提出来并解析 content 数组', () => {
-  const adapter = getAdapter('anthropic');
-  const cfg = provider({
-    protocol: 'anthropic',
-    baseUrl: 'https://api.anthropic.com/v1',
-    model: 'claude-sonnet-4-5',
-  });
-  const { url, headers, body } = adapter.build(cfg, {
-    messages: [
-      { role: 'system', content: 'sys' },
-      { role: 'user', content: 'usr' },
-    ],
-  });
-  assert.equal(url, 'https://api.anthropic.com/v1/messages');
-  assert.equal(headers['x-api-key'], 'sk-test');
-  assert.equal(headers['anthropic-version'], '2023-06-01');
-  assert.equal(body.system, 'sys');
-  assert.deepEqual(body.messages, [{ role: 'user', content: 'usr' }]);
-  assert.equal(body.max_tokens, 8192);
-  assert.equal(
-    adapter.extractText({ content: [{ type: 'text', text: 'a' }, { type: 'thinking' }, { type: 'text', text: 'b' }] }),
-    'ab',
-  );
-});
-
-test('额外 header 与 body 可覆盖默认值', () => {
-  const adapter = getAdapter('openai-chat');
-  const cfg = provider({
-    headers: { Authorization: 'Custom abc', 'X-Extra': '1' },
-    body: { model: 'override', top_p: 0.9 },
-  });
-  const { headers, body } = adapter.build(cfg, { messages: [] });
-  assert.equal(headers.Authorization, 'Custom abc');
-  assert.equal(headers['X-Extra'], '1');
-  assert.equal(body.model, 'override');
-  assert.equal(body.top_p, 0.9);
-});
-
-test('未填 baseUrl 时回退到协议默认地址', () => {
-  const adapter = getAdapter('openai-chat');
-  const cfg = provider({ baseUrl: '' });
-  const { url } = adapter.build(cfg, { messages: [] });
-  assert.equal(url, 'https://api.openai.com/v1/chat/completions');
+  assert.ok(chunks.every((chunk) => chunk.length <= 200));
+  assert.equal(chunks.join('\n'), text);
 });

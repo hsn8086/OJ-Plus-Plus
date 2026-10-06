@@ -1,6 +1,6 @@
 import type { Protocol, ProviderConfig, Settings } from './types.ts';
 
-export const SETTINGS_KEY = 'ncb:settings';
+export const SETTINGS_KEY = 'ojpp:settings';
 
 export const DEFAULT_TARGET_LANG = '简体中文';
 

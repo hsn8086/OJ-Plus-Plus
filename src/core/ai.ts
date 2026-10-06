@@ -1,20 +1,19 @@
-import { request } from './gm.ts';
+import type { HttpTransport } from '../platforms/types.ts';
 import { getAdapter } from './providers.ts';
 import type { ProviderConfig, Settings } from './types.ts';
 
 export class AiError extends Error {
-  constructor(
-    message: string,
-    readonly status?: number,
-  ) {
+  readonly status?: number;
+
+  constructor(message: string, status?: number) {
     super(message);
     this.name = 'AiError';
+    this.status = status;
   }
 }
 
 export interface AskOptions {
   signal?: AbortSignal;
-  onProgress?: (chars: number) => void;
 }
 
 /**
@@ -22,6 +21,7 @@ export interface AskOptions {
  * 失败时按 settings.retries 重试（不重试鉴权类错误）。
  */
 export async function ask(
+  request: HttpTransport,
   settings: Settings,
   prompt: string,
   systemPrompt: string,
@@ -40,7 +40,7 @@ export async function ask(
   for (let i = 0; i < attempts; i += 1) {
     if (options.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
     try {
-      return await once(settings, cfg, prompt, systemPrompt, options);
+      return await once(request, settings, cfg, prompt, systemPrompt, options);
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') throw error;
       lastError = error;
@@ -52,6 +52,7 @@ export async function ask(
 }
 
 async function once(
+  request: HttpTransport,
   settings: Settings,
   cfg: ProviderConfig,
   prompt: string,
@@ -94,7 +95,6 @@ async function once(
   if (!text.trim()) {
     throw new AiError('接口返回了空内容，可能是模型不支持或提示词被拒绝');
   }
-  options.onProgress?.(text.length);
   return text;
 }
 
@@ -121,18 +121,18 @@ function truncate(text: string, max: number): string {
   return clean.length > max ? `${clean.slice(0, max)}…` : clean;
 }
 
-/** 探活：拉一次模型列表或发一条极短请求，用于设置面板的“测试连接” */
+/** 发一条短请求，使用设置面板内尚未保存的配置测试连接。 */
 export async function testConnection(
+  request: HttpTransport,
   settings: Settings,
   cfg: ProviderConfig,
 ): Promise<string> {
-  const probe = settings.providers.find((p) => p.id === cfg.id) ? cfg : cfg;
-  const adapter = getAdapter(probe.protocol);
-  const { url, headers, body } = adapter.build(probe, {
+  const adapter = getAdapter(cfg.protocol);
+  const { url, headers, body } = adapter.build(cfg, {
     messages: [{ role: 'user', content: 'reply with the single word: ok' }],
   });
   // 测试时把 max_tokens 压到最小，避免浪费额度
-  if (probe.protocol === 'anthropic') {
+  if (cfg.protocol === 'anthropic') {
     (body as Record<string, unknown>).max_tokens = 16;
   }
   const res = await request({

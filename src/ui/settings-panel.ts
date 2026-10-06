@@ -1,16 +1,20 @@
-import { testConnection } from './ai.ts';
+import { APP_NAME } from '../brand.ts';
+import { testConnection } from '../core/ai.ts';
 import {
   PROTOCOL_LABEL,
   PROVIDER_PRESETS,
   createProvider,
   newId,
-} from './config.ts';
-import type { Protocol, ProviderConfig, Settings } from './types.ts';
+  migrate,
+} from '../core/config.ts';
+import type { Protocol, ProviderConfig, Settings } from '../core/types.ts';
+import type { HttpTransport } from '../platforms/types.ts';
 
 export interface SettingsPanelOptions {
   settings: Settings;
   /** next 为 null 表示恢复默认 */
-  onChange(next: Settings | null): void;
+  onChange(next: Settings | null): Promise<void>;
+  request: HttpTransport;
   onClose(): void;
 }
 
@@ -26,9 +30,14 @@ function el<K extends keyof HTMLElementTagNameMap>(
 }
 
 function field(label: string, control: HTMLElement, hint?: string): HTMLElement {
-  const wrap = el('div', 'ncb-field');
-  wrap.append(el('label', undefined, label), control);
-  if (hint) wrap.append(el('div', 'ncb-hint', hint));
+  const wrap = el('div', 'ojpp-field');
+  const labelNode = el('label', undefined, label);
+  if (/^(INPUT|SELECT|TEXTAREA)$/.test(control.tagName)) {
+    control.id ||= `ojpp-field-${newId()}`;
+    labelNode.htmlFor = control.id;
+  }
+  wrap.append(labelNode, control);
+  if (hint) wrap.append(el('div', 'ojpp-hint', hint));
   return wrap;
 }
 
@@ -44,34 +53,39 @@ function textInput(
   return input;
 }
 
-export function openSettingsPanel(options: SettingsPanelOptions): void {
+export function openSettingsPanel(options: SettingsPanelOptions): () => void {
   const draft: Settings = structuredClone(options.settings);
   let selectedId: string | null =
     draft.activeProviderId ?? draft.providers[0]?.id ?? null;
 
-  const mask = el('div', 'ncb-mask');
-  const panel = el('div', 'ncb-panel');
+  const mask = el('div', 'ojpp-mask');
+  const panel = el('div', 'ojpp-panel');
 
-  const head = el('div', 'ncb-panel-head');
-  head.append(el('h3', undefined, 'NowcoderBetter 设置'));
-  const closeBtn = el('button', 'ncb-btn ncb-btn-ghost', '关闭');
+  const head = el('div', 'ojpp-panel-head');
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-modal', 'true');
+  panel.setAttribute('aria-label', `${APP_NAME} 设置`);
+  head.append(el('h3', undefined, `${APP_NAME} 设置`));
+  const closeBtn = el('button', 'ojpp-btn ojpp-btn-ghost', '关闭');
   head.append(closeBtn);
 
-  const body = el('div', 'ncb-panel-body');
-  const tabs = el('div', 'ncb-tabs');
-  const tabGeneral = el('button', 'ncb-tab', '翻译设置');
-  const tabProvider = el('button', 'ncb-tab', '提供商');
-  const tabAdvanced = el('button', 'ncb-tab', '高级');
+  const body = el('div', 'ojpp-panel-body');
+  const tabs = el('div', 'ojpp-tabs');
+  const tabGeneral = el('button', 'ojpp-tab', '翻译设置');
+  const tabProvider = el('button', 'ojpp-tab', '提供商');
+  const tabAdvanced = el('button', 'ojpp-tab', '高级');
   tabs.append(tabGeneral, tabProvider, tabAdvanced);
 
   const content = el('div');
   body.append(tabs, content);
 
-  const foot = el('div', 'ncb-panel-foot');
-  const resetBtn = el('button', 'ncb-btn ncb-btn-danger', '恢复默认');
-  const cancelBtn = el('button', 'ncb-btn', '取消');
-  const saveBtn = el('button', 'ncb-btn ncb-btn-primary', '保存');
-  foot.append(resetBtn, cancelBtn, saveBtn);
+  const foot = el('div', 'ojpp-panel-foot');
+  const resetBtn = el('button', 'ojpp-btn ojpp-btn-danger', '恢复默认');
+  const cancelBtn = el('button', 'ojpp-btn', '取消');
+  const saveBtn = el('button', 'ojpp-btn ojpp-btn-primary', '保存');
+  const saveStatus = el('span', 'ojpp-status');
+  saveStatus.setAttribute('role', 'status');
+  foot.append(saveStatus, resetBtn, cancelBtn, saveBtn);
 
   panel.append(head, body, foot);
   mask.append(panel);
@@ -120,7 +134,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
       ),
     );
 
-    const row = el('div', 'ncb-row');
+    const row = el('div', 'ojpp-row');
     const timeout = textInput(String(draft.timeoutMs), '120000', 'number');
     timeout.addEventListener('input', () => {
       const n = Number(timeout.value);
@@ -142,23 +156,23 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
 
   function renderProviders(): HTMLElement {
     const box = el('div');
-    const list = el('div', 'ncb-provider-list');
+    const list = el('div', 'ojpp-provider-list');
     /** 备注名直接改文本，避免重绘导致输入框失焦 */
     const nameRefs = new Map<string, HTMLElement>();
 
     draft.providers.forEach((provider) => {
-      const item = el('div', 'ncb-provider-item');
+      const item = el('div', 'ojpp-provider-item');
       item.dataset.active = provider.id === selectedId ? '1' : '0';
 
       const radio = el('input') as HTMLInputElement;
       radio.type = 'radio';
-      radio.name = 'ncb-provider';
+      radio.name = 'ojpp-provider';
       radio.checked = provider.id === selectedId;
 
-      const name = el('span', 'ncb-provider-name', provider.name || '未命名');
+      const name = el('span', 'ojpp-provider-name', provider.name || '未命名');
       const meta = el(
         'span',
-        'ncb-provider-meta',
+        'ojpp-provider-meta',
         `${PROTOCOL_LABEL[provider.protocol]} · ${provider.model || '未填模型'}`,
       );
       nameRefs.set(provider.id, name);
@@ -181,7 +195,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
 
     box.append(list);
 
-    const addRow = el('div', 'ncb-row');
+    const addRow = el('div', 'ojpp-row');
     const presetSelect = el('select') as HTMLSelectElement;
     PROVIDER_PRESETS.forEach((preset, index) => {
       const option = el('option') as HTMLOptionElement;
@@ -189,7 +203,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
       option.textContent = preset.label;
       presetSelect.append(option);
     });
-    const addBtn = el('button', 'ncb-btn', '新增');
+    const addBtn = el('button', 'ojpp-btn', '新增');
     addBtn.addEventListener('click', () => {
       const preset = PROVIDER_PRESETS[Number(presetSelect.value)];
       const provider = createProvider(preset);
@@ -259,10 +273,10 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
     const keyInput = textInput(provider.apiKey, 'sk-...', 'password');
     keyInput.addEventListener('input', () => (provider.apiKey = keyInput.value));
     box.append(
-      field('API Key', keyInput, '只保存在本地浏览器存储里，不会上传到任何第三方。'),
+      field('API Key', keyInput, '保存在当前平台的本地存储中，随请求发送到你配置的接口。'),
     );
 
-    const row = el('div', 'ncb-row');
+    const row = el('div', 'ojpp-row');
     const reasoningSelect = el('select') as HTMLSelectElement;
     [
       { value: 'default', label: '跟随模型默认' },
@@ -328,18 +342,18 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
       ),
     );
 
-    const status = el('div', 'ncb-status');
-    const actions = el('div', 'ncb-row');
-    const testBtn = el('button', 'ncb-btn', '测试连接');
-    const dupBtn = el('button', 'ncb-btn', '复制配置');
-    const delBtn = el('button', 'ncb-btn ncb-btn-danger', '删除配置');
+    const status = el('div', 'ojpp-status');
+    const actions = el('div', 'ojpp-row');
+    const testBtn = el('button', 'ojpp-btn', '测试连接');
+    const dupBtn = el('button', 'ojpp-btn', '复制配置');
+    const delBtn = el('button', 'ojpp-btn ojpp-btn-danger', '删除配置');
 
     testBtn.addEventListener('click', async () => {
       testBtn.disabled = true;
       status.dataset.kind = '';
       status.textContent = '正在测试…';
       try {
-        const reply = await testConnection(draft, provider);
+        const reply = await testConnection(options.request, draft, provider);
         status.dataset.kind = 'ok';
         status.textContent = `连接成功，模型回复：${reply.slice(0, 200)}`;
       } catch (error) {
@@ -385,9 +399,9 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
 
   function renderAdvanced(): HTMLElement {
     const box = el('div');
-    const info = el('div', 'ncb-hint');
+    const info = el('div', 'ojpp-hint');
     info.textContent =
-      '所有配置保存在浏览器本地存储（GM_setValue），请求由脚本直接发出，不经过任何中间服务器。遇到跨域或 401 时，先点「提供商」里的「测试连接」确认地址与 Key。';
+      '配置保存在当前平台的本地存储中。翻译内容与 API Key 发往你配置的提供商；可在「提供商」页测试连接。';
     box.append(info);
 
     const exportArea = el('textarea') as HTMLTextAreaElement;
@@ -401,19 +415,15 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
 
     const importArea = el('textarea') as HTMLTextAreaElement;
     importArea.placeholder = '粘贴导出的 JSON 后点「导入」';
-    const importBtn = el('button', 'ncb-btn', '导入');
-    const status = el('div', 'ncb-status');
+    const importBtn = el('button', 'ojpp-btn', '导入');
+    const status = el('div', 'ojpp-status');
     importBtn.addEventListener('click', () => {
       try {
         const parsed = JSON.parse(importArea.value) as Settings;
         if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.providers)) {
           throw new Error('缺少 providers 数组');
         }
-        draft.targetLang = parsed.targetLang ?? draft.targetLang;
-        draft.extraPrompt = parsed.extraPrompt ?? draft.extraPrompt;
-        draft.providers = parsed.providers;
-        draft.activeProviderId =
-          parsed.activeProviderId ?? parsed.providers[0]?.id ?? null;
+        Object.assign(draft, migrate(parsed));
         selectedId = draft.activeProviderId;
         status.dataset.kind = 'ok';
         status.textContent = '导入成功，保存后生效。';
@@ -435,15 +445,15 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
     hint: string,
     onChange: (v: boolean) => void,
   ): HTMLElement {
-    const row = el('div', 'ncb-check');
+    const row = el('div', 'ojpp-check');
     const input = el('input') as HTMLInputElement;
     input.type = 'checkbox';
     input.checked = value;
-    input.id = `ncb-${label}`;
+    input.id = `ojpp-${label}`;
     input.addEventListener('change', () => onChange(input.checked));
     const wrap = el('label');
     wrap.htmlFor = input.id;
-    wrap.append(el('div', undefined, label), el('div', 'ncb-hint', hint));
+    wrap.append(el('div', undefined, label), el('div', 'ojpp-hint', hint));
     row.append(input, wrap);
     return row;
   }
@@ -461,11 +471,12 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
     render();
   });
 
+  let closed = false;
   const close = () => {
+    if (closed) return;
+    closed = true;
     mask.remove();
     document.removeEventListener('keydown', onKey);
-    document.removeEventListener('pointerdown', onPointerDownAnywhere, true);
-    document.removeEventListener('pointerup', onPointerUpAnywhere, true);
     options.onClose();
   };
 
@@ -473,56 +484,50 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
     if (event.key === 'Escape') close();
   };
 
+  const persist = async (next: Settings | null) => {
+    saveBtn.disabled = resetBtn.disabled = true;
+    saveStatus.textContent = '';
+    try {
+      await options.onChange(next);
+      close();
+    } catch (error) {
+      saveStatus.dataset.kind = 'error';
+      saveStatus.textContent = `保存失败：${error instanceof Error ? error.message : String(error)}`;
+    } finally {
+      saveBtn.disabled = resetBtn.disabled = false;
+    }
+  };
   saveBtn.addEventListener('click', () => {
     if (!draft.activeProviderId && draft.providers[0]) {
       draft.activeProviderId = draft.providers[0].id;
     }
-    options.onChange(draft);
-    close();
+    void persist(draft);
   });
   cancelBtn.addEventListener('click', close);
   closeBtn.addEventListener('click', close);
   resetBtn.addEventListener('click', () => {
-    if (!confirm('确定恢复默认设置？当前配置会被清空。')) return;
-    options.onChange(null);
-    close();
+    if (confirm('确定恢复默认设置？当前配置会被清空。')) void persist(null);
   });
 
-  // 关闭面板：只在“从遮罩按下、在遮罩松开、且没有拖动过”时生效。
-  //
-  // 不能只看 click 或 pointerup。在输入框里选文本、把鼠标拖出面板再松手时，
-  // 浏览器会在遮罩上补发一对 pointerdown/pointerup 并派发 click，
-  // 光看事件目标无法区分，所以额外记录“刚刚结束了一次拖拽”的状态。
-  let lastDragEndAt = 0;
-  let dragStart: { x: number; y: number } | null = null;
-
-  const onPointerDownAnywhere = (event: PointerEvent) => {
-    dragStart = { x: event.clientX, y: event.clientY };
-  };
-  const onPointerUpAnywhere = (event: PointerEvent) => {
-    if (dragStart) {
-      const moved = Math.hypot(event.clientX - dragStart.x, event.clientY - dragStart.y);
-      if (moved > 4) lastDragEndAt = Date.now();
-    }
-    dragStart = null;
-  };
-  document.addEventListener('pointerdown', onPointerDownAnywhere, true);
-  document.addEventListener('pointerup', onPointerUpAnywhere, true);
-
-  let pressedOnMask = false;
+  // 只有同一次手势从遮罩开始、在遮罩结束，且没有拖动，才关闭。
+  let maskPress: { id: number; x: number; y: number } | undefined;
   mask.addEventListener('pointerdown', (event) => {
-    pressedOnMask = event.target === mask;
+    maskPress = event.target === mask && event.button === 0
+      ? { id: event.pointerId, x: event.clientX, y: event.clientY }
+      : undefined;
   });
+  mask.addEventListener('pointercancel', () => { maskPress = undefined; });
   mask.addEventListener('pointerup', (event) => {
-    const isMaskClick = pressedOnMask && event.target === mask;
-    pressedOnMask = false;
-    // 300ms 内刚发生过拖拽（典型情况是选完文本拖到窗外松手），不算点击
-    if (isMaskClick && Date.now() - lastDragEndAt > 300) close();
+    const press = maskPress;
+    maskPress = undefined;
+    if (press && event.pointerId === press.id && event.target === mask &&
+        Math.hypot(event.clientX - press.x, event.clientY - press.y) < 4) close();
   });
   document.addEventListener('keydown', onKey);
 
   render();
   document.body.append(mask);
+  return close;
 }
 
 function parsePairs(text: string): Record<string, string> {

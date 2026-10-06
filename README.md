@@ -1,151 +1,164 @@
-# NowcoderBetter
+# OJ++
 
-[![release](https://img.shields.io/github/v/release/hsn8086/NowcoderBetter?display_name=tag)](https://github.com/hsn8086/NowcoderBetter/releases)
-[![license](https://img.shields.io/github/license/hsn8086/NowcoderBetter)](LICENSE)
-[![userscript](https://img.shields.io/badge/userscript-Tampermonkey-0b5)](dist/nowcoder-better.user.js)
+[![release](https://img.shields.io/github/v/release/hsn8086/OJ-Plus-Plus?display_name=tag)](https://github.com/hsn8086/OJ-Plus-Plus/releases)
+[![license](https://img.shields.io/github/license/hsn8086/OJ-Plus-Plus)](LICENSE)
+[![userscript](https://img.shields.io/badge/userscript-Tampermonkey-0b5)](dist/oj-plus-plus.user.js)
 
-牛客竞赛（ac.nowcoder.com）增强油猴脚本。主要功能是把英文题面翻译成中文，翻译由你自己配置的 AI 接口完成，支持 OpenAI Chat Completions、OpenAI Responses、Anthropic Messages 三种协议，以及任意兼容 OpenAI 的自定义服务商。
+OJ++（OJ-Plus-Plus）是一个可扩展的在线评测站增强工具。它把 AI 题面翻译、Markdown 查看和复制能力做成通用功能，再通过站点适配器连接具体 OJ，通过运行平台适配器连接 Tampermonkey、浏览器调试环境和未来的 Chrome 扩展。
+
+目前内置牛客竞赛适配器，正式构建为油猴脚本，验证页面为 `ac.nowcoder.com` 竞赛题目页。其他 OJ 和 Chrome CRX 还没有作为发布目标提供，但核心接口已经独立出来。
 
 ![翻译题面](docs/images/translate.png)
 
-> 当前版本 0.1.0，只在 `ac.nowcoder.com` 的题目页验证过。功能还在陆续增加。
-
 ## 功能
 
-- **AI 题面翻译**：题目描述、输入/输出描述、题解各自一个翻译按钮，译文显示在正文下方，可重新翻译、复制、收起。
-- **公式不丢**：牛客把公式渲染成 `equation?tex=` 图片，脚本会还原成 LaTeX 交给模型，翻译后用 KaTeX 重新渲染。
-- **Markdown 视图 / 复制原文**：把题目区域转成 Markdown，方便粘贴到笔记或题解里。
-- **多提供商管理**：可保存多套配置随时切换，支持自定义接口地址、模型、额外请求头、额外请求体字段、推理开关。
-- **长题面分段**：关闭「整段翻译」后按标题和段落切块依次翻译，适配上下文窗口较小的模型。
-
-工具栏是内联图标，挂在每个标题右边：
-
-| 图标 | 作用 |
-| --- | --- |
-| 地球 | AI 翻译。翻译中变成转圈，可点击中止；完成变对勾 |
-| 文档 | 切换 Markdown 视图 / 返回原始内容 |
-| 剪贴板 | 复制该区域的 Markdown |
-
-设置入口只有一个，在页面右上角。
+- **AI 题面翻译**：题目描述、输入/输出描述、题解分别提供翻译按钮，译文显示在原文下方。
+- **公式保留**：站点适配器先把页面公式还原成 LaTeX，模型翻译后用 KaTeX 渲染。
+- **Markdown 查看与复制**：从内容副本生成 Markdown，不替换原页面 DOM，因此页面原有交互可以继续使用。
+- **多提供商**：支持 OpenAI Chat Completions、OpenAI Responses、Anthropic Messages，以及自定义地址、请求头和请求体字段。
+- **长题面分段**：关闭整段翻译后按标题、段落和行切分内容。
+- **平台解耦**：通用代码只依赖存储、HTTP 请求和剪贴板接口。油猴平台使用 GM API，浏览器平台使用 `localStorage`、`fetch` 和 Clipboard API。
 
 ## 安装
 
-需要先装 [Tampermonkey](https://www.tampermonkey.net/)（或 Violentmonkey）。
+需要先安装 [Tampermonkey](https://www.tampermonkey.net/) 或 Violentmonkey。
 
 | 版本 | 安装地址 |
 | --- | --- |
-| 正式版 | [nowcoder-better.user.js](https://raw.githubusercontent.com/hsn8086/NowcoderBetter/main/dist/nowcoder-better.user.js) |
-| 开发版 | 本地构建，见下方「开发」 |
+| 正式版 | [oj-plus-plus.user.js](https://raw.githubusercontent.com/hsn8086/OJ-Plus-Plus/main/dist/oj-plus-plus.user.js) |
+| 本地开发版 | 构建后安装 `dist/oj-plus-plus.user.js` |
 
-卸载：在脚本管理器的管理面板里删除 `NowcoderBetter` 即可，本地保存的配置也会一并清除。
+现有 `NowcoderBetter` 用户可以继续通过旧文件名更新：
+
+```text
+https://raw.githubusercontent.com/hsn8086/OJ-Plus-Plus/main/dist/nowcoder-better.user.js
+```
+
+新安装请使用 `oj-plus-plus.user.js`。卸载脚本后，脚本管理器里的配置也可以手动删除；升级时旧的 `ncb:settings` 会迁移到 `ojpp:settings`。
 
 ## 第一次使用
 
-1. 打开任意牛客题目页，点右上角的齿轮图标。
-2. 在「提供商」页从预设里选一个（OpenAI / Anthropic / DeepSeek / OpenRouter 等），填入 API Key。
-3. 点「测试连接」确认能通，再点「保存」。
-4. 回到题目，点标题旁边的翻译图标。
-
-设置面板长这样：
+1. 打开牛客竞赛题目页，点击页面右上角的齿轮。
+2. 在「提供商」页选择预设，填写 API Key 和模型。
+3. 点击「测试连接」，确认接口返回成功后保存。
+4. 点击题目标题旁边的翻译图标。
 
 ![提供商设置](docs/images/settings-provider.png)
 
-### 三种协议怎么选
+默认模型是 `gpt-6-luna`。`temperature`、`top_p`、`max_tokens` 等参数统一写在「额外请求体字段」中，不再单独显示表单字段。
 
-| 协议 | 接口路径 | 请求体 | 认证头 |
+### 协议选择
+
+| 协议 | 路径 | 请求字段 | 认证头 |
 | --- | --- | --- | --- |
 | OpenAI Chat Completions | `/chat/completions` | `messages` | `Authorization: Bearer` |
 | OpenAI Responses | `/responses` | `input` | `Authorization: Bearer` |
 | Anthropic Messages | `/messages` | `system` + `messages` | `x-api-key` |
 
-「接口地址」填到 `/v1` 即可，脚本会按协议补全后面的路径；也可以直接填完整端点，脚本识别到已含端点就原样使用。
+接口地址填写到 `/v1` 即可，脚本会按协议补全路径；也可以直接填写完整端点。
 
-默认模型是 `gpt-6-luna`。`temperature`、`top_p`、`max_tokens` 这类参数不在表单里单独列，统一写到「额外请求体字段」的 JSON 里，会合并进请求体。
+## 代码结构
 
-## 密钥与请求路径
+```text
+src/
+  app.ts                 通用应用组合根
+  brand.ts               产品名和仓库地址
+  core/
+    ai.ts               重试、错误处理、AI 请求
+    config.ts           配置结构、预设与迁移
+    providers.ts        三种协议的请求构造与响应解析
+    prompt.ts           翻译提示词与分段
+    settings-store.ts   平台无关的配置读写与旧键迁移
+    translate.ts        分段翻译编排
+    types.ts            通用配置和协议接口
+  sites/
+    types.ts            OJ 站点适配器接口
+    index.ts            站点注册和 URL 分派
+    nowcoder.ts         牛客选择器、公式和动态 DOM 适配
+  platforms/
+    types.ts            存储、HTTP、剪贴板接口
+    userscript.ts       Tampermonkey / Violentmonkey 实现
+    browser.ts          普通浏览器调试实现
+  ui/
+    section.ts          区域工具栏和翻译流程
+    result-panel.ts     通用译文面板
+    settings-panel.ts   通用设置面板
+    markdown.ts         HTML 副本到 Markdown、KaTeX 渲染
+    buttons.ts          图标按钮和复制反馈
+    styles.ts           通用样式
+  entries/
+    userscript.ts       油猴入口
+    browser.ts          浏览器调试入口
+```
 
-API Key 通过 `GM_setValue` 存在浏览器的脚本存储里，译文请求由脚本用 `GM_xmlhttpRequest` 直接发给你填的接口地址，中间没有本项目提供的任何转发服务。
+### 添加一个 OJ
 
-`GM_xmlhttpRequest` 这一层很关键：它不受页面同源策略限制。如果脚本没能拿到这个 API（比如在普通浏览器里直接引入构建产物），请求会退化成 `fetch`，于是被 CORS 拦下，设置面板的「测试连接」会报 `Failed to fetch`。此时页面右下角会有一条提示。
+实现 `SiteAdapter`：
 
-可以自己验证：打开设置 → 「高级」，配置预览里的 Key 被替换成了 `***`；真正的请求只出现在浏览器开发者工具的 Network 面板，目标地址就是你填的接口地址。
+- `collectSections` 返回题目描述、输入、输出或题解区域。
+- `prepareContent` 在内容副本上处理公式、代码和站点特殊节点。
+- `mountSettingsButton` 决定设置入口放到站点哪里。
+- `observe` 监听站点的异步渲染，并在页面变化时调用回调。
 
-> 构建产物里内置了 KaTeX 的 JS，KaTeX 的字体会在页面首次出现公式时从 jsDelivr 的 CSS 加载。除此之外没有别的外部请求。如果不想连 CDN，可以改 `src/markdown.ts` 里的 `KATEX_CSS_URL`。
+然后把适配器加入 `src/sites/index.ts`。通用翻译、Markdown 和设置代码不需要修改。
 
-## 开发
+### 添加一个运行平台
+
+实现 `Platform`：
+
+```ts
+interface Platform {
+  readonly id: string;
+  readonly storage: Storage;
+  readonly request: HttpTransport;
+  readonly writeClipboard: (text: string) => Promise<void>;
+}
+```
+
+Chrome 扩展可以把 `storage` 映射到 `chrome.storage.local`，把 `request` 放到扩展后台或 service worker，再使用一个新的入口调用 `startApp`。页面功能不需要知道请求来自 GM API 还是扩展消息通道。
+
+## 开发与验证
 
 ```bash
 pnpm install
-pnpm dev          # 开发模式，输出 dist/nowcoder-better.user.js（监听重构建）
-pnpm build        # 生产构建
-pnpm typecheck    # 类型检查
-pnpm test         # 单元测试（协议拼包、分段、配置迁移）
+pnpm check          # 类型检查、8 个单元测试、构建油猴脚本
+pnpm test:browser   # 离线浏览器回归，不需要真实 API Key
+pnpm screenshots     # 生成 README 截图
 ```
 
-目录结构：
+浏览器回归会使用本地 fixture，不启动 mock AI 服务，也不依赖真实 OJ 页面。它覆盖：
 
-```
-src/
-  main.ts             入口，挂载工具栏与设置入口
-  inject.ts           扫描页面区域、注入图标按钮、绑定翻译流程
-  translate.ts        翻译编排与结果面板
-  prompt.ts           提示词与分段逻辑
-  providers.ts        三种协议的请求构造与响应解析
-  ai.ts               重试、错误处理、测试连接
-  markdown.ts         HTML ↔ Markdown，公式还原与 KaTeX 渲染
-  nowcoder.ts         牛客页面选择器
-  settings-panel.ts   设置面板
-  config.ts           配置结构与迁移
-  gm.ts               GM_* 封装（无 GM 时回退 localStorage / fetch）
-  icons.ts            内联 SVG 图标
-  styles.ts           全部 CSS
-```
+- 实际 userscript 构建和 GM 请求通道，页面 `fetch` 被故意禁用。
+- 牛客站点公式还原、Markdown、复制、动态插入和结果渲染。
+- 设置面板输入焦点、文本拖拽、保存后即时切换配置、取消请求和重复翻译。
+- 另一套 DOM 与浏览器平台，验证通用应用不依赖牛客选择器。
 
-### 端到端验证
-
-仓库带一个 mock AI 服务和两个 Playwright 检查脚本，不需要真实 API Key 就能验证三种协议与关键交互。
+本机没有 Playwright 管理的浏览器时，可以指定已有 Chromium：
 
 ```bash
-pnpm mock-ai                          # 终端 A：mock 服务，127.0.0.1:8787
-pnpm serve                            # 终端 B：提供构建产物
-pnpm build && pnpm e2e                # 三种协议打通 + 公式渲染
-pnpm ui-check                         # 图标工具栏、输入焦点、遮罩关闭等回归
+OJPP_CHROME=/path/to/Google\ Chrome\ for\ Testing pnpm test:browser
 ```
 
-`ui-check` 覆盖的是一次性修过的交互问题，改动 UI 后应该跑一遍：
+## 请求与数据
 
-```console
-$ pnpm ui-check
-✅ 工具栏已注入 — count=3
-✅ 工具栏只有图标没有文字 — ["","",""]
-✅ 设置入口在页面右上角
-✅ 备注名输入后仍然聚焦
-✅ 选文本拖出面板不会关闭窗口
-✅ 译文面板没有蓝色加粗左边框 — left=1px rgb(230, 233, 238) top=rgb(230, 233, 238)
+油猴构建只通过 `GM_xmlhttpRequest` 发 AI 请求，API Key 通过 `GM_setValue` 保存在脚本管理器存储中。普通浏览器入口只用于本地调试，使用 `fetch`，仍然受 CORS 限制；它不会作为油猴脚本的隐藏回退路径。
 
-全部通过
-```
+请求地址是用户在设置面板中填写的地址，项目没有中转服务。配置预览会隐藏 API Key；翻译内容会发送给选定的 AI 提供商。
 
-截图可以用 `pnpm screenshots` 重新生成到 `docs/images/`。
+## 故障排查
 
-## 常见问题
+**测试连接提示 `Failed to fetch`。** 检查安装的是 `oj-plus-plus.user.js`，而不是把构建产物直接作为普通网页脚本加载。油猴构建需要 `GM_xmlhttpRequest` 权限；直接浏览器调试入口使用 `fetch`，服务端必须允许 CORS。
 
-**点测试连接提示 `Failed to fetch` 或控制台报 CORS。** 说明脚本没走 `GM_xmlhttpRequest` 而是退化成了 `fetch`。确认脚本是通过 Tampermonkey 安装的，并且 `@grant` 里有 `GM_xmlhttpRequest`。
+**返回 401 或 403。** 检查 API Key、模型名和接口协议是否匹配。可以先用「测试连接」查看服务商返回的错误。
 
-**点翻译后提示 401 / 403。** Key 不对或没有该模型的权限。回设置面板点「测试连接」看接口返回的原始报错。
+**公式显示为源码。** 确认 KaTeX CSS 可以从 jsDelivr 加载。公式的 Markdown 仍会保留 LaTeX，复制结果不受影响。
 
-**提示网络请求失败。** 接口地址写错，或者服务商不允许浏览器直接调用。检查地址是否需要带 `/v1`。
-
-**公式变成了一串 `$...$`。** KaTeX 的样式没加载出来，确认能访问 jsDelivr；公式本身没有被破坏，复制出来仍是 LaTeX。
-
-**译文和原文对不上。** 关掉「整段翻译」让脚本分段处理，或者换一个上下文窗口更大的模型。
-
-**按钮有时候不出现。** 脚本用 MutationObserver 监听题目区插入，正常情况下会自动补上。如果一直不出现，刷新页面。
+**旧配置没有出现。** 打开新脚本后，第一次读取会把 `ncb:settings` 迁移到 `ojpp:settings`。如果脚本管理器使用了隔离的脚本存储，请确认旧脚本和新脚本运行在同一个脚本管理器中。
 
 ## 反馈
 
-问题和建议提到 [GitHub Issues](https://github.com/hsn8086/NowcoderBetter/issues)。报错时请附上接口返回的报错信息，注意把 Key 打码。
+请在 [GitHub Issues](https://github.com/hsn8086/OJ-Plus-Plus/issues) 提交问题。报错时附上协议、状态码和脱敏后的响应信息，不要提交 API Key。
 
 ## 许可
 
-[GPL-3.0](LICENSE)。实现思路参考了 [beijixiaohu/OJBetter](https://github.com/beijixiaohu/OJBetter)。
+[GPL-3.0](LICENSE)。公式处理思路参考了 [OJBetter](https://github.com/beijixiaohu/OJBetter)。
