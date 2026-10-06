@@ -30,22 +30,30 @@ export async function ask(
   prompt: string,
   systemPrompt: string,
   options: AskOptions = {},
-): Promise<string> {  const cfg = settings.providers.find((p) => p.id === settings.activeProviderId);
+): Promise<string> {
+  const cfg = settings.providers.find((p) => p.id === settings.activeProviderId);
   if (!cfg) throw new AiError('还没有配置任何提供商，请先打开设置面板添加一个');
   if (!cfg.model.trim()) throw new AiError('未填写模型名');
   // 允许空 Key：本地推理服务通常不需要鉴权。
 
   const attempts = Math.max(1, settings.retries + 1);
   let lastError: unknown;
+  // 一旦已经把部分译文显示给用户，就不再重试：
+  // 重试会让面板内容回退重来，比直接报错更差。
+  const shown: string[] = [];
+  const optionsWithGuard: AskOptions = options.onDelta
+    ? { ...options, onDelta: (text) => { shown.push(text); options.onDelta!(text); } }
+    : options;
 
   for (let i = 0; i < attempts; i += 1) {
     if (options.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
     try {
-      return await once(request, settings, cfg, prompt, systemPrompt, options);
+      return await once(request, settings, cfg, prompt, systemPrompt, optionsWithGuard);
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') throw error;
       lastError = error;
       if (error instanceof AiError && isFatal(error.status)) break;
+      if (shown.length > 0) break;
       if (i < attempts - 1) await sleep(600 * (i + 1), options.signal);
     }
   }
@@ -62,21 +70,20 @@ async function once(
 ): Promise<string> {
   const adapter = getAdapter(cfg.protocol);
   const wantStream = !!(options.stream && options.onDelta && adapter.createStreamReader);
-  const { url, headers, body } = adapter.build(cfg, {
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: prompt },
-    ],
-    stream: wantStream,
-  });
-
-  const init = {
-    method: 'POST',
-    url,
-    headers,
-    body: JSON.stringify(body),
-    timeoutMs: settings.timeoutMs,
-    signal: options.signal,
+  const messages = [
+    { role: 'system' as const, content: systemPrompt },
+    { role: 'user' as const, content: prompt },
+  ];
+  const build = (stream: boolean) => {
+    const { url, headers, body } = adapter.build(cfg, { messages, stream });
+    return {
+      method: 'POST',
+      url,
+      headers,
+      body: JSON.stringify(body),
+      timeoutMs: settings.timeoutMs,
+      signal: options.signal,
+    };
   };
 
   // 流式：边收边回显。失败且没吐过任何内容时，允许回退到一次性请求。
@@ -84,13 +91,16 @@ async function once(
     let streamed = false;
     const readStream = adapter.createStreamReader!();
     try {
-      const res = await options.stream!({ ...init, onChunk: (raw) => {
-        const text = readStream(raw);
-        if (text) {
-          streamed = true;
-          options.onDelta!(text);
-        }
-      } });
+      const res = await options.stream!({
+        ...build(true),
+        onChunk: (raw) => {
+          const text = readStream(raw);
+          if (text) {
+            streamed = true;
+            options.onDelta!(text);
+          }
+        },
+      });
       if (res.status < 200 || res.status >= 300) {
         // 有些服务商在流式错误时返回普通 JSON 错误体
         const payload = safeJson(res.text);
@@ -109,11 +119,12 @@ async function once(
       if (error instanceof AiError && isFatal(error.status)) throw error;
       // 已经显示过部分译文就不要重新开始，否则用户会看到内容回退
       if (streamed) throw error;
-      // 否则退回非流式重试
+      // 否则退回非流式重试。注意要用不带 stream 的请求体，
+      // 否则服务端仍返回 SSE，而下面按 JSON 解析会失败。
     }
   }
 
-  const res = await request(init);
+  const res = await request(build(false));
   const payload = safeJson(res.text);
 
   if (res.status < 200 || res.status >= 300) {

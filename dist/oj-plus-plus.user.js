@@ -438,14 +438,23 @@
 		if (!cfg.model.trim()) throw new AiError("未填写模型名");
 		const attempts = Math.max(1, settings.retries + 1);
 		let lastError;
+		const shown = [];
+		const optionsWithGuard = options.onDelta ? {
+			...options,
+			onDelta: (text) => {
+				shown.push(text);
+				options.onDelta(text);
+			}
+		} : options;
 		for (let i = 0; i < attempts; i += 1) {
 			if (options.signal?.aborted) throw new DOMException("Aborted", "AbortError");
 			try {
-				return await once(request, settings, cfg, prompt, systemPrompt, options);
+				return await once(request, settings, cfg, prompt, systemPrompt, optionsWithGuard);
 			} catch (error) {
 				if (error instanceof DOMException && error.name === "AbortError") throw error;
 				lastError = error;
 				if (error instanceof AiError && isFatal(error.status)) break;
+				if (shown.length > 0) break;
 				if (i < attempts - 1) await sleep(600 * (i + 1), options.signal);
 			}
 		}
@@ -454,30 +463,33 @@
 	async function once(request, settings, cfg, prompt, systemPrompt, options) {
 		const adapter = getAdapter(cfg.protocol);
 		const wantStream = !!(options.stream && options.onDelta && adapter.createStreamReader);
-		const { url, headers, body } = adapter.build(cfg, {
-			messages: [{
-				role: "system",
-				content: systemPrompt
-			}, {
-				role: "user",
-				content: prompt
-			}],
-			stream: wantStream
-		});
-		const init = {
-			method: "POST",
-			url,
-			headers,
-			body: JSON.stringify(body),
-			timeoutMs: settings.timeoutMs,
-			signal: options.signal
+		const messages = [{
+			role: "system",
+			content: systemPrompt
+		}, {
+			role: "user",
+			content: prompt
+		}];
+		const build = (stream) => {
+			const { url, headers, body } = adapter.build(cfg, {
+				messages,
+				stream
+			});
+			return {
+				method: "POST",
+				url,
+				headers,
+				body: JSON.stringify(body),
+				timeoutMs: settings.timeoutMs,
+				signal: options.signal
+			};
 		};
 		if (wantStream) {
 			let streamed = false;
 			const readStream = adapter.createStreamReader();
 			try {
 				const res = await options.stream({
-					...init,
+					...build(true),
 					onChunk: (raw) => {
 						const text = readStream(raw);
 						if (text) {
@@ -502,7 +514,7 @@
 				if (streamed) throw error;
 			}
 		}
-		const res = await request(init);
+		const res = await request(build(false));
 		const payload = safeJson(res.text);
 		if (res.status < 200 || res.status >= 300) {
 			const detail = payload && adapter.extractError?.(payload) || truncate(res.text, 400) || res.statusText;
@@ -32009,11 +32021,13 @@ $$` : `${n}$$`;
 			state("busy", ICON_SPINNER, "翻译中，点击中止");
 			panel.begin();
 			try {
+				const snapshot = structuredClone(getSettings());
 				const translated = await translateMarkdown(platform.request, {
-					settings: structuredClone(getSettings()),
+					settings: snapshot,
 					markdown: text,
 					signal,
 					stream: platform.stream,
+					streaming: snapshot.streaming,
 					onStatus: panel.setStatus,
 					onPartial: panel.update
 				});
@@ -32852,22 +32866,38 @@ $$` : `${n}$$`;
 			cleanup();
 			reject(error);
 		};
+		let accumulated = "";
+		const push = (piece) => {
+			if (!piece) return;
+			accumulated += piece;
+			req.onChunk?.(accumulated);
+		};
 		const handle = _GM_xmlhttpRequest({
 			method: req.method,
 			url: req.url,
 			headers: req.headers,
 			data: req.body,
 			timeout: req.timeoutMs,
-			responseType: "text",
+			responseType: "stream",
+			partialSize: 128,
+			onpartial(res) {
+				const piece = res.partial;
+				if (typeof piece === "string") push(piece);
+			},
 			onprogress(res) {
-				if (typeof res.responseText === "string") req.onChunk?.(res.responseText);
+				const text = res.responseText;
+				if (typeof text === "string" && text.length > accumulated.length) {
+					accumulated = text;
+					req.onChunk?.(accumulated);
+				}
 			},
 			onload(res) {
 				cleanup();
+				const text = accumulated || (typeof res.responseText === "string" ? res.responseText : "");
 				resolve({
 					status: res.status,
 					statusText: res.statusText,
-					text: res.responseText
+					text
 				});
 			},
 			onerror: () => fail(new Error("网络请求失败，请检查网络或接口地址")),

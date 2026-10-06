@@ -62,7 +62,9 @@ https://raw.githubusercontent.com/hsn8086/OJ-Plus-Plus/main/dist/nowcoder-better
 
 开启后请求会带上 `stream: true`，脚本按 SSE 解析增量并逐帧渲染。三处细节值得说明：
 
-- 脚本管理器只提供 `GM_xmlhttpRequest` 的 `onprogress`（累计文本），没有可读流。有些实现不触发这个回调，此时首帧之后没有内容可渲染，会自动改走一次性请求。
+- 油猴没有可读流。Tampermonkey 的增量通道是 `GM_xmlhttpRequest` 的 `onpartial` + `partialSize`：`onprogress` 只带进度字段，`responseText` 要等整个响应读完才赋值，用它做流式拿不到正文。`onpartial` 给的是增量片段，脚本内部累积成累计文本。
+- 不支持 `partialSize` 的脚本管理器不会触发 `onpartial`，此时自动改走一次性请求（回退请求会去掉 `stream` 参数，否则服务端仍返回 SSE 而无法按 JSON 解析）。
+- 已经开始输出后再中断不会重试，避免面板内容回退重来。
 - 正文随时可能停在半个公式、半个代码块或半个粗体上。渲染前会做两件事：
   - 结构标记（粗体、斜体、删除线、链接）由 [remend](https://www.npmjs.com/package/remend) 补全。补全不改变可见文字，所以 `**注意` 能立刻以粗体显示，收尾符到达时也不会重画。
   - 公式不能补全。把 `$a+` 补成 `$a+$` 会先把半截公式渲染出来，真内容到达时又得重画。所以未闭合的公式会被隐去，等闭合后再显示。

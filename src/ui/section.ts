@@ -60,11 +60,13 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
     panel.begin();
     try {
       // 保存设置后，下次点击立即使用新配置；当前请求使用独立快照。
+      const snapshot = structuredClone(getSettings());
       const translated = await translateMarkdown(platform.request, {
-        settings: structuredClone(getSettings()),
+        settings: snapshot,
         markdown: text,
         signal,
         stream: platform.stream,
+        streaming: snapshot.streaming,
         onStatus: panel.setStatus,
         onPartial: panel.update,
       });

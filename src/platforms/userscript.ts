@@ -41,8 +41,15 @@ const request: HttpTransport = (req) => new Promise((resolve, reject) => {
 });
 
 /**
- * 流式请求：GM 的 responseType 不支持通用读取，但 onprogress 会累计返回已收到的文本。
- * Violentmonkey 不提供可用的流式读取，此时拒绝，由上层退化为非流式。
+ * 流式请求。
+ *
+ * 不能用 onprogress + responseText：Tampermonkey 的 onprogress 只带进度字段，
+ * responseText 在 readyState !== 4 时被清空，文本要等整个 body 读完才赋值。
+ * 真正的增量通道是 onpartial + partialSize，它给出的是**增量**片段，
+ * 所以这里自己累积成累计文本，对上层保持“累计”这个统一契约。
+ *
+ * 不支持 partialSize 的管理器（如部分 Violentmonkey 版本）不会触发 onpartial，
+ * 此时拿不到正文，上层会自动退化为一次性请求。
  */
 const stream: HttpStreamTransport = (req) => new Promise((resolve, reject) => {
   if (req.signal?.aborted) {
@@ -54,25 +61,47 @@ const stream: HttpStreamTransport = (req) => new Promise((resolve, reject) => {
     cleanup();
     reject(error);
   };
+  let accumulated = '';
+  const push = (piece: string) => {
+    if (!piece) return;
+    accumulated += piece;
+    req.onChunk?.(accumulated);
+  };
+
   const handle = GM_xmlhttpRequest({
     method: req.method as 'GET' | 'POST',
     url: req.url,
     headers: req.headers,
     data: req.body,
     timeout: req.timeoutMs,
-    responseType: 'text',
-    onprogress(res) {
-      if (typeof res.responseText === 'string') req.onChunk?.(res.responseText);
+    responseType: 'stream',
+    // 每次回调返回的片段大小（字符数），越小首屏越快
+    partialSize: 128,
+    onpartial(res: { partial?: unknown }) {
+      // 片段在 partial；部分实现只给 tfd（transferable data），那种情况交给 onload
+      const piece = res.partial;
+      if (typeof piece === 'string') push(piece);
+    },
+    onprogress(res: { responseText?: unknown }) {
+      // 少数管理器在 onprogress 里直接给累计文本（responseText 非空）
+      const text = res.responseText;
+      if (typeof text === 'string' && text.length > accumulated.length) {
+        accumulated = text;
+        req.onChunk?.(accumulated);
+      }
     },
     onload(res) {
       cleanup();
-      resolve({ status: res.status, statusText: res.statusText, text: res.responseText });
+      // partialSize 模式下 response/responseText 会被删掉，只能用累积值
+      const text = accumulated || (typeof res.responseText === 'string' ? res.responseText : '');
+      resolve({ status: res.status, statusText: res.statusText, text });
     },
     onerror: () => fail(new Error('网络请求失败，请检查网络或接口地址')),
     ontimeout: () => fail(new Error('请求超时')),
     onabort: () => fail(new DOMException('Aborted', 'AbortError')),
-  });
+  } as Parameters<typeof GM_xmlhttpRequest>[0]);
   function onAbort() {
+    // 部分脚本管理器取消后不触发 onabort，主动结束 Promise。
     fail(new DOMException('Aborted', 'AbortError'));
     handle.abort();
   }

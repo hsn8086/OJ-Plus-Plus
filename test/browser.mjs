@@ -96,22 +96,31 @@ try {
           options.onabort?.();
         };
         if (body.stream) {
-          // 逐块推送 SSE，每块都是“到目前为止”的累计文本
+          // 按 Tampermonkey 的真实语义模拟流式：
+          //   - onpartial 给的是**增量**片段（partialSize 切分）
+          //   - onprogress 只带进度字段，responseText 是空串
+          //   - onload 时 responseText 已被删除（partialSize 模式）
+          // 之前这里发的是"累计文本的 onprogress"，那是臆想的行为，
+          // 所以真实环境不流式时测试依然通过。
           const text = response.choices[0].message.content;
-          const pieces = [];
+          const events = [];
           for (let i = 0; i < text.length; i += 3) {
-            const chunk = text.slice(0, i + 3);
-            pieces.push(`data: ${JSON.stringify({ choices: [{ delta: { content: text.slice(i, i + 3) } }] })}\n\n`);
+            events.push(`data: ${JSON.stringify({ choices: [{ delta: { content: text.slice(i, i + 3) } }] })}\n\n`);
           }
-          pieces.push('data: [DONE]\n\n');
+          events.push('data: [DONE]\n\n');
           let acc = '';
-          pieces.forEach((piece, index) => {
+          events.forEach((event, index) => {
             timers.push(setTimeout(() => {
               if (aborted) return;
-              acc += piece;
-              options.onprogress?.({ responseText: acc, loaded: acc.length, total: acc.length });
-              if (index === pieces.length - 1) {
-                options.onload({ status: 200, statusText: 'OK', responseText: acc });
+              acc += event;
+              const isLast = index === events.length - 1;
+              if (!isLast) {
+                // 增量片段，按 partialSize 语义投递
+                options.onpartial?.({ partial: event, index, length: events.length });
+                // 进度事件：只有进度字段，没有正文
+                options.onprogress?.({ responseText: '', loaded: acc.length, total: 0 });
+              } else {
+                options.onload({ status: 200, statusText: 'OK', responseText: undefined, response: undefined });
               }
             }, state.delay * (index + 1)));
           });

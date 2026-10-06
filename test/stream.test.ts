@@ -141,3 +141,66 @@ test('行内 $$...$$ 渲染成独立公式，不留下可见美元符', () => {
   assert.equal((money.match(/class="katex/g) ?? []).length, 0);
   assert.match(money, /\$5/);
 });
+
+test('流式没拿到正文时，回退的非流式请求体里不能带 stream', async () => {
+  const { ask } = await import('../src/core/ai.ts');
+  const { defaultSettings } = await import('../src/core/config.ts');
+  const settings = defaultSettings();
+  settings.providers[0].apiKey = 'k';
+
+  const seen: { stream?: boolean }[] = [];
+  const jsonResponse = JSON.stringify({ choices: [{ message: { content: '回退译文' } }] });
+
+  // 流式通道：状态 200 但一个字符都不给（模拟 onpartial 不触发）
+  const stream = async (req: { body?: string }) => {
+    seen.push(JSON.parse(req.body ?? '{}'));
+    return { status: 200, statusText: 'OK', text: '' };
+  };
+  // 非流式通道
+  const request = async (req: { body?: string }) => {
+    seen.push(JSON.parse(req.body ?? '{}'));
+    return { status: 200, statusText: 'OK', text: jsonResponse };
+  };
+
+  const deltas: string[] = [];
+  const text = await ask(request, settings, '原文', 'system', {
+    stream,
+    onDelta: (t) => deltas.push(t),
+  });
+
+  assert.equal(text, '回退译文');
+  assert.equal(seen.length, 2, `应发两次请求，实际 ${seen.length}`);
+  assert.equal(seen[0].stream, true, '第一次应是流式');
+  // 关键：回退请求必须关掉 stream，否则服务端仍返回 SSE，按 JSON 解析会失败
+  assert.equal(seen[1].stream, undefined, '回退请求不能带 stream');
+  // 回退时也要把结果交给回调，避免 UI 停在空面板
+  assert.deepEqual(deltas, ['回退译文']);
+});
+
+test('流式已经开始输出后中断，不重来', async () => {
+  const { ask } = await import('../src/core/ai.ts');
+  const { defaultSettings } = await import('../src/core/config.ts');
+  const settings = defaultSettings();
+  settings.providers[0].apiKey = 'k';
+
+  let requests = 0;
+  const stream = async (req: { onChunk?: (raw: string) => void }) => {
+    requests += 1;
+    // 先给一点内容，再抛错
+    req.onChunk?.('data: {"choices":[{"delta":{"content":"已译"}}]}\n\n');
+    throw new Error('连接中断');
+  };
+  const request = async () => {
+    requests += 1;
+    return { status: 200, statusText: 'OK', text: '{}' };
+  };
+
+  const deltas: string[] = [];
+  await assert.rejects(
+    ask(request, settings, '原文', 'system', { stream, onDelta: (t) => deltas.push(t) }),
+    /连接中断/,
+  );
+  // 已经给用户看过内容，不能再重来一次
+  assert.equal(requests, 1, '已输出内容后不应重试');
+  assert.deepEqual(deltas, ['已译']);
+});
