@@ -23,8 +23,8 @@ export type HttpTransport = (request: HttpRequest) => Promise<HttpResponse>;
 
 /**
  * 流式请求：onChunk 收到的是**累计**的原始响应文本，不是增量。
- * 累计形式对两种平台都自然：GM 的 onprogress 只给累计文本，
- * fetch 的 reader 虽然给增量，但拼成累计只是一次字符串相加。
+ * 浏览器平台把 fetch reader 的增量拼成累计文本；油猴平台把
+ * Tampermonkey onpartial 的 partial 或 tfd.objUrl 解码后再累积。
  */
 export interface HttpStreamRequest extends HttpRequest {
   onChunk?: (raw: string) => void;

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OJ++
 // @namespace    https://github.com/hsn8086/OJ-Plus-Plus
-// @version      0.5.1
+// @version      0.5.2
 // @author       hsn8086
 // @description  OJ-Plus-Plus：AI 题面翻译、Markdown 视图与一键复制
 // @license      GPL-3.0
@@ -150,12 +150,7 @@
 		return settings;
 	}
 	async function loadSettings(storage) {
-		const current = await storage.get(SETTINGS_KEY);
-		if (current !== void 0) return migrate(current);
-		const legacy = await storage.get("ncb:settings");
-		const settings = migrate(legacy);
-		if (legacy !== void 0) await storage.set(SETTINGS_KEY, settings);
-		return settings;
+		return migrate(await storage.get(SETTINGS_KEY));
 	}
 	async function saveSettings(storage, settings) {
 		await storage.set(SETTINGS_KEY, settings);
@@ -32856,22 +32851,67 @@ $$` : `${n}$$`;
 		}
 		req.signal?.addEventListener("abort", onAbort, { once: true });
 	});
+	function decodeBinaryString(value) {
+		const bytes = new Uint8Array(value.length);
+		for (let index = 0; index < value.length; index += 1) bytes[index] = value.charCodeAt(index) & 255;
+		return new TextDecoder().decode(bytes);
+	}
+	function decodeDataUri(value) {
+		const comma = value.indexOf(",");
+		if (comma < 0) return "";
+		const metadata = value.slice(0, comma);
+		const payload = value.slice(comma + 1);
+		if (/;base64(?:;|$)/i.test(metadata)) return decodeBinaryString(atob(payload));
+		return decodeURIComponent(payload);
+	}
+	async function readObjectUrl(url) {
+		if (typeof fetch === "function") try {
+			return await (await fetch(url)).text();
+		} catch {}
+		return new Promise((resolve, reject) => {
+			_GM_xmlhttpRequest({
+				method: "GET",
+				url,
+				responseType: "text",
+				onload: (response) => resolve(response.responseText || ""),
+				onerror: () => reject(new Error("无法读取 Tampermonkey 流式片段"))
+			});
+		});
+	}
+	async function readPartialText(value) {
+		if (typeof value === "string") return value;
+		if (!value || typeof value !== "object") return "";
+		const event = value;
+		if (typeof event.partial === "string") return event.partial;
+		const raw = event.tfd ?? value;
+		if (typeof raw.dataUri === "string") return decodeDataUri(raw.dataUri);
+		if (typeof raw.binary === "string") return decodeBinaryString(raw.binary);
+		if (raw.binary instanceof ArrayBuffer) return new TextDecoder().decode(raw.binary);
+		if (ArrayBuffer.isView(raw.binary)) return new TextDecoder().decode(new Uint8Array(raw.binary.buffer, raw.binary.byteOffset, raw.binary.byteLength));
+		if (raw.blob && typeof raw.blob.text === "function") return raw.blob.text();
+		if (typeof raw.objUrl?.url === "string") return readObjectUrl(raw.objUrl.url);
+		return "";
+	}
 	var stream = (req) => new Promise((resolve, reject) => {
 		if (req.signal?.aborted) {
 			reject(new DOMException("Aborted", "AbortError"));
 			return;
 		}
+		let settled = false;
 		const cleanup = () => req.signal?.removeEventListener("abort", onAbort);
 		const fail = (error) => {
+			if (settled) return;
+			settled = true;
 			cleanup();
 			reject(error);
 		};
 		let accumulated = "";
 		const push = (piece) => {
-			if (!piece) return;
+			if (!piece || settled) return;
 			accumulated += piece;
 			req.onChunk?.(accumulated);
 		};
+		let partials = Promise.resolve();
 		const handle = _GM_xmlhttpRequest({
 			method: req.method,
 			url: req.url,
@@ -32879,10 +32919,15 @@ $$` : `${n}$$`;
 			data: req.body,
 			timeout: req.timeoutMs,
 			responseType: "stream",
-			partialSize: 128,
+			partialSize: 64,
 			onpartial(res) {
-				const piece = res.partial;
-				if (typeof piece === "string") push(piece);
+				const current = partials.then(async () => {
+					try {
+						push(await readPartialText(res));
+					} catch {}
+				});
+				partials = current;
+				return current;
 			},
 			onprogress(res) {
 				const text = res.responseText;
@@ -32892,12 +32937,16 @@ $$` : `${n}$$`;
 				}
 			},
 			onload(res) {
-				cleanup();
-				const text = accumulated || (typeof res.responseText === "string" ? res.responseText : "");
-				resolve({
-					status: res.status,
-					statusText: res.statusText,
-					text
+				partials.then(() => {
+					if (settled) return;
+					settled = true;
+					cleanup();
+					const text = accumulated || (typeof res.responseText === "string" ? res.responseText : "");
+					resolve({
+						status: res.status,
+						statusText: res.statusText,
+						text
+					});
 				});
 			},
 			onerror: () => fail(new Error("网络请求失败，请检查网络或接口地址")),

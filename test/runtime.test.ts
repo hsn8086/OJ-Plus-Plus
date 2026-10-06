@@ -12,18 +12,18 @@ function memoryStorage(values: Map<string, unknown>): Storage {
   };
 }
 
-test('更名后从旧存储迁移配置，之后以新键为准', async () => {
-  const old = defaultSettings();
-  old.providers[0].apiKey = 'saved-key';
-  const values = new Map<string, unknown>([['ncb:settings', old]]);
+test('配置读写走平台存储，旧数据缺失时回落到默认值', async () => {
+  const values = new Map<string, unknown>();
   const storage = memoryStorage(values);
-  const settings = await loadSettings(storage);
-  assert.equal(settings.providers[0].apiKey, 'saved-key');
-  assert.deepEqual(values.get(SETTINGS_KEY), settings);
-  settings.providers[0].model = 'updated-model';
+  assert.equal((await loadSettings(storage)).providers.length > 0, true);
+  const settings = defaultSettings();
+  settings.providers[0].apiKey = 'saved-key';
+  settings.providers[0].model = 'my-model';
   await saveSettings(storage, settings);
-  assert.equal((await loadSettings(storage)).providers[0].model, 'updated-model');
-  assert.deepEqual(values.get('ncb:settings'), old);
+  const reloaded = await loadSettings(storage);
+  assert.equal(reloaded.providers[0].apiKey, 'saved-key');
+  assert.equal(reloaded.providers[0].model, 'my-model');
+  assert.equal(values.has(SETTINGS_KEY), true);
 });
 
 test('异步存储写入失败向调用方报告，防止显示虚假的保存成功', async () => {

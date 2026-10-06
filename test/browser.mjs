@@ -75,7 +75,8 @@ try {
   const page = await pageWithFixture('https://ac.nowcoder.com/acm/contest/100000/A', fixture);
   const main = await page.locator('main').evaluate((node) => { const html = node.outerHTML; node.remove(); return html; });
   await page.evaluate(({ bundle, settings, response }) => {
-    const store = new Map([['ncb:settings', settings]]);
+    const store = new Map([['ojpp:settings', settings]]);
+    const partials = new Map();
     const state = window.__testState = { store, requests: [], clipboard: '', delay: 10, aborted: 0 };
     // 只有词法作用域里有 GM API；page.fetch 故意失败，以捕获 CORS 回退回归。
     window.fetch = () => { throw new Error('userscript must use GM transport'); };
@@ -85,6 +86,16 @@ try {
       (key, value) => store.set(key, structuredClone(value)),
       (text) => { state.clipboard = text; },
       (options) => {
+        // 模拟 TM onpartial 的 transferable data：实际回调通常收到 tfd.objUrl，
+        // 不是直接的 partial 字符串。平台层会通过 GM 请求读回这个 Blob URL。
+        if (partials.has(options.url)) {
+          const timer = setTimeout(() => options.onload?.({
+            status: 200,
+            statusText: 'OK',
+            responseText: partials.get(options.url),
+          }), 0);
+          return { abort: () => clearTimeout(timer) };
+        }
         const body = JSON.parse(options.data);
         state.requests.push(body);
         const timers = [];
@@ -115,8 +126,15 @@ try {
               acc += event;
               const isLast = index === events.length - 1;
               if (!isLast) {
-                // 增量片段，按 partialSize 语义投递
-                options.onpartial?.({ partial: event, index, length: events.length });
+                // TM 的 stream 路径在普通用户脚本沙箱里会返回 tfd.objUrl。
+                // 每个临时 URL 只保存对应片段，供平台层通过 GM 请求读取。
+                const url = `blob:tm-probe-${index}`;
+                partials.set(url, event);
+                options.onpartial?.({
+                  tfd: { objUrl: { url, type: 'text/plain;charset=utf-8' } },
+                  index,
+                  length: events.length,
+                });
                 // 进度事件：只有进度字段，没有正文
                 options.onprogress?.({ responseText: '', loaded: acc.length, total: 0 });
               } else {
@@ -131,7 +149,12 @@ try {
       },
     );
   }, { bundle, settings, response });
-  await page.waitForFunction(() => window.__testState.store.has('ojpp:settings'));
+  // 等应用完成初始化（它会注入自己的样式表）。
+  // 这里不能用“存储里有 settings”来判断：测试一开始就把配置放好了，
+  // 那个条件恒为真，等于没等。
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('style')].some((s) => s.textContent?.includes('.ojpp-toolbar')),
+  );
   await page.evaluate((html) => document.body.insertAdjacentHTML('beforeend', html), main);
   await page.getByRole('button', { name: 'AI 翻译', exact: true }).first().waitFor();
 
@@ -172,7 +195,11 @@ try {
   await page.getByRole('dialog').waitFor({ state: 'detached' });
   // 流式：请求体带 stream，且中途就能看到部分译文
   await page.getByRole('button', { name: 'AI 翻译', exact: true }).first().click();
-  await page.waitForFunction(() => document.querySelector('.ojpp-result-body')?.textContent.trim().length > 0);
+  await page.waitForFunction(() => {
+    const panel = document.querySelector('.ojpp-result');
+    return panel?.classList.contains('ojpp-streaming')
+      && (panel.querySelector('.ojpp-result-body')?.textContent?.trim().length ?? 0) > 0;
+  });
   const midText = await page.locator('.ojpp-result-body').textContent();
   assert.ok(midText.includes('给定两个整数'), `流式中间态应有部分译文，实际: ${midText}`);
   assert.equal(await page.locator('.ojpp-result.ojpp-streaming').count(), 1);
@@ -194,7 +221,7 @@ try {
   await page.getByRole('button', { name: '翻译中，点击中止', exact: true }).click();
   await page.waitForFunction(() => window.__testState.aborted === 1);
   await page.locator('.ojpp-result').waitFor({ state: 'detached' });
-  console.log('✓ userscript：旧配置迁移、动态题面、公式与复制、设置交互、即时配置、取消与重译');
+  console.log('✓ userscript：动态题面、公式与复制、设置交互、即时配置、TM tfd 流式与取消');
 
   if (screenshots) {
     await page.evaluate(() => { window.__testState.delay = 10; });

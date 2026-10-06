@@ -8,7 +8,7 @@ import { readFile } from 'node:fs/promises';
 const root = new URL('../', import.meta.url);
 const pkg = JSON.parse(await readFile(new URL('package.json', root), 'utf8'));
 
-const files = ['dist/oj-plus-plus.user.js', 'dist/nowcoder-better.user.js'];
+const files = ['dist/oj-plus-plus.user.js'];
 const problems = [];
 
 for (const file of files) {
@@ -20,9 +20,9 @@ for (const file of files) {
   } else if (version !== pkg.version) {
     problems.push(`${file}: @version=${version}，package.json=${pkg.version}`);
   }
-  // 下载地址也要指向当前仓库，避免改名后残留旧域名
-  if (/NowcoderBetter\/main\/dist\/oj-plus-plus/.test(source)) {
-    problems.push(`${file}: downloadURL 仍指向旧仓库`);
+  // 下载地址要指向当前仓库
+  if (!/OJ-Plus-Plus\/main\/dist\/oj-plus-plus\.user\.js/.test(source)) {
+    problems.push(`${file}: downloadURL 未指向当前仓库`);
   }
 }
 

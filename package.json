@@ -1,12 +1,12 @@
 {
   "name": "oj-plus-plus",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": true,
   "type": "module",
   "description": "OJ++：可扩展站点与运行平台的 AI 题面翻译工具",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node tools/legacy-userscript.mjs",
+    "build": "vite build",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test test/*.test.ts",
     "check": "pnpm typecheck && pnpm test && pnpm build && pnpm verify-dist",

@@ -29,13 +29,7 @@ OJ++（OJ-Plus-Plus）是一个可扩展的在线评测站增强工具。它把 
 | 正式版 | [oj-plus-plus.user.js](https://raw.githubusercontent.com/hsn8086/OJ-Plus-Plus/main/dist/oj-plus-plus.user.js) |
 | 本地开发版 | 构建后安装 `dist/oj-plus-plus.user.js` |
 
-现有 `NowcoderBetter` 用户可以继续通过旧文件名更新：
-
-```text
-https://raw.githubusercontent.com/hsn8086/OJ-Plus-Plus/main/dist/nowcoder-better.user.js
-```
-
-新安装请使用 `oj-plus-plus.user.js`。卸载脚本后，脚本管理器里的配置也可以手动删除；升级时旧的 `ncb:settings` 会迁移到 `ojpp:settings`。
+> 项目原名 NowcoderBetter，2026-10 改名为 OJ++。改名后脚本的 `@namespace` 变了，脚本管理器会把它当成新脚本，配置需要重新填写。
 
 ## 第一次使用
 
@@ -62,8 +56,8 @@ https://raw.githubusercontent.com/hsn8086/OJ-Plus-Plus/main/dist/nowcoder-better
 
 开启后请求会带上 `stream: true`，脚本按 SSE 解析增量并逐帧渲染。三处细节值得说明：
 
-- 油猴没有可读流。Tampermonkey 的增量通道是 `GM_xmlhttpRequest` 的 `onpartial` + `partialSize`：`onprogress` 只带进度字段，`responseText` 要等整个响应读完才赋值，用它做流式拿不到正文。`onpartial` 给的是增量片段，脚本内部累积成累计文本。
-- 不支持 `partialSize` 的脚本管理器不会触发 `onpartial`，此时自动改走一次性请求（回退请求会去掉 `stream` 参数，否则服务端仍返回 SSE 而无法按 JSON 解析）。
+- 油猴没有可读流。Tampermonkey 的增量通道是 `GM_xmlhttpRequest` 的 `responseType: 'stream'` + `partialSize` + `onpartial`：`onprogress` 只带进度字段，`responseText` 要等整个响应读完才赋值。普通用户脚本沙箱里的 `onpartial` 通常返回 `tfd.objUrl`，脚本会先读取 Blob，再把增量交给 SSE 解析器。
+- 不支持 `partialSize` 的脚本管理器不会触发可用的 `onpartial`，此时自动改走一次性请求（回退请求会去掉 `stream` 参数，否则服务端仍返回 SSE 而无法按 JSON 解析）。
 - 已经开始输出后再中断不会重试，避免面板内容回退重来。
 - 正文随时可能停在半个公式、半个代码块或半个粗体上。渲染前会做两件事：
   - 结构标记（粗体、斜体、删除线、链接）由 [remend](https://www.npmjs.com/package/remend) 补全。补全不改变可见文字，所以 `**注意` 能立刻以粗体显示，收尾符到达时也不会重画。
@@ -82,7 +76,7 @@ src/
     providers.ts        三种协议的请求构造与响应解析
     prompt.ts           翻译提示词与分段
     sse.ts              SSE 增量解析
-    settings-store.ts   平台无关的配置读写与旧键迁移
+    settings-store.ts   平台无关的配置读写
     translate.ts        分段翻译编排
     types.ts            通用配置和协议接口
   sites/
@@ -130,7 +124,7 @@ interface Platform {
 }
 ```
 
-`stream` 是可选的，不实现就退化为一次性请求。它的回调收到的是**累计**文本而不是增量，这样 GM 的 `onprogress` 和 `fetch` 的 reader 都能对上同一个契约。
+`stream` 是可选的，不实现就退化为一次性请求。它的回调收到的是**累计**原始响应文本。浏览器平台把 `ReadableStream` 的增量片段拼成累计文本；油猴平台把 Tampermonkey 的 `onpartial`/`tfd.objUrl` 解码后再累积，核心层不需要知道具体脚本管理器。
 
 Chrome 扩展可以把 `storage` 映射到 `chrome.storage.local`，把 `request` 放到扩展后台或 service worker，再使用一个新的入口调用 `startApp`。页面功能不需要知道请求来自 GM API 还是扩展消息通道。
 
@@ -145,7 +139,7 @@ pnpm screenshots     # 生成 README 截图
 
 浏览器回归会使用本地 fixture，不启动 mock AI 服务，也不依赖真实 OJ 页面。它覆盖：
 
-- 实际 userscript 构建和 GM 请求通道，页面 `fetch` 被故意禁用。
+- 油猴构建的回归会模拟 Tampermonkey 的 `onpartial({ tfd: { objUrl } })`，页面 `fetch` 被故意禁用，验证 Blob 片段仍能逐步进入译文面板。
 - 牛客站点公式还原、Markdown、复制、动态插入和结果渲染。
 - 流式请求：请求体带 `stream`，中途就能看到部分译文，完成后流式状态清除。
 - 设置面板输入焦点、文本拖拽、保存后即时切换配置、取消请求和重复翻译。
@@ -175,7 +169,7 @@ OJPP_CHROME=/path/to/Google\ Chrome\ for\ Testing pnpm test:browser
 
 **公式显示为源码。** 确认 KaTeX CSS 可以从 jsDelivr 加载。公式的 Markdown 仍会保留 LaTeX，复制结果不受影响。
 
-**旧配置没有出现。** 打开新脚本后，第一次读取会把 `ncb:settings` 迁移到 `ojpp:settings`。如果脚本管理器使用了隔离的脚本存储，请确认旧脚本和新脚本运行在同一个脚本管理器中。
+**从 NowcoderBetter 升级后配置没了。** 脚本管理器的 GM 存储按脚本 uuid 隔离，uuid 由 `@namespace` + `@name` 决定。改名后 uuid 变了，旧配置读不到，需要重新填一次 API Key 和模型。
 
 ## 反馈
 

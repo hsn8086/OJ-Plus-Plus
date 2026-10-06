@@ -71,8 +71,7 @@ export function createBrowserPlatform(): Platform {
     id: 'browser',
     storage: {
       async get<T>(key: string) {
-        // 兼容旧版直接注入脚本调试时使用的 localStorage 前缀。
-        const raw = localStorage.getItem(key) ?? localStorage.getItem(`ncb:gm:${key}`);
+        const raw = localStorage.getItem(key);
         if (raw === null) return undefined;
         return JSON.parse(raw) as T;
       },
