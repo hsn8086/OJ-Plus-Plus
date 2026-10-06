@@ -80,8 +80,7 @@ export const CSS = `
   color: #1f2328;
   overflow-x: auto;
 }
-.ojpp-result-body > :first-child { margin-top: 0; }
-.ojpp-result-body > :last-child { margin-bottom: 0; }
+.ojpp-result-body > :first-child { margin-top: 0; }.ojpp-result-body > :last-child { margin-bottom: 0; }
 .ojpp-result-body img { max-width: 100%; }
 .ojpp-result-body table { border-collapse: collapse; margin: 8px 0; }
 .ojpp-result-body th, .ojpp-result-body td {
@@ -103,6 +102,19 @@ export const CSS = `
 }
 .ojpp-result-body pre code { background: none; padding: 0; }
 .ojpp-collapsed .ojpp-result-body { display: none; }
+/* 流式生成中：末尾光标，提示内容还在继续 */
+.ojpp-streaming .ojpp-result-body > :last-child::after {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: currentColor;
+  opacity: .5;
+  animation: ojpp-caret 1s steps(2) infinite;
+}
+@keyframes ojpp-caret { 50% { opacity: 0; } }
 
 .ojpp-md-source {
   white-space: pre-wrap;

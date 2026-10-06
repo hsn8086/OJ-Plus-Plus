@@ -1,4 +1,4 @@
-import type { HttpTransport } from '../platforms/types.ts';
+import type { HttpStreamTransport, HttpTransport } from '../platforms/types.ts';
 import { getAdapter } from './providers.ts';
 import type { ProviderConfig, Settings } from './types.ts';
 
@@ -14,6 +14,10 @@ export class AiError extends Error {
 
 export interface AskOptions {
   signal?: AbortSignal;
+  /** 收到增量正文时回调（已累计），用于流式展示 */
+  onDelta?: (text: string) => void;
+  /** 支持流式的传输；不传则退化为一次性请求 */
+  stream?: HttpStreamTransport;
 }
 
 /**
@@ -26,13 +30,10 @@ export async function ask(
   prompt: string,
   systemPrompt: string,
   options: AskOptions = {},
-): Promise<string> {
-  const cfg = settings.providers.find((p) => p.id === settings.activeProviderId);
+): Promise<string> {  const cfg = settings.providers.find((p) => p.id === settings.activeProviderId);
   if (!cfg) throw new AiError('还没有配置任何提供商，请先打开设置面板添加一个');
   if (!cfg.model.trim()) throw new AiError('未填写模型名');
-  if (!cfg.apiKey.trim() && !cfg.headers['Authorization'] && !cfg.headers['x-api-key']) {
-    throw new AiError('未填写 API Key');
-  }
+  // 允许空 Key：本地推理服务通常不需要鉴权。
 
   const attempts = Math.max(1, settings.retries + 1);
   let lastError: unknown;
@@ -60,28 +61,60 @@ async function once(
   options: AskOptions,
 ): Promise<string> {
   const adapter = getAdapter(cfg.protocol);
+  const wantStream = !!(options.stream && options.onDelta && adapter.createStreamReader);
   const { url, headers, body } = adapter.build(cfg, {
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: prompt },
     ],
+    stream: wantStream,
   });
 
-  const res = await request({
+  const init = {
     method: 'POST',
     url,
     headers,
     body: JSON.stringify(body),
     timeoutMs: settings.timeoutMs,
     signal: options.signal,
-  });
+  };
 
-  let payload: unknown;
-  try {
-    payload = res.text ? JSON.parse(res.text) : null;
-  } catch {
-    payload = null;
+  // 流式：边收边回显。失败且没吐过任何内容时，允许回退到一次性请求。
+  if (wantStream) {
+    let streamed = false;
+    const readStream = adapter.createStreamReader!();
+    try {
+      const res = await options.stream!({ ...init, onChunk: (raw) => {
+        const text = readStream(raw);
+        if (text) {
+          streamed = true;
+          options.onDelta!(text);
+        }
+      } });
+      if (res.status < 200 || res.status >= 300) {
+        // 有些服务商在流式错误时返回普通 JSON 错误体
+        const payload = safeJson(res.text);
+        const detail =
+          (payload && adapter.extractError?.(payload)) || truncate(res.text, 400) || res.statusText;
+        throw new AiError(`${res.status} ${detail}`, res.status);
+      }
+      const finalText = readStream(res.text) ?? '';
+      if (finalText.trim()) return finalText;
+      // 流里没解析出正文：可能是服务端忽略了 stream 参数，当作普通响应再解析一次
+      const fallback = adapter.extractText(safeJson(res.text));
+      if (fallback.trim()) return fallback;
+      throw new AiError('接口返回了空内容，可能是模型不支持或提示词被拒绝');
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') throw error;
+      if (error instanceof AiError && isFatal(error.status)) throw error;
+      // 已经显示过部分译文就不要重新开始，否则用户会看到内容回退
+      if (streamed) throw error;
+      // 否则退回非流式重试
+    }
   }
+
+  const res = await request(init);
+  const payload = safeJson(res.text);
 
   if (res.status < 200 || res.status >= 300) {
     const detail =
@@ -95,7 +128,18 @@ async function once(
   if (!text.trim()) {
     throw new AiError('接口返回了空内容，可能是模型不支持或提示词被拒绝');
   }
+  // 非流式回退时，一次性把结果交给回调，避免 UI 停在空面板
+  if (wantStream) options.onDelta!(text);
   return text;
+}
+
+function safeJson(text: string): unknown {
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
 }
 
 function isFatal(status?: number): boolean {

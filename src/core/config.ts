@@ -95,6 +95,7 @@ export function defaultSettings(): Settings {
     autoTranslate: false,
     timeoutMs: 120_000,
     retries: 1,
+    streaming: true,
   };
 }
 

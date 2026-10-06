@@ -4,7 +4,7 @@ import {
   GM_setValue,
   GM_xmlhttpRequest,
 } from 'vite-plugin-monkey/dist/client';
-import type { HttpTransport, Platform } from './types.ts';
+import type { HttpStreamTransport, HttpTransport, Platform } from './types.ts';
 
 const request: HttpTransport = (req) => new Promise((resolve, reject) => {
   if (req.signal?.aborted) {
@@ -40,6 +40,45 @@ const request: HttpTransport = (req) => new Promise((resolve, reject) => {
   req.signal?.addEventListener('abort', onAbort, { once: true });
 });
 
+/**
+ * 流式请求：GM 的 responseType 不支持通用读取，但 onprogress 会累计返回已收到的文本。
+ * Violentmonkey 不提供可用的流式读取，此时拒绝，由上层退化为非流式。
+ */
+const stream: HttpStreamTransport = (req) => new Promise((resolve, reject) => {
+  if (req.signal?.aborted) {
+    reject(new DOMException('Aborted', 'AbortError'));
+    return;
+  }
+  const cleanup = () => req.signal?.removeEventListener('abort', onAbort);
+  const fail = (error: Error) => {
+    cleanup();
+    reject(error);
+  };
+  const handle = GM_xmlhttpRequest({
+    method: req.method as 'GET' | 'POST',
+    url: req.url,
+    headers: req.headers,
+    data: req.body,
+    timeout: req.timeoutMs,
+    responseType: 'text',
+    onprogress(res) {
+      if (typeof res.responseText === 'string') req.onChunk?.(res.responseText);
+    },
+    onload(res) {
+      cleanup();
+      resolve({ status: res.status, statusText: res.statusText, text: res.responseText });
+    },
+    onerror: () => fail(new Error('网络请求失败，请检查网络或接口地址')),
+    ontimeout: () => fail(new Error('请求超时')),
+    onabort: () => fail(new DOMException('Aborted', 'AbortError')),
+  });
+  function onAbort() {
+    fail(new DOMException('Aborted', 'AbortError'));
+    handle.abort();
+  }
+  req.signal?.addEventListener('abort', onAbort, { once: true });
+});
+
 export function createUserscriptPlatform(): Platform {
   // GM API 在脚本沙箱作用域内，不一定挂在 globalThis 上。
   if ([GM_getValue, GM_setValue, GM_xmlhttpRequest, GM_setClipboard]
@@ -57,6 +96,7 @@ export function createUserscriptPlatform(): Platform {
       },
     },
     request,
+    stream,
     async writeClipboard(text) {
       GM_setClipboard(text, 'text');
     },

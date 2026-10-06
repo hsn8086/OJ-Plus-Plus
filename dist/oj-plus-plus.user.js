@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OJ++
 // @namespace    https://github.com/hsn8086/OJ-Plus-Plus
-// @version      0.3.0
+// @version      0.4.0
 // @author       hsn8086
 // @description  OJ-Plus-Plus：AI 题面翻译、Markdown 视图与一键复制
 // @license      GPL-3.0
@@ -114,7 +114,8 @@
 			translateWholeBlock: true,
 			autoTranslate: false,
 			timeoutMs: 12e4,
-			retries: 1
+			retries: 1,
+			streaming: true
 		};
 	}
 	function migrate(raw) {
@@ -198,6 +199,29 @@
 			timer = setTimeout(() => setIcon(button, icon, title), 1200);
 		});
 	}
+	function createSseParser() {
+		let buffer = "";
+		return (chunk) => {
+			buffer += chunk;
+			const events = [];
+			for (;;) {
+				const match = /\r?\n\r?\n/.exec(buffer);
+				if (!match) break;
+				const block = buffer.slice(0, match.index);
+				buffer = buffer.slice(match.index + match[0].length);
+				const data = block.split(/\r?\n/).filter((line) => line.startsWith("data:")).map((line) => line.slice(5).replace(/^ /, "")).join("\n");
+				if (data) events.push(data);
+			}
+			return events;
+		};
+	}
+	function parseJson(text) {
+		try {
+			return JSON.parse(text);
+		} catch {
+			return null;
+		}
+	}
 	function trimSlash(url) {
 		return url.replace(/\/+$/, "");
 	}
@@ -212,11 +236,45 @@
 		for (const [key, value] of Object.entries(extra)) if (key.trim()) out[key.trim()] = value;
 		return out;
 	}
+	function authHeader(name, value) {
+		const key = value.trim();
+		return key ? { [name]: name === "Authorization" ? `Bearer ${key}` : key } : {};
+	}
 	function compact(obj) {
 		const out = {};
 		for (const [key, value] of Object.entries(obj)) if (value !== void 0 && value !== null) out[key] = value;
 		return out;
 	}
+	function streamReader(pick) {
+		return () => {
+			let acc = "";
+			const parser = createSseParser();
+			let seen = 0;
+			return (raw) => {
+				for (const event of parser(raw.slice(seen))) {
+					if (event === "[DONE]") continue;
+					const text = pick(parseJson(event));
+					if (text) acc += text;
+				}
+				seen = raw.length;
+				return acc || null;
+			};
+		};
+	}
+	var openaiChatStream = streamReader((payload) => {
+		return normalizeContent(payload?.choices?.[0]?.delta?.content) || null;
+	});
+	var openaiResponsesStream = streamReader((payload) => {
+		const data = payload;
+		if (typeof data?.delta === "string" && data.delta) return data.delta;
+		if (typeof data?.output_text === "string" && data.output_text) return data.output_text;
+		return null;
+	});
+	var anthropicStream = streamReader((payload) => {
+		const data = payload;
+		if (data?.type === "content_block_delta" && typeof data.delta?.text === "string") return data.delta.text;
+		return null;
+	});
 	var openaiChat = {
 		protocol: "openai-chat",
 		label: "OpenAI Chat Completions",
@@ -227,6 +285,7 @@
 			const body = compact({
 				model: cfg.model || this.defaultModel,
 				messages: req.messages,
+				...req.stream ? { stream: true } : {},
 				...cfg.reasoning.enabled === null ? {} : { thinking: { type: cfg.reasoning.enabled ? "enabled" : "disabled" } },
 				...cfg.reasoning.effort && cfg.reasoning.enabled !== false ? { reasoning_effort: cfg.reasoning.effort } : {},
 				...cfg.body
@@ -235,7 +294,7 @@
 				url,
 				headers: mergeHeaders({
 					"Content-Type": "application/json",
-					Authorization: `Bearer ${cfg.apiKey}`
+					...authHeader("Authorization", cfg.apiKey)
 				}, cfg.headers),
 				body
 			};
@@ -245,6 +304,7 @@
 			if (!message) return "";
 			return normalizeContent(message.content);
 		},
+		createStreamReader: openaiChatStream,
 		extractError(payload) {
 			const data = payload;
 			return data?.error?.message || data?.message || "";
@@ -263,6 +323,7 @@
 					role: m.role,
 					content: m.content
 				})),
+				...req.stream ? { stream: true } : {},
 				...cfg.reasoning.effort ? { reasoning: { effort: cfg.reasoning.effort } } : {},
 				...cfg.body
 			});
@@ -270,7 +331,7 @@
 				url,
 				headers: mergeHeaders({
 					"Content-Type": "application/json",
-					Authorization: `Bearer ${cfg.apiKey}`
+					...authHeader("Authorization", cfg.apiKey)
 				}, cfg.headers),
 				body
 			};
@@ -285,6 +346,7 @@
 			}
 			return normalizeContent(data?.choices?.[0]?.message?.content);
 		},
+		createStreamReader: openaiResponsesStream,
 		extractError(payload) {
 			const data = payload;
 			return data?.error?.message || data?.message || "";
@@ -307,6 +369,7 @@
 				max_tokens: 8192,
 				...system ? { system } : {},
 				messages,
+				...req.stream ? { stream: true } : {},
 				...cfg.reasoning.effort && cfg.reasoning.enabled !== false ? { thinking: {
 					type: "enabled",
 					budget_tokens: effortToBudget(cfg.reasoning.effort)
@@ -317,7 +380,7 @@
 				url,
 				headers: mergeHeaders({
 					"Content-Type": "application/json",
-					"x-api-key": cfg.apiKey,
+					...authHeader("x-api-key", cfg.apiKey),
 					"anthropic-version": "2023-06-01",
 					"anthropic-dangerous-direct-browser-access": "true"
 				}, cfg.headers),
@@ -329,6 +392,7 @@
 			if (!Array.isArray(data?.content)) return "";
 			return data.content.filter((block) => block?.type === "text" && typeof block.text === "string").map((block) => block.text).join("");
 		},
+		createStreamReader: anthropicStream,
 		extractError(payload) {
 			const data = payload;
 			return data?.error?.message || data?.message || "";
@@ -372,7 +436,6 @@
 		const cfg = settings.providers.find((p) => p.id === settings.activeProviderId);
 		if (!cfg) throw new AiError("还没有配置任何提供商，请先打开设置面板添加一个");
 		if (!cfg.model.trim()) throw new AiError("未填写模型名");
-		if (!cfg.apiKey.trim() && !cfg.headers["Authorization"] && !cfg.headers["x-api-key"]) throw new AiError("未填写 API Key");
 		const attempts = Math.max(1, settings.retries + 1);
 		let lastError;
 		for (let i = 0; i < attempts; i += 1) {
@@ -390,34 +453,73 @@
 	}
 	async function once(request, settings, cfg, prompt, systemPrompt, options) {
 		const adapter = getAdapter(cfg.protocol);
-		const { url, headers, body } = adapter.build(cfg, { messages: [{
-			role: "system",
-			content: systemPrompt
-		}, {
-			role: "user",
-			content: prompt
-		}] });
-		const res = await request({
+		const wantStream = !!(options.stream && options.onDelta && adapter.createStreamReader);
+		const { url, headers, body } = adapter.build(cfg, {
+			messages: [{
+				role: "system",
+				content: systemPrompt
+			}, {
+				role: "user",
+				content: prompt
+			}],
+			stream: wantStream
+		});
+		const init = {
 			method: "POST",
 			url,
 			headers,
 			body: JSON.stringify(body),
 			timeoutMs: settings.timeoutMs,
 			signal: options.signal
-		});
-		let payload;
-		try {
-			payload = res.text ? JSON.parse(res.text) : null;
-		} catch {
-			payload = null;
+		};
+		if (wantStream) {
+			let streamed = false;
+			const readStream = adapter.createStreamReader();
+			try {
+				const res = await options.stream({
+					...init,
+					onChunk: (raw) => {
+						const text = readStream(raw);
+						if (text) {
+							streamed = true;
+							options.onDelta(text);
+						}
+					}
+				});
+				if (res.status < 200 || res.status >= 300) {
+					const payload = safeJson(res.text);
+					const detail = payload && adapter.extractError?.(payload) || truncate(res.text, 400) || res.statusText;
+					throw new AiError(`${res.status} ${detail}`, res.status);
+				}
+				const finalText = readStream(res.text) ?? "";
+				if (finalText.trim()) return finalText;
+				const fallback = adapter.extractText(safeJson(res.text));
+				if (fallback.trim()) return fallback;
+				throw new AiError("接口返回了空内容，可能是模型不支持或提示词被拒绝");
+			} catch (error) {
+				if (error instanceof DOMException && error.name === "AbortError") throw error;
+				if (error instanceof AiError && isFatal(error.status)) throw error;
+				if (streamed) throw error;
+			}
 		}
+		const res = await request(init);
+		const payload = safeJson(res.text);
 		if (res.status < 200 || res.status >= 300) {
 			const detail = payload && adapter.extractError?.(payload) || truncate(res.text, 400) || res.statusText;
 			throw new AiError(`${res.status} ${detail}`, res.status);
 		}
 		const text = adapter.extractText(payload);
 		if (!text.trim()) throw new AiError("接口返回了空内容，可能是模型不支持或提示词被拒绝");
+		if (wantStream) options.onDelta(text);
 		return text;
+	}
+	function safeJson(text) {
+		if (!text) return null;
+		try {
+			return JSON.parse(text);
+		} catch {
+			return null;
+		}
 	}
 	function isFatal(status) {
 		return status === 400 || status === 401 || status === 403 || status === 404;
@@ -473,6 +575,7 @@
 			"1. 只输出译文本身，不要任何前言、解释、总结或代码块包裹。",
 			"2. 原样保留 Markdown 结构：标题层级、列表、表格、引用、代码块、加粗斜体、链接。",
 			"3. 原样保留 LaTeX 公式（$...$ 与 $$...$$）以及公式内的所有字符，绝不翻译、改写或换行。",
+			"   译文里出现的 $ 分隔符数量必须与原文一致，不要去掉、不要改成别的写法。",
 			"4. 变量名、函数名、类名、宏、复杂度记号（如 O(n log n)）、输入输出样例、文件名保持原样。",
 			"5. 不要翻译代码块内部的内容，只翻译代码块外的说明文字。",
 			"6. 术语按中文竞赛习惯翻译，例如：sample → 样例，constraint → 数据范围，subtask → 子任务，",
@@ -519,17 +622,24 @@
 		}
 		return chunks.filter((c) => c.trim());
 	}
-	async function translateMarkdown(request, { settings, markdown, signal, onStatus, onPartial }) {
+	async function translateMarkdown(request, { settings, markdown, signal, onStatus, onPartial, stream, streaming }) {
 		const cfg = settings.providers.find((p) => p.id === settings.activeProviderId);
 		const system = buildSystemPrompt(settings);
 		const chunks = settings.translateWholeBlock ? [markdown] : chunkMarkdown(markdown);
 		const started = Date.now();
 		const out = [];
+		const useStream = !!stream && streaming !== false;
 		for (const [index, chunk] of chunks.entries()) {
 			signal?.throwIfAborted();
 			onStatus?.(chunks.length === 1 ? "正在翻译…" : `正在翻译第 ${index + 1}/${chunks.length} 段…`);
-			out.push((await ask(request, settings, chunk, system, { signal })).trim());
-			onPartial?.(out.join("\n\n"));
+			const done = out.length;
+			const translated = await ask(request, settings, chunk, system, {
+				signal,
+				stream,
+				onDelta: useStream ? (text) => onPartial?.([...out, text].join("\n\n")) : void 0
+			});
+			out.push(translated.trim());
+			onPartial?.(out.slice(0, done + 1).join("\n\n"));
 		}
 		return {
 			markdown: out.join("\n\n"),
@@ -30726,7 +30836,11 @@
 		});
 		td.addRule("math", {
 			filter: (node) => node.nodeName === "SPAN" && node.hasAttribute("data-ojpp-math"),
-			replacement: (_content, node) => `$${node.textContent ?? ""}$`
+			replacement: (_content, node) => {
+				const latex = node.textContent ?? "";
+				const delimiter = node.dataset.ojppMath === "display" ? "$$" : "$";
+				return `${delimiter}${latex}${delimiter}`;
+			}
 		});
 		return td;
 	}
@@ -30866,6 +30980,18 @@
 	function renderMarkdown(source) {
 		return md.render(source);
 	}
+	function stabilizeMarkdown(source) {
+		let text = source;
+		const fenceLines = [...text.matchAll(/^(`{3,}|~{3,})/gm)];
+		if (fenceLines.length % 2 === 1) text = text.slice(0, fenceLines[fenceLines.length - 1].index);
+		if ((text.match(/(?<!`)`(?!`)/g) ?? []).length % 2 === 1) {
+			const last = text.lastIndexOf("`");
+			if (last >= 0) text = text.slice(0, last);
+		}
+		if ((text.match(/\$\$/g) ?? []).length % 2 === 1) text = text.slice(0, text.lastIndexOf("$$"));
+		else if ((text.match(/(?<!\$)\$(?!\$)/g) ?? []).length % 2 === 1) text = text.slice(0, text.lastIndexOf("$"));
+		return text;
+	}
 	var KATEX_CSS_URL = `https://cdn.jsdelivr.net/npm/katex@${katex.version}/dist/katex.min.css`;
 	var katexCssInjected = false;
 	function ensureKatexStyles() {
@@ -30901,9 +31027,10 @@
 		body.className = "ojpp-result-body";
 		el.append(header, body);
 		let currentMarkdown = "";
+		let streaming = false;
 		const update = (markdown) => {
 			currentMarkdown = markdown;
-			body.innerHTML = renderMarkdown(markdown);
+			body.innerHTML = renderMarkdown(streaming ? stabilizeMarkdown(markdown) : markdown);
 		};
 		const setStatus = (text, kind = "info") => {
 			status.textContent = text;
@@ -30919,7 +31046,13 @@
 			el,
 			update,
 			setStatus,
+			begin() {
+				streaming = true;
+				el.classList.add("ojpp-streaming");
+			},
 			finish(result) {
+				streaming = false;
+				el.classList.remove("ojpp-streaming");
 				update(result.markdown);
 				setStatus(`${result.providerName} · ${result.model} · ${(result.elapsedMs / 1e3).toFixed(1)}s`);
 			},
@@ -30967,11 +31100,13 @@
 			controller = new AbortController();
 			const signal = controller.signal;
 			state("busy", ICON_SPINNER, "翻译中，点击中止");
+			panel.begin();
 			try {
 				const translated = await translateMarkdown(platform.request, {
 					settings: structuredClone(getSettings()),
 					markdown: text,
 					signal,
+					stream: platform.stream,
 					onStatus: panel.setStatus,
 					onPartial: panel.update
 				});
@@ -31099,6 +31234,7 @@
 			box.append(field("追加提示词", promptArea, "会拼接到内置翻译提示词之后。"));
 			box.append(checkRow("整段翻译", draft.translateWholeBlock, "开启后把整块内容一次性发给模型，上下文更完整；关闭则按标题和段落切块，适合超长题面或上下文窗口较小的模型。", (v) => draft.translateWholeBlock = v));
 			box.append(checkRow("自动翻译题面", draft.autoTranslate, "打开题目页后自动翻译题目描述区域。", (v) => draft.autoTranslate = v));
+			box.append(checkRow("流式显示", draft.streaming, "边生成边渲染，首屏更快。关闭后等整段译完再一次性显示；服务商或脚本管理器不支持时会自动回退。", (v) => draft.streaming = v));
 			const row = el("div", "ojpp-row");
 			const timeout = textInput(String(draft.timeoutMs), "120000", "number");
 			timeout.addEventListener("input", () => {
@@ -31196,9 +31332,9 @@
 			const modelInput = textInput(provider.model, "gpt-6-luna");
 			modelInput.addEventListener("input", () => provider.model = modelInput.value);
 			box.append(field("模型", modelInput));
-			const keyInput = textInput(provider.apiKey, "sk-...", "password");
+			const keyInput = textInput(provider.apiKey, "本地服务可留空", "password");
 			keyInput.addEventListener("input", () => provider.apiKey = keyInput.value);
-			box.append(field("API Key", keyInput, "保存在当前平台的本地存储中，随请求发送到你配置的接口。"));
+			box.append(field("API Key", keyInput, "保存在当前平台的本地存储中，随请求发送到你配置的接口。本地推理服务可以留空，此时不会发送认证头。"));
 			const row = el("div", "ojpp-row");
 			const reasoningSelect = el("select");
 			[
@@ -31305,7 +31441,7 @@
 				...draft,
 				providers: draft.providers.map((p) => ({
 					...p,
-					apiKey: "***"
+					apiKey: p.apiKey ? "***" : ""
 				}))
 			}, null, 2);
 			exportArea.readOnly = true;
@@ -31503,8 +31639,7 @@
   color: #1f2328;
   overflow-x: auto;
 }
-.ojpp-result-body > :first-child { margin-top: 0; }
-.ojpp-result-body > :last-child { margin-bottom: 0; }
+.ojpp-result-body > :first-child { margin-top: 0; }.ojpp-result-body > :last-child { margin-bottom: 0; }
 .ojpp-result-body img { max-width: 100%; }
 .ojpp-result-body table { border-collapse: collapse; margin: 8px 0; }
 .ojpp-result-body th, .ojpp-result-body td {
@@ -31526,6 +31661,19 @@
 }
 .ojpp-result-body pre code { background: none; padding: 0; }
 .ojpp-collapsed .ojpp-result-body { display: none; }
+/* 流式生成中：末尾光标，提示内容还在继续 */
+.ojpp-streaming .ojpp-result-body > :last-child::after {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: currentColor;
+  opacity: .5;
+  animation: ojpp-caret 1s steps(2) infinite;
+}
+@keyframes ojpp-caret { 50% { opacity: 0; } }
 
 .ojpp-md-source {
   white-space: pre-wrap;
@@ -31787,6 +31935,44 @@
 		}
 		req.signal?.addEventListener("abort", onAbort, { once: true });
 	});
+	var stream = (req) => new Promise((resolve, reject) => {
+		if (req.signal?.aborted) {
+			reject(new DOMException("Aborted", "AbortError"));
+			return;
+		}
+		const cleanup = () => req.signal?.removeEventListener("abort", onAbort);
+		const fail = (error) => {
+			cleanup();
+			reject(error);
+		};
+		const handle = _GM_xmlhttpRequest({
+			method: req.method,
+			url: req.url,
+			headers: req.headers,
+			data: req.body,
+			timeout: req.timeoutMs,
+			responseType: "text",
+			onprogress(res) {
+				if (typeof res.responseText === "string") req.onChunk?.(res.responseText);
+			},
+			onload(res) {
+				cleanup();
+				resolve({
+					status: res.status,
+					statusText: res.statusText,
+					text: res.responseText
+				});
+			},
+			onerror: () => fail(new Error("网络请求失败，请检查网络或接口地址")),
+			ontimeout: () => fail(new Error("请求超时")),
+			onabort: () => fail(new DOMException("Aborted", "AbortError"))
+		});
+		function onAbort() {
+			fail(new DOMException("Aborted", "AbortError"));
+			handle.abort();
+		}
+		req.signal?.addEventListener("abort", onAbort, { once: true });
+	});
 	function createUserscriptPlatform() {
 		if ([
 			_GM_getValue,
@@ -31805,6 +31991,7 @@
 				}
 			},
 			request,
+			stream,
 			async writeClipboard(text) {
 				_GM_setClipboard(text, "text");
 			}
@@ -31821,6 +32008,12 @@
 		} catch {
 			return match[1];
 		}
+	}
+	function isSpacingOnly(latex) {
+		return !latex.replace(/\\(hspace|hfill|quad|qquad|,|;|:|!)\s*(\{[^{}]*\})?/g, "").replace(/[\s~]/g, "");
+	}
+	function isBullet(latex) {
+		return /^\\(hspace\s*\{[^{}]*\})?\s*\\bullet\b/.test(latex.trim());
 	}
 	var sites = [{
 		id: "nowcoder",
@@ -31867,11 +32060,31 @@
 			return sections;
 		},
 		prepareContent(root) {
+			for (const katex of root.querySelectorAll(".katex")) {
+				const tex = katex.querySelector("annotation[encoding=\"application/x-tex\"]")?.textContent?.trim();
+				if (!tex) continue;
+				const wrapper = katex.parentElement;
+				const display = wrapper?.classList.contains("katex-display") ?? false;
+				const target = display && wrapper ? wrapper : katex;
+				if (isSpacingOnly(tex)) {
+					target.remove();
+					continue;
+				}
+				const math = root.ownerDocument.createElement("span");
+				if (isBullet(tex)) {
+					math.textContent = "• ";
+					target.replaceWith(math);
+					continue;
+				}
+				math.setAttribute("data-ojpp-math", display ? "display" : "inline");
+				math.textContent = tex;
+				target.replaceWith(math);
+			}
 			for (const img of root.querySelectorAll("img")) {
 				const latex = equationFromImg(img);
 				if (latex === null) continue;
 				const math = root.ownerDocument.createElement("span");
-				math.setAttribute("data-ojpp-math", "");
+				math.setAttribute("data-ojpp-math", "inline");
 				math.textContent = latex;
 				img.replaceWith(math);
 			}

@@ -34,6 +34,24 @@ test('异步存储写入失败向调用方报告，防止显示虚假的保存�
   await assert.rejects(saveSettings(storage, defaultSettings()), /storage unavailable/);
 });
 
+test('空 API Key 不发认证头，也不阻断请求', async () => {
+  const settings = defaultSettings();
+  settings.providers[0].apiKey = '';
+  let headers: Record<string, string> = {};
+  const transport = async (request: { headers?: Record<string, string> }) => {
+    headers = request.headers ?? {};
+    return { status: 200, statusText: 'OK', text: '{"choices":[{"message":{"content":"译文"}}]}' };
+  };
+  assert.equal(await ask(transport, settings, 'text', 'system'), '译文');
+  assert.equal(headers.Authorization, undefined);
+  assert.equal(headers['Content-Type'], 'application/json');
+
+  // 手动在额外请求头里写了认证头时，仍然照常发送。
+  settings.providers[0].headers = { Authorization: 'Bearer local-token' };
+  await ask(transport, settings, 'text', 'system');
+  assert.equal(headers.Authorization, 'Bearer local-token');
+});
+
 test('AI 调用使用注入的传输：鉴权失败不重试，取消后不发请求', async () => {
   const settings = defaultSettings();
   settings.providers[0].apiKey = 'test-key';

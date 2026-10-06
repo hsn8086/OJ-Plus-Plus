@@ -36,6 +36,8 @@ export interface Settings {
   timeoutMs: number;
   /** 失败重试次数 */
   retries: number;
+  /** 边收边渲染；关闭后等整段译完再显示 */
+  streaming: boolean;
 }
 
 export interface ChatMessage {
@@ -45,6 +47,8 @@ export interface ChatMessage {
 
 export interface ChatRequest {
   messages: ChatMessage[];
+  /** 请求 SSE 流式响应 */
+  stream?: boolean;
 }
 
 export interface ProviderAdapter {
@@ -64,4 +68,10 @@ export interface ProviderAdapter {
   extractText(payload: unknown): string;
   /** 从错误响应体里提取人类可读的信息 */
   extractError?(payload: unknown): string;
+  /**
+   * 创建一个流式提取器。每次请求都要新建一个，因为它会累计状态。
+   * 调用时传入到目前为止收到的完整 SSE 文本，返回累计正文；
+   * 返回 null 表示还没有正文，不要覆盖已有内容。
+   */
+  createStreamReader?(): (raw: string) => string | null;
 }

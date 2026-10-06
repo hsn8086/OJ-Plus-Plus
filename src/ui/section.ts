@@ -57,12 +57,14 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
     controller = new AbortController();
     const signal = controller.signal;
     state('busy', ICON_SPINNER, '翻译中，点击中止');
+    panel.begin();
     try {
       // 保存设置后，下次点击立即使用新配置；当前请求使用独立快照。
       const translated = await translateMarkdown(platform.request, {
         settings: structuredClone(getSettings()),
         markdown: text,
         signal,
+        stream: platform.stream,
         onStatus: panel.setStatus,
         onPartial: panel.update,
       });

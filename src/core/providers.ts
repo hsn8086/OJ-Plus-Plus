@@ -1,4 +1,5 @@
 import { DEFAULT_MODEL } from './config.ts';
+import { createSseParser, parseJson } from './sse.ts';
 import type { ChatRequest, ProviderAdapter, ProviderConfig } from './types.ts';
 
 function trimSlash(url: string): string {
@@ -31,6 +32,15 @@ function mergeHeaders(
   return out;
 }
 
+/**
+ * 本地推理服务（llama.cpp、Ollama、vLLM 等）常常不需要 Key。
+ * 这种情况下不要发空的认证头，否则有些服务会当成错误的凭据直接拒绝。
+ */
+function authHeader(name: string, value: string): Record<string, string> {
+  const key = value.trim();
+  return key ? { [name]: name === 'Authorization' ? `Bearer ${key}` : key } : {};
+}
+
 /** 去掉值为 undefined/null 的字段，避免污染请求体 */
 function compact<T extends Record<string, unknown>>(obj: T): T {
   const out = {} as Record<string, unknown>;
@@ -39,6 +49,59 @@ function compact<T extends Record<string, unknown>>(obj: T): T {
   }
   return out as T;
 }
+
+/**
+ * 流式提取器：接收完整 SSE 文本，返回累计正文。
+ * 返回 null 表示这一批还没有正文，调用方应保留上一次的内容。
+ */
+function streamReader(
+  pick: (payload: unknown) => string | null,
+): () => (raw: string) => string | null {
+  return () => {
+    let acc = '';
+    const parser = createSseParser();
+    let seen = 0;
+    return (raw) => {
+      for (const event of parser(raw.slice(seen))) {
+        if (event === '[DONE]') continue;
+        const text = pick(parseJson(event));
+        if (text) acc += text;
+      }
+      seen = raw.length;
+      return acc || null;
+    };
+  };
+}
+
+const openaiChatStream = streamReader((payload) => {
+  const data = payload as {
+    choices?: { delta?: { content?: unknown; reasoning_content?: unknown } }[];
+  };
+  return normalizeContent(data?.choices?.[0]?.delta?.content) || null;
+});
+
+const openaiResponsesStream = streamReader((payload) => {
+  const data = payload as {
+    type?: string;
+    delta?: unknown;
+    output_text?: unknown;
+  };
+  // Responses 的事件类型较多，只取真正携带正文增量的几种
+  if (typeof data?.delta === 'string' && data.delta) return data.delta;
+  if (typeof data?.output_text === 'string' && data.output_text) return data.output_text;
+  return null;
+});
+
+const anthropicStream = streamReader((payload) => {
+  const data = payload as {
+    type?: string;
+    delta?: { type?: string; text?: unknown };
+  };
+  if (data?.type === 'content_block_delta' && typeof data.delta?.text === 'string') {
+    return data.delta.text;
+  }
+  return null;
+});
 
 const openaiChat: ProviderAdapter = {
   protocol: 'openai-chat',
@@ -51,6 +114,7 @@ const openaiChat: ProviderAdapter = {
     const body = compact({
       model: cfg.model || this.defaultModel,
       messages: req.messages,
+      ...(req.stream ? { stream: true } : {}),
       ...(cfg.reasoning.enabled === null
         ? {}
         : { thinking: { type: cfg.reasoning.enabled ? 'enabled' : 'disabled' } }),
@@ -64,7 +128,7 @@ const openaiChat: ProviderAdapter = {
       headers: mergeHeaders(
         {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${cfg.apiKey}`,
+          ...authHeader('Authorization', cfg.apiKey),
         },
         cfg.headers,
       ),
@@ -80,6 +144,8 @@ const openaiChat: ProviderAdapter = {
     if (!message) return '';
     return normalizeContent(message.content);
   },
+
+  createStreamReader: openaiChatStream,
 
   extractError(payload: unknown) {
     const data = payload as { error?: { message?: string }; message?: string };
@@ -98,6 +164,7 @@ const openaiResponses: ProviderAdapter = {
     const body = compact({
       model: cfg.model || this.defaultModel,
       input: req.messages.map((m) => ({ role: m.role, content: m.content })),
+      ...(req.stream ? { stream: true } : {}),
       ...(cfg.reasoning.effort ? { reasoning: { effort: cfg.reasoning.effort } } : {}),
       ...cfg.body,
     });
@@ -106,7 +173,7 @@ const openaiResponses: ProviderAdapter = {
       headers: mergeHeaders(
         {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${cfg.apiKey}`,
+          ...authHeader('Authorization', cfg.apiKey),
         },
         cfg.headers,
       ),
@@ -135,6 +202,8 @@ const openaiResponses: ProviderAdapter = {
     return normalizeContent(data?.choices?.[0]?.message?.content);
   },
 
+  createStreamReader: openaiResponsesStream,
+
   extractError(payload: unknown) {
     const data = payload as { error?: { message?: string }; message?: string };
     return data?.error?.message || data?.message || '';
@@ -161,6 +230,7 @@ const anthropic: ProviderAdapter = {
       max_tokens: 8192,
       ...(system ? { system } : {}),
       messages,
+      ...(req.stream ? { stream: true } : {}),
       ...(cfg.reasoning.effort && cfg.reasoning.enabled !== false
         ? { thinking: { type: 'enabled', budget_tokens: effortToBudget(cfg.reasoning.effort) } }
         : {}),
@@ -171,7 +241,7 @@ const anthropic: ProviderAdapter = {
       headers: mergeHeaders(
         {
           'Content-Type': 'application/json',
-          'x-api-key': cfg.apiKey,
+          ...authHeader('x-api-key', cfg.apiKey),
           'anthropic-version': '2023-06-01',
           'anthropic-dangerous-direct-browser-access': 'true',
         },
@@ -189,6 +259,8 @@ const anthropic: ProviderAdapter = {
       .map((block) => block.text as string)
       .join('');
   },
+
+  createStreamReader: anthropicStream,
 
   extractError(payload: unknown) {
     const data = payload as { error?: { message?: string }; message?: string };

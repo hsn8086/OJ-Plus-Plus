@@ -42,8 +42,13 @@ function createTurndown(): TurndownService {
 
   // 站点适配器还原出的 LaTeX 不应被 Turndown 再次转义。
   td.addRule('math', {
-    filter: (node) => node.nodeName === 'SPAN' && (node as HTMLElement).hasAttribute('data-ojpp-math'),
-    replacement: (_content, node) => `$${node.textContent ?? ''}$`,
+    filter: (node) =>
+      node.nodeName === 'SPAN' && (node as HTMLElement).hasAttribute('data-ojpp-math'),
+    replacement: (_content, node) => {
+      const latex = node.textContent ?? '';
+      const delimiter = (node as HTMLElement).dataset.ojppMath === 'display' ? '$$' : '$';
+      return `${delimiter}${latex}${delimiter}`;
+    },
   });
   return td;
 }
@@ -207,6 +212,41 @@ md.use(mathPlugin);
 /** markdown → 安全 HTML（公式走 KaTeX） */
 export function renderMarkdown(source: string): string {
   return md.render(source);
+}
+
+/**
+ * 流式渲染时，正文随时可能停在半个公式、半个代码块或半行上。
+ * 这里把未完成的部分先摘掉，保证每一帧都是合法 markdown，
+ * 否则 KaTeX 会报错、代码块会闪烁，用户看到的是“渲染坏掉”而不是“正在生成”。
+ */
+export function stabilizeMarkdown(source: string): string {
+  let text = source;
+
+  // 未闭合的围栏代码块：把开头的 ``` 连同内容一起隐去，等闭合后再显示
+  const fenceLines = [...text.matchAll(/^(`{3,}|~{3,})/gm)];
+  if (fenceLines.length % 2 === 1) {
+    text = text.slice(0, fenceLines[fenceLines.length - 1].index);
+  }
+
+  // 未闭合的行内代码：丢掉最后一个反引号之后的内容
+  const ticks = (text.match(/(?<!`)`(?!`)/g) ?? []).length;
+  if (ticks % 2 === 1) {
+    const last = text.lastIndexOf('`');
+    if (last >= 0) text = text.slice(0, last);
+  }
+
+  // 未闭合的公式。$$ 优先，其次 $。
+  const dollars = (text.match(/\$\$/g) ?? []).length;
+  if (dollars % 2 === 1) {
+    text = text.slice(0, text.lastIndexOf('$$'));
+  } else {
+    const singles = (text.match(/(?<!\$)\$(?!\$)/g) ?? []).length;
+    if (singles % 2 === 1) {
+      text = text.slice(0, text.lastIndexOf('$'));
+    }
+  }
+
+  return text;
 }
 
 export const KATEX_CSS_URL = `https://cdn.jsdelivr.net/npm/katex@${katex.version}/dist/katex.min.css`;

@@ -13,6 +13,21 @@ function equationFromImg(img: HTMLImageElement): string | null {
   }
 }
 
+/**
+ * 牛客用公式做缩进（如 \hspace{15pt}），这些不是内容。
+ * 不滤掉的话，它们会污染提示词，译文里也会冒出一堆空白公式。
+ */
+function isSpacingOnly(latex: string): boolean {
+  return !latex
+    .replace(/\\(hspace|hfill|quad|qquad|,|;|:|!)\s*(\{[^{}]*\})?/g, '')
+    .replace(/[\s~]/g, '');
+}
+
+/** 牛客用 \hspace{23pt}\bullet\, 模拟列表项，转成 Markdown 列表标记。 */
+function isBullet(latex: string): boolean {
+  return /^\\(hspace\s*\{[^{}]*\})?\s*\\bullet\b/.test(latex.trim());
+}
+
 export const nowcoder: SiteAdapter = {
   id: 'nowcoder',
   name: '牛客',
@@ -79,11 +94,39 @@ export const nowcoder: SiteAdapter = {
   },
 
   prepareContent(root) {
+    // 新版页面用 KaTeX 渲染，真正的 LaTeX 在 annotation[encoding="application/x-tex"] 里。
+    // 不处理的话，Turndown 会把 katex-mathml 和 katex-html 两份文本一起抓下来。
+    for (const katex of root.querySelectorAll<HTMLElement>('.katex')) {
+      const tex = katex
+        .querySelector('annotation[encoding="application/x-tex"]')
+        ?.textContent?.trim();
+      if (!tex) continue;
+      const wrapper = katex.parentElement;
+      const display = wrapper?.classList.contains('katex-display') ?? false;
+      const target = display && wrapper ? wrapper : katex;
+      if (isSpacingOnly(tex)) {
+        target.remove();
+        continue;
+      }
+      const math = root.ownerDocument.createElement('span');
+      if (isBullet(tex)) {
+        // 列表标记不能进公式，否则 KaTeX 会渲染成孤立的圆点。
+        // 也不用 "- "：Turndown 会把行首的减号转义成 \- ，这里用真正的项目符号。
+        math.textContent = '• ';
+        target.replaceWith(math);
+        continue;
+      }
+      math.setAttribute('data-ojpp-math', display ? 'display' : 'inline');
+      math.textContent = tex;
+      target.replaceWith(math);
+    }
+
+    // 旧版页面把公式渲染成 <img src=".../equation?tex=...">。
     for (const img of root.querySelectorAll('img')) {
       const latex = equationFromImg(img);
       if (latex === null) continue;
       const math = root.ownerDocument.createElement('span');
-      math.setAttribute('data-ojpp-math', '');
+      math.setAttribute('data-ojpp-math', 'inline');
       math.textContent = latex;
       img.replaceWith(math);
     }

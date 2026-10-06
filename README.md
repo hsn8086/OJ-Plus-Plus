@@ -13,9 +13,10 @@ OJ++（OJ-Plus-Plus）是一个可扩展的在线评测站增强工具。它把 
 ## 功能
 
 - **AI 题面翻译**：题目描述、输入/输出描述、题解分别提供翻译按钮，译文显示在原文下方。
+- **流式显示**：边生成边渲染，首屏更快。可以在设置里关闭；服务商或脚本管理器不支持时自动退回一次性请求。
 - **公式保留**：站点适配器先把页面公式还原成 LaTeX，模型翻译后用 KaTeX 渲染。
 - **Markdown 查看与复制**：从内容副本生成 Markdown，不替换原页面 DOM，因此页面原有交互可以继续使用。
-- **多提供商**：支持 OpenAI Chat Completions、OpenAI Responses、Anthropic Messages，以及自定义地址、请求头和请求体字段。
+- **多提供商**：支持 OpenAI Chat Completions、OpenAI Responses、Anthropic Messages，以及自定义地址、请求头和请求体字段。API Key 可以留空，此时不发送认证头，适配本地推理服务。
 - **长题面分段**：关闭整段翻译后按标题、段落和行切分内容。
 - **平台解耦**：通用代码只依赖存储、HTTP 请求和剪贴板接口。油猴平台使用 GM API，浏览器平台使用 `localStorage`、`fetch` 和 Clipboard API。
 
@@ -57,6 +58,14 @@ https://raw.githubusercontent.com/hsn8086/OJ-Plus-Plus/main/dist/nowcoder-better
 
 接口地址填写到 `/v1` 即可，脚本会按协议补全路径；也可以直接填写完整端点。
 
+### 流式显示
+
+开启后请求会带上 `stream: true`，脚本按 SSE 解析增量并逐帧渲染。三处细节值得说明：
+
+- 脚本管理器只提供 `GM_xmlhttpRequest` 的 `onprogress`（累计文本），没有可读流。有些实现不触发这个回调，此时首帧之后没有内容可渲染，会自动改走一次性请求。
+- 正文随时可能停在半个 `$...$`、半个代码块上。渲染前会先把未闭合的部分隐去，否则每一帧都会闪出渲染报错。
+- 如果流已经开始输出后又中断，不会重新开始，避免用户看到内容回退。
+
 ## 代码结构
 
 ```text
@@ -68,6 +77,7 @@ src/
     config.ts           配置结构、预设与迁移
     providers.ts        三种协议的请求构造与响应解析
     prompt.ts           翻译提示词与分段
+    sse.ts              SSE 增量解析
     settings-store.ts   平台无关的配置读写与旧键迁移
     translate.ts        分段翻译编排
     types.ts            通用配置和协议接口
@@ -111,9 +121,12 @@ interface Platform {
   readonly id: string;
   readonly storage: Storage;
   readonly request: HttpTransport;
+  readonly stream?: HttpStreamTransport;
   readonly writeClipboard: (text: string) => Promise<void>;
 }
 ```
+
+`stream` 是可选的，不实现就退化为一次性请求。它的回调收到的是**累计**文本而不是增量，这样 GM 的 `onprogress` 和 `fetch` 的 reader 都能对上同一个契约。
 
 Chrome 扩展可以把 `storage` 映射到 `chrome.storage.local`，把 `request` 放到扩展后台或 service worker，再使用一个新的入口调用 `startApp`。页面功能不需要知道请求来自 GM API 还是扩展消息通道。
 
@@ -121,7 +134,7 @@ Chrome 扩展可以把 `storage` 映射到 `chrome.storage.local`，把 `request
 
 ```bash
 pnpm install
-pnpm check          # 类型检查、8 个单元测试、构建油猴脚本
+pnpm check          # 类型检查、16 个单元测试、构建油猴脚本
 pnpm test:browser   # 离线浏览器回归，不需要真实 API Key
 pnpm screenshots     # 生成 README 截图
 ```
@@ -130,6 +143,7 @@ pnpm screenshots     # 生成 README 截图
 
 - 实际 userscript 构建和 GM 请求通道，页面 `fetch` 被故意禁用。
 - 牛客站点公式还原、Markdown、复制、动态插入和结果渲染。
+- 流式请求：请求体带 `stream`，中途就能看到部分译文，完成后流式状态清除。
 - 设置面板输入焦点、文本拖拽、保存后即时切换配置、取消请求和重复翻译。
 - 另一套 DOM 与浏览器平台，验证通用应用不依赖牛客选择器。
 
@@ -150,6 +164,10 @@ OJPP_CHROME=/path/to/Google\ Chrome\ for\ Testing pnpm test:browser
 **测试连接提示 `Failed to fetch`。** 检查安装的是 `oj-plus-plus.user.js`，而不是把构建产物直接作为普通网页脚本加载。油猴构建需要 `GM_xmlhttpRequest` 权限；直接浏览器调试入口使用 `fetch`，服务端必须允许 CORS。
 
 **返回 401 或 403。** 检查 API Key、模型名和接口协议是否匹配。可以先用「测试连接」查看服务商返回的错误。
+
+**用本地推理服务，没有 Key。** 把 API Key 留空即可，脚本不会发送认证头。如果服务要求任意非空 Key，在「额外请求头」里手动写 `Authorization: Bearer dummy`。
+
+**译文一直不出来，进度条在转。** 如果服务商不支持流式，脚本会在首帧之后自动改走一次性请求；若一直没结果，关掉「流式显示」再试，或点翻译按钮中止后查看错误提示。
 
 **公式显示为源码。** 确认 KaTeX CSS 可以从 jsDelivr 加载。公式的 Markdown 仍会保留 LaTeX，复制结果不受影响。
 

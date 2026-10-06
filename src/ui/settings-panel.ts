@@ -133,6 +133,14 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
         (v) => (draft.autoTranslate = v),
       ),
     );
+    box.append(
+      checkRow(
+        '流式显示',
+        draft.streaming,
+        '边生成边渲染，首屏更快。关闭后等整段译完再一次性显示；服务商或脚本管理器不支持时会自动回退。',
+        (v) => (draft.streaming = v),
+      ),
+    );
 
     const row = el('div', 'ojpp-row');
     const timeout = textInput(String(draft.timeoutMs), '120000', 'number');
@@ -270,10 +278,14 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
     modelInput.addEventListener('input', () => (provider.model = modelInput.value));
     box.append(field('模型', modelInput));
 
-    const keyInput = textInput(provider.apiKey, 'sk-...', 'password');
+    const keyInput = textInput(provider.apiKey, '本地服务可留空', 'password');
     keyInput.addEventListener('input', () => (provider.apiKey = keyInput.value));
     box.append(
-      field('API Key', keyInput, '保存在当前平台的本地存储中，随请求发送到你配置的接口。'),
+      field(
+        'API Key',
+        keyInput,
+        '保存在当前平台的本地存储中，随请求发送到你配置的接口。本地推理服务可以留空，此时不会发送认证头。',
+      ),
     );
 
     const row = el('div', 'ojpp-row');
@@ -406,7 +418,14 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
 
     const exportArea = el('textarea') as HTMLTextAreaElement;
     exportArea.value = JSON.stringify(
-      { ...draft, providers: draft.providers.map((p) => ({ ...p, apiKey: '***' })) },
+      {
+        ...draft,
+        // 空 Key 保持为空，不要显示成 ***，否则导入后以为已经填过
+        providers: draft.providers.map((p) => ({
+          ...p,
+          apiKey: p.apiKey ? '***' : '',
+        })),
+      },
       null,
       2,
     );

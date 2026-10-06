@@ -1,13 +1,30 @@
 // 离线浏览器回归：实际 userscript 构建 + GM 沙箱；另一站点 DOM + 浏览器平台。
 // 协议拼包由单元测试覆盖，这里只验证适配边界和用户交互，不检查图标数或 CSS 像素。
 import assert from 'node:assert/strict';
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { build } from 'vite';
 
 const root = new URL('../', import.meta.url);
-const bundle = await readFile(new URL('dist/oj-plus-plus.user.js', root), 'utf8');
+
+/** 用当前源码构建，避免拿旧的 dist 产物跑测试。 */
+async function buildUserscript() {
+  const result = await build({
+    configFile: new URL('vite.config.ts', root).pathname,
+    logLevel: 'silent',
+    build: { write: false, minify: false },
+  });
+  const outputs = Array.isArray(result) ? result : [result];
+  for (const output of outputs) {
+    for (const file of output.output ?? []) {
+      if (file.type === 'chunk') return file.code;
+    }
+  }
+  throw new Error('vite 构建没有产出 chunk');
+}
+
+const bundle = await buildUserscript();
 const fixture = await readFile(new URL('test/fixtures/nowcoder.html', root), 'utf8');
 const screenshots = process.argv.includes('--screenshots');
 const executableCandidates = [
@@ -29,7 +46,11 @@ async function pageWithFixture(url, html) {
   await page.route('**/*', async (route) => {
     const requestURL = new URL(route.request().url());
     if (requestURL.href === url) return route.fulfill({ contentType: 'text/html', body: html });
-    if (requestURL.hostname === 'api.fixture.test') return route.fulfill({ json: response, headers: { 'Access-Control-Allow-Origin': '*' } });
+    if (requestURL.hostname === 'api.fixture.test') {
+      // 注意：Playwright 的 fulfill 不能向页面流式推送，所以这里返回整包 JSON。
+      // 浏览器平台的流式通道由 test/stream.test.ts 直接打桩 fetch 覆盖。
+      return route.fulfill({ json: response, headers: { 'Access-Control-Allow-Origin': '*' } });
+    }
     if (requestURL.hostname === 'cdn.jsdelivr.net') {
       const asset = requestURL.pathname.split('/dist/')[1];
       if (asset && !asset.includes('..')) {
@@ -64,9 +85,40 @@ try {
       (key, value) => store.set(key, structuredClone(value)),
       (text) => { state.clipboard = text; },
       (options) => {
-        state.requests.push(JSON.parse(options.data));
-        const timer = setTimeout(() => options.onload({ status: 200, statusText: 'OK', responseText: JSON.stringify(response) }), state.delay);
-        return { abort() { clearTimeout(timer); state.aborted += 1; options.onabort?.(); } };
+        const body = JSON.parse(options.data);
+        state.requests.push(body);
+        const timers = [];
+        let aborted = false;
+        const abort = () => {
+          aborted = true;
+          timers.forEach(clearTimeout);
+          state.aborted += 1;
+          options.onabort?.();
+        };
+        if (body.stream) {
+          // 逐块推送 SSE，每块都是“到目前为止”的累计文本
+          const text = response.choices[0].message.content;
+          const pieces = [];
+          for (let i = 0; i < text.length; i += 3) {
+            const chunk = text.slice(0, i + 3);
+            pieces.push(`data: ${JSON.stringify({ choices: [{ delta: { content: text.slice(i, i + 3) } }] })}\n\n`);
+          }
+          pieces.push('data: [DONE]\n\n');
+          let acc = '';
+          pieces.forEach((piece, index) => {
+            timers.push(setTimeout(() => {
+              if (aborted) return;
+              acc += piece;
+              options.onprogress?.({ responseText: acc, loaded: acc.length, total: acc.length });
+              if (index === pieces.length - 1) {
+                options.onload({ status: 200, statusText: 'OK', responseText: acc });
+              }
+            }, state.delay * (index + 1)));
+          });
+        } else {
+          timers.push(setTimeout(() => options.onload({ status: 200, statusText: 'OK', responseText: JSON.stringify(response) }), state.delay));
+        }
+        return { abort };
       },
     );
   }, { bundle, settings, response });
@@ -75,7 +127,13 @@ try {
   await page.getByRole('button', { name: 'AI 翻译', exact: true }).first().waitFor();
 
   // Markdown 视图与复制始终读取原始 DOM，公式交给站点适配器还原。
+  // KaTeX 页面必须还原成 LaTeX，而不是把 katex-mathml / katex-html 两份文本都抓下来。
   await page.getByRole('button', { name: 'Markdown 视图', exact: true }).first().click();
+  const statementMarkdown = await page.locator('.ojpp-md-source').first().textContent();
+  assert.match(statementMarkdown, /\$a\+b\$/);
+  assert.match(statementMarkdown, /\$a_i \\le 10\^9\$/);
+  assert.match(statementMarkdown, /\$\$O\(n\)\$\$/);
+  assert.doesNotMatch(statementMarkdown, /katex|mord|mathnormal|annotation/);
   await page.getByRole('button', { name: '复制原文', exact: true }).first().click();
   assert.match(await page.evaluate(() => window.__testState.clipboard), /\$a\+b\$/);
   await page.getByRole('button', { name: '返回原始内容', exact: true }).click();
@@ -103,10 +161,20 @@ try {
   await page.getByLabel('模型', { exact: true }).fill('updated-model');
   await page.getByRole('button', { name: '保存', exact: true }).click();
   await page.getByRole('dialog').waitFor({ state: 'detached' });
-  await translate(page);
+  // 流式：请求体带 stream，且中途就能看到部分译文
+  await page.getByRole('button', { name: 'AI 翻译', exact: true }).first().click();
+  await page.waitForFunction(() => document.querySelector('.ojpp-result-body')?.textContent.trim().length > 0);
+  const midText = await page.locator('.ojpp-result-body').textContent();
+  assert.ok(midText.includes('给定两个整数'), `流式中间态应有部分译文，实际: ${midText}`);
+  assert.equal(await page.locator('.ojpp-result.ojpp-streaming').count(), 1);
+  await page.waitForFunction(() => document.querySelector('.ojpp-translate-btn')?.dataset.state === 'done');
+  assert.equal(await page.locator('.ojpp-result.ojpp-streaming').count(), 0);
   assert.equal(await page.evaluate(() => window.__testState.requests.at(-1).model), 'updated-model');
+  assert.equal(await page.evaluate(() => window.__testState.requests.at(-1).stream), true);
   assert.match(await page.evaluate(() => window.__testState.requests.at(-1).messages.at(-1).content), /\$a\+b\$/);
+  // 译文里的 LaTeX 必须被 KaTeX 渲染成公式节点
   assert.ok(await page.locator('.ojpp-result .katex').count() > 0);
+  assert.doesNotMatch(await page.locator('.ojpp-result-body').textContent(), /\$a\+b\$/);
   await page.getByRole('button', { name: '复制译文', exact: true }).click();
   assert.match(await page.evaluate(() => window.__testState.clipboard), /\$a\+b\$/);
   await translate(page);
@@ -146,6 +214,7 @@ try {
   await alternate.evaluate(async () => { window.stopApp = await OJPPTest.start(); });
   await translate(alternate);
   assert.match(await alternate.locator('.ojpp-result-body').textContent(), /给定两个整数/);
+  assert.ok(await alternate.locator('.ojpp-result .katex').count() > 0);
   await alternate.evaluate(() => window.stopApp());
   assert.equal(await alternate.locator('.ojpp-toolbar, .ojpp-result, .ojpp-settings-btn').count(), 0);
   await alternate.close();

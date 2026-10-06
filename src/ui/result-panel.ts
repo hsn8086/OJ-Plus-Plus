@@ -2,7 +2,7 @@ import type { TranslationResult } from '../core/translate.ts';
 import type { WriteClipboard } from '../platforms/types.ts';
 import { bindCopy, iconButton, setIcon } from './buttons.ts';
 import { ICON_CHEVRON, ICON_CHEVRON_RIGHT, ICON_COPY } from './icons.ts';
-import { ensureKatexStyles, renderMarkdown } from './markdown.ts';
+import { ensureKatexStyles, renderMarkdown, stabilizeMarkdown } from './markdown.ts';
 
 export function createResultPanel(writeClipboard: WriteClipboard) {
   ensureKatexStyles();
@@ -28,9 +28,11 @@ export function createResultPanel(writeClipboard: WriteClipboard) {
   el.append(header, body);
 
   let currentMarkdown = '';
+  let streaming = false;
   const update = (markdown: string) => {
     currentMarkdown = markdown;
-    body.innerHTML = renderMarkdown(markdown);
+    // 流式过程中把未完成的公式/代码块先藏起来，避免每帧都渲染成错乱的样子
+    body.innerHTML = renderMarkdown(streaming ? stabilizeMarkdown(markdown) : markdown);
   };
   const setStatus = (text: string, kind: 'info' | 'error' = 'info') => {
     status.textContent = text;
@@ -46,7 +48,13 @@ export function createResultPanel(writeClipboard: WriteClipboard) {
     el,
     update,
     setStatus,
+    begin() {
+      streaming = true;
+      el.classList.add('ojpp-streaming');
+    },
     finish(result: TranslationResult) {
+      streaming = false;
+      el.classList.remove('ojpp-streaming');
       update(result.markdown);
       setStatus(`${result.providerName} · ${result.model} · ${(result.elapsedMs / 1000).toFixed(1)}s`);
     },
