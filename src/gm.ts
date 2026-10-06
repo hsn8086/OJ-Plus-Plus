@@ -2,8 +2,12 @@
  * GM_* 薄封装。
  *
  * 在 Tampermonkey / Violentmonkey 下走原生 API；
- * 在普通浏览器里（比如 vite dev 直接打开页面）回退到 localStorage，
+ * 在普通浏览器里（比如 vite dev 直接打开页面）回退到 localStorage / fetch，
  * 方便脱离脚本管理器调试。
+ *
+ * 注意：不要用 globalThis 探测 GM API。脚本管理器把 API 注入在沙箱作用域里，
+ * 并不会挂到 window 上，探测 globalThis 会得到 undefined 而静默退化成 fetch，
+ * 于是被 CORS 挡住。这里直接判断 import 进来的绑定是不是函数。
  */
 
 import {
@@ -39,12 +43,10 @@ export interface HttpResponse {
   text: string;
 }
 
-function hasNative(key: string): boolean {
-  const api = globalThis as Record<string, unknown>;
-  return typeof api[key] === 'function';
-}
-
-const hasGM = hasNative('GM_getValue');
+const hasGM = typeof GM_getValue === 'function';
+const hasGMRequest = typeof GM_xmlhttpRequest === 'function';
+const hasGMStyle = typeof GM_addStyle === 'function';
+const hasGMClipboard = typeof GM_setClipboard === 'function';
 
 const LOCAL_PREFIX = 'ncb:gm:';
 
@@ -93,7 +95,7 @@ export function listValues(): string[] {
 }
 
 export function addStyle(css: string): HTMLStyleElement {
-  if (hasNative('GM_addStyle')) return GM_addStyle(css) as HTMLStyleElement;
+  if (hasGMStyle) return GM_addStyle(css) as HTMLStyleElement;
   const style = document.createElement('style');
   style.textContent = css;
   document.head.appendChild(style);
@@ -101,7 +103,7 @@ export function addStyle(css: string): HTMLStyleElement {
 }
 
 export function setClipboard(text: string): void {
-  if (hasNative('GM_setClipboard')) {
+  if (hasGMClipboard) {
     GM_setClipboard(text, 'text');
     return;
   }
@@ -110,10 +112,10 @@ export function setClipboard(text: string): void {
 
 /**
  * 统一请求出口。优先 GM_xmlhttpRequest 以绕过 CORS，
- * 没有 GM 时退化为 fetch。
+ * 没有 GM 时退化为 fetch（此时浏览器同源策略生效）。
  */
 export function request(req: HttpRequest): Promise<HttpResponse> {
-  if (hasNative('GM_xmlhttpRequest')) {
+  if (hasGMRequest) {
     return new Promise<HttpResponse>((resolve, reject) => {
       const handle = GM_xmlhttpRequest({
         method: req.method,
@@ -158,4 +160,5 @@ export function request(req: HttpRequest): Promise<HttpResponse> {
     });
 }
 
-export const isUserscriptEnv = hasGM;
+/** 是否运行在脚本管理器里，用于设置面板给出提示 */
+export const isUserscriptEnv = hasGM && hasGMRequest;

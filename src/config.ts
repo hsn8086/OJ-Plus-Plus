@@ -1,8 +1,10 @@
-import type { Protocol, ProviderConfig, Settings } from './types';
+import type { Protocol, ProviderConfig, Settings } from './types.ts';
 
 export const SETTINGS_KEY = 'ncb:settings';
 
 export const DEFAULT_TARGET_LANG = '简体中文';
+
+export const DEFAULT_MODEL = 'gpt-6-luna';
 
 export const PROTOCOL_LABEL: Record<Protocol, string> = {
   'openai-chat': 'OpenAI Chat Completions',
@@ -24,14 +26,14 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
     label: 'OpenAI（Chat Completions）',
     protocol: 'openai-chat',
     baseUrl: 'https://api.openai.com/v1',
-    model: 'gpt-4o-mini',
+    model: DEFAULT_MODEL,
   },
   {
     key: 'openai-responses',
     label: 'OpenAI（Responses）',
     protocol: 'openai-responses',
     baseUrl: 'https://api.openai.com/v1',
-    model: 'gpt-4o-mini',
+    model: DEFAULT_MODEL,
   },
   {
     key: 'anthropic',
@@ -59,7 +61,7 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
     label: '自定义（兼容 OpenAI Chat）',
     protocol: 'openai-chat',
     baseUrl: '',
-    model: '',
+    model: DEFAULT_MODEL,
   },
 ];
 
@@ -78,7 +80,6 @@ export function createProvider(preset: ProviderPreset): ProviderConfig {
     headers: {},
     body: {},
     reasoning: { enabled: null, effort: '' },
-    temperature: null,
   };
 }
 
@@ -101,17 +102,25 @@ export function defaultSettings(): Settings {
 export function migrate(raw: unknown): Settings {
   const base = defaultSettings();
   if (!raw || typeof raw !== 'object') return base;
-  const input = raw as Partial<Settings>;
+  const input = raw as Partial<Settings> & { providers?: unknown };
   const providers = Array.isArray(input.providers)
     ? input.providers
         .filter((p): p is ProviderConfig => !!p && typeof p === 'object')
-        .map((p) => ({
-          ...createProvider(PROVIDER_PRESETS[0]),
-          ...p,
-          headers: p.headers ?? {},
-          body: p.body ?? {},
-          reasoning: p.reasoning ?? { enabled: null, effort: '' },
-        }))
+        .map((p) => {
+          const merged = {
+            ...createProvider(PROVIDER_PRESETS[0]),
+            ...p,
+            headers: p.headers ?? {},
+            body: p.body ?? {},
+            reasoning: p.reasoning ?? { enabled: null, effort: '' },
+          };
+          // 早期版本把 temperature 放在顶层，统一并进 body
+          const legacy = (p as { temperature?: number | null }).temperature;
+          if (typeof legacy === 'number') {
+            merged.body = { temperature: legacy, ...merged.body };
+          }
+          return merged;
+        })
     : base.providers;
   const settings: Settings = {
     ...base,

@@ -1,10 +1,10 @@
-import { addStyle, getValue, setValue } from './gm';
-import { SETTINGS_KEY, defaultSettings, migrate } from './config';
-import { isProblemPage } from './nowcoder';
-import { openSettingsPanel } from './settings-panel';
-import { installToolbars, startObserving } from './inject';
-import { CSS } from './styles';
-import type { Settings } from './types';
+import { addStyle, getValue, isUserscriptEnv, setValue } from './gm.ts';
+import { SETTINGS_KEY, defaultSettings, migrate } from './config.ts';
+import { isProblemPage } from './nowcoder.ts';
+import { openSettingsPanel } from './settings-panel.ts';
+import { installSettingsEntry, installToolbars, startObserving } from './inject.ts';
+import { CSS } from './styles.ts';
+import type { Settings } from './types.ts';
 
 let currentSettings: Settings;
 
@@ -43,23 +43,14 @@ function openPanel(): void {
   });
 }
 
-function mountFloatingEntry(): void {
-  if (document.querySelector('.ncb-fab')) return;
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'ncb-fab';
-  button.textContent = 'NCB';
-  button.title = 'NowcoderBetter 设置';
-  button.addEventListener('click', openPanel);
-  document.body.append(button);
-}
-
 function autoTranslate(): void {
   window.setTimeout(() => {
     document.querySelectorAll<HTMLElement>('.subject-question').forEach((root) => {
-      const toolbar = root.previousElementSibling;
-      if (!toolbar?.classList.contains('ncb-toolbar')) return;
-      toolbar.querySelector<HTMLButtonElement>('.ncb-translate-btn')?.click();
+      const title = document.querySelector('.subject-item-title');
+      title
+        ?.querySelector<HTMLButtonElement>('.ncb-translate-btn')
+        ?.click();
+      void root;
     });
   }, 500);
 }
@@ -67,12 +58,17 @@ function autoTranslate(): void {
 function bootstrap(): void {
   currentSettings = loadSettings();
   addStyle(CSS);
-  mountFloatingEntry();
 
   if (isProblemPage()) {
     installToolbars(currentSettings);
     startObserving(() => installToolbars(currentSettings));
     if (currentSettings.autoTranslate) autoTranslate();
+  }
+
+  installSettingsEntry(openPanel);
+
+  if (!isUserscriptEnv) {
+    toast('未检测到脚本管理器，请求会走 fetch 并受同源策略限制', 'error');
   }
 }
 

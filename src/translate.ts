@@ -1,7 +1,14 @@
-import { ask } from './ai';
-import { ensureKatexStyles, renderMarkdown } from './markdown';
-import { buildSystemPrompt, chunkMarkdown } from './prompt';
-import type { Settings } from './types';
+import { ask } from './ai.ts';
+import {
+  ICON_CHECK,
+  ICON_CHEVRON,
+  ICON_CHEVRON_RIGHT,
+  ICON_COPY,
+} from './icons.ts';
+import { ensureKatexStyles, renderMarkdown } from './markdown.ts';
+import type { TranslationTarget } from './nowcoder.ts';
+import { buildSystemPrompt, chunkMarkdown } from './prompt.ts';
+import type { Settings } from './types.ts';
 
 export interface TranslationResult {
   markdown: string;
@@ -71,8 +78,8 @@ export interface ResultPanelHandle {
 
 /** 结果面板：状态行 + 译文 + 复制按钮 */
 export function createResultPanel(
-  placement: 'before' | 'after' | 'prepend',
-  host: HTMLElement,
+  target: TranslationTarget,
+  toolbar: HTMLElement,
 ): ResultPanelHandle {
   ensureKatexStyles();
   const el = document.createElement('div');
@@ -93,13 +100,17 @@ export function createResultPanel(
 
   const copyBtn = document.createElement('button');
   copyBtn.type = 'button';
-  copyBtn.className = 'ncb-btn ncb-btn-ghost';
-  copyBtn.textContent = '复制译文';
+  copyBtn.className = 'ncb-icon-btn';
+  copyBtn.title = '复制译文';
+  copyBtn.setAttribute('aria-label', '复制译文');
+  copyBtn.innerHTML = ICON_COPY;
 
   const toggleBtn = document.createElement('button');
   toggleBtn.type = 'button';
-  toggleBtn.className = 'ncb-btn ncb-btn-ghost';
-  toggleBtn.textContent = '收起';
+  toggleBtn.className = 'ncb-icon-btn';
+  toggleBtn.title = '收起';
+  toggleBtn.setAttribute('aria-label', '收起');
+  toggleBtn.innerHTML = ICON_CHEVRON;
 
   actions.append(copyBtn, toggleBtn);
   header.append(title, status, actions);
@@ -118,18 +129,25 @@ export function createResultPanel(
 
   copyBtn.addEventListener('click', () => {
     void navigator.clipboard?.writeText(currentMarkdown);
-    copyBtn.textContent = '已复制';
-    setTimeout(() => (copyBtn.textContent = '复制译文'), 1500);
+    copyBtn.innerHTML = ICON_CHECK;
+    copyBtn.title = '已复制';
+    setTimeout(() => {
+      copyBtn.innerHTML = ICON_COPY;
+      copyBtn.title = '复制译文';
+    }, 1200);
   });
 
   toggleBtn.addEventListener('click', () => {
     const collapsed = el.classList.toggle('ncb-collapsed');
-    toggleBtn.textContent = collapsed ? '展开' : '收起';
+    toggleBtn.innerHTML = collapsed ? ICON_CHEVRON_RIGHT : ICON_CHEVRON;
+    toggleBtn.title = collapsed ? '展开' : '收起';
   });
 
-  if (placement === 'before') host.insertAdjacentElement('beforebegin', el);
-  else if (placement === 'after') host.insertAdjacentElement('afterend', el);
-  else host.prepend(el);
+  if (target.panelPosition === 'afterToolbar') {
+    toolbar.insertAdjacentElement('afterend', el);
+  } else {
+    target.root.insertAdjacentElement('afterend', el);
+  }
 
   return {
     el,

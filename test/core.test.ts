@@ -63,6 +63,19 @@ test('migrate 为缺失字段补默认值', () => {
   assert.equal(migrated.activeProviderId, 'x');
 });
 
+test('migrate 把旧的顶层 temperature 并进 body', () => {
+  const migrated = migrate({
+    providers: [{ id: 'x', temperature: 0.3, body: { top_p: 0.9 } }],
+  });
+  assert.deepEqual(migrated.providers[0].body, { temperature: 0.3, top_p: 0.9 });
+});
+
+test('默认模型是 gpt-6-luna', () => {
+  assert.equal(defaultSettings().providers[0].model, 'gpt-6-luna');
+  const custom = PROVIDER_PRESETS.find((p) => p.key === 'custom');
+  assert.equal(custom?.model, 'gpt-6-luna');
+});
+
 test('migrate 修复失效的 activeProviderId', () => {
   const migrated = migrate({ activeProviderId: 'ghost', providers: [{ id: 'real' }] });
   assert.equal(migrated.activeProviderId, 'real');
@@ -83,6 +96,7 @@ test('openai-chat 端点补全与请求体', () => {
   assert.equal(headers.Authorization, 'Bearer sk-test');
   assert.equal(body.model, 'm1');
   assert.equal(body.temperature, undefined);
+  assert.equal(body.thinking, undefined);
 });
 
 test('openai-chat 接受完整端点', () => {
@@ -133,7 +147,6 @@ test('openai-responses 写入 reasoning.effort', () => {
   });
   const { body } = adapter.build(cfg, { messages: [] });
   assert.deepEqual(body.reasoning, { effort: 'high' });
-  assert.equal(body.temperature, undefined);
 });
 
 test('anthropic 把 system 提出来并解析 content 数组', () => {

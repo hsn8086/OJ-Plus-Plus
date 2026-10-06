@@ -1,6 +1,6 @@
-import { request } from './gm';
-import { getAdapter } from './providers';
-import type { ProviderConfig, Settings } from './types';
+import { request } from './gm.ts';
+import { getAdapter } from './providers.ts';
+import type { ProviderConfig, Settings } from './types.ts';
 
 export class AiError extends Error {
   constructor(

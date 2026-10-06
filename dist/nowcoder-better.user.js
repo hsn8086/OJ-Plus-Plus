@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NowcoderBetter
 // @namespace    https://github.com/hsn8086/NowcoderBetter
-// @version      0.1.0
+// @version      0.2.0
 // @author       hsn8086
 // @description  牛客竞赛增强：AI 题面翻译、Markdown 视图与一键复制
 // @license      GPL-3.0
@@ -36,10 +36,9 @@
 	var _GM_getValue = (() => typeof GM_getValue != "undefined" ? GM_getValue : void 0)();
 	var _GM_setValue = (() => typeof GM_setValue != "undefined" ? GM_setValue : void 0)();
 	var _GM_xmlhttpRequest = (() => typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : void 0)();
-	function hasNative(key) {
-		return typeof globalThis[key] === "function";
-	}
-	var hasGM = hasNative("GM_getValue");
+	var hasGM = typeof _GM_getValue === "function";
+	var hasGMRequest = typeof _GM_xmlhttpRequest === "function";
+	var hasGMStyle = typeof _GM_addStyle === "function";
 	var LOCAL_PREFIX = "ncb:gm:";
 	function localGet(key, fallback) {
 		try {
@@ -66,14 +65,14 @@
 		} catch {}
 	}
 	function addStyle(css) {
-		if (hasNative("GM_addStyle")) return _GM_addStyle(css);
+		if (hasGMStyle) return _GM_addStyle(css);
 		const style = document.createElement("style");
 		style.textContent = css;
 		document.head.appendChild(style);
 		return style;
 	}
 	function request(req) {
-		if (hasNative("GM_xmlhttpRequest")) return new Promise((resolve, reject) => {
+		if (hasGMRequest) return new Promise((resolve, reject) => {
 			const handle = _GM_xmlhttpRequest({
 				method: req.method,
 				url: req.url,
@@ -108,8 +107,10 @@
 			if (timer) clearTimeout(timer);
 		});
 	}
+	var isUserscriptEnv = hasGM && hasGMRequest;
 	var SETTINGS_KEY = "ncb:settings";
 	var DEFAULT_TARGET_LANG = "简体中文";
+	var DEFAULT_MODEL = "gpt-6-luna";
 	var PROTOCOL_LABEL = {
 		"openai-chat": "OpenAI Chat Completions",
 		"openai-responses": "OpenAI Responses",
@@ -121,14 +122,14 @@
 			label: "OpenAI（Chat Completions）",
 			protocol: "openai-chat",
 			baseUrl: "https://api.openai.com/v1",
-			model: "gpt-4o-mini"
+			model: DEFAULT_MODEL
 		},
 		{
 			key: "openai-responses",
 			label: "OpenAI（Responses）",
 			protocol: "openai-responses",
 			baseUrl: "https://api.openai.com/v1",
-			model: "gpt-4o-mini"
+			model: DEFAULT_MODEL
 		},
 		{
 			key: "anthropic",
@@ -156,7 +157,7 @@
 			label: "自定义（兼容 OpenAI Chat）",
 			protocol: "openai-chat",
 			baseUrl: "",
-			model: ""
+			model: DEFAULT_MODEL
 		}
 	];
 	function newId() {
@@ -175,8 +176,7 @@
 			reasoning: {
 				enabled: null,
 				effort: ""
-			},
-			temperature: null
+			}
 		};
 	}
 	function defaultSettings() {
@@ -197,16 +197,24 @@
 		const base = defaultSettings();
 		if (!raw || typeof raw !== "object") return base;
 		const input = raw;
-		const providers = Array.isArray(input.providers) ? input.providers.filter((p) => !!p && typeof p === "object").map((p) => ({
-			...createProvider(PROVIDER_PRESETS[0]),
-			...p,
-			headers: p.headers ?? {},
-			body: p.body ?? {},
-			reasoning: p.reasoning ?? {
-				enabled: null,
-				effort: ""
-			}
-		})) : base.providers;
+		const providers = Array.isArray(input.providers) ? input.providers.filter((p) => !!p && typeof p === "object").map((p) => {
+			const merged = {
+				...createProvider(PROVIDER_PRESETS[0]),
+				...p,
+				headers: p.headers ?? {},
+				body: p.body ?? {},
+				reasoning: p.reasoning ?? {
+					enabled: null,
+					effort: ""
+				}
+			};
+			const legacy = p.temperature;
+			if (typeof legacy === "number") merged.body = {
+				temperature: legacy,
+				...merged.body
+			};
+			return merged;
+		}) : base.providers;
 		const settings = {
 			...base,
 			...input,
@@ -220,36 +228,35 @@
 	function isProblemPage() {
 		return !!document.querySelector(".subject-question, .subject-describe");
 	}
+	function hasContent(el) {
+		return !!el && !!(el.textContent ?? "").trim();
+	}
 	function collectTargets() {
 		const targets = [];
 		const seen = new WeakSet();
-		const push = (root, anchor, placement, label) => {
-			if (!root || !anchor || seen.has(root)) return;
-			if (!(root.textContent ?? "").trim()) return;
+		const push = (root, mountHost, mountPosition, panelPosition, label) => {
+			if (!hasContent(root) || !mountHost || seen.has(root)) return;
 			seen.add(root);
 			targets.push({
 				key: `${label}:${targets.length}`,
 				root,
-				anchor,
-				placement,
+				mountHost,
+				mountPosition,
+				panelPosition,
 				label
 			});
 		};
-		document.querySelectorAll(".subject-question").forEach((el) => {
-			push(el, el, "before", "题目描述");
-		});
-		document.querySelectorAll(".subject-describe > h2").forEach((h2) => {
-			const title = (h2.textContent ?? "").trim();
-			if (!/描述/.test(title)) return;
-			let node = h2.nextElementSibling;
+		push(document.querySelector(".subject-question"), document.querySelector(".subject-item-title"), "append", "afterRoot", "题目描述");
+		document.querySelectorAll(".subject-describe > h2").forEach((heading) => {
+			const text = (heading.textContent ?? "").trim();
+			if (!/描述/.test(text)) return;
+			let node = heading.nextElementSibling;
 			while (node && node.tagName !== "PRE") node = node.nextElementSibling;
-			if (node) {
-				const label = /输入/.test(title) ? "输入描述" : "输出描述";
-				push(node, h2, "before", label);
-			}
+			if (!node) return;
+			push(node, heading, "append", "afterRoot", /输入/.test(text) ? "输入描述" : "输出描述");
 		});
 		document.querySelectorAll("div.nc-post-content").forEach((el) => {
-			push(el, el, "prepend", "题解");
+			push(el, el, "prepend", "afterToolbar", "题解");
 		});
 		return targets;
 	}
@@ -282,13 +289,12 @@
 		protocol: "openai-chat",
 		label: "OpenAI Chat Completions",
 		defaultBaseUrl: "https://api.openai.com/v1",
-		defaultModel: "gpt-4o-mini",
+		defaultModel: DEFAULT_MODEL,
 		build(cfg, req) {
 			const url = resolveUrl(cfg.baseUrl, this.defaultBaseUrl, "/chat/completions");
 			const body = compact({
 				model: cfg.model || this.defaultModel,
 				messages: req.messages,
-				temperature: cfg.reasoning.enabled === true ? void 0 : cfg.temperature,
 				...cfg.reasoning.enabled === null ? {} : { thinking: { type: cfg.reasoning.enabled ? "enabled" : "disabled" } },
 				...cfg.reasoning.effort && cfg.reasoning.enabled !== false ? { reasoning_effort: cfg.reasoning.effort } : {},
 				...cfg.body
@@ -316,7 +322,7 @@
 		protocol: "openai-responses",
 		label: "OpenAI Responses",
 		defaultBaseUrl: "https://api.openai.com/v1",
-		defaultModel: "gpt-4o-mini",
+		defaultModel: DEFAULT_MODEL,
 		build(cfg, req) {
 			const url = resolveUrl(cfg.baseUrl, this.defaultBaseUrl, "/responses");
 			const body = compact({
@@ -325,7 +331,6 @@
 					role: m.role,
 					content: m.content
 				})),
-				temperature: cfg.reasoning.effort ? void 0 : cfg.temperature,
 				...cfg.reasoning.effort ? { reasoning: { effort: cfg.reasoning.effort } } : {},
 				...cfg.body
 			});
@@ -374,7 +379,6 @@
 					type: "enabled",
 					budget_tokens: effortToBudget(cfg.reasoning.effort)
 				} } : {},
-				...cfg.temperature !== null && !cfg.reasoning.effort ? { temperature: cfg.temperature } : {},
 				...cfg.body
 			});
 			return {
@@ -539,8 +543,7 @@
 	}
 	function field(label, control, hint) {
 		const wrap = el("div", "ncb-field");
-		const lab = el("label", void 0, label);
-		wrap.append(lab, control);
+		wrap.append(el("label", void 0, label), control);
 		if (hint) wrap.append(el("div", "ncb-hint", hint));
 		return wrap;
 	}
@@ -615,6 +618,7 @@
 		function renderProviders() {
 			const box = el("div");
 			const list = el("div", "ncb-provider-list");
+			const nameRefs = new Map();
 			draft.providers.forEach((provider) => {
 				const item = el("div", "ncb-provider-item");
 				item.dataset.active = provider.id === selectedId ? "1" : "0";
@@ -622,19 +626,21 @@
 				radio.type = "radio";
 				radio.name = "ncb-provider";
 				radio.checked = provider.id === selectedId;
-				radio.addEventListener("change", () => {
+				const name = el("span", "ncb-provider-name", provider.name || "未命名");
+				const meta = el("span", "ncb-provider-meta", `${PROTOCOL_LABEL[provider.protocol]} · ${provider.model || "未填模型"}`);
+				nameRefs.set(provider.id, name);
+				const select = () => {
+					if (selectedId === provider.id) return;
 					selectedId = provider.id;
 					draft.activeProviderId = provider.id;
 					render();
-				});
-				const name = el("span", "ncb-provider-name", provider.name || "未命名");
-				const meta = el("span", "ncb-provider-meta", `${PROTOCOL_LABEL[provider.protocol]} · ${provider.model || "未填模型"}`);
-				item.append(radio, name, meta);
+				};
+				radio.addEventListener("change", select);
 				item.addEventListener("click", (event) => {
 					if (event.target === radio) return;
-					radio.checked = true;
-					radio.dispatchEvent(new Event("change"));
+					select();
 				});
+				item.append(radio, name, meta);
 				list.append(item);
 			});
 			box.append(list);
@@ -658,18 +664,18 @@
 			addRow.append(field("从预设新增", presetSelect), addBtn);
 			box.append(addRow);
 			const current = draft.providers.find((p) => p.id === selectedId);
-			if (current) box.append(renderProviderEditor(current));
+			if (current) box.append(renderProviderEditor(current, (name) => {
+				const ref = nameRefs.get(current.id);
+				if (ref) ref.textContent = name || "未命名";
+			}));
 			return box;
 		}
-		function renderProviderEditor(provider) {
+		function renderProviderEditor(provider, onNameChange) {
 			const box = el("div");
-			const heading = el("div", "ncb-field");
-			heading.append(el("label", void 0, "配置详情"));
-			box.append(heading);
 			const nameInput = textInput(provider.name, "给这个配置起个名字");
 			nameInput.addEventListener("input", () => {
 				provider.name = nameInput.value;
-				render();
+				onNameChange(nameInput.value);
 			});
 			box.append(field("备注名", nameInput));
 			const protocolSelect = el("select");
@@ -688,7 +694,7 @@
 			const baseInput = textInput(provider.baseUrl, "https://api.openai.com/v1");
 			baseInput.addEventListener("input", () => provider.baseUrl = baseInput.value);
 			box.append(field("接口地址", baseInput, "填到 /v1 即可，脚本会自动补 /chat/completions、/responses 或 /messages；也可直接填完整端点。"));
-			const modelInput = textInput(provider.model, "gpt-4o-mini");
+			const modelInput = textInput(provider.model, "gpt-6-luna");
 			modelInput.addEventListener("input", () => provider.model = modelInput.value);
 			box.append(field("模型", modelInput));
 			const keyInput = textInput(provider.apiKey, "sk-...", "password");
@@ -724,12 +730,6 @@
 			effortInput.addEventListener("input", () => provider.reasoning.effort = effortInput.value);
 			row.append(field("推理开关", reasoningSelect, "对应 thinking 字段，部分服务商才支持。"), field("推理强度", effortInput, "对应 reasoning_effort / reasoning.effort。"));
 			box.append(row);
-			const tempInput = textInput(provider.temperature === null ? "" : String(provider.temperature), "留空使用接口默认值");
-			tempInput.addEventListener("input", () => {
-				const raw = tempInput.value.trim();
-				provider.temperature = raw === "" ? null : Number(raw);
-			});
-			box.append(field("temperature", tempInput));
 			const headerArea = el("textarea");
 			headerArea.value = Object.entries(provider.headers).map(([k, v]) => `${k}: ${v}`).join("\n");
 			headerArea.placeholder = "X-Custom-Header: value\n每行一个";
@@ -749,7 +749,7 @@
 					bodyArea.style.borderColor = "#b42318";
 				}
 			});
-			box.append(field("额外请求体字段", bodyArea, "JSON 对象，会合并进请求体，可覆盖任意字段。"));
+			box.append(field("额外请求体字段", bodyArea, "JSON 对象，会合并进请求体，可覆盖任意字段，例如 top_p、max_tokens。"));
 			const status = el("div", "ncb-status");
 			const actions = el("div", "ncb-row");
 			const testBtn = el("button", "ncb-btn", "测试连接");
@@ -799,7 +799,7 @@
 		function renderAdvanced() {
 			const box = el("div");
 			const info = el("div", "ncb-hint");
-			info.innerHTML = "所有配置保存在浏览器本地存储（GM_setValue），请求由脚本直接发出，不经过任何中间服务器。<br>遇到跨域或 401 时，先点“提供商”里的“测试连接”确认地址与 Key。";
+			info.textContent = "所有配置保存在浏览器本地存储（GM_setValue），请求由脚本直接发出，不经过任何中间服务器。遇到跨域或 401 时，先点「提供商」里的「测试连接」确认地址与 Key。";
 			box.append(info);
 			const exportArea = el("textarea");
 			exportArea.value = JSON.stringify({
@@ -812,18 +812,17 @@
 			exportArea.readOnly = true;
 			box.append(field("配置预览（已隐藏 Key）", exportArea));
 			const importArea = el("textarea");
-			importArea.placeholder = "粘贴导出的 JSON 后点“导入”";
+			importArea.placeholder = "粘贴导出的 JSON 后点「导入」";
 			const importBtn = el("button", "ncb-btn", "导入");
 			const status = el("div", "ncb-status");
 			importBtn.addEventListener("click", () => {
 				try {
 					const parsed = JSON.parse(importArea.value);
 					if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.providers)) throw new Error("缺少 providers 数组");
-					const merged = parsed;
-					draft.targetLang = merged.targetLang ?? draft.targetLang;
-					draft.extraPrompt = merged.extraPrompt ?? draft.extraPrompt;
-					draft.providers = merged.providers;
-					draft.activeProviderId = merged.activeProviderId ?? merged.providers[0]?.id ?? null;
+					draft.targetLang = parsed.targetLang ?? draft.targetLang;
+					draft.extraPrompt = parsed.extraPrompt ?? draft.extraPrompt;
+					draft.providers = parsed.providers;
+					draft.activeProviderId = parsed.activeProviderId ?? parsed.providers[0]?.id ?? null;
 					selectedId = draft.activeProviderId;
 					status.dataset.kind = "ok";
 					status.textContent = "导入成功，保存后生效。";
@@ -864,6 +863,8 @@
 		const close = () => {
 			mask.remove();
 			document.removeEventListener("keydown", onKey);
+			document.removeEventListener("pointerdown", onPointerDownAnywhere, true);
+			document.removeEventListener("pointerup", onPointerUpAnywhere, true);
 			options.onClose();
 		};
 		const onKey = (event) => {
@@ -881,8 +882,30 @@
 			options.onChange(null);
 			close();
 		});
-		mask.addEventListener("click", (event) => {
-			if (event.target === mask) close();
+		let lastDragEndAt = 0;
+		let dragStart = null;
+		const onPointerDownAnywhere = (event) => {
+			dragStart = {
+				x: event.clientX,
+				y: event.clientY
+			};
+		};
+		const onPointerUpAnywhere = (event) => {
+			if (dragStart) {
+				if (Math.hypot(event.clientX - dragStart.x, event.clientY - dragStart.y) > 4) lastDragEndAt = Date.now();
+			}
+			dragStart = null;
+		};
+		document.addEventListener("pointerdown", onPointerDownAnywhere, true);
+		document.addEventListener("pointerup", onPointerUpAnywhere, true);
+		let pressedOnMask = false;
+		mask.addEventListener("pointerdown", (event) => {
+			pressedOnMask = event.target === mask;
+		});
+		mask.addEventListener("pointerup", (event) => {
+			const isMaskClick = pressedOnMask && event.target === mask;
+			pressedOnMask = false;
+			if (isMaskClick && Date.now() - lastDragEndAt > 300) close();
 		});
 		document.addEventListener("keydown", onKey);
 		render();
@@ -899,6 +922,18 @@
 		}
 		return out;
 	}
+	function svg(path, viewBox = "0 0 24 24") {
+		return `<svg viewBox="${viewBox}" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+	}
+	var ICON_TRANSLATE = svg("<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18\"/><path d=\"M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z\"/>");
+	var ICON_MARKDOWN = svg("<path d=\"M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z\"/><path d=\"M14 3v5h5\"/><path d=\"M9 13v4\"/><path d=\"M12 15l2 2 2-2\"/>");
+	var ICON_COPY = svg("<rect x=\"9\" y=\"9\" width=\"12\" height=\"12\" rx=\"2\"/><path d=\"M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1\"/>");
+	var ICON_SETTINGS = svg("<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.7 1.7 0 0 0 21 11a2 2 0 1 1 0 4 1.7 1.7 0 0 0-1.6 0z\"/>");
+	var ICON_CHECK = svg("<path d=\"M20 6 9 17l-5-5\"/>");
+	var ICON_CHEVRON = svg("<path d=\"m6 15 6-6 6 6\"/>");
+	var ICON_CHEVRON_RIGHT = svg("<path d=\"m6 9 6 6 6-6\"/>");
+	var ICON_CROSS = svg("<path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/>");
+	var ICON_SPINNER = svg("<path d=\"M21 12a9 9 0 1 1-6.2-8.6\"/>");
 	var decodeCache = {};
 	function getDecodeCache(exclude) {
 		let cache = decodeCache[exclude];
@@ -31339,7 +31374,7 @@
 			elapsedMs: Date.now() - started
 		};
 	}
-	function createResultPanel(placement, host) {
+	function createResultPanel(target, toolbar) {
 		ensureKatexStyles();
 		const el = document.createElement("div");
 		el.className = "ncb-result";
@@ -31354,12 +31389,16 @@
 		actions.className = "ncb-result-actions";
 		const copyBtn = document.createElement("button");
 		copyBtn.type = "button";
-		copyBtn.className = "ncb-btn ncb-btn-ghost";
-		copyBtn.textContent = "复制译文";
+		copyBtn.className = "ncb-icon-btn";
+		copyBtn.title = "复制译文";
+		copyBtn.setAttribute("aria-label", "复制译文");
+		copyBtn.innerHTML = ICON_COPY;
 		const toggleBtn = document.createElement("button");
 		toggleBtn.type = "button";
-		toggleBtn.className = "ncb-btn ncb-btn-ghost";
-		toggleBtn.textContent = "收起";
+		toggleBtn.className = "ncb-icon-btn";
+		toggleBtn.title = "收起";
+		toggleBtn.setAttribute("aria-label", "收起");
+		toggleBtn.innerHTML = ICON_CHEVRON;
 		actions.append(copyBtn, toggleBtn);
 		header.append(title, status, actions);
 		const body = document.createElement("div");
@@ -31372,16 +31411,20 @@
 		};
 		copyBtn.addEventListener("click", () => {
 			navigator.clipboard?.writeText(currentMarkdown);
-			copyBtn.textContent = "已复制";
-			setTimeout(() => copyBtn.textContent = "复制译文", 1500);
+			copyBtn.innerHTML = ICON_CHECK;
+			copyBtn.title = "已复制";
+			setTimeout(() => {
+				copyBtn.innerHTML = ICON_COPY;
+				copyBtn.title = "复制译文";
+			}, 1200);
 		});
 		toggleBtn.addEventListener("click", () => {
 			const collapsed = el.classList.toggle("ncb-collapsed");
-			toggleBtn.textContent = collapsed ? "展开" : "收起";
+			toggleBtn.innerHTML = collapsed ? ICON_CHEVRON_RIGHT : ICON_CHEVRON;
+			toggleBtn.title = collapsed ? "展开" : "收起";
 		});
-		if (placement === "before") host.insertAdjacentElement("beforebegin", el);
-		else if (placement === "after") host.insertAdjacentElement("afterend", el);
-		else host.prepend(el);
+		if (target.panelPosition === "afterToolbar") toolbar.insertAdjacentElement("afterend", el);
+		else target.root.insertAdjacentElement("afterend", el);
 		return {
 			el,
 			update: render,
@@ -31400,71 +31443,75 @@
 		};
 	}
 	var jobs = new WeakMap();
-	function buildToolbar(target, settings, onStateChange) {
-		const toolbar = document.createElement("div");
+	var panels = new WeakMap();
+	function setButtonState(button, state, title) {
+		button.dataset.state = state;
+		button.title = title;
+		button.setAttribute("aria-label", title);
+		button.innerHTML = state === "busy" ? ICON_SPINNER : state === "done" ? ICON_CHECK : state === "error" ? ICON_CROSS : ICON_TRANSLATE;
+		button.disabled = state === "busy";
+	}
+	function iconButton(icon, title, extraClass = "") {
+		const button = document.createElement("button");
+		button.type = "button";
+		button.className = `ncb-icon-btn ${extraClass}`.trim();
+		button.title = title;
+		button.setAttribute("aria-label", title);
+		button.innerHTML = icon;
+		return button;
+	}
+	function buildToolbar(target, settings) {
+		const toolbar = document.createElement("span");
 		toolbar.className = "ncb-toolbar";
-		const translateBtn = document.createElement("button");
-		translateBtn.type = "button";
-		translateBtn.className = "ncb-btn ncb-btn-primary ncb-translate-btn";
-		translateBtn.textContent = "AI 翻译";
-		const mdBtn = document.createElement("button");
-		mdBtn.type = "button";
-		mdBtn.className = "ncb-btn ncb-md-btn";
-		mdBtn.textContent = "Markdown 视图";
-		const copyBtn = document.createElement("button");
-		copyBtn.type = "button";
-		copyBtn.className = "ncb-btn ncb-copy-btn";
-		copyBtn.textContent = "复制原文";
-		const settingsBtn = document.createElement("button");
-		settingsBtn.type = "button";
-		settingsBtn.className = "ncb-btn ncb-btn-ghost ncb-settings-btn";
-		settingsBtn.textContent = "设置";
-		toolbar.append(translateBtn, mdBtn, copyBtn, settingsBtn);
+		const translateBtn = iconButton(ICON_TRANSLATE, "AI 翻译", "ncb-translate-btn");
+		const mdBtn = iconButton(ICON_MARKDOWN, "Markdown 视图", "ncb-md-btn");
+		const copyBtn = iconButton(ICON_COPY, "复制原文", "ncb-copy-btn");
+		toolbar.append(translateBtn, mdBtn, copyBtn);
 		translateBtn.addEventListener("click", () => {
-			runTranslation(target, settings, translateBtn, onStateChange);
+			runTranslation(target, settings, translateBtn);
 		});
 		mdBtn.addEventListener("click", () => {
 			toggleMarkdownView(target, mdBtn);
 		});
-		copyBtn.addEventListener("click", async () => {
-			const markdown = htmlToMarkdown(target.root);
-			try {
-				await navigator.clipboard.writeText(markdown);
-				copyBtn.textContent = "已复制";
-			} catch {
-				copyBtn.textContent = "复制失败";
-			}
-			window.setTimeout(() => copyBtn.textContent = "复制原文", 1500);
-		});
-		settingsBtn.addEventListener("click", () => {
-			document.querySelector(".ncb-fab")?.click();
+		copyBtn.addEventListener("click", () => {
+			navigator.clipboard?.writeText(htmlToMarkdown(target.root)).then(() => flash(copyBtn, ICON_CHECK, "已复制")).catch(() => flash(copyBtn, ICON_CROSS, "复制失败"));
 		});
 		return toolbar;
 	}
-	async function runTranslation(target, settings, button, onStateChange) {
+	function flash(button, icon, title) {
+		const previous = button.innerHTML;
+		const previousTitle = button.title;
+		button.innerHTML = icon;
+		button.title = title;
+		window.setTimeout(() => {
+			button.innerHTML = previous;
+			button.title = previousTitle;
+		}, 1200);
+	}
+	async function runTranslation(target, settings, button) {
 		const existing = jobs.get(target.root);
 		if (existing) {
 			existing.controller.abort();
 			existing.panel.remove();
 			jobs.delete(target.root);
-			button.textContent = "AI 翻译";
-			button.disabled = false;
+			setButtonState(button, "idle", "AI 翻译");
 			return;
 		}
 		const markdown = htmlToMarkdown(target.root);
 		if (!markdown.trim()) {
-			button.textContent = "无内容";
+			setButtonState(button, "error", "没有可翻译的内容");
 			return;
 		}
+		panels.get(target.root)?.remove();
+		panels.delete(target.root);
 		const controller = new AbortController();
-		const panel = createResultPanel(target.placement, target.anchor);
+		const panel = createResultPanel(target, button.parentElement);
 		jobs.set(target.root, {
 			controller,
 			panel,
 			button
 		});
-		button.disabled = true;
-		button.textContent = "翻译中…";
+		setButtonState(button, "busy", "翻译中，点击中止");
 		panel.setStatus("准备中…");
 		try {
 			const result = await translateMarkdown({
@@ -31478,20 +31525,23 @@
 				}
 			});
 			panel.finish(result);
-			button.textContent = "重新翻译";
+			panels.set(target.root, panel);
+			setButtonState(button, "done", "重新翻译");
+			window.setTimeout(() => {
+				if (button.dataset.state === "done") setButtonState(button, "idle", "重新翻译");
+			}, 3e3);
 		} catch (error) {
 			if (error instanceof DOMException && error.name === "AbortError") {
 				panel.remove();
-				button.textContent = "AI 翻译";
+				setButtonState(button, "idle", "AI 翻译");
 			} else {
 				const message = error instanceof AiError ? error.message : error instanceof Error ? error.message : String(error);
 				panel.setStatus(`翻译失败：${message}`, "error");
-				button.textContent = "重试";
+				panels.set(target.root, panel);
+				setButtonState(button, "error", `重试：${message.slice(0, 60)}`);
 			}
 		} finally {
-			button.disabled = false;
 			jobs.delete(target.root);
-			onStateChange();
 		}
 	}
 	function toggleMarkdownView(target, button) {
@@ -31502,7 +31552,9 @@
 				delete root.dataset.ncbMdBackup;
 			}
 			delete root.dataset.ncbMd;
-			button.textContent = "Markdown 视图";
+			button.dataset.state = "idle";
+			button.title = "Markdown 视图";
+			button.setAttribute("aria-label", "Markdown 视图");
 			return;
 		}
 		root.dataset.ncbMdBackup = root.innerHTML;
@@ -31511,17 +31563,42 @@
 		pre.className = "ncb-md-source";
 		pre.textContent = htmlToMarkdown(root);
 		root.replaceChildren(pre);
-		button.textContent = "原始内容";
+		button.dataset.state = "active";
+		button.title = "返回原始内容";
+		button.setAttribute("aria-label", "返回原始内容");
 	}
 	function installToolbars(settings) {
 		for (const target of collectTargets()) {
-			if (isToolbarMounted(target.anchor)) continue;
-			const toolbar = buildToolbar(target, settings, () => {});
-			if (target.placement === "before") target.anchor.insertAdjacentElement("beforebegin", toolbar);
-			else if (target.placement === "after") target.anchor.insertAdjacentElement("afterend", toolbar);
-			else target.anchor.prepend(toolbar);
-			markToolbarMounted(target.anchor);
+			if (isToolbarMounted(target.mountHost)) continue;
+			const toolbar = buildToolbar(target, settings);
+			if (target.mountPosition === "append") target.mountHost.append(toolbar);
+			else target.mountHost.prepend(toolbar);
+			markToolbarMounted(target.mountHost);
 		}
+	}
+	function installSettingsEntry(openSettings) {
+		if (document.querySelector(".ncb-settings-btn")) return;
+		const button = iconButton(ICON_SETTINGS, "NowcoderBetter 设置", "ncb-settings-btn");
+		button.addEventListener("click", openSettings);
+		const headerRight = document.querySelector(".header-right");
+		if (headerRight) {
+			const host = document.createElement("span");
+			host.className = "ncb-settings-host";
+			host.append(button);
+			headerRight.append(host);
+			return;
+		}
+		const headerBar = document.querySelector(".header-bar");
+		if (headerBar) {
+			const host = document.createElement("span");
+			host.className = "ncb-settings-host";
+			host.style.marginLeft = "auto";
+			host.append(button);
+			headerBar.append(host);
+			return;
+		}
+		button.classList.add("ncb-settings-floating");
+		document.body.append(button);
 	}
 	function startObserving(onChange) {
 		let scheduled = false;
@@ -31542,62 +31619,90 @@
 		});
 	}
 	var CSS = `
+/* ---------- 内联图标工具栏 ---------- */
 .ncb-toolbar {
-  display: flex;
-  gap: 6px;
+  display: inline-flex;
+  gap: 2px;
   align-items: center;
-  margin: 6px 0;
-  flex-wrap: wrap;
+  margin-left: 8px;
+  vertical-align: middle;
 }
-.ncb-btn {
-  font: inherit;
-  font-size: 12px;
-  line-height: 1.4;
-  padding: 3px 10px;
-  border-radius: 4px;
-  border: 1px solid #d0d7de;
-  background: #fff;
-  color: #24292f;
+.ncb-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: #8a9099;
   cursor: pointer;
-  transition: background .15s, border-color .15s, color .15s;
+  transition: background .15s, color .15s, border-color .15s;
 }
-.ncb-btn:hover { background: #f3f4f6; border-color: #b6bfc9; }
-.ncb-btn:disabled { opacity: .6; cursor: not-allowed; }
-.ncb-btn-primary {
-  background: #2563eb;
-  border-color: #2563eb;
+.ncb-icon-btn:hover {
+  background: rgba(0, 0, 0, .06);
+  color: #24292f;
+}
+.ncb-icon-btn:focus-visible {
+  outline: 2px solid #bfdbfe;
+  outline-offset: 1px;
+}
+.ncb-icon-btn[data-state="busy"] { color: #2563eb; }
+.ncb-icon-btn[data-state="busy"] svg { animation: ncb-spin 1s linear infinite; }
+.ncb-icon-btn[data-state="done"] { color: #067647; }
+.ncb-icon-btn[data-state="error"] { color: #b42318; }
+.ncb-icon-btn[data-state="active"] { color: #2563eb; background: rgba(37, 99, 235, .1); }
+.ncb-icon-btn:disabled { cursor: default; }
+@keyframes ncb-spin { to { transform: rotate(360deg); } }
+
+/* 右上角设置入口 */
+.ncb-settings-host {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+}
+.ncb-settings-host .ncb-icon-btn { color: #cfd3d8; }
+.ncb-settings-host .ncb-icon-btn:hover {
+  background: rgba(255, 255, 255, .14);
   color: #fff;
 }
-.ncb-btn-primary:hover { background: #1d4ed8; border-color: #1d4ed8; }
-.ncb-btn-ghost {
-  border-color: transparent;
-  background: transparent;
+.ncb-icon-btn.ncb-settings-floating {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 2147482998;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, .92);
+  border-color: #d0d7de;
   color: #57606a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
 }
-.ncb-btn-ghost:hover { background: rgba(0,0,0,.06); }
-.ncb-btn-danger { color: #b42318; }
 
+/* ---------- 译文面板 ---------- */
 .ncb-result {
   margin: 10px 0;
-  border: 1px solid #e3e6ea;
-  border-left: 3px solid #2563eb;
+  border: 1px solid #e6e9ee;
   border-radius: 6px;
-  background: #fbfcfd;
+  background: #fcfdfe;
   overflow: hidden;
 }
 .ncb-result-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 10px;
-  background: #f3f6fa;
-  border-bottom: 1px solid #e3e6ea;
+  padding: 5px 10px;
+  background: #f6f8fa;
+  border-bottom: 1px solid #e6e9ee;
   font-size: 12px;
 }
-.ncb-result-title { font-weight: 600; color: #24292f; }
-.ncb-result-status { color: #57606a; flex: 1; }
+.ncb-result-title { font-weight: 600; color: #57606a; }
+.ncb-result-status { color: #8a9099; flex: 1; }
 .ncb-result-status[data-kind="error"] { color: #b42318; }
-.ncb-result-actions { display: flex; gap: 4px; }
+.ncb-result-actions { display: flex; gap: 2px; }
+.ncb-result-actions .ncb-icon-btn { width: 22px; height: 22px; }
 .ncb-result-body {
   padding: 10px 14px;
   font-size: 14px;
@@ -31608,10 +31713,7 @@
 .ncb-result-body > :first-child { margin-top: 0; }
 .ncb-result-body > :last-child { margin-bottom: 0; }
 .ncb-result-body img { max-width: 100%; }
-.ncb-result-body table {
-  border-collapse: collapse;
-  margin: 8px 0;
-}
+.ncb-result-body table { border-collapse: collapse; margin: 8px 0; }
 .ncb-result-body th, .ncb-result-body td {
   border: 1px solid #d0d7de;
   padding: 4px 8px;
@@ -31625,12 +31727,24 @@
 .ncb-result-body code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 13px;
-  background: rgba(175,184,193,.2);
+  background: rgba(175, 184, 193, .2);
   padding: 1px 4px;
   border-radius: 3px;
 }
 .ncb-result-body pre code { background: none; padding: 0; }
 .ncb-collapsed .ncb-result-body { display: none; }
+
+.ncb-md-source {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #f6f8fa;
+  border: 1px dashed #d0d7de;
+  border-radius: 6px;
+  padding: 10px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+}
 
 /* ---------- 设置面板 ---------- */
 .ncb-mask {
@@ -31651,7 +31765,7 @@
   background: #fff;
   color: #1f2328;
   border-radius: 10px;
-  box-shadow: 0 18px 48px rgba(15,23,42,.28);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, .28);
   font-size: 13px;
   line-height: 1.6;
 }
@@ -31660,19 +31774,16 @@
   display: flex;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid #e3e6ea;
+  border-bottom: 1px solid #e6e9ee;
 }
 .ncb-panel-head h3 { margin: 0; font-size: 15px; flex: 1; }
-.ncb-panel-body {
-  padding: 12px 16px;
-  overflow-y: auto;
-}
+.ncb-panel-body { padding: 12px 16px; overflow-y: auto; }
 .ncb-panel-foot {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
   padding: 12px 16px;
-  border-top: 1px solid #e3e6ea;
+  border-top: 1px solid #e6e9ee;
 }
 .ncb-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
 .ncb-tab {
@@ -31686,11 +31797,7 @@
 }
 .ncb-tab[data-active="1"] { background: #eef2f7; color: #1f2328; font-weight: 600; }
 .ncb-field { margin-bottom: 12px; }
-.ncb-field > label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
+.ncb-field > label { display: block; font-weight: 600; margin-bottom: 4px; }
 .ncb-hint { color: #6b7280; font-size: 12px; margin-top: 3px; }
 .ncb-panel input[type="text"],
 .ncb-panel input[type="password"],
@@ -31705,13 +31812,19 @@
   background: #fff;
   color: inherit;
 }
-.ncb-panel textarea { resize: vertical; min-height: 64px; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+.ncb-panel textarea {
+  resize: vertical;
+  min-height: 64px;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 12px;
+}
 .ncb-panel input:focus, .ncb-panel select:focus, .ncb-panel textarea:focus {
   outline: 2px solid #bfdbfe;
   border-color: #2563eb;
 }
-.ncb-row { display: flex; gap: 10px; }
-.ncb-row > .ncb-field { flex: 1; }
+.ncb-row { display: flex; gap: 10px; align-items: flex-end; }
+.ncb-row > .ncb-field { flex: 1; min-width: 0; }
+.ncb-row > .ncb-btn { flex: none; margin-bottom: 12px; }
 .ncb-check { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
 .ncb-check input { margin-top: 3px; }
 .ncb-check label { flex: 1; }
@@ -31721,7 +31834,7 @@
   align-items: center;
   gap: 10px;
   padding: 8px 10px;
-  border: 1px solid #e3e6ea;
+  border: 1px solid #e6e9ee;
   border-radius: 6px;
   cursor: pointer;
 }
@@ -31732,12 +31845,13 @@
   margin-top: 8px;
   font-size: 12px;
   white-space: pre-wrap;
-  word-break: break-all;
+  word-break: break-word;
   max-height: 160px;
   overflow-y: auto;
 }
 .ncb-status[data-kind="error"] { color: #b42318; }
 .ncb-status[data-kind="ok"] { color: #067647; }
+
 .ncb-fab {
   position: fixed;
   right: 16px;
@@ -31753,20 +31867,10 @@
   font-weight: 700;
   letter-spacing: .5px;
   cursor: pointer;
-  box-shadow: 0 6px 18px rgba(37,99,235,.4);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, .4);
 }
 .ncb-fab:hover { background: #1d4ed8; }
-.ncb-md-source {
-  white-space: pre-wrap;
-  word-break: break-word;
-  background: #f6f8fa;
-  border: 1px dashed #d0d7de;
-  border-radius: 6px;
-  padding: 10px;
-  font-family: ui-monospace, Menlo, Consolas, monospace;
-  font-size: 12px;
-  line-height: 1.6;
-}
+
 .ncb-toast {
   position: fixed;
   right: 20px;
@@ -31777,7 +31881,7 @@
   padding: 10px 16px;
   border-radius: 8px;
   font-size: 13px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
   max-width: 420px;
 }
 .ncb-toast[data-kind="error"] { background: #b42318; }
@@ -31811,34 +31915,23 @@
 			onClose() {}
 		});
 	}
-	function mountFloatingEntry() {
-		if (document.querySelector(".ncb-fab")) return;
-		const button = document.createElement("button");
-		button.type = "button";
-		button.className = "ncb-fab";
-		button.textContent = "NCB";
-		button.title = "NowcoderBetter 设置";
-		button.addEventListener("click", openPanel);
-		document.body.append(button);
-	}
 	function autoTranslate() {
 		window.setTimeout(() => {
 			document.querySelectorAll(".subject-question").forEach((root) => {
-				const toolbar = root.previousElementSibling;
-				if (!toolbar?.classList.contains("ncb-toolbar")) return;
-				toolbar.querySelector(".ncb-translate-btn")?.click();
+				document.querySelector(".subject-item-title")?.querySelector(".ncb-translate-btn")?.click();
 			});
 		}, 500);
 	}
 	function bootstrap() {
 		currentSettings = loadSettings();
 		addStyle(CSS);
-		mountFloatingEntry();
 		if (isProblemPage()) {
 			installToolbars(currentSettings);
 			startObserving(() => installToolbars(currentSettings));
 			if (currentSettings.autoTranslate) autoTranslate();
 		}
+		installSettingsEntry(openPanel);
+		if (!isUserscriptEnv) toast("未检测到脚本管理器，请求会走 fetch 并受同源策略限制", "error");
 	}
 	if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootstrap, { once: true });
 	else bootstrap();

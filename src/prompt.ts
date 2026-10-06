@@ -1,4 +1,4 @@
-import type { Settings } from './types';
+import type { Settings } from './types.ts';
 
 export function buildSystemPrompt(settings: Settings): string {
   const lang = settings.targetLang.trim() || '简体中文';

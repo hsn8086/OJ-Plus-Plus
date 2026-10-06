@@ -1,4 +1,5 @@
-import type { ChatRequest, ProviderAdapter, ProviderConfig } from './types';
+import { DEFAULT_MODEL } from './config.ts';
+import type { ChatRequest, ProviderAdapter, ProviderConfig } from './types.ts';
 
 function trimSlash(url: string): string {
   return url.replace(/\/+$/, '');
@@ -43,14 +44,13 @@ const openaiChat: ProviderAdapter = {
   protocol: 'openai-chat',
   label: 'OpenAI Chat Completions',
   defaultBaseUrl: 'https://api.openai.com/v1',
-  defaultModel: 'gpt-4o-mini',
+  defaultModel: DEFAULT_MODEL,
 
   build(cfg: ProviderConfig, req: ChatRequest) {
     const url = resolveUrl(cfg.baseUrl, this.defaultBaseUrl, '/chat/completions');
     const body = compact({
       model: cfg.model || this.defaultModel,
       messages: req.messages,
-      temperature: cfg.reasoning.enabled === true ? undefined : cfg.temperature,
       ...(cfg.reasoning.enabled === null
         ? {}
         : { thinking: { type: cfg.reasoning.enabled ? 'enabled' : 'disabled' } }),
@@ -91,14 +91,13 @@ const openaiResponses: ProviderAdapter = {
   protocol: 'openai-responses',
   label: 'OpenAI Responses',
   defaultBaseUrl: 'https://api.openai.com/v1',
-  defaultModel: 'gpt-4o-mini',
+  defaultModel: DEFAULT_MODEL,
 
   build(cfg: ProviderConfig, req: ChatRequest) {
     const url = resolveUrl(cfg.baseUrl, this.defaultBaseUrl, '/responses');
     const body = compact({
       model: cfg.model || this.defaultModel,
       input: req.messages.map((m) => ({ role: m.role, content: m.content })),
-      temperature: cfg.reasoning.effort ? undefined : cfg.temperature,
       ...(cfg.reasoning.effort ? { reasoning: { effort: cfg.reasoning.effort } } : {}),
       ...cfg.body,
     });
@@ -164,9 +163,6 @@ const anthropic: ProviderAdapter = {
       messages,
       ...(cfg.reasoning.effort && cfg.reasoning.enabled !== false
         ? { thinking: { type: 'enabled', budget_tokens: effortToBudget(cfg.reasoning.effort) } }
-        : {}),
-      ...(cfg.temperature !== null && !cfg.reasoning.effort
-        ? { temperature: cfg.temperature }
         : {}),
       ...cfg.body,
     });

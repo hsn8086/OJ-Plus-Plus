@@ -11,14 +11,13 @@ export interface ProviderConfig {
   model: string;
   /** 额外请求头，会覆盖默认值 */
   headers: Record<string, string>;
-  /** 额外请求体字段，会覆盖默认值 */
+  /** 额外请求体字段，会覆盖默认值；temperature 之类不常用参数走这里 */
   body: Record<string, unknown>;
   /** 推理参数；enabled 为 null 表示跟随模型默认 */
   reasoning: {
     enabled: boolean | null;
     effort: string;
   };
-  temperature: number | null;
 }
 
 export interface Settings {

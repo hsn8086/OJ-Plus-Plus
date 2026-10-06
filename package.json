@@ -1,6 +1,6 @@
 {
   "name": "nowcoder-better",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "牛客竞赛增强脚本：AI 题面翻译",
@@ -10,7 +10,11 @@
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test test/*.test.ts",
     "check": "npm run typecheck && npm run test && npm run build",
-    "mock-ai": "node tools/mock-ai-server.mjs"
+    "mock-ai": "node tools/mock-ai-server.mjs",
+    "serve": "python3 -m http.server 8791 -d dist",
+    "e2e": "node tools/e2e-check.mjs",
+    "ui-check": "node tools/ui-check.mjs",
+    "screenshots": "node tools/screenshots.mjs"
   },
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",

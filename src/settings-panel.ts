@@ -1,11 +1,11 @@
-import { testConnection } from './ai';
+import { testConnection } from './ai.ts';
 import {
   PROTOCOL_LABEL,
   PROVIDER_PRESETS,
   createProvider,
   newId,
-} from './config';
-import type { Protocol, ProviderConfig, Settings } from './types';
+} from './config.ts';
+import type { Protocol, ProviderConfig, Settings } from './types.ts';
 
 export interface SettingsPanelOptions {
   settings: Settings;
@@ -27,13 +27,16 @@ function el<K extends keyof HTMLElementTagNameMap>(
 
 function field(label: string, control: HTMLElement, hint?: string): HTMLElement {
   const wrap = el('div', 'ncb-field');
-  const lab = el('label', undefined, label);
-  wrap.append(lab, control);
+  wrap.append(el('label', undefined, label), control);
   if (hint) wrap.append(el('div', 'ncb-hint', hint));
   return wrap;
 }
 
-function textInput(value: string, placeholder = '', type = 'text'): HTMLInputElement {
+function textInput(
+  value: string,
+  placeholder = '',
+  type: 'text' | 'password' | 'number' = 'text',
+): HTMLInputElement {
   const input = el('input') as HTMLInputElement;
   input.type = type;
   input.value = value;
@@ -140,6 +143,8 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
   function renderProviders(): HTMLElement {
     const box = el('div');
     const list = el('div', 'ncb-provider-list');
+    /** 备注名直接改文本，避免重绘导致输入框失焦 */
+    const nameRefs = new Map<string, HTMLElement>();
 
     draft.providers.forEach((provider) => {
       const item = el('div', 'ncb-provider-item');
@@ -149,11 +154,6 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
       radio.type = 'radio';
       radio.name = 'ncb-provider';
       radio.checked = provider.id === selectedId;
-      radio.addEventListener('change', () => {
-        selectedId = provider.id;
-        draft.activeProviderId = provider.id;
-        render();
-      });
 
       const name = el('span', 'ncb-provider-name', provider.name || '未命名');
       const meta = el(
@@ -161,13 +161,21 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
         'ncb-provider-meta',
         `${PROTOCOL_LABEL[provider.protocol]} · ${provider.model || '未填模型'}`,
       );
+      nameRefs.set(provider.id, name);
 
-      item.append(radio, name, meta);
+      const select = () => {
+        if (selectedId === provider.id) return;
+        selectedId = provider.id;
+        draft.activeProviderId = provider.id;
+        render();
+      };
+      radio.addEventListener('change', select);
       item.addEventListener('click', (event) => {
         if (event.target === radio) return;
-        radio.checked = true;
-        radio.dispatchEvent(new Event('change'));
+        select();
       });
+
+      item.append(radio, name, meta);
       list.append(item);
     });
 
@@ -194,21 +202,29 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
     box.append(addRow);
 
     const current = draft.providers.find((p) => p.id === selectedId);
-    if (current) box.append(renderProviderEditor(current));
+    if (current) {
+      box.append(
+        renderProviderEditor(current, (name) => {
+          const ref = nameRefs.get(current.id);
+          if (ref) ref.textContent = name || '未命名';
+        }),
+      );
+    }
 
     return box;
   }
 
-  function renderProviderEditor(provider: ProviderConfig): HTMLElement {
+  function renderProviderEditor(
+    provider: ProviderConfig,
+    onNameChange: (name: string) => void,
+  ): HTMLElement {
     const box = el('div');
-    const heading = el('div', 'ncb-field');
-    heading.append(el('label', undefined, '配置详情'));
-    box.append(heading);
 
     const nameInput = textInput(provider.name, '给这个配置起个名字');
+    // 只同步数据与列表文字，不重绘面板，否则每敲一个字母都会失焦
     nameInput.addEventListener('input', () => {
       provider.name = nameInput.value;
-      render();
+      onNameChange(nameInput.value);
     });
     box.append(field('备注名', nameInput));
 
@@ -224,9 +240,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
       provider.protocol = protocolSelect.value as Protocol;
       render();
     });
-    box.append(
-      field('接口协议', protocolSelect, '决定请求体格式与响应解析方式。'),
-    );
+    box.append(field('接口协议', protocolSelect, '决定请求体格式与响应解析方式。'));
 
     const baseInput = textInput(provider.baseUrl, 'https://api.openai.com/v1');
     baseInput.addEventListener('input', () => (provider.baseUrl = baseInput.value));
@@ -238,7 +252,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
       ),
     );
 
-    const modelInput = textInput(provider.model, 'gpt-4o-mini');
+    const modelInput = textInput(provider.model, 'gpt-6-luna');
     modelInput.addEventListener('input', () => (provider.model = modelInput.value));
     box.append(field('模型', modelInput));
 
@@ -268,8 +282,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
     });
     reasoningSelect.addEventListener('change', () => {
       const v = reasoningSelect.value;
-      provider.reasoning.enabled =
-        v === 'default' ? null : v === 'enabled';
+      provider.reasoning.enabled = v === 'default' ? null : v === 'enabled';
     });
 
     const effortInput = textInput(provider.reasoning.effort, 'low / medium / high');
@@ -282,16 +295,6 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
       field('推理强度', effortInput, '对应 reasoning_effort / reasoning.effort。'),
     );
     box.append(row);
-
-    const tempInput = textInput(
-      provider.temperature === null ? '' : String(provider.temperature),
-      '留空使用接口默认值',
-    );
-    tempInput.addEventListener('input', () => {
-      const raw = tempInput.value.trim();
-      provider.temperature = raw === '' ? null : Number(raw);
-    });
-    box.append(field('temperature', tempInput));
 
     const headerArea = el('textarea') as HTMLTextAreaElement;
     headerArea.value = Object.entries(provider.headers)
@@ -318,7 +321,11 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
       }
     });
     box.append(
-      field('额外请求体字段', bodyArea, 'JSON 对象，会合并进请求体，可覆盖任意字段。'),
+      field(
+        '额外请求体字段',
+        bodyArea,
+        'JSON 对象，会合并进请求体，可覆盖任意字段，例如 top_p、max_tokens。',
+      ),
     );
 
     const status = el('div', 'ncb-status');
@@ -379,9 +386,8 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
   function renderAdvanced(): HTMLElement {
     const box = el('div');
     const info = el('div', 'ncb-hint');
-    info.innerHTML =
-      '所有配置保存在浏览器本地存储（GM_setValue），请求由脚本直接发出，不经过任何中间服务器。<br>' +
-      '遇到跨域或 401 时，先点“提供商”里的“测试连接”确认地址与 Key。';
+    info.textContent =
+      '所有配置保存在浏览器本地存储（GM_setValue），请求由脚本直接发出，不经过任何中间服务器。遇到跨域或 401 时，先点「提供商」里的「测试连接」确认地址与 Key。';
     box.append(info);
 
     const exportArea = el('textarea') as HTMLTextAreaElement;
@@ -394,20 +400,20 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
     box.append(field('配置预览（已隐藏 Key）', exportArea));
 
     const importArea = el('textarea') as HTMLTextAreaElement;
-    importArea.placeholder = '粘贴导出的 JSON 后点“导入”';
+    importArea.placeholder = '粘贴导出的 JSON 后点「导入」';
     const importBtn = el('button', 'ncb-btn', '导入');
     const status = el('div', 'ncb-status');
     importBtn.addEventListener('click', () => {
       try {
-        const parsed = JSON.parse(importArea.value);
+        const parsed = JSON.parse(importArea.value) as Settings;
         if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.providers)) {
           throw new Error('缺少 providers 数组');
         }
-        const merged = parsed as Settings;
-        draft.targetLang = merged.targetLang ?? draft.targetLang;
-        draft.extraPrompt = merged.extraPrompt ?? draft.extraPrompt;
-        draft.providers = merged.providers;
-        draft.activeProviderId = merged.activeProviderId ?? merged.providers[0]?.id ?? null;
+        draft.targetLang = parsed.targetLang ?? draft.targetLang;
+        draft.extraPrompt = parsed.extraPrompt ?? draft.extraPrompt;
+        draft.providers = parsed.providers;
+        draft.activeProviderId =
+          parsed.activeProviderId ?? parsed.providers[0]?.id ?? null;
         selectedId = draft.activeProviderId;
         status.dataset.kind = 'ok';
         status.textContent = '导入成功，保存后生效。';
@@ -458,6 +464,8 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
   const close = () => {
     mask.remove();
     document.removeEventListener('keydown', onKey);
+    document.removeEventListener('pointerdown', onPointerDownAnywhere, true);
+    document.removeEventListener('pointerup', onPointerUpAnywhere, true);
     options.onClose();
   };
 
@@ -479,8 +487,37 @@ export function openSettingsPanel(options: SettingsPanelOptions): void {
     options.onChange(null);
     close();
   });
-  mask.addEventListener('click', (event) => {
-    if (event.target === mask) close();
+
+  // 关闭面板：只在“从遮罩按下、在遮罩松开、且没有拖动过”时生效。
+  //
+  // 不能只看 click 或 pointerup。在输入框里选文本、把鼠标拖出面板再松手时，
+  // 浏览器会在遮罩上补发一对 pointerdown/pointerup 并派发 click，
+  // 光看事件目标无法区分，所以额外记录“刚刚结束了一次拖拽”的状态。
+  let lastDragEndAt = 0;
+  let dragStart: { x: number; y: number } | null = null;
+
+  const onPointerDownAnywhere = (event: PointerEvent) => {
+    dragStart = { x: event.clientX, y: event.clientY };
+  };
+  const onPointerUpAnywhere = (event: PointerEvent) => {
+    if (dragStart) {
+      const moved = Math.hypot(event.clientX - dragStart.x, event.clientY - dragStart.y);
+      if (moved > 4) lastDragEndAt = Date.now();
+    }
+    dragStart = null;
+  };
+  document.addEventListener('pointerdown', onPointerDownAnywhere, true);
+  document.addEventListener('pointerup', onPointerUpAnywhere, true);
+
+  let pressedOnMask = false;
+  mask.addEventListener('pointerdown', (event) => {
+    pressedOnMask = event.target === mask;
+  });
+  mask.addEventListener('pointerup', (event) => {
+    const isMaskClick = pressedOnMask && event.target === mask;
+    pressedOnMask = false;
+    // 300ms 内刚发生过拖拽（典型情况是选完文本拖到窗外松手），不算点击
+    if (isMaskClick && Date.now() - lastDragEndAt > 300) close();
   });
   document.addEventListener('keydown', onKey);
 
