@@ -1,0 +1,28 @@
+{
+  "name": "nowcoder-better",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "牛客竞赛增强脚本：AI 题面翻译",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test test/*.test.ts",
+    "check": "npm run typecheck && npm run test && npm run build",
+    "mock-ai": "node tools/mock-ai-server.mjs"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
+    "@types/turndown": "^5.0.5",
+    "playwright": "^1.63.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.0",
+    "vite-plugin-monkey": "^8.1.1"
+  },
+  "dependencies": {
+    "katex": "^0.16.25",
+    "markdown-it": "^14.1.0",
+    "turndown": "^7.2.0"
+  }
+}
