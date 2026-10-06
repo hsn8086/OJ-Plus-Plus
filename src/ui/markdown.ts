@@ -2,6 +2,13 @@ import MarkdownIt from 'markdown-it';
 import katex from 'katex';
 import TurndownService from 'turndown';
 
+/**
+ * 流式模式：行内数学规则扫到末尾仍没找到收尾符时，
+ * 把起始位置记到 unclosedMath，供 stabilizeMarkdown 判断这一帧是否完成。
+ */
+let streamingMode = false;
+let unclosedMath: number[] = [];
+
 function createTurndown(): TurndownService {
   const td = new TurndownService({
     headingStyle: 'atx',
@@ -104,38 +111,81 @@ export function htmlToMarkdown(node: HTMLElement, prepareContent: (root: HTMLEle
   return turndown.turndown(clone).replace(/\n{3,}/g, '\n\n').trim();
 }
 
+/**
+ * 判断一个还没收尾的 $ 是否可能真的是公式。
+ *
+ * 只看开头的字符不够：$1,3,5,\cdots 以数字开头，但带 LaTeX 命令，是公式；
+ * 价格 $5 到 $10 里两段都没有反斜杠、下标或上下标，是货币。
+ * 所以判断依据是“有没有 LaTeX 语法特征”，而不是“第一个字符是什么”。
+ */
+function looksLikeLatex(text: string): boolean {
+  const head = text.slice(0, 60);
+  // 有 LaTeX 语法特征：命令、上下标、括号等
+  if (/\\[a-zA-Z]+|[_^{}]|\\[(),;:]/.test(head)) return true;
+  // 没有语法特征时，看开头：字母/符号开头多半是公式，数字开头是货币
+  return !/^[\d\s]/.test(head);
+}
+
 /** markdown-it + $...$ / $$...$$ 数学公式 */
 function mathPlugin(md: MarkdownIt): void {
   const inlineRule = (state: any, silent: boolean) => {
     const start = state.pos;
     if (state.src[start] !== '$') return false;
-    if (state.src[start + 1] === '$') return false;
     const max = state.posMax;
-    let pos = start + 1;
+    // $$...$$ 也可以出现在行内（如“复杂度是 $$O(n)$$，其中…”）
+    const display = state.src[start + 1] === '$';
+    const open = display ? 2 : 1;
+    let pos = start + open;
     while (pos < max) {
       const ch = state.src[pos];
       if (ch === '\\') {
         pos += 2;
         continue;
       }
+      if (ch === '\n') {
+        // 行内公式不跨行；若已扫到行尾还没收尾，流式下记为未完成
+        if (streamingMode && looksLikeLatex(state.src.slice(start + open))) {
+          unclosedMath.push(start);
+        }
+        return false;
+      }
       if (ch === '$') {
-        if (state.src[pos + 1] === '$') {
+        // 行内公式不能跨过 $$ 的边界，否则会把 $$ 当成 $ 的收尾
+        if (display) {
+          if (state.src[pos + 1] !== '$') {
+            pos += 1;
+            continue;
+          }
+        } else if (state.src[pos + 1] === '$') {
           pos += 1;
           continue;
         }
-        const content = state.src.slice(start + 1, pos);
-        if (!content.trim() || /\s$/.test(content)) {
+        const content = state.src.slice(start + open, pos);
+        if (!content.trim()) {
+          pos += open;
+          continue;
+        }
+        // $ 形式的公式首尾不能是空白，避免把“价格 $5 到 $10”当成公式。
+        // 但要继续往后找，因为后面可能还有真正的公式；只有扫到末尾仍未收尾
+        // 且这段内容看着像 LaTeX 时，才记为未完成。
+        if (!display && /^\s|\s$/.test(content)) {
           pos += 1;
           continue;
         }
         if (silent) return true;
         const token = state.push('math_inline', 'math', 0);
         token.content = content;
-        state.pos = pos + 1;
+        token.meta = { display };
+        state.pos = pos + open;
         return true;
       }
-      if (ch === '\n') return false;
       pos += 1;
+    }
+    // 扫到行尾或文本末尾还没找到收尾符。
+    // 只有看起来真的像 LaTeX 才记为未完成，否则“价格从 $5 到 $10”
+    // 这种会把整段文字切掉。
+    if (streamingMode && looksLikeLatex(state.src.slice(start + open))) {
+      unclosedMath.push(start);
     }
     return false;
   };
@@ -193,8 +243,12 @@ function mathPlugin(md: MarkdownIt): void {
     }
   };
 
-  md.renderer.rules.math_inline = (tokens, idx) =>
-    render(tokens[idx].content, false);
+  md.renderer.rules.math_inline = (tokens, idx) => {
+    const display = tokens[idx].meta?.display === true;
+    const html = render(tokens[idx].content, display);
+    // 行内出现的 $$...$$ 单独成段，否则会和前后文字挤在一行
+    return display ? `<p>${html}</p>\n` : html;
+  };
   md.renderer.rules.math_block = (tokens, idx) =>
     `<p>${render(tokens[idx].content, true)}</p>\n`;
 }
@@ -216,37 +270,56 @@ export function renderMarkdown(source: string): string {
 
 /**
  * 流式渲染时，正文随时可能停在半个公式、半个代码块或半行上。
- * 这里把未完成的部分先摘掉，保证每一帧都是合法 markdown，
- * 否则 KaTeX 会报错、代码块会闪烁，用户看到的是“渲染坏掉”而不是“正在生成”。
+ *
+ * 判定“未闭合”不能靠数 $ 个数或看渲染结果：
+ *   - `用 \`$\` 表示美元` 里的 $ 在代码里，本来就该显示；
+ *   - `价格从 $5 到 $10` 里的 $ 是货币，不是公式。
+ * 这两种都会被启发式误判。所以公式用解析器级判定：
+ * 流式模式下，行内规则扫到末尾仍没找到收尾符时，记下位置。
  */
 export function stabilizeMarkdown(source: string): string {
   let text = source;
-
-  // 未闭合的围栏代码块：把开头的 ``` 连同内容一起隐去，等闭合后再显示
-  const fenceLines = [...text.matchAll(/^(`{3,}|~{3,})/gm)];
-  if (fenceLines.length % 2 === 1) {
-    text = text.slice(0, fenceLines[fenceLines.length - 1].index);
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const cut = incompleteStart(text);
+    if (cut === null) return text;
+    const next = text.slice(0, cut);
+    if (next === text) return text;
+    text = next;
   }
-
-  // 未闭合的行内代码：丢掉最后一个反引号之后的内容
-  const ticks = (text.match(/(?<!`)`(?!`)/g) ?? []).length;
-  if (ticks % 2 === 1) {
-    const last = text.lastIndexOf('`');
-    if (last >= 0) text = text.slice(0, last);
-  }
-
-  // 未闭合的公式。$$ 优先，其次 $。
-  const dollars = (text.match(/\$\$/g) ?? []).length;
-  if (dollars % 2 === 1) {
-    text = text.slice(0, text.lastIndexOf('$$'));
-  } else {
-    const singles = (text.match(/(?<!\$)\$(?!\$)/g) ?? []).length;
-    if (singles % 2 === 1) {
-      text = text.slice(0, text.lastIndexOf('$'));
-    }
-  }
-
   return text;
+}
+
+/** 返回最靠前的“未完成构造”的起始位置；没有则返回 null */
+function incompleteStart(text: string): number | null {
+  if (!text) return null;
+
+  // 未闭合的围栏代码块：连开头的 ``` 一起隐去，等闭合后再显示
+  const fences = [...text.matchAll(/^(?:`{3,}|~{3,})/gm)];
+  if (fences.length % 2 === 1) return fences[fences.length - 1].index;
+
+  // 未闭合的行内代码
+  const ticks = [...text.matchAll(/(?<!`)`(?!`)/g)];
+  if (ticks.length % 2 === 1) return ticks[ticks.length - 1].index;
+
+  // 未闭合的公式：由解析器在流式模式下记录，而不是猜。
+  // 行内规则不管 $$ 开头且内容还没成型的情况（如 “复杂度是 $$O(”），
+  // 所以这里再直接找一下未配对的 $$。
+  const doubles = [...text.matchAll(/\$\$/g)];
+  if (doubles.length % 2 === 1) {
+    return doubles[doubles.length - 1].index;
+  }
+
+  const positions: number[] = [];
+  streamingMode = true;
+  unclosedMath = [];
+  try {
+    md.render(text);
+    positions.push(...unclosedMath);
+  } finally {
+    streamingMode = false;
+    unclosedMath = [];
+  }
+  return positions.length ? Math.min(...positions) : null;
 }
 
 export const KATEX_CSS_URL = `https://cdn.jsdelivr.net/npm/katex@${katex.version}/dist/katex.min.css`;

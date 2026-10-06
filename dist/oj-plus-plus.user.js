@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OJ++
 // @namespace    https://github.com/hsn8086/OJ-Plus-Plus
-// @version      0.4.0
+// @version      0.4.1
 // @author       hsn8086
 // @description  OJ-Plus-Plus：AI 题面翻译、Markdown 视图与一键复制
 // @license      GPL-3.0
@@ -30804,6 +30804,8 @@
 	function canConvert(input) {
 		return input != null && (typeof input === "string" || input.nodeType && (input.nodeType === 1 || input.nodeType === 9 || input.nodeType === 11));
 	}
+	var streamingMode = false;
+	var unclosedMath = [];
 	function createTurndown() {
 		const td = new TurndownService({
 			headingStyle: "atx",
@@ -30883,38 +30885,58 @@
 		prepareContent(clone);
 		return turndown.turndown(clone).replace(/\n{3,}/g, "\n\n").trim();
 	}
+	function looksLikeLatex(text) {
+		const head = text.slice(0, 60);
+		if (/\\[a-zA-Z]+|[_^{}]|\\[(),;:]/.test(head)) return true;
+		return !/^[\d\s]/.test(head);
+	}
 	function mathPlugin(md) {
 		const inlineRule = (state, silent) => {
 			const start = state.pos;
 			if (state.src[start] !== "$") return false;
-			if (state.src[start + 1] === "$") return false;
 			const max = state.posMax;
-			let pos = start + 1;
+			const display = state.src[start + 1] === "$";
+			const open = display ? 2 : 1;
+			let pos = start + open;
 			while (pos < max) {
 				const ch = state.src[pos];
 				if (ch === "\\") {
 					pos += 2;
 					continue;
 				}
+				if (ch === "\n") {
+					if (streamingMode && looksLikeLatex(state.src.slice(start + open))) unclosedMath.push(start);
+					return false;
+				}
 				if (ch === "$") {
-					if (state.src[pos + 1] === "$") {
+					if (display) {
+						if (state.src[pos + 1] !== "$") {
+							pos += 1;
+							continue;
+						}
+					} else if (state.src[pos + 1] === "$") {
 						pos += 1;
 						continue;
 					}
-					const content = state.src.slice(start + 1, pos);
-					if (!content.trim() || /\s$/.test(content)) {
+					const content = state.src.slice(start + open, pos);
+					if (!content.trim()) {
+						pos += open;
+						continue;
+					}
+					if (!display && /^\s|\s$/.test(content)) {
 						pos += 1;
 						continue;
 					}
 					if (silent) return true;
 					const token = state.push("math_inline", "math", 0);
 					token.content = content;
-					state.pos = pos + 1;
+					token.meta = { display };
+					state.pos = pos + open;
 					return true;
 				}
-				if (ch === "\n") return false;
 				pos += 1;
 			}
+			if (streamingMode && looksLikeLatex(state.src.slice(start + open))) unclosedMath.push(start);
 			return false;
 		};
 		const blockRule = (state, startLine, endLine, silent) => {
@@ -30965,7 +30987,11 @@
 				return `<code>${escapeHtml(latex)}</code>`;
 			}
 		};
-		md.renderer.rules.math_inline = (tokens, idx) => render(tokens[idx].content, false);
+		md.renderer.rules.math_inline = (tokens, idx) => {
+			const display = tokens[idx].meta?.display === true;
+			const html = render(tokens[idx].content, display);
+			return display ? `<p>${html}</p>\n` : html;
+		};
 		md.renderer.rules.math_block = (tokens, idx) => `<p>${render(tokens[idx].content, true)}</p>\n`;
 	}
 	function escapeHtml(text) {
@@ -30982,15 +31008,34 @@
 	}
 	function stabilizeMarkdown(source) {
 		let text = source;
-		const fenceLines = [...text.matchAll(/^(`{3,}|~{3,})/gm)];
-		if (fenceLines.length % 2 === 1) text = text.slice(0, fenceLines[fenceLines.length - 1].index);
-		if ((text.match(/(?<!`)`(?!`)/g) ?? []).length % 2 === 1) {
-			const last = text.lastIndexOf("`");
-			if (last >= 0) text = text.slice(0, last);
+		for (let attempt = 0; attempt < 8; attempt += 1) {
+			const cut = incompleteStart(text);
+			if (cut === null) return text;
+			const next = text.slice(0, cut);
+			if (next === text) return text;
+			text = next;
 		}
-		if ((text.match(/\$\$/g) ?? []).length % 2 === 1) text = text.slice(0, text.lastIndexOf("$$"));
-		else if ((text.match(/(?<!\$)\$(?!\$)/g) ?? []).length % 2 === 1) text = text.slice(0, text.lastIndexOf("$"));
 		return text;
+	}
+	function incompleteStart(text) {
+		if (!text) return null;
+		const fences = [...text.matchAll(/^(?:`{3,}|~{3,})/gm)];
+		if (fences.length % 2 === 1) return fences[fences.length - 1].index;
+		const ticks = [...text.matchAll(/(?<!`)`(?!`)/g)];
+		if (ticks.length % 2 === 1) return ticks[ticks.length - 1].index;
+		const doubles = [...text.matchAll(/\$\$/g)];
+		if (doubles.length % 2 === 1) return doubles[doubles.length - 1].index;
+		const positions = [];
+		streamingMode = true;
+		unclosedMath = [];
+		try {
+			md.render(text);
+			positions.push(...unclosedMath);
+		} finally {
+			streamingMode = false;
+			unclosedMath = [];
+		}
+		return positions.length ? Math.min(...positions) : null;
 	}
 	var KATEX_CSS_URL = `https://cdn.jsdelivr.net/npm/katex@${katex.version}/dist/katex.min.css`;
 	var katexCssInjected = false;

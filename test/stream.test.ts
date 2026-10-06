@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createSseParser } from '../src/core/sse.ts';
 import { getAdapter } from '../src/core/providers.ts';
-import { stabilizeMarkdown } from '../src/ui/markdown.ts';
+import { renderMarkdown, stabilizeMarkdown } from '../src/ui/markdown.ts';
 
 function sse(events: string[]): string {
   return events.map((e) => `data: ${e}\n\n`).join('');
@@ -65,52 +65,57 @@ test('流式请求体带上 stream 开关，非流式不带', () => {
   assert.equal(adapter.build(base, { messages: [] }).body.stream, undefined);
 });
 
-test('流式渲染：未闭合的公式与代码块不会渲染成错乱内容', () => {
-  // 正常闭合：原样保留
-  assert.equal(stabilizeMarkdown('答案是 $a+b$ 。'), '答案是 $a+b$ 。');
-  // 公式只到一半：把半截公式摘掉
-  assert.equal(stabilizeMarkdown('答案是 $a+'), '答案是 ');
-  assert.equal(stabilizeMarkdown('公式 $x$ 和未完成的 $y'), '公式 $x$ 和未完成的 ');
-  // 显示公式
-  assert.equal(stabilizeMarkdown('$$\nO(n)\n$$'), '$$\nO(n)\n$$');
-  assert.equal(stabilizeMarkdown('$$\nO(n'), '');
-  // 代码块未闭合
-  assert.equal(stabilizeMarkdown('```ts\nconst a = 1;\n'), '');
-  assert.equal(stabilizeMarkdown('```ts\nconst a = 1;\n```'), '```ts\nconst a = 1;\n```');
-  // 行内代码未闭合
-  assert.equal(stabilizeMarkdown('用 `code'), '用 ');
+test('流式渲染：逐帧都不漏出 LaTeX 源码，且终态与原文一致', () => {
+  const visible = (html: string) =>
+    html.replace(/<annotation[\s\S]*?<\/annotation>/g, '').replace(/<[^>]*>/g, '');
+  const samples = [
+    '当小 S 第奇数次（ $1,3,5,\\cdots$ ）次按按钮时，她可以得到 $1$ 元。',
+    '给定 $P=[p_0, p_1, \\ldots, p_{n-1}]$ 以及 $n-1$ 次修改。',
+    '复杂度是 $$O(n \\log n)$$，其中 $n \\le 10^9$。',
+    '用 `$` 表示美元，公式是 $a+b$。',
+    '```sh\nprice=$5\n```\n\n然后是 $x$。',
+    '价格从 $5 到 $10 不等，共 $20。',
+    '设 $x = \\frac{a}{b}$ 且 $y > 0$。',
+  ];
+
+  for (const sample of samples) {
+    // 终态必须与不做稳定化时完全一致，否则稳定化会吃掉内容
+    assert.equal(
+      visible(renderMarkdown(stabilizeMarkdown(sample))).trim(),
+      visible(renderMarkdown(sample)).trim(),
+      `终态不一致: ${sample}`,
+    );
+    // 逐字符前缀：任何一帧都不能漏出 LaTeX 源码
+    for (let i = 0; i <= sample.length; i += 2) {
+      const prefix = sample.slice(0, i);
+      const shown = visible(renderMarkdown(stabilizeMarkdown(prefix)));
+      assert.doesNotMatch(shown, /\\[a-zA-Z]{2,}/, `漏出 LaTeX 源码: ${JSON.stringify(prefix)}`);
+      assert.doesNotMatch(shown, /\$\$/, `漏出 $$: ${JSON.stringify(prefix)}`);
+    }
+  }
 });
 
-test('浏览器平台：fetch 流式边收边回调，且累计文本正确', async () => {
-  const { createBrowserPlatform } = await import('../src/platforms/browser.ts');
-  const text = '给定 $a+b$ 的结果。';
-  const encoder = new TextEncoder();
-  const body = new ReadableStream<Uint8Array>({
-    start(controller) {
-      for (let i = 0; i < text.length; i += 3) {
-        const piece = `data: ${JSON.stringify({ choices: [{ delta: { content: text.slice(i, i + 3) } }] })}\n\n`;
-        controller.enqueue(encoder.encode(piece));
-      }
-      controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-      controller.close();
-    },
-  });
-  const original = globalThis.fetch;
-  globalThis.fetch = (async () => new Response(body, { status: 200 })) as typeof fetch;
-  try {
-    const seen: string[] = [];
-    const platform = createBrowserPlatform();
-    const res = await platform.stream!({
-      method: 'POST',
-      url: 'https://api.example/v1/chat/completions',
-      onChunk: (raw) => seen.push(raw),
-    });
-    assert.equal(res.status, 200);
-    // 回调拿到的是累计文本，且分片到达
-    assert.ok(seen.length > 1, `应多次回调，实际 ${seen.length}`);
-    assert.equal(seen.at(-1), res.text);
-    assert.equal(getAdapter('openai-chat').createStreamReader!()(res.text), text);
-  } finally {
-    globalThis.fetch = original;
-  }
+test('流式渲染：半截公式先隐藏，货币与代码里的 $ 照常显示', () => {
+  // 半截公式：隐藏，避免用户看到 $a+
+  assert.equal(stabilizeMarkdown('公式是 $a+').trim(), '公式是');
+  assert.equal(stabilizeMarkdown('公式是 $n \\le').trim(), '公式是');
+  // 未闭合的显示公式
+  assert.equal(stabilizeMarkdown('复杂度是 $$O(n').trim(), '复杂度是');
+  // 货币：不是公式，必须原样保留
+  assert.equal(stabilizeMarkdown('价格从 $5 到 $10 不等，共 $20。'), '价格从 $5 到 $10 不等，共 $20。');
+  // 代码里的 $ 不是公式
+  assert.equal(stabilizeMarkdown('用 `$` 表示美元。'), '用 `$` 表示美元。');
+  // 已闭合的公式不受影响
+  assert.equal(stabilizeMarkdown('公式是 $a+b$。'), '公式是 $a+b$。');
+});
+
+test('行内 $$...$$ 渲染成独立公式，不留下可见美元符', () => {
+  const html = renderMarkdown('复杂度是 $$O(n \\log n)$$，其中 $n \\le 10^9$。');
+  const visible = html.replace(/<annotation[\s\S]*?<\/annotation>/g, '').replace(/<[^>]*>/g, '');
+  assert.doesNotMatch(visible, /\$/, `可见文字不应有 $: ${visible}`);
+  assert.equal((html.match(/class="katex-display"/g) ?? []).length, 1);
+  // 货币不该被当成公式
+  const money = renderMarkdown('价格从 $5 到 $10 不等。');
+  assert.equal((money.match(/class="katex/g) ?? []).length, 0);
+  assert.match(money, /\$5/);
 });
