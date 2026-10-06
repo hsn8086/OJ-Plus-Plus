@@ -65,7 +65,7 @@ test('流式请求体带上 stream 开关，非流式不带', () => {
   assert.equal(adapter.build(base, { messages: [] }).body.stream, undefined);
 });
 
-test('流式渲染：逐帧都不漏出 LaTeX 源码，且终态与原文一致', () => {
+test('流式渲染：逐帧都不漏出源码或格式标记，且终态与原文一致', () => {
   const visible = (html: string) =>
     html.replace(/<annotation[\s\S]*?<\/annotation>/g, '').replace(/<[^>]*>/g, '');
   const samples = [
@@ -76,6 +76,9 @@ test('流式渲染：逐帧都不漏出 LaTeX 源码，且终态与原文一致'
     '```sh\nprice=$5\n```\n\n然后是 $x$。',
     '价格从 $5 到 $10 不等，共 $20。',
     '设 $x = \\frac{a}{b}$ 且 $y > 0$。',
+    '这是 **加粗** 和 *斜体* 以及 ~~删除~~。',
+    '见 [链接](https://example.com) 和 ![图](a.png)。',
+    '范围 20~25 与 `code`。',
   ];
 
   for (const sample of samples) {
@@ -85,12 +88,13 @@ test('流式渲染：逐帧都不漏出 LaTeX 源码，且终态与原文一致'
       visible(renderMarkdown(sample)).trim(),
       `终态不一致: ${sample}`,
     );
-    // 逐字符前缀：任何一帧都不能漏出 LaTeX 源码
+    // 逐字符前缀：任何一帧都不能漏出 LaTeX 源码或 Markdown 格式标记
     for (let i = 0; i <= sample.length; i += 2) {
       const prefix = sample.slice(0, i);
       const shown = visible(renderMarkdown(stabilizeMarkdown(prefix)));
       assert.doesNotMatch(shown, /\\[a-zA-Z]{2,}/, `漏出 LaTeX 源码: ${JSON.stringify(prefix)}`);
       assert.doesNotMatch(shown, /\$\$/, `漏出 $$: ${JSON.stringify(prefix)}`);
+      assert.doesNotMatch(shown, /\*\*|~~/, `漏出格式标记: ${JSON.stringify(prefix)}`);
     }
   }
 });
@@ -107,6 +111,24 @@ test('流式渲染：半截公式先隐藏，货币与代码里的 $ 照常显�
   assert.equal(stabilizeMarkdown('用 `$` 表示美元。'), '用 `$` 表示美元。');
   // 已闭合的公式不受影响
   assert.equal(stabilizeMarkdown('公式是 $a+b$。'), '公式是 $a+b$。');
+});
+
+test('流式渲染：结构标记补全后立即可见，不闪烁', () => {
+  // remend 负责补全结构标记，补全不影响可见文字，所以可以立即显示
+  assert.equal(stabilizeMarkdown('这是 **加粗'), '这是 **加粗**');
+  assert.equal(stabilizeMarkdown('这是 *斜体'), '这是 *斜体*');
+  assert.equal(stabilizeMarkdown('这是 ~~删除'), '这是 ~~删除~~');
+  assert.equal(stabilizeMarkdown('这是 ***粗斜'), '这是 ***粗斜***');
+  assert.match(stabilizeMarkdown('见 [链接](https://exa'), /\[链接\]/);
+  // 结尾刚出现的孤立标记先隐藏，等有内容再显示
+  assert.equal(stabilizeMarkdown('这是 **'), '这是 ');
+  assert.equal(stabilizeMarkdown('以及 ~~'), '以及 ');
+  // 单个 ~ 是普通字符，不能当成删除线。
+  // remend 会把它转义成 \~ 以免被解析成删除线，渲染结果不变。
+  assert.equal(
+    renderMarkdown(stabilizeMarkdown('范围 20~25')).replace(/<[^>]*>/g, '').trim(),
+    '范围 20~25',
+  );
 });
 
 test('行内 $$...$$ 渲染成独立公式，不留下可见美元符', () => {

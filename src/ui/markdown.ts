@@ -1,5 +1,6 @@
 import MarkdownIt from 'markdown-it';
 import katex from 'katex';
+import remend from 'remend';
 import TurndownService from 'turndown';
 
 /**
@@ -271,14 +272,19 @@ export function renderMarkdown(source: string): string {
 /**
  * 流式渲染时，正文随时可能停在半个公式、半个代码块或半行上。
  *
- * 判定“未闭合”不能靠数 $ 个数或看渲染结果：
- *   - `用 \`$\` 表示美元` 里的 $ 在代码里，本来就该显示；
- *   - `价格从 $5 到 $10` 里的 $ 是货币，不是公式。
- * 这两种都会被启发式误判。所以公式用解析器级判定：
- * 流式模式下，行内规则扫到末尾仍没找到收尾符时，记下位置。
+ * 分两层处理：
+ *   1. 结构标记（粗体、斜体、删除线、链接）交给 remend 补全。
+ *      补全不影响可见文字，`**粗体` 立即以粗体显示，真收尾符到达后也不会变。
+ *   2. 公式不能用补全。把 `$a+` 补成 `$a+$` 会先把半截公式渲染出来，
+ *      真正内容到达时又得重画，用户看到的是闪烁。所以公式要隐起来。
+ *
+ * 公式的“未闭合”由解析器在流式模式下判定，而不是数 $ 个数或看渲染结果：
+ * `用 \`$\` 表示美元` 里的 $ 在代码里，`价格从 $5 到 $10` 里的 $ 是货币，
+ * 这两种启发式都会误判。
  */
 export function stabilizeMarkdown(source: string): string {
-  let text = source;
+  // remend 的 katex 补全会把单个 $ 补成 $$、并破坏货币文本，这里只让它做结构补全
+  let text = remend(source, { katex: false });
   for (let attempt = 0; attempt < 8; attempt += 1) {
     const cut = incompleteStart(text);
     if (cut === null) return text;
@@ -307,6 +313,18 @@ function incompleteStart(text: string): number | null {
   const doubles = [...text.matchAll(/\$\$/g)];
   if (doubles.length % 2 === 1) {
     return doubles[doubles.length - 1].index;
+  }
+
+  // 结尾孤立的格式标记。remend 会补全“有内容的”粗体/删除线，
+  // 但不会补全刚开头、后面还没内容的 `**` / `~~`。
+  // 只在标记个数为奇数（即确实没配对）时隐去，
+  // 否则会把 remend 刚补上的收尾符也切掉，反而漏出 `~~删`。
+  const marks = [...text.matchAll(/\*{1,3}|_{1,3}|~{2}|`/g)];
+  const trailing = /(?:\*{1,3}|_{1,3}|~{2}|`)$/.exec(text);
+  if (trailing) {
+    const kind = trailing[0];
+    const same = marks.filter((m) => m[0] === kind).length;
+    if (same % 2 === 1) return trailing.index;
   }
 
   const positions: number[] = [];

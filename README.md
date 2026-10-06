@@ -63,7 +63,9 @@ https://raw.githubusercontent.com/hsn8086/OJ-Plus-Plus/main/dist/nowcoder-better
 开启后请求会带上 `stream: true`，脚本按 SSE 解析增量并逐帧渲染。三处细节值得说明：
 
 - 脚本管理器只提供 `GM_xmlhttpRequest` 的 `onprogress`（累计文本），没有可读流。有些实现不触发这个回调，此时首帧之后没有内容可渲染，会自动改走一次性请求。
-- 正文随时可能停在半个 `$...$`、半个代码块上。渲染前会先把未闭合的部分隐去，否则每一帧都会闪出渲染报错。
+- 正文随时可能停在半个公式、半个代码块或半个粗体上。渲染前会做两件事：
+  - 结构标记（粗体、斜体、删除线、链接）由 [remend](https://www.npmjs.com/package/remend) 补全。补全不改变可见文字，所以 `**注意` 能立刻以粗体显示，收尾符到达时也不会重画。
+  - 公式不能补全。把 `$a+` 补成 `$a+$` 会先把半截公式渲染出来，真内容到达时又得重画。所以未闭合的公式会被隐去，等闭合后再显示。
 - 如果流已经开始输出后又中断，不会重新开始，避免用户看到内容回退。
 
 ## 代码结构
@@ -93,7 +95,7 @@ src/
     section.ts          区域工具栏和翻译流程
     result-panel.ts     通用译文面板
     settings-panel.ts   通用设置面板
-    markdown.ts         HTML 副本到 Markdown、KaTeX 渲染
+    markdown.ts         HTML 副本到 Markdown、KaTeX 渲染、流式稳定化
     buttons.ts          图标按钮和复制反馈
     styles.ts           通用样式
   entries/
