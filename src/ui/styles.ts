@@ -14,6 +14,20 @@ export const CSS = `
   margin-left: 12px;
   margin-right: 0;
 }
+/* 单独一行靠右。用于标题区下方（如 Codeforces 的时限/内存限制之后），
+   用 flex 而不是 float，这样它一定会独占一行。 */
+.ojpp-toolbar-block {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  margin: 2px 0 6px;
+}
+.ojpp-toolbar-block .ojpp-icon-btn {
+  width: 26px;
+  height: 26px;
+}
 .ojpp-icon-btn {
   display: inline-flex;
   align-items: center;

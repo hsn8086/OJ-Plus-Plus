@@ -2,10 +2,11 @@ export interface MountPoint {
   anchor: HTMLElement;
   position: InsertPosition;
   /**
-   * right: 浮到锚点所在行的最右边（标题行右侧）。
    * inline: 紧跟锚点（默认）。
+   * right: 浮到锚点所在行的最右边（适合标题行）。
+   * block-right: 单独一行、靠右对齐（适合放在标题区下方）。
    */
-  align?: 'inline' | 'right';
+  align?: 'inline' | 'right' | 'block-right';
 }
 
 /** 一个可独立翻译、查看 Markdown、复制的区域。 */

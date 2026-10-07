@@ -314,23 +314,43 @@ try {
     await page.evaluate((settings) => localStorage.setItem('ojpp:settings', JSON.stringify(settings)), settings);
     await page.addScriptTag({ content: cfCode });
     await page.evaluate(async () => { window.stopApp = await OJPPCf.start(); });
-    const result = await page.evaluate(() => [...document.querySelectorAll('.ojpp-toolbar')].map((tb) => {
-      const heading = tb.parentElement;
-      const hb = heading.getBoundingClientRect();
-      const tbb = tb.getBoundingClientRect();
-      return {
-        sameLine: Math.abs((hb.top + hb.height / 2) - (tbb.top + tbb.height / 2)) < hb.height,
-        atRight: Math.abs(tbb.right - hb.right) < 8,
-      };
-    }));
+    const result = await page.evaluate(() => {
+      const header = document.querySelector('.problem-statement .header');
+      const hb = header?.getBoundingClientRect();
+      return [...document.querySelectorAll('.ojpp-toolbar')].map((tb) => {
+        const tbb = tb.getBoundingClientRect();
+        if (tb.classList.contains('ojpp-toolbar-block')) {
+          // 题面工具栏：在标题区下方单独一行，靠右，且不与标题同行
+          return {
+            kind: 'block',
+            belowHeader: hb ? tbb.top >= hb.bottom - 2 : null,
+            ownLine: hb ? Math.abs(tbb.top - (hb.top + hb.height / 2)) > 10 : null,
+            atRight: hb ? Math.abs(tbb.right - hb.right) < 8 : null,
+          };
+        }
+        // 其余工具栏：跟在各自小标题同一行，靠右
+        const heading = tb.parentElement;
+        const chb = heading.getBoundingClientRect();
+        return {
+          kind: 'inline',
+          sameLine: Math.abs((chb.top + chb.height / 2) - (tbb.top + tbb.height / 2)) < chb.height,
+          atRight: Math.abs(tbb.right - chb.right) < 8,
+        };
+      });
+    });
     await page.evaluate(() => window.stopApp());
     await page.close();
     return result;
   })();
   assert.ok(align.length > 0, '应有工具栏');
-  assert.ok(align.every((a) => a.sameLine), `工具栏应与标题同行: ${JSON.stringify(align)}`);
-  assert.ok(align.every((a) => a.atRight), `工具栏应靠右: ${JSON.stringify(align)}`);
-  console.log('✓ 工具栏：靠右且与标题同行');
+  const block = align.filter((a) => a.kind === 'block');
+  assert.equal(block.length, 1, `题面应有独立的块级工具栏: ${JSON.stringify(align)}`);
+  assert.ok(block[0].belowHeader, '题面工具栏应在时限/内存限制下方');
+  assert.ok(block[0].ownLine, '题面工具栏应单独一行');
+  const inline = align.filter((a) => a.kind === 'inline');
+  assert.ok(inline.every((a) => a.sameLine), `区域工具栏应与小标题同行: ${JSON.stringify(inline)}`);
+  assert.ok(align.every((a) => a.atRight), `工具栏都应靠右: ${JSON.stringify(align)}`);
+  console.log('✓ 工具栏：题面独立一行靠右，其余与小标题同行');
 
   // 暗色主题与界面语言：主题属性要落到 <html>，且只影响脚本自己的界面。
   const themed = await (async () => {
@@ -364,6 +384,166 @@ try {
   assert.notEqual(themed.statementColor, 'rgb(0, 0, 0)', `题面应应用暗色: ${themed.statementColor}`);
   assert.equal(themed.buttonTitle, 'AI Translate', '英文界面下按钮应为英文');
   console.log('✓ 暗色主题与界面语言：题面与面板同时切换');
+
+  // 暗色完整性：扫一遍可见元素，不该还有浅色底。
+  // 这个断言来自真实反馈：样例块（.sample-tests pre #efefef）、
+  // 样例行高亮（.test-example-line-even #E0E0E0）和侧边栏曾经漏掉。
+  const leftovers = await (async () => {
+    const html = await readFile(new URL('test/fixtures/codeforces-new.html', root), 'utf8');
+    const page = await pageWithFixture('https://codeforces.com/problemset/problem/1/A', html);
+    await page.evaluate((settings) => localStorage.setItem('ojpp:settings', JSON.stringify({
+      ...settings, theme: 'dark', locale: 'zh',
+    })), settings);
+    await page.addScriptTag({ content: cfCode });
+    await page.evaluate(async () => { window.stopApp = await OJPPCf.start(); });
+    await page.waitForTimeout(200);
+    const found = await page.evaluate(() => {
+      const isLight = (rgb) => {
+        const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(rgb);
+        if (!m) return false;
+        const alpha = /rgba\([^)]*,\s*([\d.]+)\)/.exec(rgb);
+        if (alpha && Number(alpha[1]) === 0) return false;
+        const [r, g, b] = [+m[1], +m[2], +m[3]];
+        return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55;
+      };
+      const out = [];
+      for (const el of document.querySelectorAll('body *')) {
+        const rect = el.getBoundingClientRect();
+        if (rect.width < 8 || rect.height < 6) continue;
+        const cs = getComputedStyle(el);
+        if (cs.visibility === 'hidden' || cs.display === 'none') continue;
+        if (!isLight(cs.backgroundColor)) continue;
+        out.push(`${el.tagName.toLowerCase()}.${(el.className || '').toString().slice(0, 40)} = ${cs.backgroundColor}`);
+      }
+      return out.slice(0, 10);
+    });
+    // 文字颜色也要检查：站点给顶部导航和侧边栏链接设了 #000，
+    // 背景压暗后黑字会完全看不见。
+    const darkText = await page.evaluate(() => {
+      const isDark = (rgb) => {
+        const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(rgb);
+        if (!m) return false;
+        return (0.299 * +m[1] + 0.587 * +m[2] + 0.114 * +m[3]) / 255 < 0.35;
+      };
+      const out = [];
+      for (const sel of ['.menu-list li a', '.second-level-menu-list li a', '.roundbox a', '.sidebox a']) {
+        for (const el of document.querySelectorAll(sel)) {
+          const cs = getComputedStyle(el);
+          if (isDark(cs.color)) out.push(`${sel} = ${cs.color}`);
+        }
+      }
+      return [...new Set(out)].slice(0, 8);
+    });
+    // 多测样例的奇偶行必须保持不同底色，否则行分组信息就丢了。
+    // （曾经因为用 .test-example-line 覆盖高亮，把交替色也一起盖掉。）
+    const lineColors = await page.evaluate(() => {
+      const even = document.querySelector('.test-example-line-even');
+      const odd = document.querySelector('.test-example-line-odd');
+      return {
+        even: even ? getComputedStyle(even).backgroundColor : null,
+        odd: odd ? getComputedStyle(odd).backgroundColor : null,
+      };
+    });
+    // 提交类按钮：站点用 outset 边框做立体感，暗色下要压成扁平。
+    const buttonStyle = await page.evaluate(() => {
+      const el = document.querySelector('input[type="submit"]');
+      if (!el) return null;
+      const cs = getComputedStyle(el);
+      return { borderStyle: cs.borderTopStyle, bg: cs.backgroundColor };
+    });
+    // 页脚、比赛状态、登录区这些深蓝色链接，深底上要换成可读的浅色。
+    // 站点用 #0000cc / #3b5998，亮度很低，之前扫描漏掉了它们。
+    const dimLinks = await page.evaluate(() => {
+      const out = [];
+      const check = (sel) => {
+        for (const el of document.querySelectorAll(sel)) {
+          const cs = getComputedStyle(el);
+          const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(cs.color);
+          if (!m) continue;
+          if ((0.299 * +m[1] + 0.587 * +m[2] + 0.114 * +m[3]) / 255 < 0.4) {
+            out.push(sel + ' = ' + cs.color);
+          }
+        }
+      };
+      check('#footer a');
+      check('.contest-state-phase');
+      check('.lang-chooser a');
+      return [...new Set(out)];
+    });
+    // sidebar-menu 的 li 原本套 1px 白边框，暗色下要拆掉。
+    const sidebarBorder = await page.evaluate(() => {
+      const li = document.querySelector('.sidebar-menu ul li');
+      if (!li) return null;
+      const cs = getComputedStyle(li);
+      return { top: cs.borderTopWidth, bottom: cs.borderBottomWidth, bottomColor: cs.borderBottomColor };
+    });
+    // 顶栏必须分两条：logo/登录 与 主导航 用不同底色，不能糊成一片。
+    const headerBands = await page.evaluate(() => {
+      const h = document.querySelector('#header');
+      const mb = document.querySelector('.menu-box');
+      if (!h || !mb) return null;
+      const hs = getComputedStyle(h);
+      const ms = getComputedStyle(mb);
+      // 近黑色（亮度 < 0.18）也不接受：用户反馈“不要用黑色”
+      const lum = (rgb) => {
+        const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(rgb);
+        return m ? (0.299 * +m[1] + 0.587 * +m[2] + 0.114 * +m[3]) / 255 : null;
+      };
+      return {
+        headerBg: hs.backgroundColor,
+        menuBg: ms.backgroundColor,
+        // 导航条才是可见的色块；#header 故意与页面底色一致，不参与亮度检查
+        menuLum: lum(ms.backgroundColor),
+        pageBg: getComputedStyle(document.body).backgroundColor,
+      };
+    });
+    // logo 处理：白底转透明靠 mix-blend-mode
+    const logoStyle = await page.evaluate(() => {
+      const img = document.querySelector('#header img[alt="Codeforces"]');
+      if (!img) return null;
+      const cs = getComputedStyle(img);
+      return { filter: cs.filter, blend: cs.mixBlendMode };
+    });
+    await page.evaluate(() => window.stopApp());
+    await page.close();
+    return { leftovers: found, darkText, lineColors, buttonStyle, dimLinks, sidebarBorder, headerBands, logoStyle };
+  })();
+  assert.deepEqual(leftovers.leftovers, [], `暗色下仍有浅色背景: ${leftovers.leftovers.join(' | ')}`);
+  assert.deepEqual(leftovers.darkText, [], `暗色下仍有黑色文字: ${leftovers.darkText.join(' | ')}`);
+  assert.ok(leftovers.lineColors.even && leftovers.lineColors.odd, '应有多测样例行');
+  assert.notEqual(
+    leftovers.lineColors.even,
+    leftovers.lineColors.odd,
+    `多测样例的奇偶行底色应不同: ${JSON.stringify(leftovers.lineColors)}`,
+  );
+  assert.ok(leftovers.buttonStyle, 'fixture 里应有提交按钮');
+  assert.notEqual(
+    leftovers.buttonStyle.borderStyle,
+    'outset',
+    `提交按钮不应保留拟物化边框: ${JSON.stringify(leftovers.buttonStyle)}`,
+  );
+  assert.deepEqual(leftovers.dimLinks, [], `深蓝链接在暗色下仍不可读: ${leftovers.dimLinks.join(' | ')}`);
+  assert.ok(leftovers.sidebarBorder, 'fixture 应有 sidebar-menu 列表');
+  assert.equal(leftovers.sidebarBorder.top, '0px', `侧边栏列表项不应有白边框: ${JSON.stringify(leftovers.sidebarBorder)}`);
+  assert.ok(leftovers.headerBands, 'fixture 应有 #header 与 .menu-box');
+  assert.notEqual(
+    leftovers.headerBands.headerBg,
+    leftovers.headerBands.menuBg,
+    `顶栏两层应用不同底色以保持分层: ${JSON.stringify(leftovers.headerBands)}`,
+  );
+  assert.ok(
+    leftovers.headerBands.menuLum > 0.18,
+    `导航条不应使用近黑色: ${JSON.stringify(leftovers.headerBands)}`,
+  );
+  // 用户要求：logo/登录这一条与页面底色一致，不要留出比背景更亮的色块
+  assert.equal(
+    leftovers.headerBands.headerBg,
+    leftovers.headerBands.pageBg,
+    `#header 应与页面背景同色: ${JSON.stringify(leftovers.headerBands)}`,
+  );
+  assert.ok(leftovers.logoStyle, 'fixture 应有 Codeforces logo');
+  assert.equal(leftovers.logoStyle.blend, 'screen', `logo 应用 screen 混合让白底透明: ${JSON.stringify(leftovers.logoStyle)}`);
+  console.log('✓ 暗色完整性：无残留浅色、无黑字、多测交替色、按钮扁平、深蓝链接与 logo 已处理');
 
   // 在面板里切换语言后，面板与工具栏都要立刻变，不必刷新页面。
   // 这里覆盖一个曾经的 bug：面板为即时预览调了 setLocale，
@@ -399,6 +579,37 @@ try {
   assert.equal(switched.panelAfter, 'Translation', `面板应即时切换: ${switched.panelAfter}`);
   assert.equal(switched.toolbarAfter, 'AI Translate', `保存后工具栏应切换: ${switched.toolbarAfter}`);
   console.log('✓ 界面语言切换：面板即时生效，保存后工具栏同步');
+
+  // 题面工具栏插在 .header 之后，站点更新会反复触发 reconcile。
+  // 覆盖一个曾经的 bug：用 `.header + div` 找题面正文，
+  // 工具栏插入后这个选择器指向工具栏自身，工具栏数量会逐渐减少。
+  const stable = await (async () => {
+    const html = await readFile(new URL('test/fixtures/codeforces-new.html', root), 'utf8');
+    const page = await pageWithFixture('https://codeforces.com/problemset/problem/1/A', html);
+    await page.evaluate((settings) => localStorage.setItem('ojpp:settings', JSON.stringify(settings)), settings);
+    await page.addScriptTag({ content: cfCode });
+    await page.evaluate(async () => { window.stopApp = await OJPPCf.start(); });
+    await page.waitForTimeout(200);
+    const before = await page.locator('.ojpp-toolbar').count();
+    // 连续触发多次站点更新
+    for (let i = 0; i < 3; i += 1) {
+      await page.evaluate(() => document.querySelector('.problem-statement')?.append(document.createElement('span')));
+      await page.waitForTimeout(200);
+    }
+    const probe = await page.evaluate(() => ({
+      toolbars: document.querySelectorAll('.ojpp-toolbar').length,
+      statementToolbar: document.querySelectorAll('.ojpp-toolbar-block').length,
+      // 题面正文不能被工具栏替换
+      bodyHasText: (document.querySelector('.problem-statement > div:not(.header):not(.ojpp-toolbar)')?.textContent ?? '').includes('Creatnx'),
+    }));
+    await page.evaluate(() => window.stopApp());
+    await page.close();
+    return { before, ...probe };
+  })();
+  assert.equal(stable.toolbars, stable.before, `反复更新后工具栏数量应稳定: ${JSON.stringify(stable)}`);
+  assert.equal(stable.statementToolbar, 1, '题面工具栏应始终存在');
+  assert.ok(stable.bodyHasText, '题面正文不应被工具栏替换');
+  console.log('✓ 工具栏在反复更新后保持稳定，题面正文未被替换');
 
   // 使用另一个站点契约与真实 browser 平台；不加载 GM 或牛客适配器。
   const built = await build({ configFile: false, logLevel: 'silent', build: {

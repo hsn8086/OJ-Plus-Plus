@@ -14,9 +14,37 @@
   sup.upper-index, sub.lower-index { font-size: .75em; }
   .MathJax_Preview { color: inherit; }
   pre { white-space: pre-wrap; }
+  /* ↓↓↓ 以下为 Codeforces 真实站点的浅色规则（取自其 CSS），
+     用于验证暗色主题确实覆盖了它们 ↓↓↓ */
+  .problem-statement .sample-tests pre { background-color: #efefef; }
+  .problem-statement .test-example-line-even { background-color: #E0E0E0; }
+  .problem-statement .test-example-line-odd { background-color: #ffffff; }
+  .problem-statement .input .title,
+  .problem-statement .output .title { background: #f0f0f0; }
+  .roundbox { background: #fff; border: 1px solid rgb(185,185,185); }
+  .roundbox .bottom-links, .roundbox .dark { background-color: #F5F5F5; }
+  .datatable td, .datatable th { background: #fff; }
+  .tag-box { background: #fff; }
+  .second-level-menu-list li a { background: #f4f4f4; }
+  input.search { background-color: #f4f4f4; }
+  .copier-small:hover, .input-output-copier:hover { background-color: #def; }
+  /* Codeforces 真实的黑色文字规则（取自 style.css / second-level-menu.css） */
+  .menu-list li a { color: #000; }
+  .second-level-menu-list li a { color: black; }
+  .roundbox a, .sidebox a { color: #000; }
+  .roundbox li, .sidebox li { color: #000; }
+  input[type="submit"] { border: 2px outset #fff; }
+  /* Codeforces 真实的深色文字规则（取自 style.css / 内联样式） */
+  .contest-state-phase { color: #3b5998; }
+  #footer, #footer a { color: #0000cc; }
+  .lang-chooser a { color: #0000cc; }
+  .sidebar-menu ul li { border: 1px solid #fff; }
+  .resource-locale { color: #666; }
 </style>
 <div id="body">
-<div class="roundbox menu-box"><div class="menu-list-container">
+<div class="roundbox menu-box"><div id="header"><div><a href="/"><img height="65" alt="Codeforces" src="logo.png"></a></div>
+<div class="lang-chooser"><a href="#">hsn8086</a> | <a href="#">Logout</a></div></div>
+<div class="menu-list-container">
 <ul class="menu-list main-menu-list"><li><a href="/">Home</a></li><li class="current"><a href="/problemset">Problemset</a></li></ul>
 </div></div>
 <!-- 新题：MathJax 源码 -->
@@ -27,6 +55,35 @@
 10 20 50
 </pre></div><div class="output"><div class="title">Output</div><pre>112
 </pre></div></div></div><div class="note"><div class="section-title">Note</div><p>In the first test, there is only one mirror and it tells, that Creatnx is beautiful with probability <span class="MathJax_Preview">\frac{1}{2}</span><script type="math/tex">\frac{1}{2}</script>. So, the expected number of days until Creatnx becomes happy is <span class="MathJax_Preview">2</span><script type="math/tex">2</script>.</p></div>
+<!-- 站点脚本会给样例行加高亮 class，暗色下必须覆盖 -->
+<div class="sample-tests"><div class="section-title">Examples</div>
+  <div class="sample-test"><div class="input"><div class="title">Input</div>
+    <pre><span class="test-example-line test-example-line-even">1</span>
+<span class="test-example-line test-example-line-odd">50</span></pre></div>
+  <div class="output"><div class="title">Output</div><pre>2</pre></div></div>
 </div>
 </div>
+<div class="submit-box"><input type="submit" value="Start virtual contest"></div>
+<div id="sidebar">
+  <div class="roundbox sidebox sidebar-menu">
+    <div class="caption titled">→ Contest materials</div>
+    <ul>
+      <li><span><a href="#">Announcement <span class="resource-locale">(en)</span></a></span>
+        <span style="float: right;"><img class="delete-resource-link" src="close.png"></span></li>
+      <li><span><a href="#">Tutorial <span class="resource-locale">(en)</span></a></span></li>
+    </ul>
+  </div>
+  <div class="roundbox sidebox"><div class="caption">Contest</div>
+    <span class="contest-state-phase">Finished</span>
+    <div class="titled"><div class="dark"><a class="button" href="#">Practice</a></div></div>
+  </div>
+  <div class="roundbox"><div class="caption">Last submissions</div>
+    <a style="color: black" href="#">Codeforces Round 917</a>
+    <table class="datatable"><tr><th>Submission</th><th>Verdict</th></tr>
+      <tr><td>393479228</td><td class="verdict-accepted">Accepted</td></tr></table>
+  </div>
+</div>
+<div class="second-level-menu"><ul class="second-level-menu-list">
+  <li class="current"><a href="#">Problems</a></li><li><a href="#">Submit code</a></li></ul></div>
+<div id="footer"><a href="#">Privacy Policy</a> <a class="switchToMobile" href="#">mobile version</a></div>
 </html>

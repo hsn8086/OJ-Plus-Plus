@@ -30,6 +30,11 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
     // 这样工具栏和标题同一行，且不会改变站点自己的 DOM 结构。
     toolbar.classList.add('ojpp-toolbar-right');
     section.toolbar.anchor.append(toolbar);
+  } else if (section.toolbar.align === 'block-right') {
+    // 单独一行靠右：插在锚点之后，用块级容器右对齐。
+    // 适合放在标题区（如时限、内存限制）下方。
+    toolbar.classList.add('ojpp-toolbar-block');
+    section.toolbar.anchor.insertAdjacentElement(section.toolbar.position, toolbar);
   } else {
     section.toolbar.anchor.insertAdjacentElement(section.toolbar.position, toolbar);
   }
