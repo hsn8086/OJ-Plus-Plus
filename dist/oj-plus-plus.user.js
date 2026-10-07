@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OJ++
 // @namespace    https://github.com/hsn8086/OJ-Plus-Plus
-// @version      0.5.4
+// @version      0.5.5
 // @author       hsn8086
 // @description  OJ-Plus-Plus：AI 题面翻译、Markdown 视图与一键复制
 // @license      GPL-3.0
@@ -32876,8 +32876,12 @@ $$` : `${n}$$`;
 		let settled = false;
 		let accumulated = "";
 		let readerTask = null;
+		let fallbackTimer;
 		const decoder = new TextDecoder();
-		const cleanup = () => req.signal?.removeEventListener("abort", onAbort);
+		const cleanup = () => {
+			if (fallbackTimer) clearTimeout(fallbackTimer);
+			req.signal?.removeEventListener("abort", onAbort);
+		};
 		const fail = (error) => {
 			if (settled) return;
 			settled = true;
@@ -32892,8 +32896,8 @@ $$` : `${n}$$`;
 			req.onChunk?.(accumulated);
 		};
 		const consume = (response) => {
-			if (!isReadableStream(response)) return Promise.resolve();
 			if (readerTask) return readerTask;
+			if (!isReadableStream(response)) return Promise.resolve();
 			readerTask = (async () => {
 				const reader = response.getReader();
 				try {
@@ -32909,8 +32913,8 @@ $$` : `${n}$$`;
 			})();
 			return readerTask;
 		};
-		const finish = (res) => {
-			consume(res.response).then(() => {
+		const finish = (res, waitMs = 0) => {
+			const complete = () => {
 				if (settled) return;
 				settled = true;
 				cleanup();
@@ -32920,9 +32924,11 @@ $$` : `${n}$$`;
 					statusText: res.statusText,
 					text
 				});
-			}).catch((error) => {
+			};
+			consume(res.response).then(complete).catch((error) => {
 				fail(error instanceof Error ? error : new Error("读取流式响应失败"));
 			});
+			if (waitMs > 0) fallbackTimer = setTimeout(complete, waitMs);
 		};
 		const handle = _GM_xmlhttpRequest({
 			method: req.method,
@@ -32937,6 +32943,7 @@ $$` : `${n}$$`;
 					fail(error instanceof Error ? error : new Error("读取流式响应失败"));
 				});
 			},
+			onload: (res) => finish(res, 250),
 			onloadend: finish,
 			onerror: () => fail(new Error("网络请求失败，请检查网络或接口地址")),
 			ontimeout: () => fail(new Error("请求超时")),

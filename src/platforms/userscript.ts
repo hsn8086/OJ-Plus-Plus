@@ -81,8 +81,12 @@ const stream: HttpStreamTransport = (req) => new Promise((resolve, reject) => {
   let settled = false;
   let accumulated = '';
   let readerTask: Promise<void> | null = null;
+  let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
   const decoder = new TextDecoder();
-  const cleanup = () => req.signal?.removeEventListener('abort', onAbort);
+  const cleanup = () => {
+    if (fallbackTimer) clearTimeout(fallbackTimer);
+    req.signal?.removeEventListener('abort', onAbort);
+  };
   const fail = (error: Error) => {
     if (settled) return;
     settled = true;
@@ -97,8 +101,8 @@ const stream: HttpStreamTransport = (req) => new Promise((resolve, reject) => {
     req.onChunk?.(accumulated);
   };
   const consume = (response: unknown): Promise<void> => {
-    if (!isReadableStream(response)) return Promise.resolve();
     if (readerTask) return readerTask;
+    if (!isReadableStream(response)) return Promise.resolve();
     readerTask = (async () => {
       const reader = response.getReader();
       try {
@@ -114,16 +118,24 @@ const stream: HttpStreamTransport = (req) => new Promise((resolve, reject) => {
     })();
     return readerTask;
   };
-  const finish = (res: { status: number; statusText: string; response?: unknown; responseText?: unknown }) => {
-    consume(res.response).then(() => {
+  const finish = (
+    res: { status: number; statusText: string; response?: unknown; responseText?: unknown },
+    waitMs = 0,
+  ) => {
+    const complete = () => {
       if (settled) return;
       settled = true;
       cleanup();
       const text = accumulated || (typeof res.responseText === 'string' ? res.responseText : '');
       resolve({ status: res.status, statusText: res.statusText, text });
-    }).catch((error: unknown) => {
+    };
+    const task = consume(res.response);
+    task.then(complete).catch((error: unknown) => {
       fail(error instanceof Error ? error : new Error('读取流式响应失败'));
     });
+    // 某些 TM 版本会触发 onload，但不把 onloadend/stream close 传到沙箱。
+    // onload 代表响应体已经完整到达，给 reader 一小段时间消费排队数据后收尾。
+    if (waitMs > 0) fallbackTimer = setTimeout(complete, waitMs);
   };
 
   const handle = GM_xmlhttpRequest({
@@ -142,7 +154,9 @@ const stream: HttpStreamTransport = (req) => new Promise((resolve, reject) => {
         });
       }
     },
-    // TM 在 onloadend 前才会关闭 response ReadableStream。
+    // onload 表示响应体已经到达；正常 TM 仍会随后触发 onloadend。
+    // 250ms 兜底，兼容只发 onload 的管理器版本。
+    onload: (res) => finish(res, 250),
     onloadend: finish,
     onerror: () => fail(new Error('网络请求失败，请检查网络或接口地址')),
     ontimeout: () => fail(new Error('请求超时')),
