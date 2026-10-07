@@ -244,6 +244,59 @@ export const CSS = `
 .ojpp-provider-item[data-active="1"] { border-color: #2563eb; background: #f5f8ff; }
 .ojpp-provider-item .ojpp-provider-name { font-weight: 600; flex: 1; }
 .ojpp-provider-item .ojpp-provider-meta { color: #6b7280; font-size: 12px; }
+
+/* 添加提供商按钮：整行、醒目 */
+.ojpp-add-provider {
+  display: block;
+  width: 100%;
+  margin-bottom: 12px;
+  text-align: center;
+}
+/* 列表项：左边选择框，中间名称与说明，右边编辑按钮 */
+.ojpp-provider-text { flex: 1; min-width: 0; }
+.ojpp-provider-badge {
+  flex: none;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, .12);
+  color: #2563eb;
+}
+.ojpp-provider-edit { flex: none; }
+.ojpp-provider-item:hover { background: rgba(0, 0, 0, .02); }
+
+/* 添加面板的标题行与预设网格 */
+.ojpp-picker-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.ojpp-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+.ojpp-preset-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid #e6e9ee;
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ojpp-preset-item:hover { border-color: #2563eb; background: #f5f8ff; }
+.ojpp-preset-name { font-weight: 600; }
+.ojpp-preset-meta { font-size: 12px; color: #6b7280; word-break: break-all; }
 .ojpp-status {
   margin-top: 8px;
   font-size: 12px;
@@ -366,6 +419,17 @@ html[data-ojpp-theme="dark"] .ojpp-provider-item[data-active="1"] {
   border-color: #539bf5; background: rgba(83, 155, 245, .1);
 }
 html[data-ojpp-theme="dark"] .ojpp-provider-item .ojpp-provider-meta { color: #768390; }
+html[data-ojpp-theme="dark"] .ojpp-provider-item:hover { background: rgba(255, 255, 255, .03); }
+html[data-ojpp-theme="dark"] .ojpp-provider-badge {
+  background: rgba(83, 155, 245, .18); color: #79b8ff;
+}
+html[data-ojpp-theme="dark"] .ojpp-preset-item {
+  background: #22272e; border-color: #373e47; color: #cdd9e5;
+}
+html[data-ojpp-theme="dark"] .ojpp-preset-item:hover {
+  border-color: #539bf5; background: #2d333b;
+}
+html[data-ojpp-theme="dark"] .ojpp-preset-meta { color: #768390; }
 html[data-ojpp-theme="dark"] .ojpp-status[data-kind="error"] { color: #f47067; }
 html[data-ojpp-theme="dark"] .ojpp-status[data-kind="ok"] { color: #57ab5a; }
 html[data-ojpp-theme="dark"] .ojpp-btn {

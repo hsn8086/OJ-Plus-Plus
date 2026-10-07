@@ -91,6 +91,19 @@
 		"settings.timeout": "Timeout (ms)",
 		"settings.retries": "Retries",
 		"settings.retriesHint": "Only applies to network errors and 5xx responses.",
+		"settings.addProvider": "Add provider",
+		"settings.editProvider": "Edit provider",
+		"settings.backToList": "Back to list",
+		"settings.chooseProvider": "Choose a provider",
+		"settings.chooseProviderHint": "Start from a preset, or pick Custom and fill it in yourself.",
+		"settings.providerSearch": "Search providers…",
+		"settings.noProviderMatch": "No matching provider",
+		"settings.providerList": "Configured",
+		"settings.providerListEmpty": "No providers yet. Click “Add provider” above to start.",
+		"settings.enableProvider": "Enabled",
+		"settings.confirmAdd": "Add",
+		"settings.deleteConfirm": "Delete this provider?",
+		"settings.inUse": "In use",
 		"settings.addFromPreset": "Add from preset",
 		"settings.add": "Add",
 		"settings.providerName": "Label",
@@ -207,6 +220,19 @@
 		"settings.timeout": "超时（毫秒）",
 		"settings.retries": "失败重试次数",
 		"settings.retriesHint": "仅对网络错误和 5xx 生效。",
+		"settings.addProvider": "添加提供商",
+		"settings.editProvider": "编辑提供商",
+		"settings.backToList": "返回列表",
+		"settings.chooseProvider": "选择提供商",
+		"settings.chooseProviderHint": "从预设开始，或选择自定义自己填。",
+		"settings.providerSearch": "查找提供商…",
+		"settings.noProviderMatch": "没有匹配的提供商",
+		"settings.providerList": "已配置",
+		"settings.providerListEmpty": "还没有提供商，点上面的「添加提供商」开始。",
+		"settings.enableProvider": "启用",
+		"settings.confirmAdd": "添加",
+		"settings.deleteConfirm": "删除这个提供商？",
+		"settings.inUse": "使用中",
 		"settings.addFromPreset": "从预设新增",
 		"settings.add": "新增",
 		"settings.providerName": "备注名",
@@ -32533,59 +32559,122 @@ $$` : `${n}$$`;
 			box.append(row);
 			return box;
 		}
+		let providerView = "list";
 		function renderProviders() {
 			const box = el("div");
+			if (providerView === "add") {
+				box.append(renderProviderPicker());
+				return box;
+			}
+			if (providerView === "edit") {
+				const current = draft.providers.find((p) => p.id === selectedId);
+				if (current) {
+					const head = el("div", "ojpp-picker-head");
+					const back = el("button", "ojpp-btn ojpp-btn-ghost", `← ${t("settings.backToList")}`);
+					back.addEventListener("click", () => {
+						providerView = "list";
+						render();
+					});
+					head.append(back, el("strong", void 0, current.name || t("common.unnamed")));
+					box.append(head);
+					box.append(renderProviderEditor(current, () => {}));
+					return box;
+				}
+				providerView = "list";
+			}
+			box.append(renderProviderList());
+			return box;
+		}
+		function renderProviderList() {
+			const box = el("div");
+			const addBtn = el("button", "ojpp-btn ojpp-btn-primary ojpp-add-provider", `+ ${t("settings.addProvider")}`);
+			addBtn.addEventListener("click", () => {
+				providerView = "add";
+				render();
+			});
+			box.append(addBtn);
 			const list = el("div", "ojpp-provider-list");
-			const nameRefs = new Map();
+			if (draft.providers.length === 0) {
+				const empty = el("div", "ojpp-hint", t("settings.providerListEmpty"));
+				box.append(empty);
+				return box;
+			}
 			draft.providers.forEach((provider) => {
 				const item = el("div", "ojpp-provider-item");
-				item.dataset.active = provider.id === selectedId ? "1" : "0";
+				item.dataset.active = provider.id === draft.activeProviderId ? "1" : "0";
 				const radio = el("input");
 				radio.type = "radio";
 				radio.name = "ojpp-provider";
-				radio.checked = provider.id === selectedId;
-				const name = el("span", "ojpp-provider-name", provider.name || t("common.unnamed"));
-				const meta = el("span", "ojpp-provider-meta", `${PROTOCOL_LABEL[provider.protocol]} · ${provider.model || t("common.notFilled")}`);
-				nameRefs.set(provider.id, name);
-				const select = () => {
-					if (selectedId === provider.id) return;
-					selectedId = provider.id;
+				radio.checked = provider.id === draft.activeProviderId;
+				radio.title = t("settings.enableProvider");
+				radio.addEventListener("change", () => {
 					draft.activeProviderId = provider.id;
 					render();
-				};
-				radio.addEventListener("change", select);
-				item.addEventListener("click", (event) => {
-					if (event.target === radio) return;
-					select();
 				});
-				item.append(radio, name, meta);
+				const text = el("div", "ojpp-provider-text");
+				const name = el("div", "ojpp-provider-name", provider.name || t("common.unnamed"));
+				const meta = el("div", "ojpp-provider-meta", `${PROTOCOL_LABEL[provider.protocol]} · ${provider.model || t("common.notFilled")}`);
+				text.append(name, meta);
+				const badge = el("span", "ojpp-provider-badge", t("settings.inUse"));
+				if (provider.id !== draft.activeProviderId) badge.style.visibility = "hidden";
+				const edit = el("button", "ojpp-btn ojpp-btn-ghost ojpp-provider-edit", t("settings.editProvider"));
+				edit.addEventListener("click", (event) => {
+					event.stopPropagation();
+					selectedId = provider.id;
+					providerView = "edit";
+					render();
+				});
+				item.addEventListener("click", (event) => {
+					if (event.target === radio || event.target === edit) return;
+					selectedId = provider.id;
+					providerView = "edit";
+					render();
+				});
+				item.append(radio, text, badge, edit);
 				list.append(item);
 			});
 			box.append(list);
-			const addRow = el("div", "ojpp-row");
-			const presetSelect = el("select");
-			PROVIDER_PRESETS.forEach((preset, index) => {
-				const option = el("option");
-				option.value = String(index);
-				option.textContent = preset.label;
-				presetSelect.append(option);
+			return box;
+		}
+		function renderProviderPicker() {
+			const box = el("div");
+			const head = el("div", "ojpp-picker-head");
+			const back = el("button", "ojpp-btn ojpp-btn-ghost", `← ${t("settings.backToList")}`);
+			back.addEventListener("click", () => {
+				providerView = "list";
+				render();
 			});
-			const addBtn = el("button", "ojpp-btn", t("settings.add"));
-			addBtn.addEventListener("click", () => {
-				const preset = PROVIDER_PRESETS[Number(presetSelect.value)];
+			head.append(back, el("strong", void 0, t("settings.chooseProvider")));
+			box.append(head);
+			box.append(el("div", "ojpp-hint", t("settings.chooseProviderHint")));
+			const search = textInput("", t("settings.providerSearch"));
+			search.addEventListener("input", () => paint(search.value));
+			box.append(search);
+			const grid = el("div", "ojpp-preset-grid");
+			box.append(grid);
+			const pick = (preset) => {
 				const provider = createProvider(preset);
 				draft.providers.push(provider);
 				selectedId = provider.id;
 				draft.activeProviderId = provider.id;
+				providerView = "edit";
 				render();
-			});
-			addRow.append(field(t("settings.addFromPreset"), presetSelect), addBtn);
-			box.append(addRow);
-			const current = draft.providers.find((p) => p.id === selectedId);
-			if (current) box.append(renderProviderEditor(current, (name) => {
-				const ref = nameRefs.get(current.id);
-				if (ref) ref.textContent = name || t("common.unnamed");
-			}));
+			};
+			const paint = (query) => {
+				grid.replaceChildren();
+				const q = query.trim().toLowerCase();
+				const matched = PROVIDER_PRESETS.filter((preset) => !q || preset.label.toLowerCase().includes(q) || preset.baseUrl.toLowerCase().includes(q)).sort((a, b) => a.key === "custom" ? -1 : b.key === "custom" ? 1 : 0);
+				matched.forEach((preset) => {
+					const item = el("button", "ojpp-preset-item");
+					item.append(el("span", "ojpp-preset-name", preset.label));
+					const meta = preset.baseUrl.replace(/^https?:\/\//, "");
+					if (meta) item.append(el("span", "ojpp-preset-meta", meta));
+					item.addEventListener("click", () => pick(preset));
+					grid.append(item);
+				});
+				if (matched.length === 0) grid.append(el("div", "ojpp-hint", t("settings.noProviderMatch")));
+			};
+			paint("");
 			return box;
 		}
 		function renderProviderEditor(provider, onNameChange) {
@@ -32697,6 +32786,7 @@ $$` : `${n}$$`;
 				draft.providers.push(copy);
 				selectedId = copy.id;
 				draft.activeProviderId = copy.id;
+				providerView = "edit";
 				render();
 			});
 			delBtn.addEventListener("click", () => {
@@ -32708,6 +32798,7 @@ $$` : `${n}$$`;
 				draft.providers = draft.providers.filter((p) => p.id !== provider.id);
 				if (draft.activeProviderId === provider.id) draft.activeProviderId = draft.providers[0]?.id ?? null;
 				selectedId = draft.activeProviderId;
+				providerView = "list";
 				render();
 			});
 			actions.append(testBtn, dupBtn, delBtn);
@@ -33086,6 +33177,59 @@ $$` : `${n}$$`;
 .ojpp-provider-item[data-active="1"] { border-color: #2563eb; background: #f5f8ff; }
 .ojpp-provider-item .ojpp-provider-name { font-weight: 600; flex: 1; }
 .ojpp-provider-item .ojpp-provider-meta { color: #6b7280; font-size: 12px; }
+
+/* 添加提供商按钮：整行、醒目 */
+.ojpp-add-provider {
+  display: block;
+  width: 100%;
+  margin-bottom: 12px;
+  text-align: center;
+}
+/* 列表项：左边选择框，中间名称与说明，右边编辑按钮 */
+.ojpp-provider-text { flex: 1; min-width: 0; }
+.ojpp-provider-badge {
+  flex: none;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, .12);
+  color: #2563eb;
+}
+.ojpp-provider-edit { flex: none; }
+.ojpp-provider-item:hover { background: rgba(0, 0, 0, .02); }
+
+/* 添加面板的标题行与预设网格 */
+.ojpp-picker-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.ojpp-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+.ojpp-preset-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid #e6e9ee;
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ojpp-preset-item:hover { border-color: #2563eb; background: #f5f8ff; }
+.ojpp-preset-name { font-weight: 600; }
+.ojpp-preset-meta { font-size: 12px; color: #6b7280; word-break: break-all; }
 .ojpp-status {
   margin-top: 8px;
   font-size: 12px;
@@ -33203,6 +33347,17 @@ html[data-ojpp-theme="dark"] .ojpp-provider-item[data-active="1"] {
   border-color: #539bf5; background: rgba(83, 155, 245, .1);
 }
 html[data-ojpp-theme="dark"] .ojpp-provider-item .ojpp-provider-meta { color: #768390; }
+html[data-ojpp-theme="dark"] .ojpp-provider-item:hover { background: rgba(255, 255, 255, .03); }
+html[data-ojpp-theme="dark"] .ojpp-provider-badge {
+  background: rgba(83, 155, 245, .18); color: #79b8ff;
+}
+html[data-ojpp-theme="dark"] .ojpp-preset-item {
+  background: #22272e; border-color: #373e47; color: #cdd9e5;
+}
+html[data-ojpp-theme="dark"] .ojpp-preset-item:hover {
+  border-color: #539bf5; background: #2d333b;
+}
+html[data-ojpp-theme="dark"] .ojpp-preset-meta { color: #768390; }
 html[data-ojpp-theme="dark"] .ojpp-status[data-kind="error"] { color: #f47067; }
 html[data-ojpp-theme="dark"] .ojpp-status[data-kind="ok"] { color: #57ab5a; }
 html[data-ojpp-theme="dark"] .ojpp-btn {
@@ -33533,12 +33688,13 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="error"] { background: #a33a3
 			"codeforces.ml"
 		],
 		styles: `
+    /* 齿轮放在登录区、用户名左边 */
     .ojpp-codeforces-settings {
-      display: inline-flex; align-items: center; margin-left: 10px; vertical-align: middle;
+      display: inline-flex; align-items: center;
+      margin-right: 6px; vertical-align: middle;
     }
-    .ojpp-codeforces-settings .ojpp-icon-btn { color: #fff; }
-    .ojpp-codeforces-settings .ojpp-icon-btn:hover {
-      background: rgba(255, 255, 255, .2); color: #fff;
+    .ojpp-codeforces-settings .ojpp-icon-btn {
+      width: 22px; height: 22px; vertical-align: middle;
     }
   `,
 		darkStyles: `
@@ -34039,16 +34195,24 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="error"] { background: #a33a3
 			for (const el of root.querySelectorAll(".input-output-copier")) el.remove();
 		},
 		mountSettingsButton(button, doc) {
+			const loginRow = doc.querySelector(".lang-chooser > div:last-child");
+			if (loginRow) {
+				const host = doc.createElement("span");
+				host.className = "ojpp-codeforces-settings";
+				host.append(button);
+				loginRow.prepend(host);
+				return;
+			}
 			const menu = doc.querySelector(".menu-list.main-menu-list") ?? doc.querySelector("#header");
 			if (menu) {
 				const host = doc.createElement("li");
 				host.className = "ojpp-codeforces-settings";
 				host.append(button);
 				menu.append(host);
-			} else {
-				button.classList.add("ojpp-settings-floating");
-				doc.body.append(button);
+				return;
 			}
+			button.classList.add("ojpp-settings-floating");
+			doc.body.append(button);
 		},
 		observe(doc, onChange) {
 			let timer;

@@ -167,9 +167,45 @@ try {
   );
   assert.ok(labels.some((label) => label.includes('说明')), `缺少“说明”工具栏: ${labels.join(' | ')}`);
 
+  // 添加提供商：列表 → 添加面板。面板里不能出现重复的自定义入口。
+  await page.getByRole('button', { name: 'OJ++ 设置', exact: true }).click();
+  await page.getByRole('button', { name: '提供商', exact: true }).click();
+  await page.getByRole('button', { name: '+ 添加提供商', exact: true }).click();
+  await page.waitForTimeout(200);
+  const presets = await page.locator('.ojpp-preset-item').evaluateAll((nodes) =>
+    nodes.map((node) => node.textContent.replace(/\s+/g, ' ').trim()),
+  );
+  assert.ok(presets.length > 0, '添加面板应列出预设');
+  // 自定义只允许一个入口，否则用户不知道点哪个
+  const customEntries = presets.filter((text) => text.includes('自定义'));
+  assert.equal(
+    customEntries.length,
+    1,
+    `自定义入口应只有一个，实际: ${customEntries.join(' | ')}`,
+  );
+  // 第一个就是自定义，方便自己填地址
+  assert.ok(presets[0].includes('自定义'), `自定义应排在最前: ${presets[0]}`);
+  // 搜索能过滤
+  const search = page.getByPlaceholder('查找提供商…');
+  await search.fill('deepseek');
+  await page.waitForTimeout(200);
+  const filtered = await page.locator('.ojpp-preset-item').evaluateAll((nodes) =>
+    nodes.map((node) => node.textContent.replace(/\s+/g, ' ').trim()),
+  );
+  assert.ok(filtered.length >= 1 && filtered.every((x) => /deepseek|自定义/i.test(x)), `搜索过滤异常: ${filtered.join(' | ')}`);
+  // 返回列表
+  await page.getByRole('button', { name: /返回列表/ }).click();
+  await page.waitForTimeout(200);
+  assert.ok(await page.locator('.ojpp-add-provider').count() > 0, '应回到列表视图');
+  // 关掉面板再继续后面的用例
+  await page.getByRole('button', { name: '关闭', exact: true }).click();
+  await page.getByRole('dialog').waitFor({ state: 'detached' });
+
   // 连续输入、拖选到面板外、立即正常点击遮罩，以及保存后即时切换模型。
   await page.getByRole('button', { name: 'OJ++ 设置', exact: true }).click();
   await page.getByRole('button', { name: '提供商', exact: true }).click();
+  // 提供商页现在是「列表 → 编辑」两步，先进编辑视图
+  await page.getByRole('button', { name: '编辑提供商', exact: true }).first().click();
   const name = page.getByLabel('备注名', { exact: true });
   await name.fill('');
   await name.pressSequentially('Provider ABC');
@@ -187,6 +223,7 @@ try {
 
   await page.getByRole('button', { name: 'OJ++ 设置', exact: true }).click();
   await page.getByRole('button', { name: '提供商', exact: true }).click();
+  await page.getByRole('button', { name: '编辑提供商', exact: true }).first().click();
   await page.getByLabel('模型', { exact: true }).fill('updated-model');
   await page.getByRole('button', { name: '保存', exact: true }).click();
   await page.getByRole('dialog').waitFor({ state: 'detached' });

@@ -9,6 +9,7 @@ import {
   newId,
   migrate,
 } from '../core/config.ts';
+import type { ProviderPreset } from '../core/config.ts';
 import type { Locale, Protocol, ProviderConfig, Settings, Theme } from '../core/types.ts';
 import type { HttpTransport } from '../platforms/types.ts';
 
@@ -223,76 +224,163 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
     return box;
   }
 
+  /**
+   * 提供商页分两种视图：
+   *   list  —— 只显示已配置列表，顶部一个「添加提供商」
+   *   add   —— 从预设里挑一个（带搜索），或选自定义
+   *   edit  —— 编辑单个提供商
+   * 这样打开页面时不会被一堆表单淹没，添加时才展开选择面板。
+   */
+  let providerView: 'list' | 'add' | 'edit' = 'list';
+
   function renderProviders(): HTMLElement {
     const box = el('div');
+    if (providerView === 'add') {
+      box.append(renderProviderPicker());
+      return box;
+    }
+    if (providerView === 'edit') {
+      const current = draft.providers.find((p) => p.id === selectedId);
+      if (current) {
+        const head = el('div', 'ojpp-picker-head');
+        const back = el('button', 'ojpp-btn ojpp-btn-ghost', `← ${t('settings.backToList')}`);
+        back.addEventListener('click', () => {
+          providerView = 'list';
+          render();
+        });
+        head.append(back, el('strong', undefined, current.name || t('common.unnamed')));
+        box.append(head);
+        // 备注名输入时只更新列表文字，不重绘，否则会失焦
+        box.append(renderProviderEditor(current, () => {}));
+        return box;
+      }
+      // 提供商被删掉时退回列表
+      providerView = 'list';
+    }
+    box.append(renderProviderList());
+    return box;
+  }
+
+  /** 已配置列表：每行一个提供商，点进去编辑 */
+  function renderProviderList(): HTMLElement {
+    const box = el('div');
+
+    const addBtn = el('button', 'ojpp-btn ojpp-btn-primary ojpp-add-provider', `+ ${t('settings.addProvider')}`);
+    addBtn.addEventListener('click', () => {
+      providerView = 'add';
+      render();
+    });
+    box.append(addBtn);
+
     const list = el('div', 'ojpp-provider-list');
-    /** 备注名直接改文本，避免重绘导致输入框失焦 */
-    const nameRefs = new Map<string, HTMLElement>();
+    if (draft.providers.length === 0) {
+      const empty = el('div', 'ojpp-hint', t('settings.providerListEmpty'));
+      box.append(empty);
+      return box;
+    }
 
     draft.providers.forEach((provider) => {
       const item = el('div', 'ojpp-provider-item');
-      item.dataset.active = provider.id === selectedId ? '1' : '0';
+      item.dataset.active = provider.id === draft.activeProviderId ? '1' : '0';
 
       const radio = el('input') as HTMLInputElement;
       radio.type = 'radio';
       radio.name = 'ojpp-provider';
-      radio.checked = provider.id === selectedId;
+      radio.checked = provider.id === draft.activeProviderId;
+      radio.title = t('settings.enableProvider');
+      radio.addEventListener('change', () => {
+        draft.activeProviderId = provider.id;
+        render();
+      });
 
-      const name = el('span', 'ojpp-provider-name', provider.name || t('common.unnamed'));
+      const text = el('div', 'ojpp-provider-text');
+      const name = el('div', 'ojpp-provider-name', provider.name || t('common.unnamed'));
       const meta = el(
-        'span',
+        'div',
         'ojpp-provider-meta',
         `${PROTOCOL_LABEL[provider.protocol]} · ${provider.model || t('common.notFilled')}`,
       );
-      nameRefs.set(provider.id, name);
+      text.append(name, meta);
 
-      const select = () => {
-        if (selectedId === provider.id) return;
+      const badge = el('span', 'ojpp-provider-badge', t('settings.inUse'));
+      if (provider.id !== draft.activeProviderId) badge.style.visibility = 'hidden';
+
+      const edit = el('button', 'ojpp-btn ojpp-btn-ghost ojpp-provider-edit', t('settings.editProvider'));
+      edit.addEventListener('click', (event) => {
+        event.stopPropagation();
         selectedId = provider.id;
-        draft.activeProviderId = provider.id;
+        providerView = 'edit';
         render();
-      };
-      radio.addEventListener('change', select);
-      item.addEventListener('click', (event) => {
-        if (event.target === radio) return;
-        select();
       });
 
-      item.append(radio, name, meta);
+      item.addEventListener('click', (event) => {
+        if (event.target === radio || event.target === edit) return;
+        selectedId = provider.id;
+        providerView = 'edit';
+        render();
+      });
+
+      item.append(radio, text, badge, edit);
       list.append(item);
     });
 
     box.append(list);
+    return box;
+  }
 
-    const addRow = el('div', 'ojpp-row');
-    const presetSelect = el('select') as HTMLSelectElement;
-    PROVIDER_PRESETS.forEach((preset, index) => {
-      const option = el('option') as HTMLOptionElement;
-      option.value = String(index);
-      option.textContent = preset.label;
-      presetSelect.append(option);
+  /** 添加面板：先选提供商，再进编辑 */
+  function renderProviderPicker(): HTMLElement {
+    const box = el('div');
+
+    const head = el('div', 'ojpp-picker-head');
+    const back = el('button', 'ojpp-btn ojpp-btn-ghost', `← ${t('settings.backToList')}`);
+    back.addEventListener('click', () => {
+      providerView = 'list';
+      render();
     });
-    const addBtn = el('button', 'ojpp-btn', t('settings.add'));
-    addBtn.addEventListener('click', () => {
-      const preset = PROVIDER_PRESETS[Number(presetSelect.value)];
+    head.append(back, el('strong', undefined, t('settings.chooseProvider')));
+    box.append(head);
+    box.append(el('div', 'ojpp-hint', t('settings.chooseProviderHint')));
+
+    const search = textInput('', t('settings.providerSearch'));
+    search.addEventListener('input', () => paint(search.value));
+    box.append(search);
+
+    const grid = el('div', 'ojpp-preset-grid');
+    box.append(grid);
+
+    const pick = (preset: ProviderPreset) => {
       const provider = createProvider(preset);
       draft.providers.push(provider);
       selectedId = provider.id;
       draft.activeProviderId = provider.id;
+      providerView = 'edit';
       render();
-    });
-    addRow.append(field(t('settings.addFromPreset'), presetSelect), addBtn);
-    box.append(addRow);
+    };
 
-    const current = draft.providers.find((p) => p.id === selectedId);
-    if (current) {
-      box.append(
-        renderProviderEditor(current, (name) => {
-          const ref = nameRefs.get(current.id);
-          if (ref) ref.textContent = name || t('common.unnamed');
-        }),
-      );
-    }
+    const paint = (query: string) => {
+      grid.replaceChildren();
+      const q = query.trim().toLowerCase();
+      // “自定义”就是 PROVIDER_PRESETS 里的 custom 项，排在最前方便自己填地址。
+      // 不要另外再拼一个按钮，否则会出现两个自定义入口。
+      const matched = PROVIDER_PRESETS.filter(
+        (preset) => !q || preset.label.toLowerCase().includes(q) || preset.baseUrl.toLowerCase().includes(q),
+      ).sort((a, b) => (a.key === 'custom' ? -1 : b.key === 'custom' ? 1 : 0));
+
+      matched.forEach((preset) => {
+        const item = el('button', 'ojpp-preset-item');
+        item.append(el('span', 'ojpp-preset-name', preset.label));
+        const meta = preset.baseUrl.replace(/^https?:\/\//, '');
+        if (meta) item.append(el('span', 'ojpp-preset-meta', meta));
+        item.addEventListener('click', () => pick(preset));
+        grid.append(item);
+      });
+
+      if (matched.length === 0) {
+        grid.append(el('div', 'ojpp-hint', t('settings.noProviderMatch')));
+      }
+    };
+    paint('');
 
     return box;
   }
@@ -428,6 +516,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
       draft.providers.push(copy);
       selectedId = copy.id;
       draft.activeProviderId = copy.id;
+      providerView = 'edit';
       render();
     });
 
@@ -442,6 +531,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
         draft.activeProviderId = draft.providers[0]?.id ?? null;
       }
       selectedId = draft.activeProviderId;
+      providerView = 'list';
       render();
     });
 

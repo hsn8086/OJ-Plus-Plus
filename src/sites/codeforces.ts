@@ -92,12 +92,13 @@ export const codeforces: SiteAdapter = {
   get name() { return t('site.codeforces'); },
   hosts: ['codeforces.com', 'm1.codeforces.com', 'm2.codeforces.com', 'codeforces.ml'],
   styles: `
+    /* 齿轮放在登录区、用户名左边 */
     .ojpp-codeforces-settings {
-      display: inline-flex; align-items: center; margin-left: 10px; vertical-align: middle;
+      display: inline-flex; align-items: center;
+      margin-right: 6px; vertical-align: middle;
     }
-    .ojpp-codeforces-settings .ojpp-icon-btn { color: #fff; }
-    .ojpp-codeforces-settings .ojpp-icon-btn:hover {
-      background: rgba(255, 255, 255, .2); color: #fff;
+    .ojpp-codeforces-settings .ojpp-icon-btn {
+      width: 22px; height: 22px; vertical-align: middle;
     }
   `,
 
@@ -650,17 +651,28 @@ export const codeforces: SiteAdapter = {
   },
 
   mountSettingsButton(button, doc) {
-    // 主菜单栏是页面里唯一稳定的顶部容器
+    // 放到登录区里、用户名左边。
+    // .lang-chooser 的第二个 div 就是 “用户名 | Logout” 那一行。
+    const loginRow = doc.querySelector('.lang-chooser > div:last-child');
+    if (loginRow) {
+      const host = doc.createElement('span');
+      host.className = 'ojpp-codeforces-settings';
+      host.append(button);
+      // 插到最前面，于是齿轮在用户名左侧
+      loginRow.prepend(host);
+      return;
+    }
+    // 没登录时 .lang-chooser 只有语言切换，退回到导航栏
     const menu = doc.querySelector('.menu-list.main-menu-list') ?? doc.querySelector('#header');
     if (menu) {
       const host = doc.createElement('li');
       host.className = 'ojpp-codeforces-settings';
       host.append(button);
       menu.append(host);
-    } else {
-      button.classList.add('ojpp-settings-floating');
-      doc.body.append(button);
+      return;
     }
+    button.classList.add('ojpp-settings-floating');
+    doc.body.append(button);
   },
 
   observe(doc, onChange) {
