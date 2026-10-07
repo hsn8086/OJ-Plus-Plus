@@ -123,8 +123,13 @@ try {
                 controller.enqueue(new TextEncoder().encode(event));
                 options.onprogress?.({ responseText: '', loaded: index + 1, total: events.length });
               } else {
-                controller.close();
-                options.onload({ status: 200, statusText: 'OK', response: responseStream, responseText: undefined });
+                // TM 的 onload 先到，但此时 response stream 仍未关闭；
+                // 随后的 onloadend 才关闭它并让 reader.read() 返回 done。
+                options.onload?.({ status: 200, statusText: 'OK', response: responseStream, responseText: undefined });
+                timers.push(setTimeout(() => {
+                  controller.close();
+                  options.onloadend?.({ status: 200, statusText: 'OK', response: responseStream, responseText: undefined });
+                }, state.delay));
               }
             }, state.delay * (index + 1)));
           });
@@ -180,6 +185,15 @@ try {
   await page.getByRole('button', { name: '保存', exact: true }).click();
   await page.getByRole('dialog').waitFor({ state: 'detached' });
   // 流式：请求体带 stream，且中途就能看到部分译文
+  await page.evaluate(() => {
+    window.__testState.rendered = [];
+    const observer = new MutationObserver(() => {
+      const body = document.querySelector('.ojpp-result-body');
+      if (body) window.__testState.rendered.push(body.textContent || '');
+    });
+    observer.observe(document.body, { subtree: true, childList: true, characterData: true });
+    window.__testState.renderObserver = observer;
+  });
   await page.getByRole('button', { name: 'AI 翻译', exact: true }).first().click();
   await page.waitForFunction(() => {
     const panel = document.querySelector('.ojpp-result');
@@ -190,6 +204,16 @@ try {
   assert.ok(midText.includes('给定两个整数'), `流式中间态应有部分译文，实际: ${midText}`);
   assert.equal(await page.locator('.ojpp-result.ojpp-streaming').count(), 1);
   await page.waitForFunction(() => document.querySelector('.ojpp-translate-btn')?.dataset.state === 'done');
+  const rendered = await page.evaluate(() => {
+    window.__testState.renderObserver?.disconnect();
+    return window.__testState.rendered.filter((text, index, all) => index === 0 || text !== all[index - 1]);
+  });
+  console.log('stream frames:', rendered.map((text) => text.length).join(','));
+  assert.equal(
+    rendered.some((text, index) => index > 0 && text.length < rendered[index - 1].length),
+    false,
+    `显示文本不应回缩: ${rendered.map((text) => text.length).join(',')}`,
+  );
   assert.equal(await page.locator('.ojpp-result.ojpp-streaming').count(), 0);
   assert.equal(await page.evaluate(() => window.__testState.requests.at(-1).model), 'updated-model');
   assert.equal(await page.evaluate(() => window.__testState.requests.at(-1).stream), true);

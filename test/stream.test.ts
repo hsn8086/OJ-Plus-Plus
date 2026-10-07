@@ -131,6 +131,18 @@ test('流式渲染：结构标记补全后立即可见，不闪烁', () => {
   );
 });
 
+test('流式渲染：代码围栏和后续公式不会让可见文本回缩', () => {
+  const sample = '说明：\n\n```cpp\nint main() {\n  return 0;\n}\n```\n\n复杂度是 $O(n)$。';
+  const lengths: number[] = [];
+  for (let i = 1; i <= sample.length; i += 1) {
+    const html = renderMarkdown(stabilizeMarkdown(sample.slice(0, i)));
+    lengths.push(html.replace(/<[^>]*>/g, '').length);
+  }
+  for (let i = 1; i < lengths.length; i += 1) {
+    assert.ok(lengths[i] >= lengths[i - 1], `第 ${i} 帧回缩: ${lengths[i - 1]} -> ${lengths[i]}`);
+  }
+});
+
 test('行内 $$...$$ 渲染成独立公式，不留下可见美元符', () => {
   const html = renderMarkdown('复杂度是 $$O(n \\log n)$$，其中 $n \\le 10^9$。');
   const visible = html.replace(/<annotation[\s\S]*?<\/annotation>/g, '').replace(/<[^>]*>/g, '');

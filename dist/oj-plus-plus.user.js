@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OJ++
 // @namespace    https://github.com/hsn8086/OJ-Plus-Plus
-// @version      0.5.3
+// @version      0.5.4
 // @author       hsn8086
 // @description  OJ-Plus-Plus：AI 题面翻译、Markdown 视图与一键复制
 // @license      GPL-3.0
@@ -31768,7 +31768,10 @@ $$` : `${n}$$`;
 					continue;
 				}
 				if (ch === "\n") {
-					if (streamingMode && looksLikeLatex(state.src.slice(start + open))) unclosedMath.push(start);
+					if (streamingMode && looksLikeLatex(state.src.slice(start + open))) unclosedMath.push({
+						source: state.src,
+						offset: start
+					});
 					return false;
 				}
 				if (ch === "$") {
@@ -31799,7 +31802,10 @@ $$` : `${n}$$`;
 				}
 				pos += 1;
 			}
-			if (streamingMode && looksLikeLatex(state.src.slice(start + open))) unclosedMath.push(start);
+			if (streamingMode && looksLikeLatex(state.src.slice(start + open))) unclosedMath.push({
+				source: state.src,
+				offset: start
+			});
 			return false;
 		};
 		const blockRule = (state, startLine, endLine, silent) => {
@@ -31882,6 +31888,8 @@ $$` : `${n}$$`;
 	}
 	function incompleteStart(text) {
 		if (!text) return null;
+		const partialFence = /(^|\n)[ \t]*(?:`{1,2}|~{1,2})$/.exec(text);
+		if (partialFence) return partialFence.index + (partialFence[1] ? 1 : 0);
 		const fences = [...text.matchAll(/^(?:`{3,}|~{3,})/gm)];
 		if (fences.length % 2 === 1) return fences[fences.length - 1].index;
 		const ticks = [...text.matchAll(/(?<!`)`(?!`)/g)];
@@ -31894,12 +31902,12 @@ $$` : `${n}$$`;
 			const kind = trailing[0];
 			if (marks.filter((m) => m[0] === kind).length % 2 === 1) return trailing.index;
 		}
-		const positions = [];
 		streamingMode = true;
 		unclosedMath = [];
+		let positions = [];
 		try {
 			md.render(text);
-			positions.push(...unclosedMath);
+			positions = unclosedMath.filter((entry) => entry.source === text).map((entry) => entry.offset);
 		} finally {
 			streamingMode = false;
 			unclosedMath = [];
@@ -32929,17 +32937,7 @@ $$` : `${n}$$`;
 					fail(error instanceof Error ? error : new Error("读取流式响应失败"));
 				});
 			},
-			onpartial(res) {
-				if (res.partial !== void 0) push(res.partial);
-			},
-			onprogress(res) {
-				const text = res.responseText;
-				if (typeof text === "string" && text.length > accumulated.length) {
-					accumulated = text;
-					req.onChunk?.(accumulated);
-				}
-			},
-			onload: finish,
+			onloadend: finish,
 			onerror: () => fail(new Error("网络请求失败，请检查网络或接口地址")),
 			ontimeout: () => fail(new Error("请求超时")),
 			onabort: () => fail(new DOMException("Aborted", "AbortError"))

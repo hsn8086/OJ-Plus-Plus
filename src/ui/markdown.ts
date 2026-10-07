@@ -8,7 +8,7 @@ import TurndownService from 'turndown';
  * 把起始位置记到 unclosedMath，供 stabilizeMarkdown 判断这一帧是否完成。
  */
 let streamingMode = false;
-let unclosedMath: number[] = [];
+let unclosedMath: { source: string; offset: number }[] = [];
 
 function createTurndown(): TurndownService {
   const td = new TurndownService({
@@ -146,7 +146,7 @@ function mathPlugin(md: MarkdownIt): void {
       if (ch === '\n') {
         // 行内公式不跨行；若已扫到行尾还没收尾，流式下记为未完成
         if (streamingMode && looksLikeLatex(state.src.slice(start + open))) {
-          unclosedMath.push(start);
+          unclosedMath.push({ source: state.src, offset: start });
         }
         return false;
       }
@@ -186,7 +186,7 @@ function mathPlugin(md: MarkdownIt): void {
     // 只有看起来真的像 LaTeX 才记为未完成，否则“价格从 $5 到 $10”
     // 这种会把整段文字切掉。
     if (streamingMode && looksLikeLatex(state.src.slice(start + open))) {
-      unclosedMath.push(start);
+      unclosedMath.push({ source: state.src, offset: start });
     }
     return false;
   };
@@ -299,6 +299,11 @@ export function stabilizeMarkdown(source: string): string {
 function incompleteStart(text: string): number | null {
   if (!text) return null;
 
+  // 未完成的代码围栏：一个或两个反引号/波浪号也先隐藏，
+  // 否则第三个字符到达、识别成围栏后，前一帧会突然回缩。
+  const partialFence = /(^|\n)[ \t]*(?:`{1,2}|~{1,2})$/.exec(text);
+  if (partialFence) return partialFence.index + (partialFence[1] ? 1 : 0);
+
   // 未闭合的围栏代码块：连开头的 ``` 一起隐去，等闭合后再显示
   const fences = [...text.matchAll(/^(?:`{3,}|~{3,})/gm)];
   if (fences.length % 2 === 1) return fences[fences.length - 1].index;
@@ -327,12 +332,14 @@ function incompleteStart(text: string): number | null {
     if (same % 2 === 1) return trailing.index;
   }
 
-  const positions: number[] = [];
   streamingMode = true;
   unclosedMath = [];
+  let positions: number[] = [];
   try {
     md.render(text);
-    positions.push(...unclosedMath);
+    positions = unclosedMath
+      .filter((entry) => entry.source === text)
+      .map((entry) => entry.offset);
   } finally {
     streamingMode = false;
     unclosedMath = [];

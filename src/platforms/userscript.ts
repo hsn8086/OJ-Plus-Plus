@@ -142,18 +142,8 @@ const stream: HttpStreamTransport = (req) => new Promise((resolve, reject) => {
         });
       }
     },
-    // 兼容少数确实把 partial 直接交给用户回调的管理器。
-    onpartial(res: { partial?: unknown }) {
-      if (res.partial !== undefined) push(res.partial);
-    },
-    onprogress(res: { responseText?: unknown }) {
-      const text = res.responseText;
-      if (typeof text === 'string' && text.length > accumulated.length) {
-        accumulated = text;
-        req.onChunk?.(accumulated);
-      }
-    },
-    onload: finish,
+    // TM 在 onloadend 前才会关闭 response ReadableStream。
+    onloadend: finish,
     onerror: () => fail(new Error('网络请求失败，请检查网络或接口地址')),
     ontimeout: () => fail(new Error('请求超时')),
     onabort: () => fail(new DOMException('Aborted', 'AbortError')),
