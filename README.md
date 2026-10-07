@@ -56,8 +56,8 @@ OJ++（OJ-Plus-Plus）是一个可扩展的在线评测站增强工具。它把 
 
 开启后请求会带上 `stream: true`，脚本按 SSE 解析增量并逐帧渲染。三处细节值得说明：
 
-- 油猴没有可读流。Tampermonkey 的增量通道是 `GM_xmlhttpRequest` 的 `responseType: 'stream'` + `partialSize` + `onpartial`：`onprogress` 只带进度字段，`responseText` 要等整个响应读完才赋值。普通用户脚本沙箱里的 `onpartial` 通常返回 `tfd.objUrl`，脚本会先读取 Blob，再把增量交给 SSE 解析器。
-- 不支持 `partialSize` 的脚本管理器不会触发可用的 `onpartial`，此时自动改走一次性请求（回退请求会去掉 `stream` 参数，否则服务端仍返回 SSE 而无法按 JSON 解析）。
+- 油猴的流式路径使用 `GM_xmlhttpRequest` 的 `responseType: 'stream'` + `partialSize`。Tampermonkey 会在 `onreadystatechange` 阶段向用户脚本暴露 `ReadableStream`；分片要从 `res.response.getReader()` 读取。`onprogress` 只带进度字段，等 `onload` 才开始读流已经太晚。
+- 不支持 `responseType: 'stream'` 的脚本管理器不会提供可读流，此时自动改走一次性请求（回退请求会去掉 `stream` 参数，否则服务端仍返回 SSE 而无法按 JSON 解析）。
 - 已经开始输出后再中断不会重试，避免面板内容回退重来。
 - 正文随时可能停在半个公式、半个代码块或半个粗体上。渲染前会做两件事：
   - 结构标记（粗体、斜体、删除线、链接）由 [remend](https://www.npmjs.com/package/remend) 补全。补全不改变可见文字，所以 `**注意` 能立刻以粗体显示，收尾符到达时也不会重画。
@@ -124,7 +124,7 @@ interface Platform {
 }
 ```
 
-`stream` 是可选的，不实现就退化为一次性请求。它的回调收到的是**累计**原始响应文本。浏览器平台把 `ReadableStream` 的增量片段拼成累计文本；油猴平台把 Tampermonkey 的 `onpartial`/`tfd.objUrl` 解码后再累积，核心层不需要知道具体脚本管理器。
+`stream` 是可选的，不实现就退化为一次性请求。它的回调收到的是**累计**原始响应文本。浏览器平台把 `ReadableStream` 的增量片段拼成累计文本；油猴平台从 Tampermonkey 的 `res.response` 读取同一个 `ReadableStream` 后再累积，核心层不需要知道具体脚本管理器。
 
 Chrome 扩展可以把 `storage` 映射到 `chrome.storage.local`，把 `request` 放到扩展后台或 service worker，再使用一个新的入口调用 `startApp`。页面功能不需要知道请求来自 GM API 还是扩展消息通道。
 
@@ -139,7 +139,7 @@ pnpm screenshots     # 生成 README 截图
 
 浏览器回归会使用本地 fixture，不启动 mock AI 服务，也不依赖真实 OJ 页面。它覆盖：
 
-- 油猴构建的回归会模拟 Tampermonkey 的 `onpartial({ tfd: { objUrl } })`，页面 `fetch` 被故意禁用，验证 Blob 片段仍能逐步进入译文面板。
+- 油猴构建的回归会模拟 Tampermonkey 在 `onreadystatechange` 中提供 `ReadableStream`，页面 `fetch` 被故意禁用，验证流分片仍能逐步进入译文面板。
 - 牛客站点公式还原、Markdown、复制、动态插入和结果渲染。
 - 流式请求：请求体带 `stream`，中途就能看到部分译文，完成后流式状态清除。
 - 设置面板输入焦点、文本拖拽、保存后即时切换配置、取消请求和重复翻译。

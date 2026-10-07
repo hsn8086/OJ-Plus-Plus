@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OJ++
 // @namespace    https://github.com/hsn8086/OJ-Plus-Plus
-// @version      0.5.2
+// @version      0.5.3
 // @author       hsn8086
 // @description  OJ-Plus-Plus：AI 题面翻译、Markdown 视图与一键复制
 // @license      GPL-3.0
@@ -32851,45 +32851,13 @@ $$` : `${n}$$`;
 		}
 		req.signal?.addEventListener("abort", onAbort, { once: true });
 	});
-	function decodeBinaryString(value) {
-		const bytes = new Uint8Array(value.length);
-		for (let index = 0; index < value.length; index += 1) bytes[index] = value.charCodeAt(index) & 255;
-		return new TextDecoder().decode(bytes);
+	function isReadableStream(value) {
+		return !!value && typeof value === "object" && typeof value.getReader === "function";
 	}
-	function decodeDataUri(value) {
-		const comma = value.indexOf(",");
-		if (comma < 0) return "";
-		const metadata = value.slice(0, comma);
-		const payload = value.slice(comma + 1);
-		if (/;base64(?:;|$)/i.test(metadata)) return decodeBinaryString(atob(payload));
-		return decodeURIComponent(payload);
-	}
-	async function readObjectUrl(url) {
-		if (typeof fetch === "function") try {
-			return await (await fetch(url)).text();
-		} catch {}
-		return new Promise((resolve, reject) => {
-			_GM_xmlhttpRequest({
-				method: "GET",
-				url,
-				responseType: "text",
-				onload: (response) => resolve(response.responseText || ""),
-				onerror: () => reject(new Error("无法读取 Tampermonkey 流式片段"))
-			});
-		});
-	}
-	async function readPartialText(value) {
+	function decodeStreamChunk(decoder, value, final = false) {
 		if (typeof value === "string") return value;
-		if (!value || typeof value !== "object") return "";
-		const event = value;
-		if (typeof event.partial === "string") return event.partial;
-		const raw = event.tfd ?? value;
-		if (typeof raw.dataUri === "string") return decodeDataUri(raw.dataUri);
-		if (typeof raw.binary === "string") return decodeBinaryString(raw.binary);
-		if (raw.binary instanceof ArrayBuffer) return new TextDecoder().decode(raw.binary);
-		if (ArrayBuffer.isView(raw.binary)) return new TextDecoder().decode(new Uint8Array(raw.binary.buffer, raw.binary.byteOffset, raw.binary.byteLength));
-		if (raw.blob && typeof raw.blob.text === "function") return raw.blob.text();
-		if (typeof raw.objUrl?.url === "string") return readObjectUrl(raw.objUrl.url);
+		if (value instanceof ArrayBuffer) return decoder.decode(new Uint8Array(value), { stream: !final });
+		if (ArrayBuffer.isView(value)) return decoder.decode(new Uint8Array(value.buffer, value.byteOffset, value.byteLength), { stream: !final });
 		return "";
 	}
 	var stream = (req) => new Promise((resolve, reject) => {
@@ -32898,6 +32866,9 @@ $$` : `${n}$$`;
 			return;
 		}
 		let settled = false;
+		let accumulated = "";
+		let readerTask = null;
+		const decoder = new TextDecoder();
 		const cleanup = () => req.signal?.removeEventListener("abort", onAbort);
 		const fail = (error) => {
 			if (settled) return;
@@ -32905,13 +32876,46 @@ $$` : `${n}$$`;
 			cleanup();
 			reject(error);
 		};
-		let accumulated = "";
-		const push = (piece) => {
-			if (!piece || settled) return;
-			accumulated += piece;
+		const push = (value, final = false) => {
+			if (settled) return;
+			const text = decodeStreamChunk(decoder, value, final);
+			if (!text) return;
+			accumulated += text;
 			req.onChunk?.(accumulated);
 		};
-		let partials = Promise.resolve();
+		const consume = (response) => {
+			if (!isReadableStream(response)) return Promise.resolve();
+			if (readerTask) return readerTask;
+			readerTask = (async () => {
+				const reader = response.getReader();
+				try {
+					for (;;) {
+						const { done, value } = await reader.read();
+						if (done) break;
+						push(value);
+					}
+					push(decoder.decode(), true);
+				} finally {
+					reader.releaseLock?.();
+				}
+			})();
+			return readerTask;
+		};
+		const finish = (res) => {
+			consume(res.response).then(() => {
+				if (settled) return;
+				settled = true;
+				cleanup();
+				const text = accumulated || (typeof res.responseText === "string" ? res.responseText : "");
+				resolve({
+					status: res.status,
+					statusText: res.statusText,
+					text
+				});
+			}).catch((error) => {
+				fail(error instanceof Error ? error : new Error("读取流式响应失败"));
+			});
+		};
 		const handle = _GM_xmlhttpRequest({
 			method: req.method,
 			url: req.url,
@@ -32920,14 +32924,13 @@ $$` : `${n}$$`;
 			timeout: req.timeoutMs,
 			responseType: "stream",
 			partialSize: 64,
-			onpartial(res) {
-				const current = partials.then(async () => {
-					try {
-						push(await readPartialText(res));
-					} catch {}
+			onreadystatechange(res) {
+				if ((res.readyState ?? 0) >= 2) consume(res.response).catch((error) => {
+					fail(error instanceof Error ? error : new Error("读取流式响应失败"));
 				});
-				partials = current;
-				return current;
+			},
+			onpartial(res) {
+				if (res.partial !== void 0) push(res.partial);
 			},
 			onprogress(res) {
 				const text = res.responseText;
@@ -32936,19 +32939,7 @@ $$` : `${n}$$`;
 					req.onChunk?.(accumulated);
 				}
 			},
-			onload(res) {
-				partials.then(() => {
-					if (settled) return;
-					settled = true;
-					cleanup();
-					const text = accumulated || (typeof res.responseText === "string" ? res.responseText : "");
-					resolve({
-						status: res.status,
-						statusText: res.statusText,
-						text
-					});
-				});
-			},
+			onload: finish,
 			onerror: () => fail(new Error("网络请求失败，请检查网络或接口地址")),
 			ontimeout: () => fail(new Error("请求超时")),
 			onabort: () => fail(new DOMException("Aborted", "AbortError"))

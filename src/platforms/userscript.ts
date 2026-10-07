@@ -40,79 +40,38 @@ const request: HttpTransport = (req) => new Promise((resolve, reject) => {
   req.signal?.addEventListener('abort', onAbort, { once: true });
 });
 
-interface TransferableData {
-  objUrl?: { url?: unknown };
-  blob?: unknown;
-  dataUri?: unknown;
-  binary?: unknown;
+interface ReadableStreamLike {
+  getReader(): {
+    read(): Promise<{ done: boolean; value?: unknown }>;
+    releaseLock?(): void;
+  };
 }
 
-function decodeBinaryString(value: string): string {
-  const bytes = new Uint8Array(value.length);
-  for (let index = 0; index < value.length; index += 1) {
-    bytes[index] = value.charCodeAt(index) & 0xff;
-  }
-  return new TextDecoder().decode(bytes);
+function isReadableStream(value: unknown): value is ReadableStreamLike {
+  return !!value
+    && typeof value === 'object'
+    && typeof (value as { getReader?: unknown }).getReader === 'function';
 }
 
-function decodeDataUri(value: string): string {
-  const comma = value.indexOf(',');
-  if (comma < 0) return '';
-  const metadata = value.slice(0, comma);
-  const payload = value.slice(comma + 1);
-  if (/;base64(?:;|$)/i.test(metadata)) return decodeBinaryString(atob(payload));
-  return decodeURIComponent(payload);
-}
-
-async function readObjectUrl(url: string): Promise<string> {
-  // TM 的 objUrl 通常不能被页面 fetch 读取，失败后用 GM 请求再取一次。
-  if (typeof fetch === 'function') {
-    try {
-      const response = await fetch(url);
-      return await response.text();
-    } catch {
-      // 继续走 GM_xmlhttpRequest 后备路径。
-    }
-  }
-  return new Promise<string>((resolve, reject) => {
-    GM_xmlhttpRequest({
-      method: 'GET',
-      url,
-      responseType: 'text',
-      onload: (response) => resolve(response.responseText || ''),
-      onerror: () => reject(new Error('无法读取 Tampermonkey 流式片段')),
-    });
-  });
-}
-
-async function readPartialText(value: unknown): Promise<string> {
+function decodeStreamChunk(decoder: TextDecoder, value: unknown, final = false): string {
   if (typeof value === 'string') return value;
-  if (!value || typeof value !== 'object') return '';
-  const event = value as { partial?: unknown; tfd?: unknown };
-  if (typeof event.partial === 'string') return event.partial;
-
-  const raw = (event.tfd ?? value) as TransferableData;
-  if (typeof raw.dataUri === 'string') return decodeDataUri(raw.dataUri);
-  if (typeof raw.binary === 'string') return decodeBinaryString(raw.binary);
-  if (raw.binary instanceof ArrayBuffer) return new TextDecoder().decode(raw.binary);
-  if (ArrayBuffer.isView(raw.binary)) {
-    return new TextDecoder().decode(
-      new Uint8Array(raw.binary.buffer, raw.binary.byteOffset, raw.binary.byteLength),
+  if (value instanceof ArrayBuffer) return decoder.decode(new Uint8Array(value), { stream: !final });
+  if (ArrayBuffer.isView(value)) {
+    return decoder.decode(
+      new Uint8Array(value.buffer as ArrayBuffer, value.byteOffset, value.byteLength),
+      { stream: !final },
     );
   }
-  if (raw.blob && typeof (raw.blob as { text?: unknown }).text === 'function') {
-    return (raw.blob as Blob).text();
-  }
-  if (typeof raw.objUrl?.url === 'string') return readObjectUrl(raw.objUrl.url);
   return '';
 }
 
 /**
  * 流式请求。
  *
- * Tampermonkey 的 responseType=stream + partialSize 在沙箱里通常通过
- * onpartial({ tfd: { objUrl } }) 传递 Blob，而不是直接传 partial 字符串。
- * 这里兼容 TM 的 transferable data，并按顺序解码后再交给上层。
+ * Tampermonkey 的 responseType=stream 不会把 onpartial 交给用户脚本。
+ * 它在用户脚本侧暴露一个 ReadableStream，分片通过这个流的 reader 读取。
+ * 必须在 onreadystatechange 阶段开始读取，等 onload 才读取就只会得到
+ * 已经完成的结果，页面看不到中间态。
  */
 const stream: HttpStreamTransport = (req) => new Promise((resolve, reject) => {
   if (req.signal?.aborted) {
@@ -120,6 +79,9 @@ const stream: HttpStreamTransport = (req) => new Promise((resolve, reject) => {
     return;
   }
   let settled = false;
+  let accumulated = '';
+  let readerTask: Promise<void> | null = null;
+  const decoder = new TextDecoder();
   const cleanup = () => req.signal?.removeEventListener('abort', onAbort);
   const fail = (error: Error) => {
     if (settled) return;
@@ -127,14 +89,42 @@ const stream: HttpStreamTransport = (req) => new Promise((resolve, reject) => {
     cleanup();
     reject(error);
   };
-  let accumulated = '';
-  const push = (piece: string) => {
-    if (!piece || settled) return;
-    accumulated += piece;
+  const push = (value: unknown, final = false) => {
+    if (settled) return;
+    const text = decodeStreamChunk(decoder, value, final);
+    if (!text) return;
+    accumulated += text;
     req.onChunk?.(accumulated);
   };
-  // TM 可能在 onload 前仍有待解码的 objUrl，串行化以保持 SSE 顺序。
-  let partials = Promise.resolve();
+  const consume = (response: unknown): Promise<void> => {
+    if (!isReadableStream(response)) return Promise.resolve();
+    if (readerTask) return readerTask;
+    readerTask = (async () => {
+      const reader = response.getReader();
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          push(value);
+        }
+        push(decoder.decode(), true);
+      } finally {
+        reader.releaseLock?.();
+      }
+    })();
+    return readerTask;
+  };
+  const finish = (res: { status: number; statusText: string; response?: unknown; responseText?: unknown }) => {
+    consume(res.response).then(() => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      const text = accumulated || (typeof res.responseText === 'string' ? res.responseText : '');
+      resolve({ status: res.status, statusText: res.statusText, text });
+    }).catch((error: unknown) => {
+      fail(error instanceof Error ? error : new Error('读取流式响应失败'));
+    });
+  };
 
   const handle = GM_xmlhttpRequest({
     method: req.method as 'GET' | 'POST',
@@ -143,37 +133,27 @@ const stream: HttpStreamTransport = (req) => new Promise((resolve, reject) => {
     data: req.body,
     timeout: req.timeoutMs,
     responseType: 'stream',
-    // 每次回调返回的片段大小（字符数），越小首帧越快
     partialSize: 64,
-    onpartial(res: { partial?: unknown; tfd?: unknown }) {
-      const current = partials.then(async () => {
-        try {
-          push(await readPartialText(res));
-        } catch {
-          // 片段无法解码时交给上层的非流式回退，不丢失最终结果。
-        }
-      });
-      partials = current;
-      return current;
+    onreadystatechange(res: { readyState?: number; response?: unknown }) {
+      if ((res.readyState ?? 0) >= 2) {
+        // TM 在 readyState=2 提供同一个 ReadableStream；此处开始消费才是真流式。
+        void consume(res.response).catch((error: unknown) => {
+          fail(error instanceof Error ? error : new Error('读取流式响应失败'));
+        });
+      }
+    },
+    // 兼容少数确实把 partial 直接交给用户回调的管理器。
+    onpartial(res: { partial?: unknown }) {
+      if (res.partial !== undefined) push(res.partial);
     },
     onprogress(res: { responseText?: unknown }) {
-      // 少数管理器在 onprogress 里直接给累计文本（responseText 非空）
       const text = res.responseText;
       if (typeof text === 'string' && text.length > accumulated.length) {
         accumulated = text;
         req.onChunk?.(accumulated);
       }
     },
-    onload(res) {
-      partials.then(() => {
-        if (settled) return;
-        settled = true;
-        cleanup();
-        // partialSize 模式下 response/responseText 会被删掉，只能用累积值
-        const text = accumulated || (typeof res.responseText === 'string' ? res.responseText : '');
-        resolve({ status: res.status, statusText: res.statusText, text });
-      });
-    },
+    onload: finish,
     onerror: () => fail(new Error('网络请求失败，请检查网络或接口地址')),
     ontimeout: () => fail(new Error('请求超时')),
     onabort: () => fail(new DOMException('Aborted', 'AbortError')),

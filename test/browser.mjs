@@ -76,7 +76,6 @@ try {
   const main = await page.locator('main').evaluate((node) => { const html = node.outerHTML; node.remove(); return html; });
   await page.evaluate(({ bundle, settings, response }) => {
     const store = new Map([['ojpp:settings', settings]]);
-    const partials = new Map();
     const state = window.__testState = { store, requests: [], clipboard: '', delay: 10, aborted: 0 };
     // 只有词法作用域里有 GM API；page.fetch 故意失败，以捕获 CORS 回退回归。
     window.fetch = () => { throw new Error('userscript must use GM transport'); };
@@ -86,16 +85,6 @@ try {
       (key, value) => store.set(key, structuredClone(value)),
       (text) => { state.clipboard = text; },
       (options) => {
-        // 模拟 TM onpartial 的 transferable data：实际回调通常收到 tfd.objUrl，
-        // 不是直接的 partial 字符串。平台层会通过 GM 请求读回这个 Blob URL。
-        if (partials.has(options.url)) {
-          const timer = setTimeout(() => options.onload?.({
-            status: 200,
-            statusText: 'OK',
-            responseText: partials.get(options.url),
-          }), 0);
-          return { abort: () => clearTimeout(timer) };
-        }
         const body = JSON.parse(options.data);
         state.requests.push(body);
         const timers = [];
@@ -107,38 +96,35 @@ try {
           options.onabort?.();
         };
         if (body.stream) {
-          // 按 Tampermonkey 的真实语义模拟流式：
-          //   - onpartial 给的是**增量**片段（partialSize 切分）
-          //   - onprogress 只带进度字段，responseText 是空串
-          //   - onload 时 responseText 已被删除（partialSize 模式）
-          // 之前这里发的是"累计文本的 onprogress"，那是臆想的行为，
-          // 所以真实环境不流式时测试依然通过。
+          // TM 的 responseType=stream 会在 readyState=2 提供 ReadableStream；
+          // 后续网络分片通过 controller.enqueue() 进入该流，不会调用用户的 onpartial。
+          let controller;
+          const responseStream = new ReadableStream({
+            start(value) { controller = value; },
+          });
+          options.onreadystatechange?.({
+            readyState: 2,
+            status: 200,
+            statusText: 'OK',
+            response: responseStream,
+            responseText: undefined,
+          });
           const text = response.choices[0].message.content;
           const events = [];
           for (let i = 0; i < text.length; i += 3) {
             events.push(`data: ${JSON.stringify({ choices: [{ delta: { content: text.slice(i, i + 3) } }] })}\n\n`);
           }
           events.push('data: [DONE]\n\n');
-          let acc = '';
           events.forEach((event, index) => {
             timers.push(setTimeout(() => {
               if (aborted) return;
-              acc += event;
               const isLast = index === events.length - 1;
               if (!isLast) {
-                // TM 的 stream 路径在普通用户脚本沙箱里会返回 tfd.objUrl。
-                // 每个临时 URL 只保存对应片段，供平台层通过 GM 请求读取。
-                const url = `blob:tm-probe-${index}`;
-                partials.set(url, event);
-                options.onpartial?.({
-                  tfd: { objUrl: { url, type: 'text/plain;charset=utf-8' } },
-                  index,
-                  length: events.length,
-                });
-                // 进度事件：只有进度字段，没有正文
-                options.onprogress?.({ responseText: '', loaded: acc.length, total: 0 });
+                controller.enqueue(new TextEncoder().encode(event));
+                options.onprogress?.({ responseText: '', loaded: index + 1, total: events.length });
               } else {
-                options.onload({ status: 200, statusText: 'OK', responseText: undefined, response: undefined });
+                controller.close();
+                options.onload({ status: 200, statusText: 'OK', response: responseStream, responseText: undefined });
               }
             }, state.delay * (index + 1)));
           });
@@ -221,7 +207,7 @@ try {
   await page.getByRole('button', { name: '翻译中，点击中止', exact: true }).click();
   await page.waitForFunction(() => window.__testState.aborted === 1);
   await page.locator('.ojpp-result').waitFor({ state: 'detached' });
-  console.log('✓ userscript：动态题面、公式与复制、设置交互、即时配置、TM tfd 流式与取消');
+  console.log('✓ userscript：动态题面、公式与复制、设置交互、即时配置、TM ReadableStream 流式与取消');
 
   if (screenshots) {
     await page.evaluate(() => { window.__testState.delay = 10; });
