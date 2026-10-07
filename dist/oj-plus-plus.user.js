@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OJ++
 // @namespace    https://github.com/hsn8086/OJ-Plus-Plus
-// @version      0.6.0
+// @version      0.7.0
 // @author       hsn8086
 // @description  OJ-Plus-Plus：AI 题面翻译、Markdown 视图与一键复制
 // @license      GPL-3.0
@@ -36,6 +36,262 @@
 		return target;
 	};
 	var APP_NAME = "OJ++";
+	var en$1 = {
+		"common.copied": "Copied",
+		"common.copyFailed": "Copy failed",
+		"common.close": "Close",
+		"common.cancel": "Cancel",
+		"common.save": "Save",
+		"common.unnamed": "Unnamed",
+		"common.notFilled": "Not set",
+		"app.settingsTitle": "{name} Settings",
+		"app.settingsSaved": "Settings saved",
+		"toolbar.group": "{label} toolbar",
+		"toolbar.translate": "AI Translate",
+		"toolbar.retranslate": "Retranslate",
+		"toolbar.markdown": "Markdown view",
+		"toolbar.backToOriginal": "Back to original",
+		"toolbar.copyOriginal": "Copy original",
+		"toolbar.noContent": "Nothing to translate",
+		"toolbar.translating": "Translating — click to stop",
+		"toolbar.translateFailed": "Translation failed: {message}",
+		"toolbar.retry": "Retry: {message}",
+		"result.title": "AI Translate",
+		"result.copy": "Copy translation",
+		"result.collapse": "Collapse",
+		"result.expand": "Expand",
+		"settings.tab.general": "Translation",
+		"settings.tab.provider": "Providers",
+		"settings.tab.advanced": "Advanced",
+		"settings.reset": "Reset to defaults",
+		"settings.resetConfirm": "Reset to default settings? Your current configuration will be cleared.",
+		"settings.saveFailed": "Save failed: {message}",
+		"settings.uiLanguage": "Interface language",
+		"settings.uiLanguageHint": "Language used for the settings panel and buttons. Follows the browser language by default.",
+		"settings.localeAuto": "Follow browser",
+		"settings.localeZh": "简体中文",
+		"settings.localeEn": "English",
+		"settings.targetLang": "Target language",
+		"settings.targetLangHint": "Language for translations, e.g. 简体中文 / English / 日本語.",
+		"settings.targetLangPlaceholder": "简体中文",
+		"settings.extraPrompt": "Extra prompt",
+		"settings.extraPromptPlaceholder": "e.g. Keep proper nouns in English; keep explanations brief.",
+		"settings.extraPromptHint": "Appended after the built-in translation prompt.",
+		"settings.wholeBlock": "Whole block",
+		"settings.wholeBlockHint": "Send the whole block to the model in one request for fuller context. When off, content is split by headings and paragraphs, which suits very long problem statements or models with smaller context windows.",
+		"settings.autoTranslate": "Auto-translate problem statement",
+		"settings.autoTranslateHint": "Automatically translate the problem statement area when a problem page opens.",
+		"settings.streaming": "Streaming",
+		"settings.streamingHint": "Render as it generates for a faster first paint. When off, the full translation appears at once. Falls back automatically if the Provider or script manager doesn't support it.",
+		"settings.theme": "Site theme",
+		"settings.themeHint": "Only affects styles the script adds for the site. If the site has its own dark mode, keep “Follow system”.",
+		"settings.themeAuto": "Follow system",
+		"settings.themeLight": "Light",
+		"settings.themeDark": "Dark",
+		"settings.timeout": "Timeout (ms)",
+		"settings.retries": "Retries",
+		"settings.retriesHint": "Only applies to network errors and 5xx responses.",
+		"settings.addFromPreset": "Add from preset",
+		"settings.add": "Add",
+		"settings.providerName": "Label",
+		"settings.providerNamePlaceholder": "Name this configuration",
+		"settings.protocol": "Protocol",
+		"settings.protocolHint": "Determines the request body format and how responses are parsed.",
+		"settings.baseUrl": "Base URL",
+		"settings.baseUrlHint": "Up to /v1 is enough — the script appends /chat/completions, /responses, or /messages. You can also enter the full endpoint.",
+		"settings.model": "Model",
+		"settings.apiKeyPlaceholder": "Leave empty for local services",
+		"settings.apiKeyHint": "Stored in this platform's local storage and sent with requests to your configured endpoint. Leave empty for local inference services; no auth header is sent.",
+		"settings.reasoning": "Reasoning",
+		"settings.reasoningHint": "Maps to the thinking field; only some Providers support it.",
+		"settings.reasoningEffort": "Reasoning effort",
+		"settings.reasoningEffortHint": "Maps to reasoning_effort / reasoning.effort.",
+		"settings.effortDefault": "Model default",
+		"settings.effortEnabled": "On",
+		"settings.effortDisabled": "Off",
+		"settings.headers": "Extra headers",
+		"settings.headersPlaceholder": "X-Custom-Header: value\\nOne per line",
+		"settings.headersHint": "One Key: Value per line; overrides default headers with the same name.",
+		"settings.body": "Extra request body fields",
+		"settings.bodyHint": "A JSON object merged into the request body; can override any field, such as top_p or max_tokens.",
+		"settings.test": "Test connection",
+		"settings.testing": "Testing…",
+		"settings.testOk": "Connected. Model replied: {reply}",
+		"settings.testFail": "Connection failed: {message}",
+		"settings.copyProvider": "Duplicate configuration",
+		"settings.deleteProvider": "Delete configuration",
+		"settings.providerCopySuffix": "{name} copy",
+		"settings.keepOne": "At least one configuration is required.",
+		"settings.providerFooter": "Configurations are stored in this platform's local storage. Translation content and API Key are sent to your configured Provider; you can test the connection on the Providers tab.",
+		"settings.preview": "Configuration preview (Key hidden)",
+		"settings.importPlaceholder": "Paste exported JSON, then click Import",
+		"settings.import": "Import",
+		"settings.importMissing": "Missing providers array",
+		"settings.importOk": "Imported. Takes effect after saving.",
+		"settings.importFail": "Import failed: {message}",
+		"settings.importTitle": "Import configuration",
+		"translate.status": "Translating…",
+		"translate.statusChunk": "Translating chunk {index}/{total}…",
+		"translate.unknownProvider": "Not configured",
+		"error.noProvider": "No Provider configured yet. Open the settings panel and add one first.",
+		"error.noModel": "Model name is empty",
+		"error.requestFailed": "Translation request failed",
+		"error.emptyResponse": "The endpoint returned an empty response; the model may not support this or the prompt was rejected",
+		"error.emptyButOk": "(Empty response, but status code is OK)",
+		"error.network": "Network request failed. Check your connection or the endpoint URL.",
+		"error.timeout": "Request timed out",
+		"error.streamRead": "Failed to read the Streaming response",
+		"error.notUserscript": "Install OJ++ through Tampermonkey or Violentmonkey and grant the required permissions",
+		"error.baseUrlEmpty": "Base URL is empty. Please fill it in the settings.",
+		"site.nowcoder": "Nowcoder",
+		"site.codeforces": "Codeforces",
+		"section.statement": "Problem statement",
+		"section.input": "Input",
+		"section.output": "Output",
+		"section.note": "Note",
+		"section.solution": "Solution",
+		"preset.customOpenAI": "Custom (OpenAI Chat compatible)"
+	};
+	var zh = {
+		"common.copied": "已复制",
+		"common.copyFailed": "复制失败",
+		"common.close": "关闭",
+		"common.cancel": "取消",
+		"common.save": "保存",
+		"common.unnamed": "未命名",
+		"common.notFilled": "未填",
+		"app.settingsTitle": "{name} 设置",
+		"app.settingsSaved": "设置已保存",
+		"toolbar.group": "{label}工具栏",
+		"toolbar.translate": "AI 翻译",
+		"toolbar.retranslate": "重新翻译",
+		"toolbar.markdown": "Markdown 视图",
+		"toolbar.backToOriginal": "返回原始内容",
+		"toolbar.copyOriginal": "复制原文",
+		"toolbar.noContent": "没有可翻译的内容",
+		"toolbar.translating": "翻译中，点击中止",
+		"toolbar.translateFailed": "翻译失败：{message}",
+		"toolbar.retry": "重试：{message}",
+		"result.title": "AI 翻译",
+		"result.copy": "复制译文",
+		"result.collapse": "收起",
+		"result.expand": "展开",
+		"settings.tab.general": "翻译设置",
+		"settings.tab.provider": "提供商",
+		"settings.tab.advanced": "高级",
+		"settings.reset": "恢复默认",
+		"settings.resetConfirm": "确定恢复默认设置？当前配置会被清空。",
+		"settings.saveFailed": "保存失败：{message}",
+		"settings.uiLanguage": "界面语言",
+		"settings.uiLanguageHint": "设置面板和按钮使用的语言。自动跟随浏览器语言。",
+		"settings.localeAuto": "跟随浏览器",
+		"settings.localeZh": "简体中文",
+		"settings.localeEn": "English",
+		"settings.targetLang": "目标语言",
+		"settings.targetLangHint": "译文使用的语言，例如 简体中文 / English / 日本語。",
+		"settings.targetLangPlaceholder": "简体中文",
+		"settings.extraPrompt": "追加提示词",
+		"settings.extraPromptPlaceholder": "例如：专有名词保留英文原文；解释尽量简短。",
+		"settings.extraPromptHint": "会拼接到内置翻译提示词之后。",
+		"settings.wholeBlock": "整段翻译",
+		"settings.wholeBlockHint": "开启后把整块内容一次性发给模型，上下文更完整；关闭则按标题和段落切块，适合超长题面或上下文窗口较小的模型。",
+		"settings.autoTranslate": "自动翻译题面",
+		"settings.autoTranslateHint": "打开题目页后自动翻译题目描述区域。",
+		"settings.streaming": "流式显示",
+		"settings.streamingHint": "边生成边渲染，首屏更快。关闭后等整段译完再一次性显示；服务商或脚本管理器不支持时会自动回退。",
+		"settings.theme": "站点配色",
+		"settings.themeHint": "只影响脚本为站点补的样式；站点自身有暗色模式时选「跟随系统」即可。",
+		"settings.themeAuto": "跟随系统",
+		"settings.themeLight": "浅色",
+		"settings.themeDark": "暗色",
+		"settings.timeout": "超时（毫秒）",
+		"settings.retries": "失败重试次数",
+		"settings.retriesHint": "仅对网络错误和 5xx 生效。",
+		"settings.addFromPreset": "从预设新增",
+		"settings.add": "新增",
+		"settings.providerName": "备注名",
+		"settings.providerNamePlaceholder": "给这个配置起个名字",
+		"settings.protocol": "接口协议",
+		"settings.protocolHint": "决定请求体格式与响应解析方式。",
+		"settings.baseUrl": "接口地址",
+		"settings.baseUrlHint": "填到 /v1 即可，脚本会自动补 /chat/completions、/responses 或 /messages；也可直接填完整端点。",
+		"settings.model": "模型",
+		"settings.apiKeyPlaceholder": "本地服务可留空",
+		"settings.apiKeyHint": "保存在当前平台的本地存储中，随请求发送到你配置的接口。本地推理服务可以留空，此时不会发送认证头。",
+		"settings.reasoning": "推理开关",
+		"settings.reasoningHint": "对应 thinking 字段，部分服务商才支持。",
+		"settings.reasoningEffort": "推理强度",
+		"settings.reasoningEffortHint": "对应 reasoning_effort / reasoning.effort。",
+		"settings.effortDefault": "跟随模型默认",
+		"settings.effortEnabled": "开启",
+		"settings.effortDisabled": "关闭",
+		"settings.headers": "额外请求头",
+		"settings.headersPlaceholder": "X-Custom-Header: value\n每行一个",
+		"settings.headersHint": "每行 Key: Value，会覆盖同名默认请求头。",
+		"settings.body": "额外请求体字段",
+		"settings.bodyHint": "JSON 对象，会合并进请求体，可覆盖任意字段，例如 top_p、max_tokens。",
+		"settings.test": "测试连接",
+		"settings.testing": "正在测试…",
+		"settings.testOk": "连接成功，模型回复：{reply}",
+		"settings.testFail": "连接失败：{message}",
+		"settings.copyProvider": "复制配置",
+		"settings.deleteProvider": "删除配置",
+		"settings.providerCopySuffix": "{name} 副本",
+		"settings.keepOne": "至少保留一个配置。",
+		"settings.providerFooter": "配置保存在当前平台的本地存储中。翻译内容与 API Key 发往你配置的提供商；可在「提供商」页测试连接。",
+		"settings.preview": "配置预览（已隐藏 Key）",
+		"settings.importPlaceholder": "粘贴导出的 JSON 后点「导入」",
+		"settings.import": "导入",
+		"settings.importMissing": "缺少 providers 数组",
+		"settings.importOk": "导入成功，保存后生效。",
+		"settings.importFail": "导入失败：{message}",
+		"settings.importTitle": "导入配置",
+		"translate.status": "正在翻译…",
+		"translate.statusChunk": "正在翻译第 {index}/{total} 段…",
+		"translate.unknownProvider": "未配置",
+		"error.noProvider": "还没有配置任何提供商，请先打开设置面板添加一个",
+		"error.noModel": "未填写模型名",
+		"error.requestFailed": "翻译请求失败",
+		"error.emptyResponse": "接口返回了空内容，可能是模型不支持或提示词被拒绝",
+		"error.emptyButOk": "(空响应，但状态码正常)",
+		"error.network": "网络请求失败，请检查网络或接口地址",
+		"error.timeout": "请求超时",
+		"error.streamRead": "读取流式响应失败",
+		"error.notUserscript": "请通过 Tampermonkey 或 Violentmonkey 安装 OJ++，并允许脚本所需权限",
+		"error.baseUrlEmpty": "接口地址为空，请在设置里填写",
+		"site.nowcoder": "牛客",
+		"site.codeforces": "Codeforces",
+		"section.statement": "题目描述",
+		"section.input": "输入描述",
+		"section.output": "输出描述",
+		"section.note": "提示",
+		"section.solution": "题解",
+		"preset.customOpenAI": "自定义（兼容 OpenAI Chat）"
+	};
+	var CATALOGS = {
+		zh,
+		en: en$1
+	};
+	function resolveLocale(setting, languages) {
+		if (setting === "zh" || setting === "en") return setting;
+		const first = (languages ?? (typeof navigator !== "undefined" ? navigator.languages ?? [] : []))[0] ?? "";
+		return /^zh\b/i.test(first) ? "zh" : "en";
+	}
+	var current = "zh";
+	var listeners = new Set();
+	function getLocale() {
+		return current;
+	}
+	function setLocale(locale) {
+		if (locale === current) return;
+		current = locale;
+		for (const listener of listeners) listener(locale);
+	}
+	function t(key, params) {
+		const template = CATALOGS[current][key] ?? zh[key] ?? key;
+		if (!params) return template;
+		return template.replace(/\{(\w+)\}/g, (match, name) => name in params ? String(params[name]) : match);
+	}
 	var SETTINGS_KEY = "ojpp:settings";
 	var DEFAULT_TARGET_LANG = "简体中文";
 	var DEFAULT_MODEL = "gpt-6-luna";
@@ -82,7 +338,9 @@
 		},
 		{
 			key: "custom",
-			label: "自定义（兼容 OpenAI Chat）",
+			get label() {
+				return t("preset.customOpenAI");
+			},
 			protocol: "openai-chat",
 			baseUrl: "",
 			model: DEFAULT_MODEL
@@ -119,7 +377,9 @@
 			autoTranslate: false,
 			timeoutMs: 12e4,
 			retries: 1,
-			streaming: true
+			streaming: true,
+			locale: "auto",
+			theme: "auto"
 		};
 	}
 	function migrate(raw) {
@@ -191,9 +451,9 @@
 			clearTimeout(timer);
 			try {
 				await writeClipboard(readText());
-				setIcon(button, ICON_CHECK, "已复制");
+				setIcon(button, ICON_CHECK, t("common.copied"));
 			} catch {
-				setIcon(button, ICON_CROSS, "复制失败");
+				setIcon(button, ICON_CROSS, t("common.copyFailed"));
 			}
 			timer = setTimeout(() => setIcon(button, icon, title), 1200);
 		});
@@ -226,7 +486,7 @@
 	}
 	function resolveUrl(baseUrl, fallbackBase, suffix) {
 		const base = trimSlash((baseUrl || fallbackBase).trim());
-		if (!base) throw new Error("接口地址为空，请在设置里填写");
+		if (!base) throw new Error(t("error.baseUrlEmpty"));
 		if (/\/[a-z0-9-]+$/i.test(base) && /(completions|messages|responses|chat)$/i.test(base)) return base;
 		return base + suffix;
 	}
@@ -433,8 +693,8 @@
 	};
 	async function ask(request, settings, prompt, systemPrompt, options = {}) {
 		const cfg = settings.providers.find((p) => p.id === settings.activeProviderId);
-		if (!cfg) throw new AiError("还没有配置任何提供商，请先打开设置面板添加一个");
-		if (!cfg.model.trim()) throw new AiError("未填写模型名");
+		if (!cfg) throw new AiError(t("error.noProvider"));
+		if (!cfg.model.trim()) throw new AiError(t("error.noModel"));
 		const attempts = Math.max(1, settings.retries + 1);
 		let lastError;
 		const shown = [];
@@ -506,7 +766,7 @@
 				if (finalText.trim()) return finalText;
 				const fallback = adapter.extractText(safeJson(res.text));
 				if (fallback.trim()) return fallback;
-				throw new AiError("接口返回了空内容，可能是模型不支持或提示词被拒绝");
+				throw new AiError(t("error.emptyResponse"));
 			} catch (error) {
 				if (error instanceof DOMException && error.name === "AbortError") throw error;
 				if (error instanceof AiError && isFatal(error.status)) throw error;
@@ -520,7 +780,7 @@
 			throw new AiError(`${res.status} ${detail}`, res.status);
 		}
 		const text = adapter.extractText(payload);
-		if (!text.trim()) throw new AiError("接口返回了空内容，可能是模型不支持或提示词被拒绝");
+		if (!text.trim()) throw new AiError(t("error.emptyResponse"));
 		if (wantStream) options.onDelta(text);
 		return text;
 	}
@@ -576,7 +836,7 @@
 			const detail = payload && adapter.extractError?.(payload) || truncate(res.text, 300);
 			throw new AiError(`${res.status} ${detail}`, res.status);
 		}
-		return adapter.extractText(payload) || "(空响应，但状态码正常)";
+		return adapter.extractText(payload) || t("error.emptyButOk");
 	}
 	function buildSystemPrompt(settings) {
 		const lines = [
@@ -642,7 +902,10 @@
 		const useStream = !!stream && streaming !== false;
 		for (const [index, chunk] of chunks.entries()) {
 			signal?.throwIfAborted();
-			onStatus?.(chunks.length === 1 ? "正在翻译…" : `正在翻译第 ${index + 1}/${chunks.length} 段…`);
+			onStatus?.(chunks.length === 1 ? t("translate.status") : t("translate.statusChunk", {
+				index: index + 1,
+				total: chunks.length
+			}));
 			const done = out.length;
 			const translated = await ask(request, settings, chunk, system, {
 				signal,
@@ -654,7 +917,7 @@
 		}
 		return {
 			markdown: out.join("\n\n"),
-			providerName: cfg?.name ?? "未配置",
+			providerName: cfg?.name ?? t("translate.unknownProvider"),
 			model: cfg?.model ?? "",
 			elapsedMs: Date.now() - started
 		};
@@ -31941,14 +32204,14 @@ $$` : `${n}$$`;
 		header.className = "ojpp-result-header";
 		const title = document.createElement("span");
 		title.className = "ojpp-result-title";
-		title.textContent = "AI 翻译";
+		title.textContent = t("result.title");
 		const status = document.createElement("span");
 		status.className = "ojpp-result-status";
 		status.setAttribute("role", "status");
 		const actions = document.createElement("span");
 		actions.className = "ojpp-result-actions";
-		const copy = iconButton(ICON_COPY, "复制译文");
-		const toggle = iconButton(ICON_CHEVRON, "收起");
+		const copy = iconButton(ICON_COPY, t("result.copy"));
+		const toggle = iconButton(ICON_CHEVRON, t("result.collapse"));
 		toggle.setAttribute("aria-expanded", "true");
 		actions.append(copy, toggle);
 		header.append(title, status, actions);
@@ -31968,7 +32231,7 @@ $$` : `${n}$$`;
 		bindCopy(copy, () => currentMarkdown, writeClipboard);
 		toggle.addEventListener("click", () => {
 			const collapsed = el.classList.toggle("ojpp-collapsed");
-			setIcon(toggle, collapsed ? ICON_CHEVRON_RIGHT : ICON_CHEVRON, collapsed ? "展开" : "收起");
+			setIcon(toggle, collapsed ? ICON_CHEVRON_RIGHT : ICON_CHEVRON, collapsed ? t("result.expand") : t("result.collapse"));
 			toggle.setAttribute("aria-expanded", String(!collapsed));
 		});
 		return {
@@ -31993,12 +32256,15 @@ $$` : `${n}$$`;
 		const toolbar = document.createElement("span");
 		toolbar.className = "ojpp-toolbar";
 		toolbar.setAttribute("role", "group");
-		toolbar.setAttribute("aria-label", `${section.label}工具栏`);
-		const translate = iconButton(ICON_TRANSLATE, "AI 翻译", "ojpp-translate-btn");
-		const markdown = iconButton(ICON_MARKDOWN, "Markdown 视图", "ojpp-md-btn");
-		const copy = iconButton(ICON_COPY, "复制原文", "ojpp-copy-btn");
+		toolbar.setAttribute("aria-label", t("toolbar.group", { label: section.label }));
+		const translate = iconButton(ICON_TRANSLATE, t("toolbar.translate"), "ojpp-translate-btn");
+		const markdown = iconButton(ICON_MARKDOWN, t("toolbar.markdown"), "ojpp-md-btn");
+		const copy = iconButton(ICON_COPY, t("toolbar.copyOriginal"), "ojpp-copy-btn");
 		toolbar.append(translate, markdown, copy);
-		section.toolbar.anchor.insertAdjacentElement(section.toolbar.position, toolbar);
+		if (section.toolbar.align === "right") {
+			toolbar.classList.add("ojpp-toolbar-right");
+			section.toolbar.anchor.append(toolbar);
+		} else section.toolbar.anchor.insertAdjacentElement(section.toolbar.position, toolbar);
 		const readMarkdown = () => htmlToMarkdown(section.content, prepareContent);
 		bindCopy(copy, readMarkdown, platform.writeClipboard);
 		let controller;
@@ -32019,7 +32285,7 @@ $$` : `${n}$$`;
 			clearTimeout(feedbackTimer);
 			const text = readMarkdown();
 			if (!text.trim()) {
-				state("error", ICON_CROSS, "没有可翻译的内容");
+				state("error", ICON_CROSS, t("toolbar.noContent"));
 				return;
 			}
 			result?.remove();
@@ -32028,7 +32294,7 @@ $$` : `${n}$$`;
 			section.result.anchor.insertAdjacentElement(section.result.position, panel.el);
 			controller = new AbortController();
 			const signal = controller.signal;
-			state("busy", ICON_SPINNER, "翻译中，点击中止");
+			state("busy", ICON_SPINNER, t("toolbar.translating"));
 			panel.begin();
 			try {
 				const snapshot = structuredClone(getSettings());
@@ -32043,16 +32309,16 @@ $$` : `${n}$$`;
 				});
 				signal.throwIfAborted();
 				panel.finish(translated);
-				state("done", ICON_CHECK, "重新翻译");
-				feedbackTimer = setTimeout(() => state("idle", ICON_TRANSLATE, "重新翻译"), 3e3);
+				state("done", ICON_CHECK, t("toolbar.retranslate"));
+				feedbackTimer = setTimeout(() => state("idle", ICON_TRANSLATE, t("toolbar.retranslate")), 3e3);
 			} catch (error) {
 				if (signal.aborted) {
 					panel.remove();
-					if (!disposed) state("idle", ICON_TRANSLATE, "AI 翻译");
+					if (!disposed) state("idle", ICON_TRANSLATE, t("toolbar.translate"));
 				} else {
 					const message = error instanceof Error ? error.message : String(error);
-					panel.setStatus(`翻译失败：${message}`, "error");
-					state("error", ICON_CROSS, `重试：${message.slice(0, 60)}`);
+					panel.setStatus(t("toolbar.translateFailed", { message }), "error");
+					state("error", ICON_CROSS, t("toolbar.retry", { message: message.slice(0, 60) }));
 				}
 			} finally {
 				controller = void 0;
@@ -32065,7 +32331,7 @@ $$` : `${n}$$`;
 				source = void 0;
 				section.content.hidden = originallyHidden;
 				markdown.dataset.state = "idle";
-				setIcon(markdown, ICON_MARKDOWN, "Markdown 视图");
+				setIcon(markdown, ICON_MARKDOWN, t("toolbar.markdown"));
 			} else {
 				source = document.createElement("pre");
 				source.className = "ojpp-md-source";
@@ -32073,7 +32339,7 @@ $$` : `${n}$$`;
 				section.content.after(source);
 				section.content.hidden = true;
 				markdown.dataset.state = "active";
-				setIcon(markdown, ICON_MARKDOWN, "返回原始内容");
+				setIcon(markdown, ICON_MARKDOWN, t("toolbar.backToOriginal"));
 			}
 		});
 		return {
@@ -32089,6 +32355,23 @@ $$` : `${n}$$`;
 				section.content.hidden = originallyHidden;
 			}
 		};
+	}
+	var THEME_ATTR = "data-ojpp-theme";
+	function resolveTheme(setting) {
+		if (setting === "light" || setting === "dark") return setting;
+		return typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+	}
+	function applyTheme(setting) {
+		const root = document.documentElement;
+		const theme = resolveTheme(setting);
+		root.setAttribute(THEME_ATTR, theme);
+		root.style.colorScheme = theme;
+	}
+	function watchSystemTheme(onChange) {
+		if (typeof matchMedia !== "function") return () => {};
+		const media = matchMedia("(prefers-color-scheme: dark)");
+		media.addEventListener("change", onChange);
+		return () => media.removeEventListener("change", onChange);
 	}
 	function el(tag, className, text) {
 		const node = document.createElement(tag);
@@ -32122,29 +32405,42 @@ $$` : `${n}$$`;
 		const head = el("div", "ojpp-panel-head");
 		panel.setAttribute("role", "dialog");
 		panel.setAttribute("aria-modal", "true");
-		panel.setAttribute("aria-label", `${APP_NAME} 设置`);
-		head.append(el("h3", void 0, `${APP_NAME} 设置`));
-		const closeBtn = el("button", "ojpp-btn ojpp-btn-ghost", "关闭");
+		const titleNode = el("h3", void 0, t("app.settingsTitle", { name: APP_NAME }));
+		head.append(titleNode);
+		const closeBtn = el("button", "ojpp-btn ojpp-btn-ghost", t("common.close"));
 		head.append(closeBtn);
 		const body = el("div", "ojpp-panel-body");
 		const tabs = el("div", "ojpp-tabs");
-		const tabGeneral = el("button", "ojpp-tab", "翻译设置");
-		const tabProvider = el("button", "ojpp-tab", "提供商");
-		const tabAdvanced = el("button", "ojpp-tab", "高级");
+		const tabGeneral = el("button", "ojpp-tab", t("settings.tab.general"));
+		const tabProvider = el("button", "ojpp-tab", t("settings.tab.provider"));
+		const tabAdvanced = el("button", "ojpp-tab", t("settings.tab.advanced"));
 		tabs.append(tabGeneral, tabProvider, tabAdvanced);
 		const content = el("div");
 		body.append(tabs, content);
 		const foot = el("div", "ojpp-panel-foot");
-		const resetBtn = el("button", "ojpp-btn ojpp-btn-danger", "恢复默认");
-		const cancelBtn = el("button", "ojpp-btn", "取消");
-		const saveBtn = el("button", "ojpp-btn ojpp-btn-primary", "保存");
+		const resetBtn = el("button", "ojpp-btn ojpp-btn-danger", t("settings.reset"));
+		const cancelBtn = el("button", "ojpp-btn", t("common.cancel"));
+		const saveBtn = el("button", "ojpp-btn ojpp-btn-primary", t("common.save"));
 		const saveStatus = el("span", "ojpp-status");
 		saveStatus.setAttribute("role", "status");
 		foot.append(saveStatus, resetBtn, cancelBtn, saveBtn);
 		panel.append(head, body, foot);
 		mask.append(panel);
 		let activeTab = "general";
+		const retitle = () => {
+			const title = t("app.settingsTitle", { name: APP_NAME });
+			panel.setAttribute("aria-label", title);
+			titleNode.textContent = title;
+			closeBtn.textContent = t("common.close");
+			tabGeneral.textContent = t("settings.tab.general");
+			tabProvider.textContent = t("settings.tab.provider");
+			tabAdvanced.textContent = t("settings.tab.advanced");
+			resetBtn.textContent = t("settings.reset");
+			cancelBtn.textContent = t("common.cancel");
+			saveBtn.textContent = t("common.save");
+		};
 		const render = () => {
+			retitle();
 			tabGeneral.dataset.active = activeTab === "general" ? "1" : "0";
 			tabProvider.dataset.active = activeTab === "provider" ? "1" : "0";
 			tabAdvanced.dataset.active = activeTab === "advanced" ? "1" : "0";
@@ -32155,17 +32451,70 @@ $$` : `${n}$$`;
 		};
 		function renderGeneral() {
 			const box = el("div");
-			const langInput = textInput(draft.targetLang, "简体中文");
+			const localeSelect = el("select");
+			[
+				{
+					value: "auto",
+					label: t("settings.localeAuto")
+				},
+				{
+					value: "zh",
+					label: t("settings.localeZh")
+				},
+				{
+					value: "en",
+					label: t("settings.localeEn")
+				}
+			].forEach(({ value, label }) => {
+				const option = el("option");
+				option.value = value;
+				option.textContent = label;
+				option.selected = draft.locale === value;
+				localeSelect.append(option);
+			});
+			localeSelect.addEventListener("change", () => {
+				draft.locale = localeSelect.value;
+				setLocale(resolveLocale(draft.locale));
+				render();
+			});
+			box.append(field(t("settings.uiLanguage"), localeSelect, t("settings.uiLanguageHint")));
+			const themeSelect = el("select");
+			[
+				{
+					value: "auto",
+					label: t("settings.themeAuto")
+				},
+				{
+					value: "light",
+					label: t("settings.themeLight")
+				},
+				{
+					value: "dark",
+					label: t("settings.themeDark")
+				}
+			].forEach(({ value, label }) => {
+				const option = el("option");
+				option.value = value;
+				option.textContent = label;
+				option.selected = draft.theme === value;
+				themeSelect.append(option);
+			});
+			themeSelect.addEventListener("change", () => {
+				draft.theme = themeSelect.value;
+				applyTheme(draft.theme);
+			});
+			box.append(field(t("settings.theme"), themeSelect, t("settings.themeHint")));
+			const langInput = textInput(draft.targetLang, t("settings.targetLangPlaceholder"));
 			langInput.addEventListener("input", () => draft.targetLang = langInput.value);
-			box.append(field("目标语言", langInput, "译文使用的语言，例如 简体中文 / English / 日本語。"));
+			box.append(field(t("settings.targetLang"), langInput, t("settings.targetLangHint")));
 			const promptArea = el("textarea");
 			promptArea.value = draft.extraPrompt;
-			promptArea.placeholder = "例如：专有名词保留英文原文；解释尽量简短。";
+			promptArea.placeholder = t("settings.extraPromptPlaceholder");
 			promptArea.addEventListener("input", () => draft.extraPrompt = promptArea.value);
-			box.append(field("追加提示词", promptArea, "会拼接到内置翻译提示词之后。"));
-			box.append(checkRow("整段翻译", draft.translateWholeBlock, "开启后把整块内容一次性发给模型，上下文更完整；关闭则按标题和段落切块，适合超长题面或上下文窗口较小的模型。", (v) => draft.translateWholeBlock = v));
-			box.append(checkRow("自动翻译题面", draft.autoTranslate, "打开题目页后自动翻译题目描述区域。", (v) => draft.autoTranslate = v));
-			box.append(checkRow("流式显示", draft.streaming, "边生成边渲染，首屏更快。关闭后等整段译完再一次性显示；服务商或脚本管理器不支持时会自动回退。", (v) => draft.streaming = v));
+			box.append(field(t("settings.extraPrompt"), promptArea, t("settings.extraPromptHint")));
+			box.append(checkRow(t("settings.wholeBlock"), draft.translateWholeBlock, t("settings.wholeBlockHint"), (v) => draft.translateWholeBlock = v));
+			box.append(checkRow(t("settings.autoTranslate"), draft.autoTranslate, t("settings.autoTranslateHint"), (v) => draft.autoTranslate = v));
+			box.append(checkRow(t("settings.streaming"), draft.streaming, t("settings.streamingHint"), (v) => draft.streaming = v));
 			const row = el("div", "ojpp-row");
 			const timeout = textInput(String(draft.timeoutMs), "120000", "number");
 			timeout.addEventListener("input", () => {
@@ -32177,7 +32526,7 @@ $$` : `${n}$$`;
 				const n = Number(retries.value);
 				if (Number.isFinite(n) && n >= 0) draft.retries = n;
 			});
-			row.append(field("超时（毫秒）", timeout), field("失败重试次数", retries, "仅对网络错误和 5xx 生效。"));
+			row.append(field(t("settings.timeout"), timeout), field(t("settings.retries"), retries, t("settings.retriesHint")));
 			box.append(row);
 			return box;
 		}
@@ -32192,8 +32541,8 @@ $$` : `${n}$$`;
 				radio.type = "radio";
 				radio.name = "ojpp-provider";
 				radio.checked = provider.id === selectedId;
-				const name = el("span", "ojpp-provider-name", provider.name || "未命名");
-				const meta = el("span", "ojpp-provider-meta", `${PROTOCOL_LABEL[provider.protocol]} · ${provider.model || "未填模型"}`);
+				const name = el("span", "ojpp-provider-name", provider.name || t("common.unnamed"));
+				const meta = el("span", "ojpp-provider-meta", `${PROTOCOL_LABEL[provider.protocol]} · ${provider.model || t("common.notFilled")}`);
 				nameRefs.set(provider.id, name);
 				const select = () => {
 					if (selectedId === provider.id) return;
@@ -32218,7 +32567,7 @@ $$` : `${n}$$`;
 				option.textContent = preset.label;
 				presetSelect.append(option);
 			});
-			const addBtn = el("button", "ojpp-btn", "新增");
+			const addBtn = el("button", "ojpp-btn", t("settings.add"));
 			addBtn.addEventListener("click", () => {
 				const preset = PROVIDER_PRESETS[Number(presetSelect.value)];
 				const provider = createProvider(preset);
@@ -32227,23 +32576,23 @@ $$` : `${n}$$`;
 				draft.activeProviderId = provider.id;
 				render();
 			});
-			addRow.append(field("从预设新增", presetSelect), addBtn);
+			addRow.append(field(t("settings.addFromPreset"), presetSelect), addBtn);
 			box.append(addRow);
 			const current = draft.providers.find((p) => p.id === selectedId);
 			if (current) box.append(renderProviderEditor(current, (name) => {
 				const ref = nameRefs.get(current.id);
-				if (ref) ref.textContent = name || "未命名";
+				if (ref) ref.textContent = name || t("common.unnamed");
 			}));
 			return box;
 		}
 		function renderProviderEditor(provider, onNameChange) {
 			const box = el("div");
-			const nameInput = textInput(provider.name, "给这个配置起个名字");
+			const nameInput = textInput(provider.name, t("settings.providerNamePlaceholder"));
 			nameInput.addEventListener("input", () => {
 				provider.name = nameInput.value;
 				onNameChange(nameInput.value);
 			});
-			box.append(field("备注名", nameInput));
+			box.append(field(t("settings.providerName"), nameInput));
 			const protocolSelect = el("select");
 			Object.keys(PROTOCOL_LABEL).forEach((key) => {
 				const option = el("option");
@@ -32256,30 +32605,30 @@ $$` : `${n}$$`;
 				provider.protocol = protocolSelect.value;
 				render();
 			});
-			box.append(field("接口协议", protocolSelect, "决定请求体格式与响应解析方式。"));
+			box.append(field(t("settings.protocol"), protocolSelect, t("settings.protocolHint")));
 			const baseInput = textInput(provider.baseUrl, "https://api.openai.com/v1");
 			baseInput.addEventListener("input", () => provider.baseUrl = baseInput.value);
-			box.append(field("接口地址", baseInput, "填到 /v1 即可，脚本会自动补 /chat/completions、/responses 或 /messages；也可直接填完整端点。"));
+			box.append(field(t("settings.baseUrl"), baseInput, t("settings.baseUrlHint")));
 			const modelInput = textInput(provider.model, "gpt-6-luna");
 			modelInput.addEventListener("input", () => provider.model = modelInput.value);
-			box.append(field("模型", modelInput));
-			const keyInput = textInput(provider.apiKey, "本地服务可留空", "password");
+			box.append(field(t("settings.model"), modelInput));
+			const keyInput = textInput(provider.apiKey, t("settings.apiKeyPlaceholder"), "password");
 			keyInput.addEventListener("input", () => provider.apiKey = keyInput.value);
-			box.append(field("API Key", keyInput, "保存在当前平台的本地存储中，随请求发送到你配置的接口。本地推理服务可以留空，此时不会发送认证头。"));
+			box.append(field("API Key", keyInput, t("settings.apiKeyHint")));
 			const row = el("div", "ojpp-row");
 			const reasoningSelect = el("select");
 			[
 				{
 					value: "default",
-					label: "跟随模型默认"
+					label: t("settings.effortDefault")
 				},
 				{
 					value: "enabled",
-					label: "开启"
+					label: t("settings.effortEnabled")
 				},
 				{
 					value: "disabled",
-					label: "关闭"
+					label: t("settings.effortDisabled")
 				}
 			].forEach(({ value, label }) => {
 				const option = el("option");
@@ -32294,15 +32643,15 @@ $$` : `${n}$$`;
 			});
 			const effortInput = textInput(provider.reasoning.effort, "low / medium / high");
 			effortInput.addEventListener("input", () => provider.reasoning.effort = effortInput.value);
-			row.append(field("推理开关", reasoningSelect, "对应 thinking 字段，部分服务商才支持。"), field("推理强度", effortInput, "对应 reasoning_effort / reasoning.effort。"));
+			row.append(field(t("settings.reasoning"), reasoningSelect, t("settings.reasoningHint")), field(t("settings.reasoningEffort"), effortInput, t("settings.reasoningEffortHint")));
 			box.append(row);
 			const headerArea = el("textarea");
 			headerArea.value = Object.entries(provider.headers).map(([k, v]) => `${k}: ${v}`).join("\n");
-			headerArea.placeholder = "X-Custom-Header: value\n每行一个";
+			headerArea.placeholder = t("settings.headersPlaceholder");
 			headerArea.addEventListener("input", () => {
 				provider.headers = parsePairs(headerArea.value);
 			});
-			box.append(field("额外请求头", headerArea, "每行 Key: Value，会覆盖同名默认请求头。"));
+			box.append(field(t("settings.headers"), headerArea, t("settings.headersHint")));
 			const bodyArea = el("textarea");
 			bodyArea.value = JSON.stringify(provider.body ?? {}, null, 2);
 			bodyArea.placeholder = "{}";
@@ -32315,23 +32664,23 @@ $$` : `${n}$$`;
 					bodyArea.style.borderColor = "#b42318";
 				}
 			});
-			box.append(field("额外请求体字段", bodyArea, "JSON 对象，会合并进请求体，可覆盖任意字段，例如 top_p、max_tokens。"));
+			box.append(field(t("settings.body"), bodyArea, t("settings.bodyHint")));
 			const status = el("div", "ojpp-status");
 			const actions = el("div", "ojpp-row");
-			const testBtn = el("button", "ojpp-btn", "测试连接");
-			const dupBtn = el("button", "ojpp-btn", "复制配置");
-			const delBtn = el("button", "ojpp-btn ojpp-btn-danger", "删除配置");
+			const testBtn = el("button", "ojpp-btn", t("settings.test"));
+			const dupBtn = el("button", "ojpp-btn", t("settings.copyProvider"));
+			const delBtn = el("button", "ojpp-btn ojpp-btn-danger", t("settings.deleteProvider"));
 			testBtn.addEventListener("click", async () => {
 				testBtn.disabled = true;
 				status.dataset.kind = "";
-				status.textContent = "正在测试…";
+				status.textContent = t("settings.testing");
 				try {
 					const reply = await testConnection(options.request, draft, provider);
 					status.dataset.kind = "ok";
-					status.textContent = `连接成功，模型回复：${reply.slice(0, 200)}`;
+					status.textContent = t("settings.testOk", { reply: reply.slice(0, 200) });
 				} catch (error) {
 					status.dataset.kind = "error";
-					status.textContent = `连接失败：${error instanceof Error ? error.message : String(error)}`;
+					status.textContent = t("settings.testFail", { message: error instanceof Error ? error.message : String(error) });
 				} finally {
 					testBtn.disabled = false;
 				}
@@ -32340,7 +32689,7 @@ $$` : `${n}$$`;
 				const copy = {
 					...structuredClone(provider),
 					id: newId(),
-					name: `${provider.name} 副本`
+					name: t("settings.providerCopySuffix", { name: provider.name })
 				};
 				draft.providers.push(copy);
 				selectedId = copy.id;
@@ -32350,7 +32699,7 @@ $$` : `${n}$$`;
 			delBtn.addEventListener("click", () => {
 				if (draft.providers.length <= 1) {
 					status.dataset.kind = "error";
-					status.textContent = "至少保留一个配置。";
+					status.textContent = t("settings.keepOne");
 					return;
 				}
 				draft.providers = draft.providers.filter((p) => p.id !== provider.id);
@@ -32365,7 +32714,7 @@ $$` : `${n}$$`;
 		function renderAdvanced() {
 			const box = el("div");
 			const info = el("div", "ojpp-hint");
-			info.textContent = "配置保存在当前平台的本地存储中。翻译内容与 API Key 发往你配置的提供商；可在「提供商」页测试连接。";
+			info.textContent = t("settings.providerFooter");
 			box.append(info);
 			const exportArea = el("textarea");
 			exportArea.value = JSON.stringify({
@@ -32376,26 +32725,26 @@ $$` : `${n}$$`;
 				}))
 			}, null, 2);
 			exportArea.readOnly = true;
-			box.append(field("配置预览（已隐藏 Key）", exportArea));
+			box.append(field(t("settings.preview"), exportArea));
 			const importArea = el("textarea");
-			importArea.placeholder = "粘贴导出的 JSON 后点「导入」";
-			const importBtn = el("button", "ojpp-btn", "导入");
+			importArea.placeholder = t("settings.importPlaceholder");
+			const importBtn = el("button", "ojpp-btn", t("settings.import"));
 			const status = el("div", "ojpp-status");
 			importBtn.addEventListener("click", () => {
 				try {
 					const parsed = JSON.parse(importArea.value);
-					if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.providers)) throw new Error("缺少 providers 数组");
+					if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.providers)) throw new Error(t("settings.importMissing"));
 					Object.assign(draft, migrate(parsed));
 					selectedId = draft.activeProviderId;
 					status.dataset.kind = "ok";
-					status.textContent = "导入成功，保存后生效。";
+					status.textContent = t("settings.importOk");
 					render();
 				} catch (error) {
 					status.dataset.kind = "error";
-					status.textContent = `导入失败：${error instanceof Error ? error.message : String(error)}`;
+					status.textContent = t("settings.importFail", { message: error instanceof Error ? error.message : String(error) });
 				}
 			});
-			box.append(field("导入配置", importArea), importBtn, status);
+			box.append(field(t("settings.importTitle"), importArea), importBtn, status);
 			return box;
 		}
 		function checkRow(label, value, hint, onChange) {
@@ -32442,7 +32791,7 @@ $$` : `${n}$$`;
 				close();
 			} catch (error) {
 				saveStatus.dataset.kind = "error";
-				saveStatus.textContent = `保存失败：${error instanceof Error ? error.message : String(error)}`;
+				saveStatus.textContent = t("settings.saveFailed", { message: error instanceof Error ? error.message : String(error) });
 			} finally {
 				saveBtn.disabled = resetBtn.disabled = false;
 			}
@@ -32454,7 +32803,7 @@ $$` : `${n}$$`;
 		cancelBtn.addEventListener("click", close);
 		closeBtn.addEventListener("click", close);
 		resetBtn.addEventListener("click", () => {
-			if (confirm("确定恢复默认设置？当前配置会被清空。")) persist(null);
+			if (confirm(t("settings.resetConfirm"))) persist(null);
 		});
 		let maskPress;
 		mask.addEventListener("pointerdown", (event) => {
@@ -32496,6 +32845,13 @@ $$` : `${n}$$`;
   align-items: center;
   margin-left: 8px;
   vertical-align: middle;
+}
+/* 浮到标题行最右边。用 float 而不是 absolute，
+   因为站点的标题容器高度常常是 auto，absolute 会溢出。 */
+.ojpp-toolbar-right {
+  float: right;
+  margin-left: 12px;
+  margin-right: 0;
 }
 .ojpp-icon-btn {
   display: inline-flex;
@@ -32753,6 +33109,96 @@ $$` : `${n}$$`;
 }
 .ojpp-toast[data-kind="error"] { background: #b42318; }
 `;
+	var DARK_CSS = `
+html[data-ojpp-theme="dark"] {
+  --ojpp-bg: #1c2128;
+  --ojpp-bg-soft: #22272e;
+  --ojpp-border: #373e47;
+  --ojpp-text: #cdd9e5;
+  --ojpp-text-dim: #909dab;
+  --ojpp-accent: #539bf5;
+  --ojpp-danger: #f47067;
+  --ojpp-ok: #57ab5a;
+}
+html[data-ojpp-theme="dark"] .ojpp-icon-btn { color: #909dab; }
+html[data-ojpp-theme="dark"] .ojpp-icon-btn:hover {
+  background: rgba(255, 255, 255, .1); color: #cdd9e5;
+}
+html[data-ojpp-theme="dark"] .ojpp-icon-btn:focus-visible { outline-color: #316dca; }
+html[data-ojpp-theme="dark"] .ojpp-icon-btn[data-state="busy"] { color: #539bf5; }
+html[data-ojpp-theme="dark"] .ojpp-icon-btn[data-state="done"] { color: #57ab5a; }
+html[data-ojpp-theme="dark"] .ojpp-icon-btn[data-state="error"] { color: #f47067; }
+html[data-ojpp-theme="dark"] .ojpp-icon-btn[data-state="active"] {
+  color: #539bf5; background: rgba(83, 155, 245, .16);
+}
+html[data-ojpp-theme="dark"] .ojpp-icon-btn.ojpp-settings-floating {
+  background: rgba(34, 39, 46, .94);
+  border-color: #373e47;
+  color: #909dab;
+}
+
+html[data-ojpp-theme="dark"] .ojpp-result {
+  background: #22272e; border-color: #373e47;
+}
+html[data-ojpp-theme="dark"] .ojpp-result-header {
+  background: #2d333b; border-bottom-color: #373e47;
+}
+html[data-ojpp-theme="dark"] .ojpp-result-title { color: #909dab; }
+html[data-ojpp-theme="dark"] .ojpp-result-status { color: #768390; }
+html[data-ojpp-theme="dark"] .ojpp-result-status[data-kind="error"] { color: #f47067; }
+html[data-ojpp-theme="dark"] .ojpp-result-body { color: #cdd9e5; }
+html[data-ojpp-theme="dark"] .ojpp-result-body th,
+html[data-ojpp-theme="dark"] .ojpp-result-body td { border-color: #373e47; }
+html[data-ojpp-theme="dark"] .ojpp-result-body pre { background: #2d333b; }
+html[data-ojpp-theme="dark"] .ojpp-result-body code {
+  background: rgba(99, 110, 123, .4);
+}
+html[data-ojpp-theme="dark"] .ojpp-result-body a { color: #539bf5; }
+html[data-ojpp-theme="dark"] .ojpp-md-source {
+  background: #2d333b; border-color: #373e47; color: #cdd9e5;
+}
+
+html[data-ojpp-theme="dark"] .ojpp-mask { background: rgba(0, 0, 0, .6); }
+html[data-ojpp-theme="dark"] .ojpp-panel {
+  background: #22272e; color: #cdd9e5; border: 1px solid #373e47;
+}
+html[data-ojpp-theme="dark"] .ojpp-panel-head,
+html[data-ojpp-theme="dark"] .ojpp-panel-foot { border-color: #373e47; }
+html[data-ojpp-theme="dark"] .ojpp-tab { color: #909dab; }
+html[data-ojpp-theme="dark"] .ojpp-tab[data-active="1"] {
+  background: #2d333b; color: #cdd9e5;
+}
+html[data-ojpp-theme="dark"] .ojpp-hint { color: #768390; }
+html[data-ojpp-theme="dark"] .ojpp-panel input[type="text"],
+html[data-ojpp-theme="dark"] .ojpp-panel input[type="password"],
+html[data-ojpp-theme="dark"] .ojpp-panel input[type="number"],
+html[data-ojpp-theme="dark"] .ojpp-panel select,
+html[data-ojpp-theme="dark"] .ojpp-panel textarea {
+  background: #1c2128; border-color: #444c56; color: #cdd9e5;
+}
+html[data-ojpp-theme="dark"] .ojpp-panel input:focus,
+html[data-ojpp-theme="dark"] .ojpp-panel select:focus,
+html[data-ojpp-theme="dark"] .ojpp-panel textarea:focus {
+  outline-color: #316dca; border-color: #539bf5;
+}
+html[data-ojpp-theme="dark"] .ojpp-provider-item { border-color: #373e47; }
+html[data-ojpp-theme="dark"] .ojpp-provider-item[data-active="1"] {
+  border-color: #539bf5; background: rgba(83, 155, 245, .1);
+}
+html[data-ojpp-theme="dark"] .ojpp-provider-item .ojpp-provider-meta { color: #768390; }
+html[data-ojpp-theme="dark"] .ojpp-status[data-kind="error"] { color: #f47067; }
+html[data-ojpp-theme="dark"] .ojpp-status[data-kind="ok"] { color: #57ab5a; }
+html[data-ojpp-theme="dark"] .ojpp-btn {
+  background: #2d333b; border-color: #444c56; color: #cdd9e5;
+}
+html[data-ojpp-theme="dark"] .ojpp-btn:hover { background: #373e47; }
+html[data-ojpp-theme="dark"] .ojpp-btn-primary {
+  background: #316dca; border-color: #316dca; color: #fff;
+}
+html[data-ojpp-theme="dark"] .ojpp-btn-danger { color: #f47067; }
+html[data-ojpp-theme="dark"] .ojpp-toast { background: #2d333b; color: #cdd9e5; }
+html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="error"] { background: #a33a3a; }
+`;
 	var timer;
 	function toast(message, kind = "info") {
 		document.querySelector(".ojpp-toast")?.remove();
@@ -32768,11 +33214,14 @@ $$` : `${n}$$`;
 	async function startApp(platform, site) {
 		if (document.readyState === "loading") await new Promise((resolve) => document.addEventListener("DOMContentLoaded", () => resolve(), { once: true }));
 		let settings = await loadSettings(platform.storage);
+		setLocale(resolveLocale(settings.locale));
+		applyTheme(settings.theme);
 		const style = document.createElement("style");
-		style.textContent = CSS + (site.styles ?? "");
+		style.textContent = CSS + (site.styles ?? "") + DARK_CSS + (site.darkStyles ?? "");
 		document.head.append(style);
+		const stopThemeWatch = watchSystemTheme(() => applyTheme(settings.theme));
 		let closeSettings;
-		const settingsButton = iconButton(ICON_SETTINGS, `${APP_NAME} 设置`, "ojpp-settings-btn");
+		const settingsButton = iconButton(ICON_SETTINGS, t("app.settingsTitle", { name: APP_NAME }), "ojpp-settings-btn");
 		settingsButton.addEventListener("click", () => {
 			if (closeSettings) return;
 			closeSettings = openSettingsPanel({
@@ -32782,7 +33231,10 @@ $$` : `${n}$$`;
 					const updated = next ?? defaultSettings();
 					await saveSettings(platform.storage, updated);
 					settings = updated;
-					toast("设置已保存");
+					setLocale(resolveLocale(updated.locale));
+					applyTheme(settings.theme);
+					toast(t("app.settingsSaved"));
+					if (getLocale() !== renderedLocale) remountAll();
 				},
 				onClose() {
 					closeSettings = void 0;
@@ -32790,6 +33242,14 @@ $$` : `${n}$$`;
 			});
 		});
 		const mounted = new Map();
+		let renderedLocale = getLocale();
+		const remountAll = () => {
+			for (const handle of mounted.values()) handle.dispose();
+			mounted.clear();
+			settingsButton.remove();
+			renderedLocale = getLocale();
+			reconcile();
+		};
 		const reconcile = () => {
 			const sections = site.collectSections(document);
 			if (sections.length === 0) {
@@ -32820,6 +33280,7 @@ $$` : `${n}$$`;
 		const stopObserving = site.observe(document, reconcile);
 		return () => {
 			stopObserving();
+			stopThemeWatch();
 			closeSettings?.();
 			for (const handle of mounted.values()) handle.dispose();
 			mounted.clear();
@@ -32856,8 +33317,8 @@ $$` : `${n}$$`;
 					text: res.responseText
 				});
 			},
-			onerror: () => fail(new Error("网络请求失败，请检查网络或接口地址")),
-			ontimeout: () => fail(new Error("请求超时")),
+			onerror: () => fail(new Error(t("error.network"))),
+			ontimeout: () => fail(new Error(t("error.timeout"))),
 			onabort: () => fail(new DOMException("Aborted", "AbortError"))
 		});
 		function onAbort() {
@@ -32933,7 +33394,7 @@ $$` : `${n}$$`;
 				});
 			};
 			consume(res.response).then(complete).catch((error) => {
-				fail(error instanceof Error ? error : new Error("读取流式响应失败"));
+				fail(error instanceof Error ? error : new Error(t("error.streamRead")));
 			});
 			if (waitMs > 0) fallbackTimer = setTimeout(complete, waitMs);
 		};
@@ -32947,13 +33408,13 @@ $$` : `${n}$$`;
 			partialSize: 64,
 			onreadystatechange(res) {
 				if ((res.readyState ?? 0) >= 2) consume(res.response).catch((error) => {
-					fail(error instanceof Error ? error : new Error("读取流式响应失败"));
+					fail(error instanceof Error ? error : new Error(t("error.streamRead")));
 				});
 			},
 			onload: (res) => finish(res, 250),
 			onloadend: finish,
-			onerror: () => fail(new Error("网络请求失败，请检查网络或接口地址")),
-			ontimeout: () => fail(new Error("请求超时")),
+			onerror: () => fail(new Error(t("error.network"))),
+			ontimeout: () => fail(new Error(t("error.timeout"))),
 			onabort: () => fail(new DOMException("Aborted", "AbortError"))
 		});
 		function onAbort() {
@@ -32968,7 +33429,7 @@ $$` : `${n}$$`;
 			_GM_setValue,
 			_GM_xmlhttpRequest,
 			_GM_setClipboard
-		].some((api) => typeof api !== "function")) throw new Error("请通过 Tampermonkey 或 Violentmonkey 安装 OJ++，并允许脚本所需权限");
+		].some((api) => typeof api !== "function")) throw new Error(t("error.notUserscript"));
 		return {
 			id: "userscript",
 			storage: {
@@ -33045,7 +33506,9 @@ $$` : `${n}$$`;
 	}
 	var codeforces = {
 		id: "codeforces",
-		name: "Codeforces",
+		get name() {
+			return t("site.codeforces");
+		},
 		hosts: [
 			"codeforces.com",
 			"m1.codeforces.com",
@@ -33061,6 +33524,93 @@ $$` : `${n}$$`;
       background: rgba(255, 255, 255, .2); color: #fff;
     }
   `,
+		darkStyles: `
+    html[data-ojpp-theme="dark"] body {
+      background: #1c2128; color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] #pageContent,
+    html[data-ojpp-theme="dark"] .content-with-sidebar {
+      background: #1c2128; color: #cdd9e5;
+    }
+    /* 题面正文：Codeforces 用 .ttypography 包住题面与博客正文 */
+    html[data-ojpp-theme="dark"] .ttypography,
+    html[data-ojpp-theme="dark"] .problem-statement {
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .problem-statement .header .title,
+    html[data-ojpp-theme="dark"] .problem-statement .section-title {
+      color: #e6edf3;
+    }
+    html[data-ojpp-theme="dark"] .problem-statement .property-title {
+      color: #909dab;
+    }
+    html[data-ojpp-theme="dark"] .ttypography a,
+    html[data-ojpp-theme="dark"] .problem-statement a {
+      color: #539bf5;
+    }
+    /* 样例的输入/输出块 */
+    html[data-ojpp-theme="dark"] .problem-statement .sample-test,
+    html[data-ojpp-theme="dark"] .problem-statement .input,
+    html[data-ojpp-theme="dark"] .problem-statement .output {
+      border-color: #373e47;
+    }
+    html[data-ojpp-theme="dark"] .problem-statement .sample-test .title {
+      color: #909dab;
+    }
+    html[data-ojpp-theme="dark"] .problem-statement pre,
+    html[data-ojpp-theme="dark"] .ttypography pre {
+      background: #22272e; color: #cdd9e5; border-color: #373e47;
+    }
+    html[data-ojpp-theme="dark"] .problem-statement code,
+    html[data-ojpp-theme="dark"] .ttypography code {
+      background: rgba(99, 110, 123, .4); color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .problem-statement table,
+    html[data-ojpp-theme="dark"] .ttypography table {
+      border-color: #373e47;
+    }
+    html[data-ojpp-theme="dark"] .problem-statement th,
+    html[data-ojpp-theme="dark"] .problem-statement td,
+    html[data-ojpp-theme="dark"] .ttypography th,
+    html[data-ojpp-theme="dark"] .ttypography td {
+      border-color: #373e47;
+    }
+    /* 侧边栏与信息框 */
+    html[data-ojpp-theme="dark"] .roundbox,
+    html[data-ojpp-theme="dark"] .sidebox,
+    html[data-ojpp-theme="dark"] .datatable,
+    html[data-ojpp-theme="dark"] .datatable td,
+    html[data-ojpp-theme="dark"] .datatable th {
+      background: #22272e; border-color: #373e47; color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .roundbox .caption,
+    html[data-ojpp-theme="dark"] .sidebox .caption {
+      background: #2d333b; color: #cdd9e5;
+    }
+    /* 二级菜单与标签页 */
+    html[data-ojpp-theme="dark"] .second-level-menu,
+    html[data-ojpp-theme="dark"] .second-level-menu-list {
+      background: #22272e;
+    }
+    html[data-ojpp-theme="dark"] .second-level-menu-list li a {
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .second-level-menu-list li.current a {
+      background: #2d333b;
+    }
+    /* 题面里的公式（老题的 .tex-span 与 MathJax 渲染结果） */
+    html[data-ojpp-theme="dark"] .MathJax,
+    html[data-ojpp-theme="dark"] .MathJax_Preview,
+    html[data-ojpp-theme="dark"] .MJXp-math {
+      color: #cdd9e5;
+    }
+    /* 顶部导航：Codeforces 原本就是深色，这里只压暗一点并统一色调 */
+    html[data-ojpp-theme="dark"] #header,
+    html[data-ojpp-theme="dark"] .menu-box,
+    html[data-ojpp-theme="dark"] .menu-list-container {
+      background: #161b22;
+    }
+  `,
 		collectSections(doc) {
 			const sections = [];
 			const statement = doc.querySelector(".problem-statement");
@@ -33073,7 +33623,8 @@ $$` : `${n}$$`;
 					content,
 					toolbar: {
 						anchor: heading,
-						position: "afterend"
+						position: "beforeend",
+						align: "right"
 					},
 					result: {
 						anchor: content,
@@ -33081,10 +33632,10 @@ $$` : `${n}$$`;
 					}
 				});
 			};
-			add(statement.querySelector(".header + div"), statement.querySelector(".header .title"), "statement", "题目描述");
-			add(statement.querySelector(".input-specification"), statement.querySelector(".input-specification .section-title"), "input", "输入描述");
-			add(statement.querySelector(".output-specification"), statement.querySelector(".output-specification .section-title"), "output", "输出描述");
-			add(statement.querySelector(".note"), statement.querySelector(".note .section-title"), "output", "提示");
+			add(statement.querySelector(".header + div"), statement.querySelector(".header .title"), "statement", t("section.statement"));
+			add(statement.querySelector(".input-specification"), statement.querySelector(".input-specification .section-title"), "input", t("section.input"));
+			add(statement.querySelector(".output-specification"), statement.querySelector(".output-specification .section-title"), "output", t("section.output"));
+			add(statement.querySelector(".note"), statement.querySelector(".note .section-title"), "output", t("section.note"));
 			return sections;
 		},
 		prepareContent(root) {
@@ -33217,7 +33768,9 @@ $$` : `${n}$$`;
 	}
 	var sites = [{
 		id: "nowcoder",
-		name: "牛客",
+		get name() {
+			return t("site.nowcoder");
+		},
 		hosts: ["ac.nowcoder.com", "www.nowcoder.com"],
 		styles: `
     .ojpp-nowcoder-settings {
@@ -33238,7 +33791,8 @@ $$` : `${n}$$`;
 					content,
 					toolbar: {
 						anchor: heading,
-						position: kind === "solution" ? "beforebegin" : "beforeend"
+						position: "beforeend",
+						align: "right"
 					},
 					result: {
 						anchor: content,
@@ -33246,7 +33800,7 @@ $$` : `${n}$$`;
 					}
 				});
 			};
-			add(doc.querySelector(".subject-question"), doc.querySelector(".subject-item-title"), "statement", "题目描述");
+			add(doc.querySelector(".subject-question"), doc.querySelector(".subject-item-title"), "statement", t("section.statement"));
 			for (const heading of doc.querySelectorAll(".subject-describe > h2")) {
 				const label = heading.textContent ?? "";
 				if (!/描述/.test(label)) continue;
@@ -33254,7 +33808,7 @@ $$` : `${n}$$`;
 				while (sibling && sibling.tagName !== "PRE" && sibling.tagName !== "H2") sibling = sibling.nextElementSibling;
 				if (sibling?.tagName !== "PRE") continue;
 				const isInput = /输入/.test(label);
-				add(sibling, heading, isInput ? "input" : "output", isInput ? "输入描述" : "输出描述");
+				add(sibling, heading, isInput ? "input" : "output", isInput ? t("section.input") : t("section.output"));
 			}
 			for (const heading of doc.querySelectorAll("h2")) {
 				const label = (heading.textContent ?? "").trim();
@@ -33264,7 +33818,7 @@ $$` : `${n}$$`;
 				if (body.querySelector("textarea")) continue;
 				add(body, heading, "output", label.replace(/[:：]\s*$/, ""));
 			}
-			for (const content of doc.querySelectorAll("div.nc-post-content")) add(content, content, "solution", "题解");
+			for (const content of doc.querySelectorAll("div.nc-post-content")) add(content, content, "solution", t("section.solution"));
 			return sections;
 		},
 		prepareContent(root) {

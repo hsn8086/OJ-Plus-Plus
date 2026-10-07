@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.ts';
 import type { TranslationResult } from '../core/translate.ts';
 import type { WriteClipboard } from '../platforms/types.ts';
 import { bindCopy, iconButton, setIcon } from './buttons.ts';
@@ -12,14 +13,14 @@ export function createResultPanel(writeClipboard: WriteClipboard) {
   header.className = 'ojpp-result-header';
   const title = document.createElement('span');
   title.className = 'ojpp-result-title';
-  title.textContent = 'AI 翻译';
+  title.textContent = t('result.title');
   const status = document.createElement('span');
   status.className = 'ojpp-result-status';
   status.setAttribute('role', 'status');
   const actions = document.createElement('span');
   actions.className = 'ojpp-result-actions';
-  const copy = iconButton(ICON_COPY, '复制译文');
-  const toggle = iconButton(ICON_CHEVRON, '收起');
+  const copy = iconButton(ICON_COPY, t('result.copy'));
+  const toggle = iconButton(ICON_CHEVRON, t('result.collapse'));
   toggle.setAttribute('aria-expanded', 'true');
   actions.append(copy, toggle);
   header.append(title, status, actions);
@@ -41,7 +42,7 @@ export function createResultPanel(writeClipboard: WriteClipboard) {
   bindCopy(copy, () => currentMarkdown, writeClipboard);
   toggle.addEventListener('click', () => {
     const collapsed = el.classList.toggle('ojpp-collapsed');
-    setIcon(toggle, collapsed ? ICON_CHEVRON_RIGHT : ICON_CHEVRON, collapsed ? '展开' : '收起');
+    setIcon(toggle, collapsed ? ICON_CHEVRON_RIGHT : ICON_CHEVRON, collapsed ? t('result.expand') : t('result.collapse'));
     toggle.setAttribute('aria-expanded', String(!collapsed));
   });
   return {

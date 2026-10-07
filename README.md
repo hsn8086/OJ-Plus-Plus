@@ -18,6 +18,8 @@ OJ++（OJ-Plus-Plus）是一个可扩展的在线评测站增强工具。它把 
 - **Markdown 查看与复制**：从内容副本生成 Markdown，不替换原页面 DOM，因此页面原有交互可以继续使用。
 - **多提供商**：支持 OpenAI Chat Completions、OpenAI Responses、Anthropic Messages，以及自定义地址、请求头和请求体字段。API Key 可以留空，此时不发送认证头，适配本地推理服务。
 - **长题面分段**：关闭整段翻译后按标题、段落和行切分内容。
+- **界面语言**：设置面板与按钮支持简体中文和英文，可跟随浏览器语言。
+- **站点配色**：可选跟随系统、浅色或暗色。Codeforces 自带一套暗色样式；脚本自己的界面也随主题切换。
 - **平台解耦**：通用代码只依赖存储、HTTP 请求和剪贴板接口。油猴平台使用 GM API，浏览器平台使用 `localStorage`、`fetch` 和 Clipboard API。
 
 ## 安装
@@ -79,6 +81,10 @@ src/
     settings-store.ts   平台无关的配置读写
     translate.ts        分段翻译编排
     types.ts            通用配置和协议接口
+  i18n/
+    zh.ts               中文文案，同时是键的定义来源
+    en.ts               英文文案
+    index.ts            取词、占位符替换、语言解析
   sites/
     types.ts            OJ 站点适配器接口
     index.ts            站点注册和 URL 分派
@@ -94,7 +100,8 @@ src/
     settings-panel.ts   通用设置面板
     markdown.ts         HTML 副本到 Markdown、KaTeX 渲染、流式稳定化
     buttons.ts          图标按钮和复制反馈
-    styles.ts           通用样式
+    theme.ts            主题解析与应用
+    styles.ts           通用样式（含暗色）
   entries/
     userscript.ts       油猴入口
     browser.ts          浏览器调试入口
@@ -110,6 +117,30 @@ src/
 - `observe` 监听站点的异步渲染，并在页面变化时调用回调。
 
 然后把适配器加入 `src/sites/index.ts`。通用翻译、Markdown 和设置代码不需要修改。
+
+### 添加界面文案
+
+界面文字都走 `src/i18n`：
+
+1. 在 `zh.ts` 加键，中文即默认文案。
+2. 在 `en.ts` 补对应英文。两份文件的键集合必须一致，`test/i18n.test.ts` 会检查，也会检查占位符是否两边都在。
+3. 代码里用 `t('key', { name: 'x' })` 取值，占位符写成 `{name}`。
+
+未支持的语言会回退英文，而不是回退中文，避免出现半截中文。
+
+### 给站点加暗色主题
+
+在适配器里提供 `darkStyles`，选择器挂在 `html[data-ojpp-theme="dark"]` 下：
+
+```ts
+export const site: SiteAdapter = {
+  darkStyles: `
+    html[data-ojpp-theme="dark"] .my-statement { color: #cdd9e5; }
+  `,
+};
+```
+
+只覆盖阅读相关的部分（正文、链接、代码块、表格），不要去改导航栏和按钮，否则容易把站点自己的配色改坏。站点自身有暗色模式时不必提供。
 
 ### 添加一个运行平台
 
@@ -143,6 +174,8 @@ pnpm screenshots     # 生成 README 截图
 - 油猴构建的回归会模拟 Tampermonkey 在 `onreadystatechange` 中提供 `ReadableStream`，页面 `fetch` 被故意禁用，验证流分片仍能逐步进入译文面板。
 - 牛客站点公式还原、Markdown、复制、动态插入和结果渲染。
 - Codeforces 两种公式形态：老题的服务端 `.tex-span` HTML 按结构还原成 LaTeX，新题的 MathJax 源码直接取用，且渲染副本不重复。
+- 工具栏靠右对齐：断言它与标题同一行且贴住容器右侧，而不是只看 CSS 类名。
+- 暗色主题与界面语言：主题属性落到 `<html>`，题面文字确实变浅，英文界面下按钮文案为英文。
 - 流式请求：请求体带 `stream`，中途就能看到部分译文，完成后流式状态清除。
 - 设置面板输入焦点、文本拖拽、保存后即时切换配置、取消请求和重复翻译。
 - 另一套 DOM 与浏览器平台，验证通用应用不依赖牛客选择器。

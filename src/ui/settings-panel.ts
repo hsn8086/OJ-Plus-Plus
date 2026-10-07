@@ -1,5 +1,7 @@
 import { APP_NAME } from '../brand.ts';
 import { testConnection } from '../core/ai.ts';
+import { resolveLocale, setLocale, t } from '../i18n/index.ts';
+import { applyTheme } from './theme.ts';
 import {
   PROTOCOL_LABEL,
   PROVIDER_PRESETS,
@@ -7,7 +9,7 @@ import {
   newId,
   migrate,
 } from '../core/config.ts';
-import type { Protocol, ProviderConfig, Settings } from '../core/types.ts';
+import type { Locale, Protocol, ProviderConfig, Settings, Theme } from '../core/types.ts';
 import type { HttpTransport } from '../platforms/types.ts';
 
 export interface SettingsPanelOptions {
@@ -64,25 +66,25 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
   const head = el('div', 'ojpp-panel-head');
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-modal', 'true');
-  panel.setAttribute('aria-label', `${APP_NAME} 设置`);
-  head.append(el('h3', undefined, `${APP_NAME} 设置`));
-  const closeBtn = el('button', 'ojpp-btn ojpp-btn-ghost', '关闭');
+  const titleNode = el('h3', undefined, t('app.settingsTitle', { name: APP_NAME }));
+  head.append(titleNode);
+  const closeBtn = el('button', 'ojpp-btn ojpp-btn-ghost', t('common.close'));
   head.append(closeBtn);
 
   const body = el('div', 'ojpp-panel-body');
   const tabs = el('div', 'ojpp-tabs');
-  const tabGeneral = el('button', 'ojpp-tab', '翻译设置');
-  const tabProvider = el('button', 'ojpp-tab', '提供商');
-  const tabAdvanced = el('button', 'ojpp-tab', '高级');
+  const tabGeneral = el('button', 'ojpp-tab', t('settings.tab.general'));
+  const tabProvider = el('button', 'ojpp-tab', t('settings.tab.provider'));
+  const tabAdvanced = el('button', 'ojpp-tab', t('settings.tab.advanced'));
   tabs.append(tabGeneral, tabProvider, tabAdvanced);
 
   const content = el('div');
   body.append(tabs, content);
 
   const foot = el('div', 'ojpp-panel-foot');
-  const resetBtn = el('button', 'ojpp-btn ojpp-btn-danger', '恢复默认');
-  const cancelBtn = el('button', 'ojpp-btn', '取消');
-  const saveBtn = el('button', 'ojpp-btn ojpp-btn-primary', '保存');
+  const resetBtn = el('button', 'ojpp-btn ojpp-btn-danger', t('settings.reset'));
+  const cancelBtn = el('button', 'ojpp-btn', t('common.cancel'));
+  const saveBtn = el('button', 'ojpp-btn ojpp-btn-primary', t('common.save'));
   const saveStatus = el('span', 'ojpp-status');
   saveStatus.setAttribute('role', 'status');
   foot.append(saveStatus, resetBtn, cancelBtn, saveBtn);
@@ -92,7 +94,25 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
 
   let activeTab: 'general' | 'provider' | 'advanced' = 'general';
 
+  /**
+   * 切换界面语言后，面板自身的标题、标签页和按钮也要重新取词。
+   * 只重绘 content 会留下中文的标题与按钮，看起来像只翻了一半。
+   */
+  const retitle = () => {
+    const title = t('app.settingsTitle', { name: APP_NAME });
+    panel.setAttribute('aria-label', title);
+    titleNode.textContent = title;
+    closeBtn.textContent = t('common.close');
+    tabGeneral.textContent = t('settings.tab.general');
+    tabProvider.textContent = t('settings.tab.provider');
+    tabAdvanced.textContent = t('settings.tab.advanced');
+    resetBtn.textContent = t('settings.reset');
+    cancelBtn.textContent = t('common.cancel');
+    saveBtn.textContent = t('common.save');
+  };
+
   const render = () => {
+    retitle();
     tabGeneral.dataset.active = activeTab === 'general' ? '1' : '0';
     tabProvider.dataset.active = activeTab === 'provider' ? '1' : '0';
     tabAdvanced.dataset.active = activeTab === 'advanced' ? '1' : '0';
@@ -105,39 +125,80 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
   function renderGeneral(): HTMLElement {
     const box = el('div');
 
-    const langInput = textInput(draft.targetLang, '简体中文');
+    // 界面语言：切换后立即重绘，方便马上看到效果
+    const localeSelect = el('select') as HTMLSelectElement;
+    [
+      { value: 'auto', label: t('settings.localeAuto') },
+      { value: 'zh', label: t('settings.localeZh') },
+      { value: 'en', label: t('settings.localeEn') },
+    ].forEach(({ value, label }) => {
+      const option = el('option') as HTMLOptionElement;
+      option.value = value;
+      option.textContent = label;
+      option.selected = draft.locale === value;
+      localeSelect.append(option);
+    });
+    localeSelect.addEventListener('change', () => {
+      draft.locale = localeSelect.value as Locale;
+      setLocale(resolveLocale(draft.locale));
+      render();
+    });
+    box.append(
+      field(t('settings.uiLanguage'), localeSelect, t('settings.uiLanguageHint')),
+    );
+
+    // 主题：站点没有提供暗色样式时禁用，避免选了没效果
+    const themeSelect = el('select') as HTMLSelectElement;
+    [
+      { value: 'auto', label: t('settings.themeAuto') },
+      { value: 'light', label: t('settings.themeLight') },
+      { value: 'dark', label: t('settings.themeDark') },
+    ].forEach(({ value, label }) => {
+      const option = el('option') as HTMLOptionElement;
+      option.value = value;
+      option.textContent = label;
+      option.selected = draft.theme === value;
+      themeSelect.append(option);
+    });
+    themeSelect.addEventListener('change', () => {
+      draft.theme = themeSelect.value as Theme;
+      applyTheme(draft.theme);
+    });
+    box.append(field(t('settings.theme'), themeSelect, t('settings.themeHint')));
+
+    const langInput = textInput(draft.targetLang, t('settings.targetLangPlaceholder'));
     langInput.addEventListener('input', () => (draft.targetLang = langInput.value));
     box.append(
-      field('目标语言', langInput, '译文使用的语言，例如 简体中文 / English / 日本語。'),
+      field(t('settings.targetLang'), langInput, t('settings.targetLangHint')),
     );
 
     const promptArea = el('textarea') as HTMLTextAreaElement;
     promptArea.value = draft.extraPrompt;
-    promptArea.placeholder = '例如：专有名词保留英文原文；解释尽量简短。';
+    promptArea.placeholder = t('settings.extraPromptPlaceholder');
     promptArea.addEventListener('input', () => (draft.extraPrompt = promptArea.value));
-    box.append(field('追加提示词', promptArea, '会拼接到内置翻译提示词之后。'));
+    box.append(field(t('settings.extraPrompt'), promptArea, t('settings.extraPromptHint')));
 
     box.append(
       checkRow(
-        '整段翻译',
+        t('settings.wholeBlock'),
         draft.translateWholeBlock,
-        '开启后把整块内容一次性发给模型，上下文更完整；关闭则按标题和段落切块，适合超长题面或上下文窗口较小的模型。',
+        t('settings.wholeBlockHint'),
         (v) => (draft.translateWholeBlock = v),
       ),
     );
     box.append(
       checkRow(
-        '自动翻译题面',
+        t('settings.autoTranslate'),
         draft.autoTranslate,
-        '打开题目页后自动翻译题目描述区域。',
+        t('settings.autoTranslateHint'),
         (v) => (draft.autoTranslate = v),
       ),
     );
     box.append(
       checkRow(
-        '流式显示',
+        t('settings.streaming'),
         draft.streaming,
-        '边生成边渲染，首屏更快。关闭后等整段译完再一次性显示；服务商或脚本管理器不支持时会自动回退。',
+        t('settings.streamingHint'),
         (v) => (draft.streaming = v),
       ),
     );
@@ -154,8 +215,8 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
       if (Number.isFinite(n) && n >= 0) draft.retries = n;
     });
     row.append(
-      field('超时（毫秒）', timeout),
-      field('失败重试次数', retries, '仅对网络错误和 5xx 生效。'),
+      field(t('settings.timeout'), timeout),
+      field(t('settings.retries'), retries, t('settings.retriesHint')),
     );
     box.append(row);
 
@@ -177,11 +238,11 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
       radio.name = 'ojpp-provider';
       radio.checked = provider.id === selectedId;
 
-      const name = el('span', 'ojpp-provider-name', provider.name || '未命名');
+      const name = el('span', 'ojpp-provider-name', provider.name || t('common.unnamed'));
       const meta = el(
         'span',
         'ojpp-provider-meta',
-        `${PROTOCOL_LABEL[provider.protocol]} · ${provider.model || '未填模型'}`,
+        `${PROTOCOL_LABEL[provider.protocol]} · ${provider.model || t('common.notFilled')}`,
       );
       nameRefs.set(provider.id, name);
 
@@ -211,7 +272,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
       option.textContent = preset.label;
       presetSelect.append(option);
     });
-    const addBtn = el('button', 'ojpp-btn', '新增');
+    const addBtn = el('button', 'ojpp-btn', t('settings.add'));
     addBtn.addEventListener('click', () => {
       const preset = PROVIDER_PRESETS[Number(presetSelect.value)];
       const provider = createProvider(preset);
@@ -220,7 +281,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
       draft.activeProviderId = provider.id;
       render();
     });
-    addRow.append(field('从预设新增', presetSelect), addBtn);
+    addRow.append(field(t('settings.addFromPreset'), presetSelect), addBtn);
     box.append(addRow);
 
     const current = draft.providers.find((p) => p.id === selectedId);
@@ -228,7 +289,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
       box.append(
         renderProviderEditor(current, (name) => {
           const ref = nameRefs.get(current.id);
-          if (ref) ref.textContent = name || '未命名';
+          if (ref) ref.textContent = name || t('common.unnamed');
         }),
       );
     }
@@ -242,13 +303,13 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
   ): HTMLElement {
     const box = el('div');
 
-    const nameInput = textInput(provider.name, '给这个配置起个名字');
+    const nameInput = textInput(provider.name, t('settings.providerNamePlaceholder'));
     // 只同步数据与列表文字，不重绘面板，否则每敲一个字母都会失焦
     nameInput.addEventListener('input', () => {
       provider.name = nameInput.value;
       onNameChange(nameInput.value);
     });
-    box.append(field('备注名', nameInput));
+    box.append(field(t('settings.providerName'), nameInput));
 
     const protocolSelect = el('select') as HTMLSelectElement;
     (Object.keys(PROTOCOL_LABEL) as Protocol[]).forEach((key) => {
@@ -262,38 +323,26 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
       provider.protocol = protocolSelect.value as Protocol;
       render();
     });
-    box.append(field('接口协议', protocolSelect, '决定请求体格式与响应解析方式。'));
+    box.append(field(t('settings.protocol'), protocolSelect, t('settings.protocolHint')));
 
     const baseInput = textInput(provider.baseUrl, 'https://api.openai.com/v1');
     baseInput.addEventListener('input', () => (provider.baseUrl = baseInput.value));
-    box.append(
-      field(
-        '接口地址',
-        baseInput,
-        '填到 /v1 即可，脚本会自动补 /chat/completions、/responses 或 /messages；也可直接填完整端点。',
-      ),
-    );
+    box.append(field(t('settings.baseUrl'), baseInput, t('settings.baseUrlHint')));
 
     const modelInput = textInput(provider.model, 'gpt-6-luna');
     modelInput.addEventListener('input', () => (provider.model = modelInput.value));
-    box.append(field('模型', modelInput));
+    box.append(field(t('settings.model'), modelInput));
 
-    const keyInput = textInput(provider.apiKey, '本地服务可留空', 'password');
+    const keyInput = textInput(provider.apiKey, t('settings.apiKeyPlaceholder'), 'password');
     keyInput.addEventListener('input', () => (provider.apiKey = keyInput.value));
-    box.append(
-      field(
-        'API Key',
-        keyInput,
-        '保存在当前平台的本地存储中，随请求发送到你配置的接口。本地推理服务可以留空，此时不会发送认证头。',
-      ),
-    );
+    box.append(field('API Key', keyInput, t('settings.apiKeyHint')));
 
     const row = el('div', 'ojpp-row');
     const reasoningSelect = el('select') as HTMLSelectElement;
     [
-      { value: 'default', label: '跟随模型默认' },
-      { value: 'enabled', label: '开启' },
-      { value: 'disabled', label: '关闭' },
+      { value: 'default', label: t('settings.effortDefault') },
+      { value: 'enabled', label: t('settings.effortEnabled') },
+      { value: 'disabled', label: t('settings.effortDisabled') },
     ].forEach(({ value, label }) => {
       const option = el('option') as HTMLOptionElement;
       option.value = value;
@@ -317,8 +366,8 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
       () => (provider.reasoning.effort = effortInput.value),
     );
     row.append(
-      field('推理开关', reasoningSelect, '对应 thinking 字段，部分服务商才支持。'),
-      field('推理强度', effortInput, '对应 reasoning_effort / reasoning.effort。'),
+      field(t('settings.reasoning'), reasoningSelect, t('settings.reasoningHint')),
+      field(t('settings.reasoningEffort'), effortInput, t('settings.reasoningEffortHint')),
     );
     box.append(row);
 
@@ -326,13 +375,11 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
     headerArea.value = Object.entries(provider.headers)
       .map(([k, v]) => `${k}: ${v}`)
       .join('\n');
-    headerArea.placeholder = 'X-Custom-Header: value\n每行一个';
+    headerArea.placeholder = t('settings.headersPlaceholder');
     headerArea.addEventListener('input', () => {
       provider.headers = parsePairs(headerArea.value);
     });
-    box.append(
-      field('额外请求头', headerArea, '每行 Key: Value，会覆盖同名默认请求头。'),
-    );
+    box.append(field(t('settings.headers'), headerArea, t('settings.headersHint')));
 
     const bodyArea = el('textarea') as HTMLTextAreaElement;
     bodyArea.value = JSON.stringify(provider.body ?? {}, null, 2);
@@ -346,33 +393,27 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
         bodyArea.style.borderColor = '#b42318';
       }
     });
-    box.append(
-      field(
-        '额外请求体字段',
-        bodyArea,
-        'JSON 对象，会合并进请求体，可覆盖任意字段，例如 top_p、max_tokens。',
-      ),
-    );
+    box.append(field(t('settings.body'), bodyArea, t('settings.bodyHint')));
 
     const status = el('div', 'ojpp-status');
     const actions = el('div', 'ojpp-row');
-    const testBtn = el('button', 'ojpp-btn', '测试连接');
-    const dupBtn = el('button', 'ojpp-btn', '复制配置');
-    const delBtn = el('button', 'ojpp-btn ojpp-btn-danger', '删除配置');
+    const testBtn = el('button', 'ojpp-btn', t('settings.test'));
+    const dupBtn = el('button', 'ojpp-btn', t('settings.copyProvider'));
+    const delBtn = el('button', 'ojpp-btn ojpp-btn-danger', t('settings.deleteProvider'));
 
     testBtn.addEventListener('click', async () => {
       testBtn.disabled = true;
       status.dataset.kind = '';
-      status.textContent = '正在测试…';
+      status.textContent = t('settings.testing');
       try {
         const reply = await testConnection(options.request, draft, provider);
         status.dataset.kind = 'ok';
-        status.textContent = `连接成功，模型回复：${reply.slice(0, 200)}`;
+        status.textContent = t('settings.testOk', { reply: reply.slice(0, 200) });
       } catch (error) {
         status.dataset.kind = 'error';
-        status.textContent = `连接失败：${
-          error instanceof Error ? error.message : String(error)
-        }`;
+        status.textContent = t('settings.testFail', {
+          message: error instanceof Error ? error.message : String(error),
+        });
       } finally {
         testBtn.disabled = false;
       }
@@ -382,7 +423,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
       const copy: ProviderConfig = {
         ...structuredClone(provider),
         id: newId(),
-        name: `${provider.name} 副本`,
+        name: t('settings.providerCopySuffix', { name: provider.name }),
       };
       draft.providers.push(copy);
       selectedId = copy.id;
@@ -393,7 +434,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
     delBtn.addEventListener('click', () => {
       if (draft.providers.length <= 1) {
         status.dataset.kind = 'error';
-        status.textContent = '至少保留一个配置。';
+        status.textContent = t('settings.keepOne');
         return;
       }
       draft.providers = draft.providers.filter((p) => p.id !== provider.id);
@@ -412,8 +453,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
   function renderAdvanced(): HTMLElement {
     const box = el('div');
     const info = el('div', 'ojpp-hint');
-    info.textContent =
-      '配置保存在当前平台的本地存储中。翻译内容与 API Key 发往你配置的提供商；可在「提供商」页测试连接。';
+    info.textContent = t('settings.providerFooter');
     box.append(info);
 
     const exportArea = el('textarea') as HTMLTextAreaElement;
@@ -430,31 +470,31 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
       2,
     );
     exportArea.readOnly = true;
-    box.append(field('配置预览（已隐藏 Key）', exportArea));
+    box.append(field(t('settings.preview'), exportArea));
 
     const importArea = el('textarea') as HTMLTextAreaElement;
-    importArea.placeholder = '粘贴导出的 JSON 后点「导入」';
-    const importBtn = el('button', 'ojpp-btn', '导入');
+    importArea.placeholder = t('settings.importPlaceholder');
+    const importBtn = el('button', 'ojpp-btn', t('settings.import'));
     const status = el('div', 'ojpp-status');
     importBtn.addEventListener('click', () => {
       try {
         const parsed = JSON.parse(importArea.value) as Settings;
         if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.providers)) {
-          throw new Error('缺少 providers 数组');
+          throw new Error(t('settings.importMissing'));
         }
         Object.assign(draft, migrate(parsed));
         selectedId = draft.activeProviderId;
         status.dataset.kind = 'ok';
-        status.textContent = '导入成功，保存后生效。';
+        status.textContent = t('settings.importOk');
         render();
       } catch (error) {
         status.dataset.kind = 'error';
-        status.textContent = `导入失败：${
-          error instanceof Error ? error.message : String(error)
-        }`;
+        status.textContent = t('settings.importFail', {
+          message: error instanceof Error ? error.message : String(error),
+        });
       }
     });
-    box.append(field('导入配置', importArea), importBtn, status);
+    box.append(field(t('settings.importTitle'), importArea), importBtn, status);
     return box;
   }
 
@@ -511,7 +551,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
       close();
     } catch (error) {
       saveStatus.dataset.kind = 'error';
-      saveStatus.textContent = `保存失败：${error instanceof Error ? error.message : String(error)}`;
+      saveStatus.textContent = t('settings.saveFailed', { message: error instanceof Error ? error.message : String(error) });
     } finally {
       saveBtn.disabled = resetBtn.disabled = false;
     }
@@ -525,7 +565,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
   cancelBtn.addEventListener('click', close);
   closeBtn.addEventListener('click', close);
   resetBtn.addEventListener('click', () => {
-    if (confirm('确定恢复默认设置？当前配置会被清空。')) void persist(null);
+    if (confirm(t('settings.resetConfirm'))) void persist(null);
   });
 
   // 只有同一次手势从遮罩开始、在遮罩结束，且没有拖动，才关闭。

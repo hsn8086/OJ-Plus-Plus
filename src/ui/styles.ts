@@ -7,6 +7,13 @@ export const CSS = `
   margin-left: 8px;
   vertical-align: middle;
 }
+/* 浮到标题行最右边。用 float 而不是 absolute，
+   因为站点的标题容器高度常常是 auto，absolute 会溢出。 */
+.ojpp-toolbar-right {
+  float: right;
+  margin-left: 12px;
+  margin-right: 0;
+}
 .ojpp-icon-btn {
   display: inline-flex;
   align-items: center;
@@ -262,4 +269,99 @@ export const CSS = `
   max-width: 420px;
 }
 .ojpp-toast[data-kind="error"] { background: #b42318; }
+`;
+
+/**
+ * 暗色主题。只覆盖脚本自己的界面元素，
+ * 站点自身的配色由各站点适配器的 darkStyles 负责。
+ */
+export const DARK_CSS = `
+html[data-ojpp-theme="dark"] {
+  --ojpp-bg: #1c2128;
+  --ojpp-bg-soft: #22272e;
+  --ojpp-border: #373e47;
+  --ojpp-text: #cdd9e5;
+  --ojpp-text-dim: #909dab;
+  --ojpp-accent: #539bf5;
+  --ojpp-danger: #f47067;
+  --ojpp-ok: #57ab5a;
+}
+html[data-ojpp-theme="dark"] .ojpp-icon-btn { color: #909dab; }
+html[data-ojpp-theme="dark"] .ojpp-icon-btn:hover {
+  background: rgba(255, 255, 255, .1); color: #cdd9e5;
+}
+html[data-ojpp-theme="dark"] .ojpp-icon-btn:focus-visible { outline-color: #316dca; }
+html[data-ojpp-theme="dark"] .ojpp-icon-btn[data-state="busy"] { color: #539bf5; }
+html[data-ojpp-theme="dark"] .ojpp-icon-btn[data-state="done"] { color: #57ab5a; }
+html[data-ojpp-theme="dark"] .ojpp-icon-btn[data-state="error"] { color: #f47067; }
+html[data-ojpp-theme="dark"] .ojpp-icon-btn[data-state="active"] {
+  color: #539bf5; background: rgba(83, 155, 245, .16);
+}
+html[data-ojpp-theme="dark"] .ojpp-icon-btn.ojpp-settings-floating {
+  background: rgba(34, 39, 46, .94);
+  border-color: #373e47;
+  color: #909dab;
+}
+
+html[data-ojpp-theme="dark"] .ojpp-result {
+  background: #22272e; border-color: #373e47;
+}
+html[data-ojpp-theme="dark"] .ojpp-result-header {
+  background: #2d333b; border-bottom-color: #373e47;
+}
+html[data-ojpp-theme="dark"] .ojpp-result-title { color: #909dab; }
+html[data-ojpp-theme="dark"] .ojpp-result-status { color: #768390; }
+html[data-ojpp-theme="dark"] .ojpp-result-status[data-kind="error"] { color: #f47067; }
+html[data-ojpp-theme="dark"] .ojpp-result-body { color: #cdd9e5; }
+html[data-ojpp-theme="dark"] .ojpp-result-body th,
+html[data-ojpp-theme="dark"] .ojpp-result-body td { border-color: #373e47; }
+html[data-ojpp-theme="dark"] .ojpp-result-body pre { background: #2d333b; }
+html[data-ojpp-theme="dark"] .ojpp-result-body code {
+  background: rgba(99, 110, 123, .4);
+}
+html[data-ojpp-theme="dark"] .ojpp-result-body a { color: #539bf5; }
+html[data-ojpp-theme="dark"] .ojpp-md-source {
+  background: #2d333b; border-color: #373e47; color: #cdd9e5;
+}
+
+html[data-ojpp-theme="dark"] .ojpp-mask { background: rgba(0, 0, 0, .6); }
+html[data-ojpp-theme="dark"] .ojpp-panel {
+  background: #22272e; color: #cdd9e5; border: 1px solid #373e47;
+}
+html[data-ojpp-theme="dark"] .ojpp-panel-head,
+html[data-ojpp-theme="dark"] .ojpp-panel-foot { border-color: #373e47; }
+html[data-ojpp-theme="dark"] .ojpp-tab { color: #909dab; }
+html[data-ojpp-theme="dark"] .ojpp-tab[data-active="1"] {
+  background: #2d333b; color: #cdd9e5;
+}
+html[data-ojpp-theme="dark"] .ojpp-hint { color: #768390; }
+html[data-ojpp-theme="dark"] .ojpp-panel input[type="text"],
+html[data-ojpp-theme="dark"] .ojpp-panel input[type="password"],
+html[data-ojpp-theme="dark"] .ojpp-panel input[type="number"],
+html[data-ojpp-theme="dark"] .ojpp-panel select,
+html[data-ojpp-theme="dark"] .ojpp-panel textarea {
+  background: #1c2128; border-color: #444c56; color: #cdd9e5;
+}
+html[data-ojpp-theme="dark"] .ojpp-panel input:focus,
+html[data-ojpp-theme="dark"] .ojpp-panel select:focus,
+html[data-ojpp-theme="dark"] .ojpp-panel textarea:focus {
+  outline-color: #316dca; border-color: #539bf5;
+}
+html[data-ojpp-theme="dark"] .ojpp-provider-item { border-color: #373e47; }
+html[data-ojpp-theme="dark"] .ojpp-provider-item[data-active="1"] {
+  border-color: #539bf5; background: rgba(83, 155, 245, .1);
+}
+html[data-ojpp-theme="dark"] .ojpp-provider-item .ojpp-provider-meta { color: #768390; }
+html[data-ojpp-theme="dark"] .ojpp-status[data-kind="error"] { color: #f47067; }
+html[data-ojpp-theme="dark"] .ojpp-status[data-kind="ok"] { color: #57ab5a; }
+html[data-ojpp-theme="dark"] .ojpp-btn {
+  background: #2d333b; border-color: #444c56; color: #cdd9e5;
+}
+html[data-ojpp-theme="dark"] .ojpp-btn:hover { background: #373e47; }
+html[data-ojpp-theme="dark"] .ojpp-btn-primary {
+  background: #316dca; border-color: #316dca; color: #fff;
+}
+html[data-ojpp-theme="dark"] .ojpp-btn-danger { color: #f47067; }
+html[data-ojpp-theme="dark"] .ojpp-toast { background: #2d333b; color: #cdd9e5; }
+html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="error"] { background: #a33a3a; }
 `;

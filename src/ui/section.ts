@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.ts';
 import { translateMarkdown } from '../core/translate.ts';
 import type { Settings } from '../core/types.ts';
 import type { Platform } from '../platforms/types.ts';
@@ -19,12 +20,19 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
   const toolbar = document.createElement('span');
   toolbar.className = 'ojpp-toolbar';
   toolbar.setAttribute('role', 'group');
-  toolbar.setAttribute('aria-label', `${section.label}工具栏`);
-  const translate = iconButton(ICON_TRANSLATE, 'AI 翻译', 'ojpp-translate-btn');
-  const markdown = iconButton(ICON_MARKDOWN, 'Markdown 视图', 'ojpp-md-btn');
-  const copy = iconButton(ICON_COPY, '复制原文', 'ojpp-copy-btn');
+  toolbar.setAttribute('aria-label', t('toolbar.group', { label: section.label }));
+  const translate = iconButton(ICON_TRANSLATE, t('toolbar.translate'), 'ojpp-translate-btn');
+  const markdown = iconButton(ICON_MARKDOWN, t('toolbar.markdown'), 'ojpp-md-btn');
+  const copy = iconButton(ICON_COPY, t('toolbar.copyOriginal'), 'ojpp-copy-btn');
   toolbar.append(translate, markdown, copy);
-  section.toolbar.anchor.insertAdjacentElement(section.toolbar.position, toolbar);
+  if (section.toolbar.align === 'right') {
+    // 靠右对齐：追加到标题元素内部并向右浮动，
+    // 这样工具栏和标题同一行，且不会改变站点自己的 DOM 结构。
+    toolbar.classList.add('ojpp-toolbar-right');
+    section.toolbar.anchor.append(toolbar);
+  } else {
+    section.toolbar.anchor.insertAdjacentElement(section.toolbar.position, toolbar);
+  }
 
   const readMarkdown = () => htmlToMarkdown(section.content, prepareContent);
   bindCopy(copy, readMarkdown, platform.writeClipboard);
@@ -47,7 +55,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
     clearTimeout(feedbackTimer);
     const text = readMarkdown();
     if (!text.trim()) {
-      state('error', ICON_CROSS, '没有可翻译的内容');
+      state('error', ICON_CROSS, t('toolbar.noContent'));
       return;
     }
     result?.remove();
@@ -56,7 +64,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
     section.result.anchor.insertAdjacentElement(section.result.position, panel.el);
     controller = new AbortController();
     const signal = controller.signal;
-    state('busy', ICON_SPINNER, '翻译中，点击中止');
+    state('busy', ICON_SPINNER, t('toolbar.translating'));
     panel.begin();
     try {
       // 保存设置后，下次点击立即使用新配置；当前请求使用独立快照。
@@ -72,16 +80,16 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
       });
       signal.throwIfAborted();
       panel.finish(translated);
-      state('done', ICON_CHECK, '重新翻译');
-      feedbackTimer = setTimeout(() => state('idle', ICON_TRANSLATE, '重新翻译'), 3000);
+      state('done', ICON_CHECK, t('toolbar.retranslate'));
+      feedbackTimer = setTimeout(() => state('idle', ICON_TRANSLATE, t('toolbar.retranslate')), 3000);
     } catch (error) {
       if (signal.aborted) {
         panel.remove();
-        if (!disposed) state('idle', ICON_TRANSLATE, 'AI 翻译');
+        if (!disposed) state('idle', ICON_TRANSLATE, t('toolbar.translate'));
       } else {
         const message = error instanceof Error ? error.message : String(error);
-        panel.setStatus(`翻译失败：${message}`, 'error');
-        state('error', ICON_CROSS, `重试：${message.slice(0, 60)}`);
+        panel.setStatus(t('toolbar.translateFailed', { message }), 'error');
+        state('error', ICON_CROSS, t('toolbar.retry', { message: message.slice(0, 60) }));
       }
     } finally {
       controller = undefined;
@@ -95,7 +103,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
       source = undefined;
       section.content.hidden = originallyHidden;
       markdown.dataset.state = 'idle';
-      setIcon(markdown, ICON_MARKDOWN, 'Markdown 视图');
+      setIcon(markdown, ICON_MARKDOWN, t('toolbar.markdown'));
     } else {
       source = document.createElement('pre');
       source.className = 'ojpp-md-source';
@@ -103,7 +111,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
       section.content.after(source);
       section.content.hidden = true;
       markdown.dataset.state = 'active';
-      setIcon(markdown, ICON_MARKDOWN, '返回原始内容');
+      setIcon(markdown, ICON_MARKDOWN, t('toolbar.backToOriginal'));
     }
   });
 

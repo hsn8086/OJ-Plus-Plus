@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.ts';
 import { DEFAULT_MODEL } from './config.ts';
 import { createSseParser, parseJson } from './sse.ts';
 import type { ChatRequest, ProviderAdapter, ProviderConfig } from './types.ts';
@@ -14,7 +15,7 @@ function trimSlash(url: string): string {
  */
 function resolveUrl(baseUrl: string, fallbackBase: string, suffix: string): string {
   const base = trimSlash((baseUrl || fallbackBase).trim());
-  if (!base) throw new Error('接口地址为空，请在设置里填写');
+  if (!base) throw new Error(t('error.baseUrlEmpty'));
   if (/\/[a-z0-9-]+$/i.test(base) && /(completions|messages|responses|chat)$/i.test(base)) {
     return base;
   }

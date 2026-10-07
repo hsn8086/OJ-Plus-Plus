@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.ts';
 import type { Protocol, ProviderConfig, Settings } from './types.ts';
 
 export const SETTINGS_KEY = 'ojpp:settings';
@@ -58,7 +59,7 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
   },
   {
     key: 'custom',
-    label: '自定义（兼容 OpenAI Chat）',
+    get label() { return t('preset.customOpenAI'); },
     protocol: 'openai-chat',
     baseUrl: '',
     model: DEFAULT_MODEL,
@@ -96,6 +97,8 @@ export function defaultSettings(): Settings {
     timeoutMs: 120_000,
     retries: 1,
     streaming: true,
+    locale: 'auto',
+    theme: 'auto',
   };
 }
 

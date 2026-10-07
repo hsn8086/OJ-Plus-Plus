@@ -1,5 +1,11 @@
 export type Protocol = 'openai-chat' | 'openai-responses' | 'anthropic';
 
+/** 界面语言设置；auto 表示跟随浏览器 */
+export type Locale = 'zh' | 'en' | 'auto';
+
+/** 站点配色；auto 跟随系统 */
+export type Theme = 'auto' | 'light' | 'dark';
+
 export interface ProviderConfig {
   id: string;
   /** 备注名，显示在设置面板和翻译状态里 */
@@ -38,6 +44,10 @@ export interface Settings {
   retries: number;
   /** 边收边渲染；关闭后等整段译完再显示 */
   streaming: boolean;
+  /** 界面语言；auto 跟随浏览器 */
+  locale: Locale;
+  /** 站点配色；auto 跟随系统 */
+  theme: Theme;
 }
 
 export interface ChatMessage {

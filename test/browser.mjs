@@ -306,6 +306,100 @@ try {
 
   console.log('✓ Codeforces：老题 .tex-span 还原、新题 MathJax 源码、公式不重复');
 
+  // 工具栏靠右：与标题同一行，且贴到容器右侧。
+  // 用真实几何位置断言，而不是看 CSS 类名。
+  const align = await (async () => {
+    const html = await readFile(new URL('test/fixtures/codeforces-new.html', root), 'utf8');
+    const page = await pageWithFixture('https://codeforces.com/problemset/problem/1/A', html);
+    await page.evaluate((settings) => localStorage.setItem('ojpp:settings', JSON.stringify(settings)), settings);
+    await page.addScriptTag({ content: cfCode });
+    await page.evaluate(async () => { window.stopApp = await OJPPCf.start(); });
+    const result = await page.evaluate(() => [...document.querySelectorAll('.ojpp-toolbar')].map((tb) => {
+      const heading = tb.parentElement;
+      const hb = heading.getBoundingClientRect();
+      const tbb = tb.getBoundingClientRect();
+      return {
+        sameLine: Math.abs((hb.top + hb.height / 2) - (tbb.top + tbb.height / 2)) < hb.height,
+        atRight: Math.abs(tbb.right - hb.right) < 8,
+      };
+    }));
+    await page.evaluate(() => window.stopApp());
+    await page.close();
+    return result;
+  })();
+  assert.ok(align.length > 0, '应有工具栏');
+  assert.ok(align.every((a) => a.sameLine), `工具栏应与标题同行: ${JSON.stringify(align)}`);
+  assert.ok(align.every((a) => a.atRight), `工具栏应靠右: ${JSON.stringify(align)}`);
+  console.log('✓ 工具栏：靠右且与标题同行');
+
+  // 暗色主题与界面语言：主题属性要落到 <html>，且只影响脚本自己的界面。
+  const themed = await (async () => {
+    const html = await readFile(new URL('test/fixtures/codeforces-new.html', root), 'utf8');
+    const page = await pageWithFixture('https://codeforces.com/problemset/problem/1/A', html);
+    await page.evaluate((settings) => localStorage.setItem('ojpp:settings', JSON.stringify({
+      ...settings, theme: 'dark', locale: 'en',
+    })), settings);
+    await page.addScriptTag({ content: cfCode });
+    await page.evaluate(async () => { window.stopApp = await OJPPCf.start(); });
+    await page.waitForTimeout(200);
+    const probe = await page.evaluate(() => {
+      const style = (sel, prop) => {
+        const node = document.querySelector(sel);
+        return node ? getComputedStyle(node)[prop] : null;
+      };
+      return {
+        themeAttr: document.documentElement.getAttribute('data-ojpp-theme'),
+        colorScheme: document.documentElement.style.colorScheme,
+        statementColor: style('.problem-statement', 'color'),
+        buttonTitle: document.querySelector('.ojpp-translate-btn')?.getAttribute('title'),
+      };
+    });
+    await page.evaluate(() => window.stopApp());
+    await page.close();
+    return probe;
+  })();
+  assert.equal(themed.themeAttr, 'dark', '暗色主题应写到 html 属性');
+  assert.equal(themed.colorScheme, 'dark', '应同步 color-scheme');
+  // 题面文字要变成浅色，说明暗色样式真的作用到站点内容，而不只是面板
+  assert.notEqual(themed.statementColor, 'rgb(0, 0, 0)', `题面应应用暗色: ${themed.statementColor}`);
+  assert.equal(themed.buttonTitle, 'AI Translate', '英文界面下按钮应为英文');
+  console.log('✓ 暗色主题与界面语言：题面与面板同时切换');
+
+  // 在面板里切换语言后，面板与工具栏都要立刻变，不必刷新页面。
+  // 这里覆盖一个曾经的 bug：面板为即时预览调了 setLocale，
+  // 导致保存时“前后语言相同”，工具栏停在旧语言。
+  const switched = await (async () => {
+    const html = await readFile(new URL('test/fixtures/nowcoder.html', root), 'utf8');
+    const built = await build({ configFile: false, logLevel: 'silent', build: {
+      write: false, minify: false,
+      lib: { entry: new URL('test/fixtures/nowcoder-entry.ts', root).pathname, name: 'OJPPLocale', formats: ['iife'] },
+    } });
+    const ncCode = (Array.isArray(built) ? built[0] : built).output.find((f) => f.type === 'chunk').code;
+    const page = await pageWithFixture('https://ac.nowcoder.com/acm/contest/100000/A', html);
+    await page.evaluate((settings) => localStorage.setItem('ojpp:settings', JSON.stringify({ ...settings, locale: 'zh' })), settings);
+    await page.addScriptTag({ content: ncCode });
+    await page.evaluate(async () => { window.stopApp = await OJPPLocale.start(); });
+
+    await page.locator('.ojpp-settings-btn').click();
+    await page.waitForTimeout(250);
+    const before = await page.locator('.ojpp-tab').first().textContent();
+    // 第一个下拉框是界面语言
+    await page.locator('.ojpp-field select').first().selectOption('en');
+    await page.waitForTimeout(250);
+    const panelAfter = await page.locator('.ojpp-tab').first().textContent();
+    await page.locator('.ojpp-btn-primary').click();
+    await page.waitForTimeout(400);
+    const toolbarAfter = await page.locator('.ojpp-translate-btn').first().getAttribute('title');
+
+    await page.evaluate(() => window.stopApp());
+    await page.close();
+    return { before, panelAfter, toolbarAfter };
+  })();
+  assert.equal(switched.before, '翻译设置', `初始应为中文: ${switched.before}`);
+  assert.equal(switched.panelAfter, 'Translation', `面板应即时切换: ${switched.panelAfter}`);
+  assert.equal(switched.toolbarAfter, 'AI Translate', `保存后工具栏应切换: ${switched.toolbarAfter}`);
+  console.log('✓ 界面语言切换：面板即时生效，保存后工具栏同步');
+
   // 使用另一个站点契约与真实 browser 平台；不加载 GM 或牛客适配器。
   const built = await build({ configFile: false, logLevel: 'silent', build: {
     write: false, minify: false,

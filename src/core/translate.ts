@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.ts';
 import type { HttpStreamTransport, HttpTransport } from '../platforms/types.ts';
 import { ask } from './ai.ts';
 import { buildSystemPrompt, chunkMarkdown } from './prompt.ts';
@@ -34,7 +35,9 @@ export async function translateMarkdown(
   const useStream = !!stream && streaming !== false;
   for (const [index, chunk] of chunks.entries()) {
     signal?.throwIfAborted();
-    onStatus?.(chunks.length === 1 ? '正在翻译…' : `正在翻译第 ${index + 1}/${chunks.length} 段…`);
+    onStatus?.(chunks.length === 1
+      ? t('translate.status')
+      : t('translate.statusChunk', { index: index + 1, total: chunks.length }));
     const done = out.length;
     const translated = await ask(request, settings, chunk, system, {
       signal,
@@ -48,7 +51,7 @@ export async function translateMarkdown(
   }
   return {
     markdown: out.join('\n\n'),
-    providerName: cfg?.name ?? '未配置',
+    providerName: cfg?.name ?? t('translate.unknownProvider'),
     model: cfg?.model ?? '',
     elapsedMs: Date.now() - started,
   };

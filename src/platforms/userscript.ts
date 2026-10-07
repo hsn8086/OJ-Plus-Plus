@@ -4,6 +4,7 @@ import {
   GM_setValue,
   GM_xmlhttpRequest,
 } from 'vite-plugin-monkey/dist/client';
+import { t } from '../i18n/index.ts';
 import type { HttpStreamTransport, HttpTransport, Platform } from './types.ts';
 
 const request: HttpTransport = (req) => new Promise((resolve, reject) => {
@@ -28,8 +29,8 @@ const request: HttpTransport = (req) => new Promise((resolve, reject) => {
       cleanup();
       resolve({ status: res.status, statusText: res.statusText, text: res.responseText });
     },
-    onerror: () => fail(new Error('网络请求失败，请检查网络或接口地址')),
-    ontimeout: () => fail(new Error('请求超时')),
+    onerror: () => fail(new Error(t('error.network'))),
+    ontimeout: () => fail(new Error(t('error.timeout'))),
     onabort: () => fail(new DOMException('Aborted', 'AbortError')),
   });
   function onAbort() {
@@ -131,7 +132,7 @@ const stream: HttpStreamTransport = (req) => new Promise((resolve, reject) => {
     };
     const task = consume(res.response);
     task.then(complete).catch((error: unknown) => {
-      fail(error instanceof Error ? error : new Error('读取流式响应失败'));
+      fail(error instanceof Error ? error : new Error(t('error.streamRead')));
     });
     // 某些 TM 版本会触发 onload，但不把 onloadend/stream close 传到沙箱。
     // onload 代表响应体已经完整到达，给 reader 一小段时间消费排队数据后收尾。
@@ -150,7 +151,7 @@ const stream: HttpStreamTransport = (req) => new Promise((resolve, reject) => {
       if ((res.readyState ?? 0) >= 2) {
         // TM 在 readyState=2 提供同一个 ReadableStream；此处开始消费才是真流式。
         void consume(res.response).catch((error: unknown) => {
-          fail(error instanceof Error ? error : new Error('读取流式响应失败'));
+          fail(error instanceof Error ? error : new Error(t('error.streamRead')));
         });
       }
     },
@@ -158,8 +159,8 @@ const stream: HttpStreamTransport = (req) => new Promise((resolve, reject) => {
     // 250ms 兜底，兼容只发 onload 的管理器版本。
     onload: (res) => finish(res, 250),
     onloadend: finish,
-    onerror: () => fail(new Error('网络请求失败，请检查网络或接口地址')),
-    ontimeout: () => fail(new Error('请求超时')),
+    onerror: () => fail(new Error(t('error.network'))),
+    ontimeout: () => fail(new Error(t('error.timeout'))),
     onabort: () => fail(new DOMException('Aborted', 'AbortError')),
   } as Parameters<typeof GM_xmlhttpRequest>[0]);
   function onAbort() {
@@ -174,7 +175,7 @@ export function createUserscriptPlatform(): Platform {
   // GM API 在脚本沙箱作用域内，不一定挂在 globalThis 上。
   if ([GM_getValue, GM_setValue, GM_xmlhttpRequest, GM_setClipboard]
     .some((api) => typeof api !== 'function')) {
-    throw new Error('请通过 Tampermonkey 或 Violentmonkey 安装 OJ++，并允许脚本所需权限');
+    throw new Error(t('error.notUserscript'));
   }
   return {
     id: 'userscript',

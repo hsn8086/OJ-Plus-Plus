@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.ts';
 import type { HttpStreamTransport, HttpTransport } from '../platforms/types.ts';
 import { getAdapter } from './providers.ts';
 import type { ProviderConfig, Settings } from './types.ts';
@@ -32,8 +33,8 @@ export async function ask(
   options: AskOptions = {},
 ): Promise<string> {
   const cfg = settings.providers.find((p) => p.id === settings.activeProviderId);
-  if (!cfg) throw new AiError('还没有配置任何提供商，请先打开设置面板添加一个');
-  if (!cfg.model.trim()) throw new AiError('未填写模型名');
+  if (!cfg) throw new AiError(t('error.noProvider'));
+  if (!cfg.model.trim()) throw new AiError(t('error.noModel'));
   // 允许空 Key：本地推理服务通常不需要鉴权。
 
   const attempts = Math.max(1, settings.retries + 1);
@@ -113,7 +114,7 @@ async function once(
       // 流里没解析出正文：可能是服务端忽略了 stream 参数，当作普通响应再解析一次
       const fallback = adapter.extractText(safeJson(res.text));
       if (fallback.trim()) return fallback;
-      throw new AiError('接口返回了空内容，可能是模型不支持或提示词被拒绝');
+      throw new AiError(t('error.emptyResponse'));
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') throw error;
       if (error instanceof AiError && isFatal(error.status)) throw error;
@@ -137,7 +138,7 @@ async function once(
 
   const text = adapter.extractText(payload);
   if (!text.trim()) {
-    throw new AiError('接口返回了空内容，可能是模型不支持或提示词被拒绝');
+    throw new AiError(t('error.emptyResponse'));
   }
   // 非流式回退时，一次性把结果交给回调，避免 UI 停在空面板
   if (wantStream) options.onDelta!(text);
@@ -208,5 +209,5 @@ export async function testConnection(
       (payload && adapter.extractError?.(payload)) || truncate(res.text, 300);
     throw new AiError(`${res.status} ${detail}`, res.status);
   }
-  return adapter.extractText(payload) || '(空响应，但状态码正常)';
+  return adapter.extractText(payload) || t('error.emptyButOk');
 }

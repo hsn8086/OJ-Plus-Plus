@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.ts';
 import type { HttpStreamTransport, HttpTransport, Platform } from './types.ts';
 
 function timeoutSignal(req: { timeoutMs?: number; signal?: AbortSignal }): AbortSignal | undefined {
@@ -10,7 +11,7 @@ function timeoutSignal(req: { timeoutMs?: number; signal?: AbortSignal }): Abort
 }
 
 function rethrow(error: unknown, signal?: AbortSignal): never {
-  if (signal?.reason?.name === 'TimeoutError') throw new Error('请求超时');
+  if (signal?.reason?.name === 'TimeoutError') throw new Error(t('error.timeout'));
   throw error;
 }
 

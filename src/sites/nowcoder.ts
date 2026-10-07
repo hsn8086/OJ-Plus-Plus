@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.ts';
 import type { ContentSection, SiteAdapter } from './types.ts';
 
 function equationFromImg(img: HTMLImageElement): string | null {
@@ -30,7 +31,7 @@ function isBullet(latex: string): boolean {
 
 export const nowcoder: SiteAdapter = {
   id: 'nowcoder',
-  name: '牛客',
+  get name() { return t('site.nowcoder'); },
   hosts: ['ac.nowcoder.com', 'www.nowcoder.com'],
   styles: `
     .ojpp-nowcoder-settings {
@@ -57,7 +58,9 @@ export const nowcoder: SiteAdapter = {
         content,
         toolbar: {
           anchor: heading,
-          position: kind === 'solution' ? 'beforebegin' : 'beforeend',
+          position: 'beforeend',
+          // 标题行最右边：牛客的标题是块级元素，float 后不会撑高行高
+          align: 'right',
         },
         result: { anchor: content, position: 'afterend' },
       });
@@ -67,7 +70,7 @@ export const nowcoder: SiteAdapter = {
       doc.querySelector('.subject-question'),
       doc.querySelector('.subject-item-title'),
       'statement',
-      '题目描述',
+      t('section.statement'),
     );
 
     for (const heading of doc.querySelectorAll<HTMLElement>('.subject-describe > h2')) {
@@ -83,7 +86,7 @@ export const nowcoder: SiteAdapter = {
         sibling as HTMLElement,
         heading,
         isInput ? 'input' : 'output',
-        isInput ? '输入描述' : '输出描述',
+        isInput ? t('section.input') : t('section.output'),
       );
     }
 
@@ -98,11 +101,12 @@ export const nowcoder: SiteAdapter = {
       if (!body || !body.textContent?.trim()) continue;
       // 示例块的“输入”“输出”各有自己的 pre，别重复收集
       if (body.querySelector('textarea')) continue;
+      // 站点自带的标题文字直接用，它是题面原文的一部分
       add(body as HTMLElement, heading, 'output', label.replace(/[:：]\s*$/, ''));
     }
 
     for (const content of doc.querySelectorAll<HTMLElement>('div.nc-post-content')) {
-      add(content, content, 'solution', '题解');
+      add(content, content, 'solution', t('section.solution'));
     }
     return sections;
   },

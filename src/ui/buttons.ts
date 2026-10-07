@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.ts';
 import { ICON_CHECK, ICON_CROSS } from './icons.ts';
 import type { WriteClipboard } from '../platforms/types.ts';
 
@@ -27,9 +28,9 @@ export function bindCopy(
     clearTimeout(timer);
     try {
       await writeClipboard(readText());
-      setIcon(button, ICON_CHECK, '已复制');
+      setIcon(button, ICON_CHECK, t('common.copied'));
     } catch {
-      setIcon(button, ICON_CROSS, '复制失败');
+      setIcon(button, ICON_CROSS, t('common.copyFailed'));
     }
     timer = setTimeout(() => setIcon(button, icon, title), 1200);
   });
