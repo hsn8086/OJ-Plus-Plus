@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OJ++
 // @namespace    https://github.com/hsn8086/OJ-Plus-Plus
-// @version      0.5.6
+// @version      0.6.0
 // @author       hsn8086
 // @description  OJ-Plus-Plus：AI 题面翻译、Markdown 视图与一键复制
 // @license      GPL-3.0
@@ -11,6 +11,10 @@
 // @updateURL    https://raw.githubusercontent.com/hsn8086/OJ-Plus-Plus/main/dist/oj-plus-plus.user.js
 // @match        https://ac.nowcoder.com/*
 // @match        https://www.nowcoder.com/*
+// @match        https://codeforces.com/*
+// @match        https://m1.codeforces.com/*
+// @match        https://m2.codeforces.com/*
+// @match        https://codeforces.ml/*
 // @connect      *
 // @grant        GM_getValue
 // @grant        GM_setClipboard
@@ -31743,10 +31747,13 @@ $$` : `${n}$$`;
 		});
 	}
 	var turndown = createTurndown();
+	function unescapeInline(text) {
+		return text.replace(/(?<=\S)\\\-/g, "-");
+	}
 	function htmlToMarkdown(node, prepareContent) {
 		const clone = node.cloneNode(true);
 		prepareContent(clone);
-		return turndown.turndown(clone).replace(/\n{3,}/g, "\n\n").trim();
+		return unescapeInline(turndown.turndown(clone)).replace(/\n{3,}/g, "\n\n").trim();
 	}
 	function looksLikeLatex(text) {
 		const head = text.slice(0, 60);
@@ -32979,6 +32986,217 @@ $$` : `${n}$$`;
 			}
 		};
 	}
+	var MATHJAX_RENDERED = [
+		".MathJax",
+		".MathJax_Display",
+		".MathJax_Preview",
+		".MathJax_CHTML",
+		".MathJax_SVG",
+		".MathJax_SVG_Display",
+		".mjx-chtml",
+		".MJXc-display",
+		".MJX_Assistive_MathML",
+		".MJXp-math"
+	].join(", ");
+	var TEX_CHAR_MAP = {
+		"×": "\\times ",
+		"≤": "\\le ",
+		"≥": "\\ge ",
+		"≠": "\\ne ",
+		"±": "\\pm ",
+		"∞": "\\infty ",
+		"·": "\\cdot ",
+		"−": "-",
+		"–": "-",
+		"⌊": "\\lfloor ",
+		"⌋": "\\rfloor ",
+		"⌈": "\\lceil ",
+		"⌉": "\\rceil ",
+		"∑": "\\sum ",
+		"∏": "\\prod ",
+		"→": "\\to ",
+		"⋅": "\\cdot "
+	};
+	function texSpanToLatex(node) {
+		let out = "";
+		for (const child of node.childNodes) {
+			if (child.nodeType === 3) {
+				const text = child.textContent ?? "";
+				let mapped = "";
+				for (const ch of text) mapped += TEX_CHAR_MAP[ch] ?? ch;
+				out += mapped;
+				continue;
+			}
+			if (child.nodeType !== 1) continue;
+			const el = child;
+			const tag = el.tagName.toLowerCase();
+			const inner = texSpanToLatex(el);
+			if (tag === "i" || tag === "em") out += /^[a-zA-Z]$/.test(inner) ? inner : `\\mathrm{${inner}}`;
+			else if (tag === "sub") out += `_{${inner}}`;
+			else if (tag === "sup") out += `^{${inner}}`;
+			else out += inner;
+		}
+		return out.replace(/\u2009|\u00a0|\u2002|\u2003/g, " ").trim();
+	}
+	function isStandaloneSpan(span) {
+		const parent = span.closest("p, div");
+		if (!parent) return false;
+		return (parent.textContent ?? "").trim() === (span.textContent ?? "").trim() && (parent.textContent ?? "").trim().length > 0;
+	}
+	var codeforces = {
+		id: "codeforces",
+		name: "Codeforces",
+		hosts: [
+			"codeforces.com",
+			"m1.codeforces.com",
+			"m2.codeforces.com",
+			"codeforces.ml"
+		],
+		styles: `
+    .ojpp-codeforces-settings {
+      display: inline-flex; align-items: center; margin-left: 10px; vertical-align: middle;
+    }
+    .ojpp-codeforces-settings .ojpp-icon-btn { color: #fff; }
+    .ojpp-codeforces-settings .ojpp-icon-btn:hover {
+      background: rgba(255, 255, 255, .2); color: #fff;
+    }
+  `,
+		collectSections(doc) {
+			const sections = [];
+			const statement = doc.querySelector(".problem-statement");
+			if (!statement) return sections;
+			const add = (content, heading, kind, label) => {
+				if (!content || !heading || !content.textContent?.trim()) return;
+				sections.push({
+					kind,
+					label,
+					content,
+					toolbar: {
+						anchor: heading,
+						position: "afterend"
+					},
+					result: {
+						anchor: content,
+						position: "afterend"
+					}
+				});
+			};
+			add(statement.querySelector(".header + div"), statement.querySelector(".header .title"), "statement", "题目描述");
+			add(statement.querySelector(".input-specification"), statement.querySelector(".input-specification .section-title"), "input", "输入描述");
+			add(statement.querySelector(".output-specification"), statement.querySelector(".output-specification .section-title"), "output", "输出描述");
+			add(statement.querySelector(".note"), statement.querySelector(".note .section-title"), "output", "提示");
+			return sections;
+		},
+		prepareContent(root) {
+			const doc = root.ownerDocument;
+			for (const rendered of root.querySelectorAll(MATHJAX_RENDERED)) {
+				const next = rendered.nextElementSibling;
+				const prev = rendered.previousElementSibling;
+				if (next?.matches("script[type^=\"math/tex\"]") || prev?.matches("script[type^=\"math/tex\"]")) rendered.remove();
+			}
+			for (const script of root.querySelectorAll("script[type^=\"math/tex\"]")) {
+				const latex = (script.textContent ?? "").trim();
+				if (!latex) {
+					script.remove();
+					continue;
+				}
+				const math = doc.createElement("span");
+				math.setAttribute("data-ojpp-math", /mode\s*=\s*display/.test(script.type) ? "display" : "inline");
+				math.textContent = latex;
+				script.replaceWith(math);
+			}
+			for (const span of root.querySelectorAll(".tex-span")) {
+				if (span.parentElement?.closest(".tex-span")) continue;
+				const latex = texSpanToLatex(span);
+				if (!latex) {
+					span.remove();
+					continue;
+				}
+				const math = doc.createElement("span");
+				math.setAttribute("data-ojpp-math", isStandaloneSpan(span) ? "display" : "inline");
+				math.textContent = latex;
+				span.replaceWith(math);
+			}
+			for (const tt of root.querySelectorAll(".tex-font-style-tt, .text-verb")) {
+				const code = doc.createElement("code");
+				code.textContent = tt.textContent ?? "";
+				tt.replaceWith(code);
+			}
+			for (const [selector, open, close] of [
+				[
+					".tex-font-style-bf",
+					"**",
+					"**"
+				],
+				[
+					".tex-font-style-it",
+					"*",
+					"*"
+				],
+				[
+					".tex-font-style-sl",
+					"*",
+					"*"
+				],
+				[
+					".tex-font-style-striked",
+					"~~",
+					"~~"
+				]
+			]) for (const el of root.querySelectorAll(selector)) {
+				const text = el.textContent ?? "";
+				if (!text) continue;
+				el.replaceWith(doc.createTextNode(`${open}${text}${close}`));
+			}
+			for (const el of root.querySelectorAll(".section-title, .property-title")) {
+				const text = (el.textContent ?? "").trim();
+				if (!text) continue;
+				const bold = doc.createElement("strong");
+				bold.textContent = selectorEndsWithProperty(el) ? `${text}: ` : text;
+				el.replaceWith(bold);
+			}
+			for (const el of root.querySelectorAll(".input-output-copier")) el.remove();
+		},
+		mountSettingsButton(button, doc) {
+			const menu = doc.querySelector(".menu-list.main-menu-list") ?? doc.querySelector("#header");
+			if (menu) {
+				const host = doc.createElement("li");
+				host.className = "ojpp-codeforces-settings";
+				host.append(button);
+				menu.append(host);
+			} else {
+				button.classList.add("ojpp-settings-floating");
+				doc.body.append(button);
+			}
+		},
+		observe(doc, onChange) {
+			let timer;
+			const schedule = () => {
+				if (timer !== void 0) return;
+				timer = setTimeout(() => {
+					timer = void 0;
+					onChange();
+				}, 150);
+			};
+			const observer = new MutationObserver(schedule);
+			observer.observe(doc.body, {
+				childList: true,
+				subtree: true
+			});
+			const onReady = () => schedule();
+			doc.addEventListener("DOMContentLoaded", onReady);
+			window.addEventListener("load", onReady);
+			return () => {
+				observer.disconnect();
+				clearTimeout(timer);
+				doc.removeEventListener("DOMContentLoaded", onReady);
+				window.removeEventListener("load", onReady);
+			};
+		}
+	};
+	function selectorEndsWithProperty(el) {
+		return el.classList.contains("property-title");
+	}
 	function equationFromImg(img) {
 		const src = img.getAttribute("src") ?? "";
 		const alt = img.getAttribute("alt")?.trim();
@@ -33121,7 +33339,7 @@ $$` : `${n}$$`;
 				doc.removeEventListener("click", onClick);
 			};
 		}
-	}];
+	}, codeforces];
 	sites.flatMap((site) => site.hosts.map((host) => `https://${host}/*`));
 	function resolveSite(url) {
 		if (url.protocol !== "https:") return void 0;

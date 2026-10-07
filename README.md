@@ -6,7 +6,7 @@
 
 OJ++（OJ-Plus-Plus）是一个可扩展的在线评测站增强工具。它把 AI 题面翻译、Markdown 查看和复制能力做成通用功能，再通过站点适配器连接具体 OJ，通过运行平台适配器连接 Tampermonkey、浏览器调试环境和未来的 Chrome 扩展。
 
-目前内置牛客竞赛适配器，正式构建为油猴脚本，验证页面为 `ac.nowcoder.com` 竞赛题目页。其他 OJ 和 Chrome CRX 还没有作为发布目标提供，但核心接口已经独立出来。
+目前内置牛客竞赛和 Codeforces 适配器，正式构建为油猴脚本。其他 OJ 和 Chrome CRX 还没有作为发布目标提供，但核心接口已经独立出来。
 
 ![翻译题面](docs/images/translate.png)
 
@@ -33,7 +33,7 @@ OJ++（OJ-Plus-Plus）是一个可扩展的在线评测站增强工具。它把 
 
 ## 第一次使用
 
-1. 打开牛客竞赛题目页，点击页面右上角的齿轮。
+1. 打开受支持的题目页（牛客竞赛、Codeforces），点击页面右上角的齿轮。
 2. 在「提供商」页选择预设，填写 API Key 和模型。
 3. 点击「测试连接」，确认接口返回成功后保存。
 4. 点击题目标题旁边的翻译图标。
@@ -83,6 +83,7 @@ src/
     types.ts            OJ 站点适配器接口
     index.ts            站点注册和 URL 分派
     nowcoder.ts         牛客选择器、公式和动态 DOM 适配
+    codeforces.ts       Codeforces 选择器、老题与新题两套公式还原
   platforms/
     types.ts            存储、HTTP、剪贴板接口
     userscript.ts       Tampermonkey / Violentmonkey 实现
@@ -132,7 +133,7 @@ Chrome 扩展可以把 `storage` 映射到 `chrome.storage.local`，把 `request
 
 ```bash
 pnpm install
-pnpm check          # 类型检查、16 个单元测试、构建油猴脚本
+pnpm check          # 类型检查、单元测试、构建油猴脚本
 pnpm test:browser   # 离线浏览器回归，不需要真实 API Key
 pnpm screenshots     # 生成 README 截图
 ```
@@ -141,6 +142,7 @@ pnpm screenshots     # 生成 README 截图
 
 - 油猴构建的回归会模拟 Tampermonkey 在 `onreadystatechange` 中提供 `ReadableStream`，页面 `fetch` 被故意禁用，验证流分片仍能逐步进入译文面板。
 - 牛客站点公式还原、Markdown、复制、动态插入和结果渲染。
+- Codeforces 两种公式形态：老题的服务端 `.tex-span` HTML 按结构还原成 LaTeX，新题的 MathJax 源码直接取用，且渲染副本不重复。
 - 流式请求：请求体带 `stream`，中途就能看到部分译文，完成后流式状态清除。
 - 设置面板输入焦点、文本拖拽、保存后即时切换配置、取消请求和重复翻译。
 - 另一套 DOM 与浏览器平台，验证通用应用不依赖牛客选择器。

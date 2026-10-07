@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>Codeforces 适配器回归</title>
+<style>
+  body { margin: 0; background: #f0f0f0; color: #000; font: 14px/1.5 "Helvetica Neue", Arial, sans-serif; }
+  .menu-list { display: flex; gap: 12px; list-style: none; margin: 0; padding: 8px 16px; background: #3b5998; color: #fff; }
+  .menu-list a { color: #fff; text-decoration: none; }
+  .problem-statement { max-width: 900px; margin: 20px auto; padding: 16px 24px; background: #fff; }
+  .problem-statement .header .title { font-size: 20px; font-weight: bold; margin-bottom: 8px; }
+  .property-title { display: inline; color: #666; }
+  .section-title { font-weight: bold; margin-top: 12px; }
+  .tex-span i { font-style: italic; }
+  sup.upper-index, sub.lower-index { font-size: .75em; }
+  .MathJax_Preview { color: inherit; }
+  pre { white-space: pre-wrap; }
+</style>
+<div id="body">
+<div class="roundbox menu-box"><div class="menu-list-container">
+<ul class="menu-list main-menu-list"><li><a href="/">Home</a></li><li class="current"><a href="/problemset">Problemset</a></li></ul>
+</div></div>
+<!-- 老题：服务端渲染的 .tex-span，没有 LaTeX 源 -->
+<div class="problem-statement"><div class="header"><div class="title">A. Theatre Square</div><div class="time-limit"><div class="property-title">time limit per test</div>1 second</div><div class="memory-limit"><div class="property-title">memory limit per test</div>256 megabytes</div><div class="input-file input-standard"><div class="property-title">input</div>stdin</div><div class="output-file output-standard"><div class="property-title">output</div>stdout</div></div><div><p>Theatre Square in the capital city of Berland has a rectangular shape with the size <span class="tex-span"><i>n</i> × <i>m</i></span> meters. On the occasion of the city's anniversary, a decision was taken to pave the Square with square granite flagstones. Each flagstone is of the size <span class="tex-span"><i>a</i> × <i>a</i></span>.</p><p>What is the least number of flagstones needed to pave the Square? It's allowed to cover the surface larger than the Theatre Square, but the Square has to be covered. It's not allowed to break the flagstones. The sides of flagstones should be parallel to the sides of the Square.</p></div><div class="input-specification"><div class="section-title">Input</div><p>The input contains three positive integer numbers in the first line: <span class="tex-span"><i>n</i>,  <i>m</i></span> and <span class="tex-span"><i>a</i></span> (<span class="tex-span">1 ≤  <i>n</i>, <i>m</i>, <i>a</i> ≤ 10<sup class="upper-index">9</sup></span>).</p></div><div class="output-specification"><div class="section-title">Output</div><p>Write the needed number of flagstones.</p></div><div class="sample-tests"><div class="section-title">Examples</div><div class="sample-test"><div class="input"><div class="title">Input</div><pre>6 6 4<br></pre></div><div class="output"><div class="title">Output</div><pre>4<br></pre></div></div></div></div>
+</div>
+</html>

@@ -105,11 +105,22 @@ function addGfmTables(td: TurndownService): void {
 
 const turndown = createTurndown();
 
+/**
+ * 去掉 Turndown 对普通文本的过度转义。
+ *
+ * Turndown 把公式后的 `-th`（如 `$i$-th`）当成可能被解析成列表的减号，
+ * 输出 `$i$\-th`，页面会看到多余的反斜杠。只还原这种“紧跟在非空白后的
+ * 转义减号”，不影响真正的转义（行首的 `\-` 仍有意义）。
+ */
+function unescapeInline(text: string): string {
+  return text.replace(/(?<=\S)\\\-/g, '-');
+}
+
 /** 站点预处理只作用于副本，页面 DOM 和事件监听保持原样。 */
 export function htmlToMarkdown(node: HTMLElement, prepareContent: (root: HTMLElement) => void): string {
   const clone = node.cloneNode(true) as HTMLElement;
   prepareContent(clone);
-  return turndown.turndown(clone).replace(/\n{3,}/g, '\n\n').trim();
+  return unescapeInline(turndown.turndown(clone)).replace(/\n{3,}/g, '\n\n').trim();
 }
 
 /**

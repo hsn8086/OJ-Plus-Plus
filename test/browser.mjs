@@ -254,6 +254,58 @@ try {
   }
   await page.close();
 
+  // Codeforces：老题（服务端 .tex-span）与新题（MathJax script 源码）两种公式形态。
+  // 两者都不能出现重复公式或残留渲染节点。
+  const cfBuilt = await build({ configFile: false, logLevel: 'silent', build: {
+    write: false, minify: false,
+    lib: { entry: new URL('test/fixtures/codeforces-entry.ts', root).pathname, name: 'OJPPCf', formats: ['iife'] },
+  } });
+  const cfCode = (Array.isArray(cfBuilt) ? cfBuilt[0] : cfBuilt).output.find((file) => file.type === 'chunk').code;
+
+  /** 打开一个 Codeforces fixture，返回各区域的 Markdown。 */
+  const readCfMarkdown = async (fixtureName) => {
+    const html = await readFile(new URL(`test/fixtures/${fixtureName}`, root), 'utf8');
+    const page = await pageWithFixture('https://codeforces.com/problemset/problem/1/A', html);
+    await page.evaluate((settings) => localStorage.setItem('ojpp:settings', JSON.stringify(settings)), settings);
+    await page.addScriptTag({ content: cfCode });
+    await page.evaluate(async () => { window.stopApp = await OJPPCf.start(); });
+    const count = await page.locator('.ojpp-toolbar').count();
+    for (let i = 0; i < count; i += 1) {
+      await page.locator('.ojpp-toolbar').nth(i).locator('.ojpp-md-btn').click();
+      await page.waitForTimeout(80);
+    }
+    const markdown = (await page.locator('.ojpp-md-source').evaluateAll((nodes) => nodes.map((n) => n.textContent))).join('\n\n');
+    const labels = await page.locator('.ojpp-toolbar').evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute('aria-label') ?? ''),
+    );
+    const settingsButtons = await page.locator('.ojpp-settings-btn').count();
+    await page.evaluate(() => window.stopApp());
+    await page.close();
+    return { markdown, labels, settingsButtons };
+  };
+
+  const cfOld = await readCfMarkdown('codeforces-old.html');
+  assert.ok(cfOld.labels.length >= 3, `老题应收集到题面区域，实际: ${cfOld.labels.join(' | ')}`);
+  assert.equal(cfOld.settingsButtons, 1, 'Codeforces 应有设置按钮');
+  // 老题：<i>n</i> × <i>m</i> 应还原成 $n \times m$，上标 10^9 不能丢
+  assert.match(cfOld.markdown, /\$n \\times m\$/, `老题公式未还原: ${cfOld.markdown.slice(0, 200)}`);
+  assert.match(cfOld.markdown, /10\^\{9\}/, '老题上标应还原成 ^{9}');
+  assert.doesNotMatch(cfOld.markdown, /tex-span|<i>|upper-index/, '老题不应残留渲染标签');
+
+  const cfNew = await readCfMarkdown('codeforces-new.html');
+  assert.ok(cfNew.labels.length >= 3, `新题应收集到题面区域，实际: ${cfNew.labels.join(' | ')}`);
+  // 新题：直接使用 MathJax 的原始 LaTeX
+  assert.match(cfNew.markdown, /\\frac\{p_i\}\{100\}/, '新题应保留 MathJax 源码');
+  assert.match(cfNew.markdown, /1\s*\\le\s*n\s*\\le\s*2\\cdot 10\^5/, '新题不等式应保留原始 LaTeX');
+  // 不能残留渲染副本或原始 script
+  assert.doesNotMatch(cfNew.markdown, /MathJax|MJXp|mjx-/, '不应残留 MathJax 渲染节点');
+  assert.doesNotMatch(cfNew.markdown, /\$\$\$/, '不应残留 $$$ 原文');
+  // 公式后的普通文本不该被 Turndown 转义
+  assert.doesNotMatch(cfNew.markdown, /\$i\$\\-th/, '公式后的连字符不应被转义');
+  assert.match(cfNew.markdown, /\$i\$-th/, '公式后的连字符应保持原样');
+
+  console.log('✓ Codeforces：老题 .tex-span 还原、新题 MathJax 源码、公式不重复');
+
   // 使用另一个站点契约与真实 browser 平台；不加载 GM 或牛客适配器。
   const built = await build({ configFile: false, logLevel: 'silent', build: {
     write: false, minify: false,
