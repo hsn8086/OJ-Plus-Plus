@@ -87,6 +87,20 @@ export const nowcoder: SiteAdapter = {
       );
     }
 
+    // 示例块里的补充说明（“说明”“备注”“提示”等）和输入/输出并列，
+    // 但它们在 .subject-describe > h2 之外，所以单独找。
+    // 这些文字常常解释样例答案，不翻译会显得题面不完整。
+    // 兄弟元素可能是 div.question-oi-cont，也可能直接是 pre，所以不依赖 class。
+    for (const heading of doc.querySelectorAll<HTMLElement>('h2')) {
+      const label = (heading.textContent ?? '').trim();
+      if (!/^(说明|备注|提示|注意)/.test(label)) continue;
+      const body = heading.nextElementSibling;
+      if (!body || !body.textContent?.trim()) continue;
+      // 示例块的“输入”“输出”各有自己的 pre，别重复收集
+      if (body.querySelector('textarea')) continue;
+      add(body as HTMLElement, heading, 'output', label.replace(/[:：]\s*$/, ''));
+    }
+
     for (const content of doc.querySelectorAll<HTMLElement>('div.nc-post-content')) {
       add(content, content, 'solution', '题解');
     }

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OJ++
 // @namespace    https://github.com/hsn8086/OJ-Plus-Plus
-// @version      0.5.5
+// @version      0.5.6
 // @author       hsn8086
 // @description  OJ-Plus-Plus：AI 题面翻译、Markdown 视图与一键复制
 // @license      GPL-3.0
@@ -33037,6 +33037,14 @@ $$` : `${n}$$`;
 				if (sibling?.tagName !== "PRE") continue;
 				const isInput = /输入/.test(label);
 				add(sibling, heading, isInput ? "input" : "output", isInput ? "输入描述" : "输出描述");
+			}
+			for (const heading of doc.querySelectorAll("h2")) {
+				const label = (heading.textContent ?? "").trim();
+				if (!/^(说明|备注|提示|注意)/.test(label)) continue;
+				const body = heading.nextElementSibling;
+				if (!body || !body.textContent?.trim()) continue;
+				if (body.querySelector("textarea")) continue;
+				add(body, heading, "output", label.replace(/[:：]\s*$/, ""));
 			}
 			for (const content of doc.querySelectorAll("div.nc-post-content")) add(content, content, "solution", "题解");
 			return sections;

@@ -161,6 +161,12 @@ try {
   assert.match(await page.evaluate(() => window.__testState.clipboard), /\$a\+b\$/);
   await page.getByRole('button', { name: '返回原始内容', exact: true }).click();
 
+  // 示例块里的“说明”也必须有自己的工具栏，否则它永远无法翻译。
+  const labels = await page.locator('.ojpp-toolbar').evaluateAll((nodes) =>
+    nodes.map((node) => node.getAttribute('aria-label') ?? ''),
+  );
+  assert.ok(labels.some((label) => label.includes('说明')), `缺少“说明”工具栏: ${labels.join(' | ')}`);
+
   // 连续输入、拖选到面板外、立即正常点击遮罩，以及保存后即时切换模型。
   await page.getByRole('button', { name: 'OJ++ 设置', exact: true }).click();
   await page.getByRole('button', { name: '提供商', exact: true }).click();
