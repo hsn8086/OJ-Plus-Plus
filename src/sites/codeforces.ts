@@ -1020,36 +1020,48 @@ export const codeforces: SiteAdapter = {
     }
     /* 评分曲线图本体是 canvas，不动它 */
 
-    /* ---------- 题号行的通过/未通过色 ---------- */
-    /* 站点给“已通过”的题号行设了浅绿底（#d4edc9），
-       给“尝试过但没过”的设了浅红/浅黄底。暗色下这些
-       还是浅色，会跟深底格格不入。换成深色但保留色相 */
-    html[data-ojpp-theme="dark"] .accepted-problem td,
-    html[data-ojpp-theme="dark"] td.accepted-problem,
-    html[data-ojpp-theme="dark"] tr.accepted-problem td {
+    /* ---------- 题号行的通过/未通过标记 ---------- */
+    /* 站点的做/未做标记分两处：① td.act（操作列图标格）上浅底色，
+       ② td.id 左侧 6px 彩色条（border-left）。两处都用同色。
+       之前写成 .accepted-problem td 把整行染绿——多了，且 td.id 的
+       6px 浅绿条在暗底下太刺眼。改成：td.act 给深色底，td.id 的左条
+       换成就感分明但不刺眼的色相 */
+    html[data-ojpp-theme="dark"] tr.accepted-problem td.act,
+    html[data-ojpp-theme="dark"] .accepted-problem td.act,
+    html[data-ojpp-theme="dark"] td.act.accepted-problem {
       background: #1d2b1d !important;
-      color: #cdd9e5 !important;
+      color: #a6d189;
     }
-    html[data-ojpp-theme="dark"] .rejected-problem td,
-    html[data-ojpp-theme="dark"] td.rejected-problem,
-    html[data-ojpp-theme="dark"] tr.rejected-problem td {
-      background: #2d1d1d !important;
-      color: #cdd9e5 !important;
+    html[data-ojpp-theme="dark"] tr.accepted-problem td.id,
+    html[data-ojpp-theme="dark"] .accepted-problem td.id {
+      border-left-color: #57ab5a !important;
     }
-    /* 未通过的题号行（浅红/浅黄） */
-    html[data-ojpp-theme="dark"] .unaccepted-problem td,
-    html[data-ojpp-theme="dark"] td.unaccepted-problem,
-    html[data-ojpp-theme="dark"] tr.unaccepted-problem td {
-      background: #2d2518 !important;
-      color: #cdd9e5 !important;
+    html[data-ojpp-theme="dark"] tr.rejected-problem td.act,
+    html[data-ojpp-theme="dark"] .rejected-problem td.act,
+    html[data-ojpp-theme="dark"] td.act.rejected-problem {
+      background: #451d1d !important;
+      color: #f85149;
     }
-    /* 题号格左边的通过/未通过指示条（站点用亮绿/亮红小方块） */
+    html[data-ojpp-theme="dark"] tr.rejected-problem td.id,
+    html[data-ojpp-theme="dark"] .rejected-problem td.id {
+      border-left-color: #f85149 !important;
+    }
+    html[data-ojpp-theme="dark"] tr.submitted-verdict-problem td.act,
+    html[data-ojpp-theme="dark"] .submitted-verdict-problem td.act,
+    html[data-ojpp-theme="dark"] td.act.submitted-verdict-problem {
+      background: #1c2b3d !important;
+      color: #79b8ff;
+    }
+    html[data-ojpp-theme="dark"] tr.submitted-verdict-problem td.id,
+    html[data-ojpp-theme="dark"] .submitted-verdict-problem td.id {
+      border-left-color: #79b8ff !important;
+    }
+    /* 普通行的 td.act（尤其斑马行 td.act.dark）：站点是 #f8f8f8 白底，
+       暗色下是白块。改成透明让它跟行底色一致 */
+    html[data-ojpp-theme="dark"] td.act,
     html[data-ojpp-theme="dark"] td.act.dark,
-    html[data-ojpp-theme="dark"] .act.accepted-problem,
-    html[data-ojpp-theme="dark"] .act.rejected-problem,
-    html[data-ojpp-theme="dark"] .act.unaccepted-problem {
-      background: inherit !important;
-      color: inherit;
+    html[data-ojpp-theme="dark"] .act.dark {
+      background: transparent !important;
     }
 
     /* ---------- 排行榜标记 ---------- */
