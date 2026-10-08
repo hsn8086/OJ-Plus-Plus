@@ -593,6 +593,20 @@ export const codeforces: SiteAdapter = {
     html[data-ojpp-theme="dark"] .datatable th img {
       filter: invert(1) brightness(1.3);
     }
+    /* 比赛报名/设置这类表单：.table-form 是表单布局表，不是数据表。
+       站点本来就让它透明贴页面，但上面 table 的全局斑马纹把它
+       染成了花花绿绿的隔行。统一还原透明，贴回 #1c2128 底色 */
+    html[data-ojpp-theme="dark"] .table-form,
+    html[data-ojpp-theme="dark"] .table-form tr,
+    html[data-ojpp-theme="dark"] .table-form tr:nth-child(even),
+    html[data-ojpp-theme="dark"] .table-form th,
+    html[data-ojpp-theme="dark"] .table-form td,
+    html[data-ojpp-theme="dark"] .table-form .field-name,
+    /* 协议条款的滚框（站点是 #ffffdd 高亮框）也统一回底色——
+       它仍留边框，能看出是个可滚动的框 */
+    html[data-ojpp-theme="dark"] .table-form textarea {
+      background: transparent !important;
+    }
     /* 表格分页条 */
     html[data-ojpp-theme="dark"] .pagination,
     html[data-ojpp-theme="dark"] .pagination span,
