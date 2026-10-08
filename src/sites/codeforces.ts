@@ -802,6 +802,27 @@ export const codeforces: SiteAdapter = {
     html[data-ojpp-theme="dark"] .prettyprint .var { color: #dcbdfb !important; }
     html[data-ojpp-theme="dark"] .prettyprint .fun { color: #dcbdfb !important; }
 
+    /* ---------- 提交结果单元格 ---------- */
+    /* .cell-rejected（-1/被拒绝）、.cell-accepted（已解决）等
+       站点用的是浅灰/浅蓝，深底上都偏暗。按语义上色 */
+    html[data-ojpp-theme="dark"] .cell-rejected {
+      color: #f85149 !important;
+    }
+    html[data-ojpp-theme="dark"] .cell-accepted,
+    html[data-ojpp-theme="dark"] .cell-solved,
+    html[data-ojpp-theme="dark"] .cell-ok {
+      color: #57ab5a !important;
+    }
+    html[data-ojpp-theme="dark"] .cell-verdict,
+    html[data-ojpp-theme="dark"] .cell-time {
+      color: #909dab;
+    }
+    /* standings 里的得分与名次 */
+    html[data-ojpp-theme="dark"] .cell-rank,
+    html[data-ojpp-theme="dark"] .cell-points {
+      color: #cdd9e5;
+    }
+
     /* ---------- 表单控件（筛选、提交等） ---------- */
     /* SumoSelect 下拉框：站点给它设了白底，暗色下是个白块 */
     html[data-ojpp-theme="dark"] .SumoSelect p.CaptionCont,
@@ -819,6 +840,37 @@ export const codeforces: SiteAdapter = {
     html[data-ojpp-theme="dark"] .SumoSelect .optWrapper ul li:hover {
       background: #373e47 !important;
     }
+    /* 展开列表的底色也要深——展开才是用户常看的样子 */
+    html[data-ojpp-theme="dark"] .SumoSelect .optWrapper.multiple,
+    html[data-ojpp-theme="dark"] .SumoSelect.open .optWrapper,
+    html[data-ojpp-theme="dark"] .SumoSelect .MultiControls {
+      background: #2d333b !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5 !important;
+    }
+    /* 选项里的复选框 i：站点是白底小方框 */
+    html[data-ojpp-theme="dark"] .SumoSelect .optWrapper li.opt i,
+    html[data-ojpp-theme="dark"] .SumoSelect .select-all > span i {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+    }
+    html[data-ojpp-theme="dark"] .SumoSelect .select-all.partial > span i,
+    html[data-ojpp-theme="dark"] .SumoSelect .select-all.selected > span i {
+      background: #57ab5a !important;
+      border-color: transparent !important;
+    }
+    /* 下拉箭头：站点把一张黑色三角 PNG 放在 label>i 的 background-image，
+       直接改色没用——是图片。用 filter 反成亮色箭头。 */
+    html[data-ojpp-theme="dark"] .SumoSelect p.CaptionCont label i,
+    html[data-ojpp-theme="dark"] .SumoSelect .CaptionCont label i {
+      filter: invert(0.8) !important;
+    }
+    /* 展开时的底色 */
+    html[data-ojpp-theme="dark"] .SumoSelect.open > .CaptionCont,
+    html[data-ojpp-theme="dark"] .SumoSelect:focus > .CaptionCont {
+      background: #2d333b !important;
+      border-color: #539bf5 !important;
+    }
     /* 筛选标签（“Gym”那类的蓝色） */
     html[data-ojpp-theme="dark"] .setting-name label,
     html[data-ojpp-theme="dark"] .setting-name,
@@ -831,16 +883,80 @@ export const codeforces: SiteAdapter = {
     }
 
     /* ---------- 星级评分控件（gym 筛选的 Difficulty） ---------- */
-    /* 站点用一张 rating.png 精灵图画“空星+白底”的整条，
-       直接改背景没用——白色是图片本身。只能对整条做反转，
-       让它在深底上变成“深底+亮星”。 */
+    /* 站点用 rating.png 精灵图画“空星+白底”的整条，反转颜色
+       太突兀。改成纯 CSS 重绘：隐藏精灵图，用 ::before 画 5 颗
+       空星（深色实心星，视觉上像描边），已选中的那一条叠金色
+       实心星，靠 li 的宽度裁掉多余的部分——站点本来就是用
+       width 控制选几颗，所以 hover/选择都能自动工作。 */
     html[data-ojpp-theme="dark"] ul[id^="vote-list-"],
     html[data-ojpp-theme="dark"] ul.vote-list {
-      filter: invert(1) hue-rotate(180deg);
+      background-image: none !important;
+      filter: none !important;
+      position: relative;
     }
-    /* 已选中的那一段（vote-current-）叠在上面，同样要反转 */
-    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li {
-      filter: invert(0) !important;
+    /* 未选中的空星：深色实心星，读作“空/未选” */
+    html[data-ojpp-theme="dark"] ul[id^="vote-list-"]::before {
+      content: "★★★★★";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: 3px;
+      color: #3d434d;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    /* 已选中的那一条：同样 5 颗星，亮金色。li 用 overflow:hidden
+       + 站点设置的 width 来裁，所以选几颗就显示几颗。 */
+    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li[id^="vote-current-"],
+    html[data-ojpp-theme="dark"] ul.vote-list li[id^="vote-current-"] {
+      background-image: none !important;
+      overflow: hidden;
+      white-space: nowrap;
+      filter: none !important;
+    }
+    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li[id^="vote-current-"]::before,
+    html[data-ojpp-theme="dark"] ul.vote-list li[id^="vote-current-"]::before {
+      content: "★★★★★";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: 3px;
+      color: #f0883e;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* ---------- 题目副标签（standard input/output、时限） ---------- */
+    /* 站点给这些 .notice 设了浅灰底做“信息条”，暗色下是一块
+       和背景不一样的灰块。直接透明，只留文字色 */
+    html[data-ojpp-theme="dark"] .notice {
+      background: transparent !important;
+      border: none !important;
+      color: #909dab !important;
+    }
+    /* 但 .notice 里的文字要可读——站点给 td .notice 设过灰，优先级不够会输 */
+    html[data-ojpp-theme="dark"] .notice *,
+    html[data-ojpp-theme="dark"] td .notice,
+    html[data-ojpp-theme="dark"] .notice a {
+      color: #909dab !important;
+    }
+
+    /* ---------- 倒计时/截止标签（.irt “Until closing X days”） ---------- */
+    /* 站点把它做成一个小药丸：边框+文字是同一种颜色。
+       之前只改了文字色，边框还留着站点原色，所以看着不对。
+       现在连边框一起按“截止”语义上色，和站点语义一致 */
+    html[data-ojpp-theme="dark"] .irt,
+    html[data-ojpp-theme="dark"] .irt *,
+    html[data-ojpp-theme="dark"] .irt a {
+      background: transparent !important;
+      border-color: #f0883e !important;
+      color: #f0883e !important;
     }
 
     /* ---------- 个人资料与图表 ---------- */
