@@ -928,12 +928,23 @@ export const codeforces: SiteAdapter = {
       color: #57ab5a !important;
       text-decoration-color: #57ab5a;
     }
-    /* 目录的文件/文件夹图标：站点用 icon-* 字体 + 深色，
-       深底上看不清。统一提亮 */
+    /* 目录的文件/文件夹图标：站点用 icon-* 字体渲染，
+       还把颜色写进 style="color:black" 或站点 !important 规则里。
+       必须 !important + 覆盖 ::before 才能抢到。 */
     html[data-ojpp-theme="dark"] [class*="icon-"],
+    html[data-ojpp-theme="dark"] [class*="icon-"]::before,
+    html[data-ojpp-theme="dark"] [class*="icon-"]::after,
     html[data-ojpp-theme="dark"] .icon-file,
     html[data-ojpp-theme="dark"] .icon-folder {
-      color: #cdd9e5;
+      color: #cdd9e5 !important;
+    }
+    /* 站点对目录树里的 icon 用 black !important，点名覆盖 */
+    html[data-ojpp-theme="dark"] ._catalogBlogEntry ._name i[class*="icon-"],
+    html[data-ojpp-theme="dark"] ._catalogFolder ._name i[class*="icon-"],
+    html[data-ojpp-theme="dark"] ._catalogNode i[class*="icon-"],
+    html[data-ojpp-theme="dark"] ._name i[class*="icon-"],
+    html[data-ojpp-theme="dark"] ._nameContent i[class*="icon-"] {
+      color: #909dab !important;
     }
 
     /* ---------- 提示条与代码编辑器 ---------- */
