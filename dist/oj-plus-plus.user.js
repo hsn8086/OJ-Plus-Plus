@@ -34539,6 +34539,20 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
     html[data-ojpp-theme="dark"] .verdict-judging {
       color: #909dab !important;
     }
+    /* 逐条测试的 verdict_type：welldone=OK 绿、error=失败红、pending 灰 */
+    html[data-ojpp-theme="dark"] .welldone,
+    html[data-ojpp-theme="dark"] .welldone .verdict {
+      color: #57ab5a !important;
+    }
+    html[data-ojpp-theme="dark"] .verdict_type.error,
+    html[data-ojpp-theme="dark"] .verdict_type.error .verdict {
+      color: #f85149 !important;
+    }
+    /* 未判定的 "Verdict: ?" 用灰，别用亮白 */
+    html[data-ojpp-theme="dark"] .verdict_type:not(.welldone):not(.error),
+    html[data-ojpp-theme="dark"] .verdict_type:not(.welldone):not(.error) .verdict {
+      color: #909dab !important;
+    }
     /* 比赛状态（Finished / Running 等）：站点用 #3b5998 深蓝，深底上看不清 */
     html[data-ojpp-theme="dark"] .contest-state-phase {
       color: #79b8ff !important;
@@ -35253,6 +35267,76 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
     html[data-ojpp-theme="dark"] .successful-submission,
     html[data-ojpp-theme="dark"] .successful-test {
       color: #57ab5a !important;
+    }
+
+    /* ---------- 提交详情的 I/O 对比块 ---------- */
+    /* .file .text 是 #ddd，test-for-popup pre #eee，sample-tests pre #efefef，
+       test-example-line-even #e0e0e0——全是浅块，暗色下是大片白 */
+    html[data-ojpp-theme="dark"] .file,
+    html[data-ojpp-theme="dark"] .file .text,
+    html[data-ojpp-theme="dark"] .file .name,
+    html[data-ojpp-theme="dark"] .test-for-popup pre,
+    html[data-ojpp-theme="dark"] .test-for-popup,
+    html[data-ojpp-theme="dark"] .sample-tests pre {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    /* 别碰 .test-example-line-even/odd——题面里靠它做奇偶交替，
+       前面已有专门规则（even #2d333b / odd #22272e），盖掉就分不清行了 */
+    html[data-ojpp-theme="dark"] .file pre,
+    html[data-ojpp-theme="dark"] .file .text pre,
+    html[data-ojpp-theme="dark"] .sample-tests pre * {
+      color: #cdd9e5 !important;
+    }
+    /* .file 的标题行（Input / Participant's output / Jury's answer） */
+    html[data-ojpp-theme="dark"] .file .name {
+      color: #909dab !important;
+    }
+    /* 高亮块：站点用 --highlighted-* 浅彩底，暗色下深底 */
+    html[data-ojpp-theme="dark"] [style*="background-color: rgb(221, 238, 255)"],
+    html[data-ojpp-theme="dark"] [style*="background-color: #ddeeff"],
+    html[data-ojpp-theme="dark"] [style*="background-color: rgb(239, 239, 239)"] {
+      background-color: #22272e !important;
+    }
+    /* 过滤框/代码预览的输入与预览区 */
+    html[data-ojpp-theme="dark"] .filter-box input,
+    html[data-ojpp-theme="dark"] .datatable .filter input,
+    html[data-ojpp-theme="dark"] .datatable input {
+      background: #2d333b !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .markItUpPreviewFrame {
+      background: #22272e !important;
+      border-color: #373e47;
+    }
+    /* ---------- text-label-* 状态徽章 ---------- */
+    /* 站点用浅彩底+深字，暗色下要反成深底+亮字 */
+    html[data-ojpp-theme="dark"] .text-label-blue,
+    html[data-ojpp-theme="dark"] .text-label-info {
+      background: #1c3a5e !important;
+      color: #79b8ff !important;
+    }
+    html[data-ojpp-theme="dark"] .text-label-green,
+    html[data-ojpp-theme="dark"] .text-label-success {
+      background: #1d3a2c !important;
+      color: #57ab5a !important;
+    }
+    html[data-ojpp-theme="dark"] .text-label-yellow,
+    html[data-ojpp-theme="dark"] .text-label-warning {
+      background: #4a3a1a !important;
+      color: #f0883e !important;
+    }
+    html[data-ojpp-theme="dark"] .text-label-red,
+    html[data-ojpp-theme="dark"] .text-label-error {
+      background: #4a2323 !important;
+      color: #f85149 !important;
+    }
+    html[data-ojpp-theme="dark"] .text-label-gray,
+    html[data-ojpp-theme="dark"] .text-label-muted {
+      background: #373e47 !important;
+      color: #909dab !important;
     }
 
     /* ---------- 目录页（Catalog） ---------- */
