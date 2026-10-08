@@ -32453,10 +32453,13 @@ $$` : `${n}$$`;
 	}
 	var strippedInline = new Map();
 	function stripInlineColors(root) {
-		for (const el of root.querySelectorAll("[style*=\"color\"]")) {
+		for (const el of root.querySelectorAll("[style*=\"color\"], [style*=\"background\"], [style*=\"background-color\"]")) {
 			const style = el.getAttribute("style");
 			if (!style || strippedInline.has(el)) continue;
-			const cleaned = style.split(";").filter((part) => !/^\s*color\s*:/i.test(part)).join(";").trim();
+			const cleaned = style.split(";").filter((part) => {
+				const prop = part.trim().toLowerCase();
+				return !/^color\s*:/.test(prop) && !/^background(-color)?\s*:/.test(prop);
+			}).join(";").trim();
 			if (cleaned === style.trim()) continue;
 			strippedInline.set(el, style);
 			if (cleaned) el.setAttribute("style", cleaned);
@@ -34653,6 +34656,44 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
     html[data-ojpp-theme="dark"] a.user-orange { color: #f0883e !important; }
     html[data-ojpp-theme="dark"] .user-red,
     html[data-ojpp-theme="dark"] a.user-red { color: #f85149 !important; }
+    /* 站点还按具体分数给类名（user-1200 ~ user-4000），
+       这些也是段位色：>=4000 红，2400-3999 橙，2100-2399 紫，1600-2099 蓝，
+       1200-1599 青，<1200 灰。覆盖最常见的几档。 */
+    html[data-ojpp-theme="dark"] .user-4000,
+    html[data-ojpp-theme="dark"] a.user-4000,
+    html[data-ojpp-theme="dark"] [class*="user-4"] { color: #f85149 !important; }
+    html[data-ojpp-theme="dark"] [class*="user-3"],
+    html[data-ojpp-theme="dark"] [class*="user-2"],
+    html[data-ojpp-theme="dark"] [class*="user-24"],
+    html[data-ojpp-theme="dark"] [class*="user-25"],
+    html[data-ojpp-theme="dark"] [class*="user-26"],
+    html[data-ojpp-theme="dark"] [class*="user-27"],
+    html[data-ojpp-theme="dark"] [class*="user-28"],
+    html[data-ojpp-theme="dark"] [class*="user-29"],
+    html[data-ojpp-theme="dark"] [class*="user-30"],
+    html[data-ojpp-theme="dark"] [class*="user-31"],
+    html[data-ojpp-theme="dark"] [class*="user-32"],
+    html[data-ojpp-theme="dark"] [class*="user-33"],
+    html[data-ojpp-theme="dark"] [class*="user-34"],
+    html[data-ojpp-theme="dark"] [class*="user-35"],
+    html[data-ojpp-theme="dark"] [class*="user-36"],
+    html[data-ojpp-theme="dark"] [class*="user-37"],
+    html[data-ojpp-theme="dark"] [class*="user-38"],
+    html[data-ojpp-theme="dark"] [class*="user-39"] { color: #f0883e !important; }
+    html[data-ojpp-theme="dark"] [class*="user-21"],
+    html[data-ojpp-theme="dark"] [class*="user-22"],
+    html[data-ojpp-theme="dark"] [class*="user-23"] { color: #c297ff !important; }
+    html[data-ojpp-theme="dark"] [class*="user-16"],
+    html[data-ojpp-theme="dark"] [class*="user-17"],
+    html[data-ojpp-theme="dark"] [class*="user-18"],
+    html[data-ojpp-theme="dark"] [class*="user-19"],
+    html[data-ojpp-theme="dark"] [class*="user-20"] { color: #539bf5 !important; }
+    html[data-ojpp-theme="dark"] [class*="user-12"],
+    html[data-ojpp-theme="dark"] [class*="user-13"],
+    html[data-ojpp-theme="dark"] [class*="user-14"],
+    html[data-ojpp-theme="dark"] [class*="user-15"] { color: #39c5bb !important; }
+    html[data-ojpp-theme="dark"] [class*="user-1"],
+    html[data-ojpp-theme="dark"] [class*="user-0"] { color: #9aa4b2 !important; }
     html[data-ojpp-theme="dark"] .user-legendary,
     html[data-ojpp-theme="dark"] a.user-legendary { color: #f85149 !important; }
     /* admin/头衔类没有段位色，给个中性亮色 */
@@ -34993,6 +35034,19 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
       color: #cdd9e5;
     }
 
+    /* ---------- 星级评分控件（gym 筛选的 Difficulty） ---------- */
+    /* 站点用一张 rating.png 精灵图画“空星+白底”的整条，
+       直接改背景没用——白色是图片本身。只能对整条做反转，
+       让它在深底上变成“深底+亮星”。 */
+    html[data-ojpp-theme="dark"] ul[id^="vote-list-"],
+    html[data-ojpp-theme="dark"] ul.vote-list {
+      filter: invert(1) hue-rotate(180deg);
+    }
+    /* 已选中的那一段（vote-current-）叠在上面，同样要反转 */
+    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li {
+      filter: invert(0) !important;
+    }
+
     /* ---------- 个人资料与图表 ---------- */
     /* 评分曲线图例的白底 */
     html[data-ojpp-theme="dark"] .legend,
@@ -35049,6 +35103,40 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
     /* 提交通过/失败的底色 */
     html[data-ojpp-theme="dark"] .verdict-accepted,
     html[data-ojpp-theme="dark"] .verdict-rejected {
+      color: #cdd9e5;
+    }
+
+    /* ---------- 目录页（Catalog） ---------- */
+    /* 目录/更新历史里的深蓝字与黑色时间戳 */
+    html[data-ojpp-theme="dark"] ._catalogFolderName,
+    html[data-ojpp-theme="dark"] ._CatalogHistorySidebarFrame_name,
+    html[data-ojpp-theme="dark"] ._catalogNode ._nameBody,
+    html[data-ojpp-theme="dark"] .caption {
+      color: #cdd9e5 !important;
+    }
+    html[data-ojpp-theme="dark"] .format-humantime,
+    html[data-ojpp-theme="dark"] .humantime,
+    html[data-ojpp-theme="dark"] time {
+      color: #909dab !important;
+    }
+    /* 目录的增删记录：del 浅红、ins 浅绿 */
+    html[data-ojpp-theme="dark"] ._CatalogHistorySidebarFrame_value del,
+    html[data-ojpp-theme="dark"] del {
+      background: #3d2b2b !important;
+      color: #f85149 !important;
+      text-decoration-color: #f85149;
+    }
+    html[data-ojpp-theme="dark"] ._CatalogHistorySidebarFrame_value ins,
+    html[data-ojpp-theme="dark"] ins {
+      background: #1d2b1d !important;
+      color: #57ab5a !important;
+      text-decoration-color: #57ab5a;
+    }
+    /* 目录的文件/文件夹图标：站点用 icon-* 字体 + 深色，
+       深底上看不清。统一提亮 */
+    html[data-ojpp-theme="dark"] [class*="icon-"],
+    html[data-ojpp-theme="dark"] .icon-file,
+    html[data-ojpp-theme="dark"] .icon-folder {
       color: #cdd9e5;
     }
 

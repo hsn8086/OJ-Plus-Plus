@@ -50,13 +50,17 @@ export function watchSystemTheme(onChange: () => void): () => void {
 const strippedInline = new Map<HTMLElement, string>();
 
 function stripInlineColors(root: ParentNode): void {
-  for (const el of root.querySelectorAll<HTMLElement>('[style*="color"]')) {
+  for (const el of root.querySelectorAll<HTMLElement>('[style*="color"], [style*="background"], [style*="background-color"]')) {
     const style = el.getAttribute('style');
     if (!style || strippedInline.has(el)) continue;
-    // 只处理显式写了颜色的声明，保留其它内联样式
+    // 只清掉跟配色相关的声明（文字色与背景色），保留布局/排版等其它内联样式。
+    // 站点有些按钮把 background-color 也写在内联里，只清 color 救不回来。
     const cleaned = style
       .split(';')
-      .filter((part) => !/^\s*color\s*:/i.test(part))
+      .filter((part) => {
+        const prop = part.trim().toLowerCase();
+        return !/^color\s*:/.test(prop) && !/^background(-color)?\s*:/.test(prop);
+      })
       .join(';')
       .trim();
     if (cleaned === style.trim()) continue;
