@@ -145,8 +145,8 @@ export const codeforces: SiteAdapter = {
     html[data-ojpp-theme="dark"] .problem-statement .section-title {
       border-bottom-color: #373e47;
     }
-    html[data-ojpp-theme="dark"] .ttypography a,
-    html[data-ojpp-theme="dark"] .problem-statement a {
+    html[data-ojpp-theme="dark"] .ttypography a:not(.rated-user):not([class*="user-"]),
+    html[data-ojpp-theme="dark"] .problem-statement a:not(.rated-user):not([class*="user-"]) {
       color: #539bf5;
     }
 
@@ -207,6 +207,12 @@ export const codeforces: SiteAdapter = {
     html[data-ojpp-theme="dark"] .problem-statement code,
     html[data-ojpp-theme="dark"] .ttypography code {
       background: rgba(99, 110, 123, .4);
+      color: #cdd9e5;
+    }
+    /* 站点把 .ttypography 里的 pre 设成深红（#800000），
+       暗色下像一块深红色字。统一改成正常文本色 */
+    html[data-ojpp-theme="dark"] .problem-statement pre,
+    html[data-ojpp-theme="dark"] .ttypography pre {
       color: #cdd9e5;
     }
     html[data-ojpp-theme="dark"] .problem-statement table,
@@ -314,7 +320,7 @@ export const codeforces: SiteAdapter = {
     }
     /* 页脚链接：站点用 #0000cc 深蓝 */
     html[data-ojpp-theme="dark"] #footer,
-    html[data-ojpp-theme="dark"] #footer a,
+    html[data-ojpp-theme="dark"] #footer a:not(.rated-user):not([class*="user-"]),
     html[data-ojpp-theme="dark"] .switchToMobile {
       color: #768390 !important;
     }
@@ -408,16 +414,16 @@ export const codeforces: SiteAdapter = {
     /* ---------- 全局链接 ---------- */
     /* 站点几乎所有正文链接都是 #0000cc 这种深蓝，深底上对比不足。
        这是提交记录、状态、博客、题面里最普遍的问题，所以放在最前面兜底。 */
-    html[data-ojpp-theme="dark"] a,
-    html[data-ojpp-theme="dark"] a:visited {
+    html[data-ojpp-theme="dark"] a:not(.rated-user):not([class*="user-"]),
+    html[data-ojpp-theme="dark"] a:not(.rated-user):not([class*="user-"]):visited {
       color: #539bf5;
     }
-    html[data-ojpp-theme="dark"] a:hover,
-    html[data-ojpp-theme="dark"] a:active {
+    html[data-ojpp-theme="dark"] a:not(.rated-user):not([class*="user-"]):hover,
+    html[data-ojpp-theme="dark"] a:not(.rated-user):not([class*="user-"]):active {
       color: #79b8ff;
     }
     /* 已访问过的链接不要变成紫色，暗色下同样难读 */
-    html[data-ojpp-theme="dark"] a:visited {
+    html[data-ojpp-theme="dark"] a:not(.rated-user):not([class*="user-"]):visited {
       color: #b083f0;
     }
 
@@ -425,25 +431,44 @@ export const codeforces: SiteAdapter = {
     /* 站点用 .user-* 类给用户名上色，色值是纯红/纯蓝/gray 这类，
        在深底上要么刺眼要么看不清。这里换成同色系的亮版本，
        保持“颜色代表段位”这个语义，只调整明度。 */
-    /* user-black 是“未评级/黑名”，站点用纯黑，深底上完全看不见 */
-    html[data-ojpp-theme="dark"] .user-black { color: #9aa4b2 !important; }
-    html[data-ojpp-theme="dark"] .user-gray { color: #9aa4b2 !important; }
-    html[data-ojpp-theme="dark"] .user-green { color: #57ab5a !important; }
-    html[data-ojpp-theme="dark"] .user-cyan { color: #39c5bb !important; }
-    html[data-ojpp-theme="dark"] .user-blue { color: #539bf5 !important; }
-    html[data-ojpp-theme="dark"] .user-violet { color: #c297ff !important; }
-    html[data-ojpp-theme="dark"] .user-orange { color: #f0883e !important; }
-    html[data-ojpp-theme="dark"] .user-red { color: #f85149 !important; }
-    html[data-ojpp-theme="dark"] .user-legendary { color: #f85149 !important; }
+    /* 用户名几乎总是 <a class="rated-user user-段位">。
+       段位色必须同时命中 a 和普通元素：站点自己的 a { color } 会跟
+       .user-* 抢，而 color: inherit 是错的——那会继承父元素（通常是
+       没有段位类的 td），段位色就整个丢了。
+       所以这里对两类元素都直接写死颜色，并且一律 !important。 */
+    html[data-ojpp-theme="dark"] .user-black,
+    html[data-ojpp-theme="dark"] a.user-black { color: #9aa4b2 !important; }
+    html[data-ojpp-theme="dark"] .user-gray,
+    html[data-ojpp-theme="dark"] a.user-gray { color: #9aa4b2 !important; }
+    html[data-ojpp-theme="dark"] .user-green,
+    html[data-ojpp-theme="dark"] a.user-green { color: #57ab5a !important; }
+    html[data-ojpp-theme="dark"] .user-cyan,
+    html[data-ojpp-theme="dark"] a.user-cyan { color: #39c5bb !important; }
+    html[data-ojpp-theme="dark"] .user-blue,
+    html[data-ojpp-theme="dark"] a.user-blue { color: #539bf5 !important; }
+    html[data-ojpp-theme="dark"] .user-violet,
+    html[data-ojpp-theme="dark"] a.user-violet { color: #c297ff !important; }
+    html[data-ojpp-theme="dark"] .user-orange,
+    html[data-ojpp-theme="dark"] a.user-orange { color: #f0883e !important; }
+    html[data-ojpp-theme="dark"] .user-red,
+    html[data-ojpp-theme="dark"] a.user-red { color: #f85149 !important; }
+    html[data-ojpp-theme="dark"] .user-legendary,
+    html[data-ojpp-theme="dark"] a.user-legendary { color: #f85149 !important; }
+    /* admin/头衔类没有段位色，给个中性亮色 */
+    html[data-ojpp-theme="dark"] .user-admin,
+    html[data-ojpp-theme="dark"] a.user-admin { color: #cdd9e5 !important; }
     /* legendary 段位的首字母被站点强制成黑色（.user-legendary::first-letter），
-       深底上就变成“首字母看不见、其余红色”。改成白色首字母。 */
+       深底上就变成“首字母看不见、其余红色”。改成白色首字母。
+       注意 ::first-letter 只能对块级容器生效，站点在 span 上也做了处理。 */
     html[data-ojpp-theme="dark"] .user-legendary::first-letter,
-    html[data-ojpp-theme="dark"] .legendary-user-first-letter {
+    html[data-ojpp-theme="dark"] a.user-legendary::first-letter,
+    html[data-ojpp-theme="dark"] .legendary-user-first-letter,
+    html[data-ojpp-theme="dark"] .legendary-user-first-letter::first-letter {
       color: #ffffff !important;
     }
-    /* 链接形式的用户名：站点的 a 颜色会盖掉段位色，这里让段位色优先 */
-    html[data-ojpp-theme="dark"] a.rated-user {
-      color: inherit;
+    /* 段位色写在里面的 span 上时（站点有这种结构），别被外层规则盖掉 */
+    html[data-ojpp-theme="dark"] .rated-user span[class*="user-"] {
+      color: inherit !important;
     }
 
     /* ---------- 表格（提交记录、状态、排行榜等） ---------- */
@@ -498,7 +523,7 @@ export const codeforces: SiteAdapter = {
     /* 表格分页条 */
     html[data-ojpp-theme="dark"] .pagination,
     html[data-ojpp-theme="dark"] .pagination span,
-    html[data-ojpp-theme="dark"] .pagination a {
+    html[data-ojpp-theme="dark"] .pagination a:not(.rated-user):not([class*="user-"]) {
       background: transparent !important;
       color: #adbac7;
       border-color: #373e47;
@@ -609,8 +634,8 @@ export const codeforces: SiteAdapter = {
     html[data-ojpp-theme="dark"] .comment .content {
       color: #cdd9e5;
     }
-    html[data-ojpp-theme="dark"] .blog-entry .title a,
-    html[data-ojpp-theme="dark"] .comment a {
+    html[data-ojpp-theme="dark"] .blog-entry .title a:not(.rated-user):not([class*="user-"]),
+    html[data-ojpp-theme="dark"] .comment a:not(.rated-user):not([class*="user-"]) {
       color: #539bf5 !important;
     }
     /* changelog 里的日期与作者信息 */
@@ -664,22 +689,26 @@ export const codeforces: SiteAdapter = {
     }
 
     /* ---------- 首页列表 ---------- */
-    /* 公告与比赛的标题：站点用 #3b5998 深蓝（.topic .title 里的链接） */
-    html[data-ojpp-theme="dark"] .topic .title a,
+    /* 公告与比赛的标题：站点用 #3b5998 深蓝（.topic .title 里的链接）。
+       这些链接里混着 .rated-user 用户名（Top rated 那栏就是链接列表），
+       不能把段位色一起刷掉，所以一律 :not(.rated-user)。 */
+    html[data-ojpp-theme="dark"] .topic .title a:not(.rated-user):not([class*="user-"]),
     html[data-ojpp-theme="dark"] .topic .title,
-    html[data-ojpp-theme="dark"] .topic a,
+    html[data-ojpp-theme="dark"] .topic a:not(.rated-user):not([class*="user-"]),
     /* 标题文字实际落在 a 里的 <p> 上，颜色设在那里而不是 a 上 */
     html[data-ojpp-theme="dark"] .topic .title a p,
     html[data-ojpp-theme="dark"] .topic a p,
-    html[data-ojpp-theme="dark"] .contestList .contestName a,
-    html[data-ojpp-theme="dark"] .recent-actions a,
-    html[data-ojpp-theme="dark"] .roundbox .caption a {
+    html[data-ojpp-theme="dark"] .contestList .contestName a:not(.rated-user):not([class*="user-"]),
+    html[data-ojpp-theme="dark"] .recent-actions a:not(.rated-user):not([class*="user-"]),
+    html[data-ojpp-theme="dark"] .roundbox .caption a:not(.rated-user):not([class*="user-"]) {
       color: #79b8ff !important;
     }
-    /* 首页右栏的“Top rated”之类列表：用户名是黑色 */
-    html[data-ojpp-theme="dark"] .personal-sidebar a,
-    html[data-ojpp-theme="dark"] .sidebox a,
-    html[data-ojpp-theme="dark"] .roundbox a {
+    /* 首页右栏的“Top rated”之类列表：默认文字色即可。
+       必须排除 .rated-user，否则会把段位色一起刷掉——
+       “Top rated”里全是红名/橙名，正是最需要保留颜色的地方。 */
+    html[data-ojpp-theme="dark"] .personal-sidebar a:not(.rated-user),
+    html[data-ojpp-theme="dark"] .sidebox a:not(.rated-user),
+    html[data-ojpp-theme="dark"] .roundbox a:not(.rated-user) {
       color: #cdd9e5 !important;
     }
     /* 公告的 rating 变化：.topic-rating 是 #008000 深绿 */
@@ -698,7 +727,7 @@ export const codeforces: SiteAdapter = {
        所以直接按标签层级选，并排除页脚等区域 */
     html[data-ojpp-theme="dark"] #pageContent h3 a,
     html[data-ojpp-theme="dark"] #pageContent h3,
-    html[data-ojpp-theme="dark"] .blog-entry h3 a,
+    html[data-ojpp-theme="dark"] .blog-entry h3 a:not(.rated-user):not([class*="user-"]),
     html[data-ojpp-theme="dark"] .blog-entry .title {
       color: #79b8ff !important;
     }
@@ -734,6 +763,93 @@ export const codeforces: SiteAdapter = {
     html[data-ojpp-theme="dark"] .prettyprint .dec,
     html[data-ojpp-theme="dark"] .prettyprint .var { color: #dcbdfb !important; }
     html[data-ojpp-theme="dark"] .prettyprint .fun { color: #dcbdfb !important; }
+
+    /* ---------- 表单控件（筛选、提交等） ---------- */
+    /* SumoSelect 下拉框：站点给它设了白底，暗色下是个白块 */
+    html[data-ojpp-theme="dark"] .SumoSelect p.CaptionCont,
+    html[data-ojpp-theme="dark"] .SumoSelect .CaptionCont,
+    html[data-ojpp-theme="dark"] .SumoSelect select,
+    html[data-ojpp-theme="dark"] .SumoSelect .optWrapper {
+      background: #2d333b !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5 !important;
+    }
+    html[data-ojpp-theme="dark"] .SumoSelect .optWrapper ul li {
+      background: #2d333b !important;
+      color: #cdd9e5 !important;
+    }
+    html[data-ojpp-theme="dark"] .SumoSelect .optWrapper ul li:hover {
+      background: #373e47 !important;
+    }
+    /* 筛选标签（“Gym”那类的蓝色） */
+    html[data-ojpp-theme="dark"] .setting-name label,
+    html[data-ojpp-theme="dark"] .setting-name,
+    html[data-ojpp-theme="dark"] .settings-form label {
+      color: #cdd9e5 !important;
+    }
+    /* 站点把部分 label 设成 #3b5998 深蓝，暗色下看不见 */
+    html[data-ojpp-theme="dark"] label {
+      color: #cdd9e5;
+    }
+
+    /* ---------- 个人资料与图表 ---------- */
+    /* 评分曲线图例的白底 */
+    html[data-ojpp-theme="dark"] .legend,
+    html[data-ojpp-theme="dark"] .legend div {
+      background: transparent !important;
+      color: #cdd9e5;
+    }
+    /* 评分曲线图本体是 canvas，不动它 */
+
+    /* ---------- 题号行的通过/未通过色 ---------- */
+    /* 站点给“已通过”的题号行设了浅绿底（#d4edc9），
+       给“尝试过但没过”的设了浅红/浅黄底。暗色下这些
+       还是浅色，会跟深底格格不入。换成深色但保留色相 */
+    html[data-ojpp-theme="dark"] .accepted-problem td,
+    html[data-ojpp-theme="dark"] td.accepted-problem,
+    html[data-ojpp-theme="dark"] tr.accepted-problem td {
+      background: #1d2b1d !important;
+      color: #cdd9e5 !important;
+    }
+    html[data-ojpp-theme="dark"] .rejected-problem td,
+    html[data-ojpp-theme="dark"] td.rejected-problem,
+    html[data-ojpp-theme="dark"] tr.rejected-problem td {
+      background: #2d1d1d !important;
+      color: #cdd9e5 !important;
+    }
+    /* 未通过的题号行（浅红/浅黄） */
+    html[data-ojpp-theme="dark"] .unaccepted-problem td,
+    html[data-ojpp-theme="dark"] td.unaccepted-problem,
+    html[data-ojpp-theme="dark"] tr.unaccepted-problem td {
+      background: #2d2518 !important;
+      color: #cdd9e5 !important;
+    }
+    /* 题号格左边的通过/未通过指示条（站点用亮绿/亮红小方块） */
+    html[data-ojpp-theme="dark"] td.act.dark,
+    html[data-ojpp-theme="dark"] .act.accepted-problem,
+    html[data-ojpp-theme="dark"] .act.rejected-problem,
+    html[data-ojpp-theme="dark"] .act.unaccepted-problem {
+      background: inherit !important;
+      color: inherit;
+    }
+
+    /* ---------- 排行榜标记 ---------- */
+    /* 站点用 #ff0000 纯红和 #008000 纯绿标“失败/成功”，
+       深底上要么刺眼要么太暗。换成亮版本，语义不变 */
+    html[data-ojpp-theme="dark"] .cell-failed-system-test,
+    html[data-ojpp-theme="dark"] .cell-challenged {
+      color: #f85149 !important;
+    }
+    html[data-ojpp-theme="dark"] .successfulChallengeCount,
+    html[data-ojpp-theme="dark"] .successful-submission,
+    html[data-ojpp-theme="dark"] .successful-test {
+      color: #57ab5a !important;
+    }
+    /* 提交通过/失败的底色 */
+    html[data-ojpp-theme="dark"] .verdict-accepted,
+    html[data-ojpp-theme="dark"] .verdict-rejected {
+      color: #cdd9e5;
+    }
 
     /* ---------- 提示条与代码编辑器 ---------- */
     html[data-ojpp-theme="dark"] div.alert-info,
@@ -781,9 +897,11 @@ export const codeforces: SiteAdapter = {
 
     /* ---------- 侧边栏里的链接 ---------- */
     /* 站点给侧边栏链接设了黑色（a.not-decorated 等），
-       有些还写成内联 style="color: black"，所以要用 !important */
-    html[data-ojpp-theme="dark"] .roundbox a,
-    html[data-ojpp-theme="dark"] .sidebox a,
+       有些还写成内联 style="color: black"，所以要用 !important。
+       但必须排除 .rated-user：“Top rated”这类列表里全是
+       红名/橙名，笼统的 a 规则会把段位色一起刷掉。 */
+    html[data-ojpp-theme="dark"] .roundbox a:not(.rated-user):not([class*="user-"]),
+    html[data-ojpp-theme="dark"] .sidebox a:not(.rated-user):not([class*="user-"]),
     html[data-ojpp-theme="dark"] .roundbox li,
     html[data-ojpp-theme="dark"] .sidebox li {
       color: #cdd9e5 !important;

@@ -636,6 +636,11 @@ try {
         // 用 span 而不是链接：链接会被通用的 a 规则兜住，
         // span 才真正依赖 .user-* 规则。
         userBlack: color('.user-black'),
+        // sidebox 里的段位名是最脆弱的地方：
+        // .sidebox a 这条通用链接规则会把 .rated-user.user-* 刷成灰。
+        sideboxRed: color('.sidebox .user-red'),
+        sideboxOrange: color('.sidebox .user-orange'),
+        sideboxCyan: color('.sidebox .user-cyan'),
         userRed: color('.rated-user.user-red'),
         legendaryFirst: color('.legendary-user-first-letter'),
         // 表格不能是白底
@@ -666,6 +671,19 @@ try {
   })) {
     assert.ok(lumOf(value) > 0.4, `${name} 在暗色下应可读，实际 ${value}`);
   }
+  // 段位名颜色不能是灰或蓝——否则段位色就被链接规则吞掉了。
+  // 这是覆盖过的 bug：.sidebox a 等通用链接规则把 .rated-user.user-*
+  // 刷成了 #cdd9e5，红名/橙名全变灰。
+  const rgb = (c) => /rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(c)?.slice(1).map(Number);
+  const isGray = (c) => {
+    const v = rgb(c); return v && Math.max(...v) - Math.min(...v) < 40;
+  };
+  assert.equal(extras.userRed, 'rgb(248, 81, 73)', `user-red 应是段位红，实际 ${extras.userRed}`);
+  assert.equal(extras.sideboxRed, 'rgb(248, 81, 73)', `sidebox 里的 user-red 应是红，实际 ${extras.sideboxRed}`);
+  assert.equal(extras.sideboxOrange, 'rgb(240, 136, 62)', `sidebox 里的 user-orange 应是橙，实际 ${extras.sideboxOrange}`);
+  assert.equal(extras.sideboxCyan, 'rgb(57, 197, 187)', `sidebox 里的 user-cyan 应是青，实际 ${extras.sideboxCyan}`);
+  assert.ok(!isGray(extras.userRed), 'user-red 不能是灰色');
+  assert.ok(!isGray(extras.userBlack) || extras.userBlack === 'rgb(154, 164, 178)', 'user-black 应是灰，实际 ' + extras.userBlack);
   for (const [name, value] of Object.entries({
     '表格行': extras.tableBg,
     'select': extras.selectBg,
