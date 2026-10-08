@@ -34438,6 +34438,13 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
       border-color: #373e47;
     }
 
+    /* ---------- 折叠博客底部的渐隐 ---------- */
+    /* /top 折叠的博文在底部用 ::before 铺一条 rgba(255,255,255,0)→#fff
+       的渐隐遮罩，暗色下是一条浅蓝白带。改成渐隐到页面底色 */
+    html[data-ojpp-theme="dark"] .collapsible-topic.collapsed .content .collapsible-topic-options::before {
+      background-image: linear-gradient(rgba(28, 33, 40, 0), #1c2128) !important;
+    }
+
     /* ---------- 公式 ---------- */
     html[data-ojpp-theme="dark"] .MathJax,
     html[data-ojpp-theme="dark"] .MathJax_Preview,
@@ -35184,6 +35191,31 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
       white-space: nowrap;
       pointer-events: none;
     }
+    /* hover 预览：站点给 a.vote-item:hover 铺 rating.gif 下半截
+       （白底金星精灵，GIF 无 alpha），暗色下是一条白块。去精灵，
+       同样用 ::before 画金星，锚点 width 裁掉多余的星 */
+    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li a.vote-item,
+    html[data-ojpp-theme="dark"] ul.vote-list li a.vote-item,
+    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li a.vote-item:hover,
+    html[data-ojpp-theme="dark"] ul.vote-list li a.vote-item:hover {
+      background-image: none !important;
+      overflow: hidden;
+    }
+    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li a.vote-item:hover::before,
+    html[data-ojpp-theme="dark"] ul.vote-list li a.vote-item:hover::before {
+      content: "★★★★★";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: 3px;
+      color: #f0883e;
+      white-space: nowrap;
+      text-indent: 0;
+      pointer-events: none;
+    }
 
     /* ---------- 题目副标签（standard input/output、时限） ---------- */
     /* 站点给这些 .notice 设了浅灰底做“信息条”，暗色下是一块
@@ -35318,6 +35350,28 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
     /* .file 的标题行（Input / Participant's output / Jury's answer） */
     html[data-ojpp-theme="dark"] .file .name {
       color: #909dab !important;
+    }
+
+    /* ---------- facebox 弹窗（view source / hack 等所有弹层） ---------- */
+    /* #facebox .content 站点给的是 #fff，a.close 也是白底，暗色下
+       整个弹窗是一块大白板。内部 .source-popup / pre 都是透明的，
+       把容器压成页面底色即可 */
+    html[data-ojpp-theme="dark"] #facebox .content,
+    html[data-ojpp-theme="dark"] #facebox .popup .content {
+      background-color: #1d2127 !important;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] #facebox a.close {
+      background-color: #1d2127 !important;
+    }
+    html[data-ojpp-theme="dark"] #facebox .source-popup pre,
+    html[data-ojpp-theme="dark"] #facebox pre {
+      background-color: #22272e;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] #facebox hr {
+      border-color: #373e47;
+      background-color: #373e47;
     }
     /* 高亮块：站点用 --highlighted-* 浅彩底，暗色下深底 */
     html[data-ojpp-theme="dark"] [style*="background-color: rgb(221, 238, 255)"],
