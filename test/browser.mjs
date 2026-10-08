@@ -37,7 +37,7 @@ const browser = await chromium.launch(executablePath ? { executablePath } : {});
 const settings = {
   version: 1, activeProviderId: 'p1',
   providers: [{ id: 'p1', name: '演示接口', protocol: 'openai-chat', baseUrl: 'https://api.fixture.test/v1', apiKey: 'demo-key', model: 'gpt-6-luna', headers: {}, body: {}, reasoning: { enabled: null, effort: '' } }],
-  targetLang: '简体中文', extraPrompt: '', translateWholeBlock: true, autoTranslate: false, timeoutMs: 30000, retries: 0,
+  targetLang: '简体中文', extraPrompt: '', translateWholeBlock: true, autoTranslate: {}, timeoutMs: 30000, retries: 0,
 };
 const response = { choices: [{ message: { content: '给定两个整数，求它们的和 $a+b$。\n\n在一行中输出结果。' } }] };
 

@@ -73,7 +73,7 @@ export const zh = {
   'settings.wholeBlock': '整段翻译',
   'settings.wholeBlockHint': '开启后把整块内容一次性发给模型，上下文更完整；关闭则按标题和段落切块，适合超长题面或上下文窗口较小的模型。',
   'settings.autoTranslate': '自动翻译题面',
-  'settings.autoTranslateHint': '打开题目页后自动翻译题目描述区域。',
+  'settings.autoTranslateHint': '按站点分别开关；打开题目页后自动翻译题目描述区域。',
   'settings.streaming': '流式显示',
   'settings.streamingHint': '边生成边渲染，首屏更快。关闭后等整段译完再一次性显示；服务商或脚本管理器不支持时会自动回退。',
   'settings.theme': '站点配色',

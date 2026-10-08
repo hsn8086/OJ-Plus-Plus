@@ -36,8 +36,8 @@ export interface Settings {
   extraPrompt: string;
   /** 关闭时按段落切分后逐段翻译，适合超长题面 */
   translateWholeBlock: boolean;
-  /** 页面加载后自动翻译题面 */
-  autoTranslate: boolean;
+  /** 各站点是否自动翻译题面；key 为站点 id，'*' 是旧版全局开关迁移来的 */
+  autoTranslate: Record<string, boolean>;
   /** 请求超时（毫秒） */
   timeoutMs: number;
   /** 失败重试次数 */

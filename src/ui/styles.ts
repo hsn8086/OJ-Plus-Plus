@@ -77,11 +77,6 @@ export const CSS = `
   margin: 2px 0 6px;
 }
 
-.ojpp-toolbar-block .ojpp-icon-btn {
-  width: 28px;
-  height: 28px;
-}
-
 .ojpp-icon-btn {
   display: inline-flex;
   align-items: center;
@@ -553,6 +548,19 @@ export const CSS = `
   font-size: 12px;
   line-height: 1.4;
   margin: 0;
+}
+
+/* 同一项设置下的多个复选框（如按站点开关自动翻译） */
+.ojpp-check-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+}
+.ojpp-check-group .ojpp-check {
+  flex: 0 0 auto;
+}
+.ojpp-check-group .ojpp-check label {
+  flex: none;
 }
 
 /* 提供商摘要 */

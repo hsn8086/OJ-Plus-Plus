@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { chunkMarkdown } from '../src/core/prompt.ts';
-import { migrate, createProvider, PROVIDER_PRESETS } from '../src/core/config.ts';
+import { migrate, createProvider, PROVIDER_PRESETS, isAutoTranslateEnabled } from '../src/core/config.ts';
 import { getAdapter } from '../src/core/providers.ts';
 import type { Protocol } from '../src/core/types.ts';
 
@@ -48,6 +48,23 @@ test('配置迁移保留用户数据、修复失效选择并迁移旧参数', ()
   assert.equal(settings.providers[0].name, '我的接口');
   assert.deepEqual(settings.providers[0].body, { temperature: 0.3, top_p: 0.9 });
   assert.deepEqual(settings.providers[0].reasoning, { enabled: null, effort: '' });
+});
+
+test('autoTranslate 迁移：旧全局布尔转站点映射，'*' 为全开', () => {
+  // 旧配置：全局 true → 各站点都视作开
+  const on = migrate({ autoTranslate: true });
+  assert.deepEqual(on.autoTranslate, { '*': true });
+  assert.equal(isAutoTranslateEnabled(on, 'codeforces'), true);
+  assert.equal(isAutoTranslateEnabled(on, 'nowcoder'), true);
+  // 旧配置：全局 false / 缺省 → 全关
+  assert.deepEqual(migrate({ autoTranslate: false }).autoTranslate, {});
+  assert.equal(isAutoTranslateEnabled(migrate({}), 'codeforces'), false);
+  // 新配置：按站点覆盖 '*'，单站规则优先
+  const perSite = migrate({ autoTranslate: { '*': true, codeforces: false, nowcoder: true } });
+  assert.equal(isAutoTranslateEnabled(perSite, 'codeforces'), false);
+  assert.equal(isAutoTranslateEnabled(perSite, 'nowcoder'), true);
+  // 非布尔值过滤
+  assert.deepEqual(migrate({ autoTranslate: { codeforces: 'yes' } }).autoTranslate, {});
 });
 
 test('长题面分段保持文本顺序与内容', () => {

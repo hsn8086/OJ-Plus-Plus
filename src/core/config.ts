@@ -93,7 +93,7 @@ export function defaultSettings(): Settings {
     targetLang: DEFAULT_TARGET_LANG,
     extraPrompt: '',
     translateWholeBlock: true,
-    autoTranslate: false,
+    autoTranslate: {},
     timeoutMs: 120_000,
     retries: 1,
     streaming: true,
@@ -129,6 +129,7 @@ export function migrate(raw: unknown): Settings {
   const settings: Settings = {
     ...base,
     ...input,
+    autoTranslate: normalizeAutoTranslate(input.autoTranslate),
     providers,
     version: base.version,
   };
@@ -136,4 +137,20 @@ export function migrate(raw: unknown): Settings {
     settings.activeProviderId = settings.providers[0]?.id ?? null;
   }
   return settings;
+}
+
+/** 旧版 autoTranslate 是全局 boolean：true 表示所有站点都开。迁移成站点 id 映射，'*' 表示「全站」。 */
+function normalizeAutoTranslate(raw: unknown): Record<string, boolean> {
+  if (typeof raw === 'boolean') return raw ? { '*': true } : {};
+  if (!raw || typeof raw !== 'object') return {};
+  const out: Record<string, boolean> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (typeof value === 'boolean') out[key] = value;
+  }
+  return out;
+}
+
+/** 某站点是否开启自动翻译；siteId 规则优先于 '*'。 */
+export function isAutoTranslateEnabled(settings: Settings, siteId: string): boolean {
+  return settings.autoTranslate[siteId] ?? settings.autoTranslate['*'] ?? false;
 }

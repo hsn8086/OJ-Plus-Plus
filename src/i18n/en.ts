@@ -64,7 +64,7 @@ export const en: Record<MessageKey, string> = {
   'settings.wholeBlock': 'Whole block',
   'settings.wholeBlockHint': 'Send the whole block to the model in one request for fuller context. When off, content is split by headings and paragraphs, which suits very long problem statements or models with smaller context windows.',
   'settings.autoTranslate': 'Auto-translate problem statement',
-  'settings.autoTranslateHint': 'Automatically translate the problem statement area when a problem page opens.',
+  'settings.autoTranslateHint': 'Per-site toggle; automatically translate the problem statement area when a problem page opens.',
   'settings.streaming': 'Streaming',
   'settings.streamingHint': 'Render as it generates for a faster first paint. When off, the full translation appears at once. Falls back automatically if the Provider or script manager doesn\'t support it.',
   'settings.theme': 'Site theme',

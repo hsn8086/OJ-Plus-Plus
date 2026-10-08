@@ -9,6 +9,8 @@ import {
   newId,
 } from '../core/config.ts';
 import type { Locale, Protocol, ProviderConfig, Settings, Theme } from '../core/types.ts';
+import { isAutoTranslateEnabled } from '../core/config.ts';
+import { sites } from '../sites/index.ts';
 import type { HttpTransport } from '../platforms/types.ts';
 import { applyStagger } from './animations.ts';
 
@@ -169,7 +171,17 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
     const sec2 = section(t('settings.behavior'));
     sec2.body.append(
       check(t('settings.wholeBlock'), draft.translateWholeBlock, (v) => draft.translateWholeBlock = v),
-      check(t('settings.autoTranslate'), draft.autoTranslate, (v) => draft.autoTranslate = v),
+      field(t('settings.autoTranslate'), (() => {
+        const group = el('div', 'ojpp-check-group');
+        for (const site of sites) {
+          group.append(
+            check(site.name, isAutoTranslateEnabled(draft, site.id), (v) => {
+              draft.autoTranslate[site.id] = v;
+            })
+          );
+        }
+        return group;
+      })()),
       check(t('settings.streaming'), draft.streaming, (v) => draft.streaming = v),
     );
 

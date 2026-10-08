@@ -1,5 +1,5 @@
 import { APP_NAME } from './brand.ts';
-import { defaultSettings } from './core/config.ts';
+import { defaultSettings, isAutoTranslateEnabled } from './core/config.ts';
 import { loadSettings, saveSettings } from './core/settings-store.ts';
 import { getLocale, resolveLocale, setLocale, t } from './i18n/index.ts';
 import type { Platform } from './platforms/types.ts';
@@ -91,7 +91,11 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
         prepareContent: (root) => site.prepareContent(root),
       });
       mounted.set(section.content, handle);
-      if (settings.autoTranslate && section.kind === 'statement') void handle.translate();
+      // 站点开关开着就把收集到的每个区都自动翻——不只是题面正文，
+      // 输入、输出、说明一并翻；样例不在收集之列（会破坏复制）
+      if (isAutoTranslateEnabled(settings, site.id)) {
+        void handle.translate();
+      }
     }
   };
   reconcile();

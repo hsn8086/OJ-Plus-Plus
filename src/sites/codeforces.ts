@@ -369,11 +369,11 @@ export const codeforces: SiteAdapter = {
     html[data-ojpp-theme="dark"] #footer a:hover {
       color: #adbac7 !important;
     }
-    /* 标签块 */
+    /* 标签块：chip 底色贴平所在容器，只留描边 */
     html[data-ojpp-theme="dark"] .tag-box,
     html[data-ojpp-theme="dark"] .tag-box a,
     html[data-ojpp-theme="dark"] .roundbox .tag-box {
-      background: #2d333b;
+      background: transparent;
       border-color: #444c56;
       color: #cdd9e5;
     }
