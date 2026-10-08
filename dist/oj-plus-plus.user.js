@@ -34515,9 +34515,30 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
     html[data-ojpp-theme="dark"] .roundbox table.rtable th {
       border-color: #373e47;
     }
-    /* 提交结果的颜色：原色在深色底上对比不足 */
-    html[data-ojpp-theme="dark"] .verdict-accepted { color: #57ab5a; }
-    html[data-ojpp-theme="dark"] .verdict-rejected { color: #f47067; }
+    /* 提交结果的颜色：按站点真实语义映射到暗色可读版——
+       CF 亮态是 accepted=#00aa00 绿、rejected(WA/TLE/RE)=#0000aa 深蓝、
+       failed/hacked=红、waiting=灰。暗色里换成对应的可读色 */
+    html[data-ojpp-theme="dark"] .verdict-accepted,
+    html[data-ojpp-theme="dark"] .verdict-accepted-challenged,
+    html[data-ojpp-theme="dark"] .verdict-successful-challenge {
+      color: #57ab5a !important;
+    }
+    /* rejected 在 CF 是深蓝色（WA/TLE/RE），暗色下提亮成可读蓝 */
+    html[data-ojpp-theme="dark"] .verdict-rejected,
+    html[data-ojpp-theme="dark"] .verdict-unsuccessful-challenge,
+    html[data-ojpp-theme="dark"] .verdict-format-judged {
+      color: #8ab4ff !important;
+    }
+    html[data-ojpp-theme="dark"] .verdict-failed,
+    html[data-ojpp-theme="dark"] .verdict-challenged,
+    html[data-ojpp-theme="dark"] .verdict-wrong-answer {
+      color: #f85149 !important;
+    }
+    html[data-ojpp-theme="dark"] .verdict-waiting,
+    html[data-ojpp-theme="dark"] .verdict-in-queue,
+    html[data-ojpp-theme="dark"] .verdict-judging {
+      color: #909dab !important;
+    }
     /* 比赛状态（Finished / Running 等）：站点用 #3b5998 深蓝，深底上看不清 */
     html[data-ojpp-theme="dark"] .contest-state-phase {
       color: #79b8ff !important;
@@ -35151,16 +35172,33 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
       color: #909dab !important;
     }
 
-    /* ---------- 倒计时/截止标签（.irt “Until closing X days”） ---------- */
-    /* 站点把它做成一个小药丸：边框+文字是同一种颜色。
-       之前只改了文字色，边框还留着站点原色，所以看着不对。
-       现在连边框一起按“截止”语义上色，和站点语义一致 */
-    html[data-ojpp-theme="dark"] .irt,
-    html[data-ojpp-theme="dark"] .irt *,
-    html[data-ojpp-theme="dark"] .irt a {
-      background: transparent !important;
-      border-color: #f0883e !important;
+    /* ---------- 倒计时/截止标签 ---------- */
+    /* “Until closing X days” 里的时间是 span.countdown，站点给 #777 深灰。
+       按“截止”语义上色成琥珀色。注意别用 .irt——那其实是 datatable
+       的圆角精灵图 class，之前误认作倒计时元素 */
+    html[data-ojpp-theme="dark"] .countdown,
+    html[data-ojpp-theme="dark"] .countdown * {
       color: #f0883e !important;
+      border-color: #f0883e !important;
+    }
+
+    /* ---------- datatable/roundbox 的角精灵图 ---------- */
+    /* CF 的圆角是靠 ilt/irt/ilb/irb 几个小 PNG 角落图拼出来的。
+       暗色下这些白色角落图会变成白块。全部去掉，容器自己给
+       border-radius 保持圆角 */
+    html[data-ojpp-theme="dark"] .ilt,
+    html[data-ojpp-theme="dark"] .irt,
+    html[data-ojpp-theme="dark"] .ilb,
+    html[data-ojpp-theme="dark"] .irb,
+    html[data-ojpp-theme="dark"] .lt,
+    html[data-ojpp-theme="dark"] .rt,
+    html[data-ojpp-theme="dark"] .lb,
+    html[data-ojpp-theme="dark"] .rb {
+      background-image: none !important;
+    }
+    html[data-ojpp-theme="dark"] .datatable,
+    html[data-ojpp-theme="dark"] .borderTopRound {
+      border-radius: 4px;
     }
 
     /* ---------- 个人资料与图表 ---------- */
@@ -35215,11 +35253,6 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
     html[data-ojpp-theme="dark"] .successful-submission,
     html[data-ojpp-theme="dark"] .successful-test {
       color: #57ab5a !important;
-    }
-    /* 提交通过/失败的底色 */
-    html[data-ojpp-theme="dark"] .verdict-accepted,
-    html[data-ojpp-theme="dark"] .verdict-rejected {
-      color: #cdd9e5;
     }
 
     /* ---------- 目录页（Catalog） ---------- */
