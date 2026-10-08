@@ -9,7 +9,7 @@ import { ICON_SETTINGS } from './ui/icons.ts';
 import { mountSection } from './ui/section.ts';
 import { openSettingsPanel } from './ui/settings-panel.ts';
 import { CSS, DARK_CSS } from './ui/styles.ts';
-import { applyTheme, watchSystemTheme } from './ui/theme.ts';
+import { applyTheme, watchInlineColors, watchSystemTheme } from './ui/theme.ts';
 import { toast } from './ui/toast.ts';
 
 /** 组合根：通用功能只接收站点与平台契约，不选择具体适配器。 */
@@ -26,6 +26,8 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
   style.textContent = CSS + (site.styles ?? '') + DARK_CSS + (site.darkStyles ?? '');
   document.head.append(style);
   const stopThemeWatch = watchSystemTheme(() => applyTheme(settings.theme));
+  // 站点有些元素把颜色写在内联样式里（还带 !important），只能靠 JS 清掉
+  const stopInlineWatch = watchInlineColors();
   let closeSettings: (() => void) | undefined;
   const settingsButton = iconButton(ICON_SETTINGS, t('app.settingsTitle', { name: APP_NAME }), 'ojpp-settings-btn');
   settingsButton.addEventListener('click', () => {
@@ -66,14 +68,14 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
   };
   const reconcile = () => {
     const sections = site.collectSections(document);
+    // 设置入口与题面区域是两回事：首页、状态页、日历页没有题面，
+    // 但仍然要能打开设置，所以这里不再因为 sections 为空就摘掉按钮。
+    if (!settingsButton.isConnected) site.mountSettingsButton(settingsButton, document);
     if (sections.length === 0) {
-      closeSettings?.();
-      settingsButton.remove();
       for (const handle of mounted.values()) handle.dispose();
       mounted.clear();
       return;
     }
-    if (!settingsButton.isConnected) site.mountSettingsButton(settingsButton, document);
     const active = new Set(sections.map((section) => section.content));
     for (const [content, handle] of mounted) {
       if (!active.has(content) || !handle.toolbar.isConnected) {
@@ -97,6 +99,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
   return () => {
     stopObserving();
     stopThemeWatch();
+    stopInlineWatch();
     closeSettings?.();
     for (const handle of mounted.values()) handle.dispose();
     mounted.clear();

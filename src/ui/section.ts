@@ -53,11 +53,19 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
     setIcon(translate, icon, title);
   };
   const run = async () => {
+    // 只有“正在翻译”时点击才是中止。
+    // 翻译完成后的 3 秒里按钮仍是 done 状态（还没被 feedbackTimer 切回 idle），
+    // 这段时间点它应该开始新一轮翻译，而不是当成中止把状态打乱。
     if (controller) {
       controller.abort();
       return;
     }
     clearTimeout(feedbackTimer);
+    // 上一轮结束后 controller 会被清空，但按钮可能还停在 done，
+    // 这里显式复位，避免用户看到“点了没反应”。
+    if (translate.dataset.state === 'done') {
+      state('idle', ICON_TRANSLATE, t('toolbar.retranslate'));
+    }
     const text = readMarkdown();
     if (!text.trim()) {
       state('error', ICON_CROSS, t('toolbar.noContent'));

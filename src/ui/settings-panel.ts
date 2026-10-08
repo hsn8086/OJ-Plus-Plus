@@ -7,19 +7,26 @@ import {
   PROVIDER_PRESETS,
   createProvider,
   newId,
-  migrate,
 } from '../core/config.ts';
-import type { ProviderPreset } from '../core/config.ts';
 import type { Locale, Protocol, ProviderConfig, Settings, Theme } from '../core/types.ts';
 import type { HttpTransport } from '../platforms/types.ts';
+import { applyStagger } from './animations.ts';
 
 export interface SettingsPanelOptions {
   settings: Settings;
-  /** next 为 null 表示恢复默认 */
   onChange(next: Settings | null): Promise<void>;
   request: HttpTransport;
   onClose(): void;
 }
+
+// SVG 图标
+const iconChevronLeft = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>';
+const iconPlus = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14m-7-7h14"/></svg>';
+const iconPencil = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
+const iconX = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+const iconCheck = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+
+type View = 'main' | 'providers' | 'edit' | 'picker';
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -32,471 +39,384 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-function field(label: string, control: HTMLElement, hint?: string): HTMLElement {
-  const wrap = el('div', 'ojpp-field');
-  const labelNode = el('label', undefined, label);
-  if (/^(INPUT|SELECT|TEXTAREA)$/.test(control.tagName)) {
-    control.id ||= `ojpp-field-${newId()}`;
-    labelNode.htmlFor = control.id;
-  }
-  wrap.append(labelNode, control);
-  if (hint) wrap.append(el('div', 'ojpp-hint', hint));
-  return wrap;
-}
-
-function textInput(
-  value: string,
-  placeholder = '',
-  type: 'text' | 'password' | 'number' = 'text',
-): HTMLInputElement {
-  const input = el('input') as HTMLInputElement;
-  input.type = type;
-  input.value = value;
-  input.placeholder = placeholder;
-  return input;
-}
-
 export function openSettingsPanel(options: SettingsPanelOptions): () => void {
   const draft: Settings = structuredClone(options.settings);
-  let selectedId: string | null =
-    draft.activeProviderId ?? draft.providers[0]?.id ?? null;
 
   const mask = el('div', 'ojpp-mask');
   const panel = el('div', 'ojpp-panel');
-
-  const head = el('div', 'ojpp-panel-head');
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-modal', 'true');
-  const titleNode = el('h3', undefined, t('app.settingsTitle', { name: APP_NAME }));
-  head.append(titleNode);
-  const closeBtn = el('button', 'ojpp-btn ojpp-btn-ghost', t('common.close'));
-  head.append(closeBtn);
+
+  const head = el('div', 'ojpp-panel-head');
+  const backBtn = el('button', 'ojpp-back-btn');
+  backBtn.innerHTML = iconChevronLeft;
+  backBtn.style.display = 'none';
+  const titleNode = el('h3');
+  const closeBtn = el('button', 'ojpp-panel-close');
+  closeBtn.innerHTML = iconX;
+  closeBtn.setAttribute('aria-label', t('common.close'));
+  head.append(backBtn, titleNode, closeBtn);
 
   const body = el('div', 'ojpp-panel-body');
-  const tabs = el('div', 'ojpp-tabs');
-  const tabGeneral = el('button', 'ojpp-tab', t('settings.tab.general'));
-  const tabProvider = el('button', 'ojpp-tab', t('settings.tab.provider'));
-  const tabAdvanced = el('button', 'ojpp-tab', t('settings.tab.advanced'));
-  tabs.append(tabGeneral, tabProvider, tabAdvanced);
-
-  const content = el('div');
-  body.append(tabs, content);
 
   const foot = el('div', 'ojpp-panel-foot');
   const resetBtn = el('button', 'ojpp-btn ojpp-btn-danger', t('settings.reset'));
-  const cancelBtn = el('button', 'ojpp-btn', t('common.cancel'));
   const saveBtn = el('button', 'ojpp-btn ojpp-btn-primary', t('common.save'));
   const saveStatus = el('span', 'ojpp-status');
   saveStatus.setAttribute('role', 'status');
-  foot.append(saveStatus, resetBtn, cancelBtn, saveBtn);
+  foot.append(resetBtn, saveStatus, saveBtn);
 
   panel.append(head, body, foot);
   mask.append(panel);
 
-  let activeTab: 'general' | 'provider' | 'advanced' = 'general';
+  // 保存草稿
+  const save = () => {
+    // 自动保存到 draft，不需要手动调用
+  };
 
+  // 视图切换
   /**
-   * 切换界面语言后，面板自身的标题、标签页和按钮也要重新取词。
-   * 只重绘 content 会留下中文的标题与按钮，看起来像只翻了一半。
+   * 切换界面语言后，面板自身的固定文案（标题、底部按钮）也要重新取词。
+   * 只重绘 body 会留下中文的标题与按钮，看起来像只翻了一半。
    */
   const retitle = () => {
-    const title = t('app.settingsTitle', { name: APP_NAME });
-    panel.setAttribute('aria-label', title);
-    titleNode.textContent = title;
-    closeBtn.textContent = t('common.close');
-    tabGeneral.textContent = t('settings.tab.general');
-    tabProvider.textContent = t('settings.tab.provider');
-    tabAdvanced.textContent = t('settings.tab.advanced');
+    closeBtn.setAttribute('aria-label', t('common.close'));
     resetBtn.textContent = t('settings.reset');
-    cancelBtn.textContent = t('common.cancel');
     saveBtn.textContent = t('common.save');
+    // 标题跟着当前视图走，这里只处理固定文案；
+    // switchView 会在自己那条分支里再设一次标题。
   };
 
-  const render = () => {
+  const switchView = (view: View, data?: string) => {
     retitle();
-    tabGeneral.dataset.active = activeTab === 'general' ? '1' : '0';
-    tabProvider.dataset.active = activeTab === 'provider' ? '1' : '0';
-    tabAdvanced.dataset.active = activeTab === 'advanced' ? '1' : '0';
-    content.replaceChildren();
-    if (activeTab === 'general') content.append(renderGeneral());
-    else if (activeTab === 'provider') content.append(renderProviders());
-    else content.append(renderAdvanced());
+    if (view === 'main') {
+      titleNode.textContent = APP_NAME;
+      backBtn.style.display = 'none';
+      body.replaceChildren(renderMain());
+    } else if (view === 'providers') {
+      titleNode.textContent = t('settings.providers');
+      backBtn.style.display = 'flex';
+      backBtn.onclick = () => switchView('main');
+      body.replaceChildren(renderProviders());
+    } else if (view === 'edit' && data) {
+      const provider = draft.providers.find((p) => p.id === data);
+      if (provider) {
+        titleNode.textContent = provider.name || t('common.unnamed');
+        backBtn.style.display = 'flex';
+        backBtn.onclick = () => switchView('providers');
+        body.replaceChildren(renderEdit(provider));
+      }
+    } else if (view === 'picker') {
+      titleNode.textContent = t('settings.addProvider');
+      backBtn.style.display = 'flex';
+      backBtn.onclick = () => switchView('providers');
+      body.replaceChildren(renderPicker());
+    }
   };
 
-  function renderGeneral(): HTMLElement {
-    const box = el('div');
+  // 主视图
+  function renderMain(): HTMLElement {
+    const container = el('div');
 
-    // 界面语言：切换后立即重绘，方便马上看到效果
-    const localeSelect = el('select') as HTMLSelectElement;
-    [
-      { value: 'auto', label: t('settings.localeAuto') },
-      { value: 'zh', label: t('settings.localeZh') },
-      { value: 'en', label: t('settings.localeEn') },
-    ].forEach(({ value, label }) => {
-      const option = el('option') as HTMLOptionElement;
-      option.value = value;
-      option.textContent = label;
-      option.selected = draft.locale === value;
-      localeSelect.append(option);
-    });
-    localeSelect.addEventListener('change', () => {
+    // 通用设置
+    const sec1 = section(t('settings.general'));
+
+    // 语言和主题（网格）
+    const row1 = el('div', 'ojpp-row');
+    const localeSelect = select([
+      ['auto', t('settings.localeAuto')],
+      ['zh', '中文'],
+      ['en', 'English'],
+    ], draft.locale);
+    localeSelect.onchange = () => {
       draft.locale = localeSelect.value as Locale;
       setLocale(resolveLocale(draft.locale));
-      render();
-    });
-    box.append(
-      field(t('settings.uiLanguage'), localeSelect, t('settings.uiLanguageHint')),
-    );
+      switchView('main');
+    };
 
-    // 主题：站点没有提供暗色样式时禁用，避免选了没效果
-    const themeSelect = el('select') as HTMLSelectElement;
-    [
-      { value: 'auto', label: t('settings.themeAuto') },
-      { value: 'light', label: t('settings.themeLight') },
-      { value: 'dark', label: t('settings.themeDark') },
-    ].forEach(({ value, label }) => {
-      const option = el('option') as HTMLOptionElement;
-      option.value = value;
-      option.textContent = label;
-      option.selected = draft.theme === value;
-      themeSelect.append(option);
-    });
-    themeSelect.addEventListener('change', () => {
+    const themeSelect = select([
+      ['auto', t('settings.themeAuto')],
+      ['light', t('settings.themeLight')],
+      ['dark', t('settings.themeDark')],
+    ], draft.theme);
+    themeSelect.onchange = () => {
       draft.theme = themeSelect.value as Theme;
       applyTheme(draft.theme);
-    });
-    box.append(field(t('settings.theme'), themeSelect, t('settings.themeHint')));
+    };
 
-    const langInput = textInput(draft.targetLang, t('settings.targetLangPlaceholder'));
-    langInput.addEventListener('input', () => (draft.targetLang = langInput.value));
-    box.append(
-      field(t('settings.targetLang'), langInput, t('settings.targetLangHint')),
+    row1.append(
+      field(t('settings.language'), localeSelect),
+      field(t('settings.theme'), themeSelect)
     );
+
+    const targetInput = input(draft.targetLang, t('settings.targetLangPlaceholder'));
+    targetInput.oninput = () => draft.targetLang = targetInput.value;
 
     const promptArea = el('textarea') as HTMLTextAreaElement;
     promptArea.value = draft.extraPrompt;
     promptArea.placeholder = t('settings.extraPromptPlaceholder');
-    promptArea.addEventListener('input', () => (draft.extraPrompt = promptArea.value));
-    box.append(field(t('settings.extraPrompt'), promptArea, t('settings.extraPromptHint')));
+    promptArea.style.minHeight = '60px';
+    promptArea.oninput = () => draft.extraPrompt = promptArea.value;
 
-    box.append(
-      checkRow(
-        t('settings.wholeBlock'),
-        draft.translateWholeBlock,
-        t('settings.wholeBlockHint'),
-        (v) => (draft.translateWholeBlock = v),
-      ),
+    sec1.body.append(
+      row1,
+      field(t('settings.targetLang'), targetInput),
+      field(t('settings.extraPrompt'), promptArea)
     );
-    box.append(
-      checkRow(
-        t('settings.autoTranslate'),
-        draft.autoTranslate,
-        t('settings.autoTranslateHint'),
-        (v) => (draft.autoTranslate = v),
-      ),
-    );
-    box.append(
-      checkRow(
-        t('settings.streaming'),
-        draft.streaming,
-        t('settings.streamingHint'),
-        (v) => (draft.streaming = v),
-      ),
+    container.append(sec1.container);
+
+    // 翻译行为
+    const sec2 = section(t('settings.behavior'));
+    sec2.body.append(
+      check(t('settings.wholeBlock'), draft.translateWholeBlock, (v) => draft.translateWholeBlock = v),
+      check(t('settings.autoTranslate'), draft.autoTranslate, (v) => draft.autoTranslate = v),
+      check(t('settings.streaming'), draft.streaming, (v) => draft.streaming = v),
     );
 
-    const row = el('div', 'ojpp-row');
-    const timeout = textInput(String(draft.timeoutMs), '120000', 'number');
-    timeout.addEventListener('input', () => {
-      const n = Number(timeout.value);
+    // 超时和重试
+    const row2 = el('div', 'ojpp-row');
+    const timeoutInput = input(String(draft.timeoutMs), '120000');
+    timeoutInput.type = 'number';
+    timeoutInput.oninput = () => {
+      const n = Number(timeoutInput.value);
       if (Number.isFinite(n) && n > 0) draft.timeoutMs = n;
-    });
-    const retries = textInput(String(draft.retries), '1', 'number');
-    retries.addEventListener('input', () => {
-      const n = Number(retries.value);
+    };
+    const retriesInput = input(String(draft.retries), '1');
+    retriesInput.type = 'number';
+    retriesInput.oninput = () => {
+      const n = Number(retriesInput.value);
       if (Number.isFinite(n) && n >= 0) draft.retries = n;
-    });
-    row.append(
-      field(t('settings.timeout'), timeout),
-      field(t('settings.retries'), retries, t('settings.retriesHint')),
+    };
+    row2.append(
+      field(t('settings.timeout'), timeoutInput),
+      field(t('settings.retries'), retriesInput)
     );
-    box.append(row);
+    sec2.body.append(row2);
+    container.append(sec2.container);
 
-    return box;
-  }
-
-  /**
-   * 提供商页分两种视图：
-   *   list  —— 只显示已配置列表，顶部一个「添加提供商」
-   *   add   —— 从预设里挑一个（带搜索），或选自定义
-   *   edit  —— 编辑单个提供商
-   * 这样打开页面时不会被一堆表单淹没，添加时才展开选择面板。
-   */
-  let providerView: 'list' | 'add' | 'edit' = 'list';
-
-  function renderProviders(): HTMLElement {
-    const box = el('div');
-    if (providerView === 'add') {
-      box.append(renderProviderPicker());
-      return box;
+    // 提供商摘要
+    const sec3 = section(t('settings.providers'), String(draft.providers.length));
+    const active = draft.providers.find((p) => p.id === draft.activeProviderId);
+    const summary = el('div', 'ojpp-provider-summary');
+    if (active) {
+      summary.textContent = `${active.name || t('common.unnamed')} · ${active.model || '—'}`;
+    } else {
+      summary.textContent = t('settings.noProvider');
     }
-    if (providerView === 'edit') {
-      const current = draft.providers.find((p) => p.id === selectedId);
-      if (current) {
-        const head = el('div', 'ojpp-picker-head');
-        const back = el('button', 'ojpp-btn ojpp-btn-ghost', `← ${t('settings.backToList')}`);
-        back.addEventListener('click', () => {
-          providerView = 'list';
-          render();
-        });
-        head.append(back, el('strong', undefined, current.name || t('common.unnamed')));
-        box.append(head);
-        // 备注名输入时只更新列表文字，不重绘，否则会失焦
-        box.append(renderProviderEditor(current, () => {}));
-        return box;
-      }
-      // 提供商被删掉时退回列表
-      providerView = 'list';
-    }
-    box.append(renderProviderList());
-    return box;
-  }
+    const manageBtn = el('button', 'ojpp-btn ojpp-btn-primary', t('settings.manage'));
+    manageBtn.onclick = () => switchView('providers');
+    sec3.body.append(summary, manageBtn);
+    container.append(sec3.container);
 
-  /** 已配置列表：每行一个提供商，点进去编辑 */
-  function renderProviderList(): HTMLElement {
-    const box = el('div');
-
-    const addBtn = el('button', 'ojpp-btn ojpp-btn-primary ojpp-add-provider', `+ ${t('settings.addProvider')}`);
-    addBtn.addEventListener('click', () => {
-      providerView = 'add';
-      render();
+    requestAnimationFrame(() => {
+      const sections = Array.from(container.querySelectorAll('.ojpp-section')) as HTMLElement[];
+      applyStagger(sections, 0, 15);
     });
-    box.append(addBtn);
+
+    return container;
+  }
+
+  // 提供商列表
+  function renderProviders(): HTMLElement {
+    const container = el('div', 'ojpp-section-body');
+    container.style.padding = '16px';
+
+    const addBtn = el('button', 'ojpp-add-provider');
+    addBtn.innerHTML = iconPlus;
+    addBtn.title = t('settings.addProvider');
+    addBtn.onclick = () => switchView('picker');
+    container.append(addBtn);
+
+    if (draft.providers.length === 0) {
+      const empty = el('div', 'ojpp-hint', t('settings.noProvider'));
+      empty.style.textAlign = 'center';
+      empty.style.padding = '40px 20px';
+      container.append(empty);
+      return container;
+    }
 
     const list = el('div', 'ojpp-provider-list');
-    if (draft.providers.length === 0) {
-      const empty = el('div', 'ojpp-hint', t('settings.providerListEmpty'));
-      box.append(empty);
-      return box;
-    }
-
-    draft.providers.forEach((provider) => {
+    draft.providers.forEach((p) => {
       const item = el('div', 'ojpp-provider-item');
-      item.dataset.active = provider.id === draft.activeProviderId ? '1' : '0';
+      item.dataset.active = p.id === draft.activeProviderId ? '1' : '0';
 
       const radio = el('input') as HTMLInputElement;
       radio.type = 'radio';
-      radio.name = 'ojpp-provider';
-      radio.checked = provider.id === draft.activeProviderId;
-      radio.title = t('settings.enableProvider');
-      radio.addEventListener('change', () => {
-        draft.activeProviderId = provider.id;
-        render();
-      });
+      radio.name = 'provider';
+      radio.checked = p.id === draft.activeProviderId;
+      radio.onclick = () => {
+        draft.activeProviderId = p.id;
+        switchView('providers');
+      };
 
       const text = el('div', 'ojpp-provider-text');
-      const name = el('div', 'ojpp-provider-name', provider.name || t('common.unnamed'));
-      const meta = el(
-        'div',
-        'ojpp-provider-meta',
-        `${PROTOCOL_LABEL[provider.protocol]} · ${provider.model || t('common.notFilled')}`,
+      text.append(
+        el('div', 'ojpp-provider-name', p.name || t('common.unnamed')),
+        el('div', 'ojpp-provider-meta', `${PROTOCOL_LABEL[p.protocol]} · ${p.model || '—'}`)
       );
-      text.append(name, meta);
 
-      const badge = el('span', 'ojpp-provider-badge', t('settings.inUse'));
-      if (provider.id !== draft.activeProviderId) badge.style.visibility = 'hidden';
+      const badge = el('span', 'ojpp-provider-badge', iconCheck);
+      badge.innerHTML = iconCheck;
+      if (p.id !== draft.activeProviderId) badge.style.visibility = 'hidden';
 
-      const edit = el('button', 'ojpp-btn ojpp-btn-ghost ojpp-provider-edit', t('settings.editProvider'));
-      edit.addEventListener('click', (event) => {
-        event.stopPropagation();
-        selectedId = provider.id;
-        providerView = 'edit';
-        render();
-      });
+      const editBtn = el('button', 'ojpp-provider-edit');
+      editBtn.innerHTML = iconPencil;
+      editBtn.title = t('settings.edit');
+      editBtn.onclick = (e) => {
+        e.stopPropagation();
+        switchView('edit', p.id);
+      };
 
-      item.addEventListener('click', (event) => {
-        if (event.target === radio || event.target === edit) return;
-        selectedId = provider.id;
-        providerView = 'edit';
-        render();
-      });
-
-      item.append(radio, text, badge, edit);
+      item.onclick = () => switchView('edit', p.id);
+      item.append(radio, text, badge, editBtn);
       list.append(item);
     });
 
-    box.append(list);
-    return box;
-  }
+    container.append(list);
 
-  /** 添加面板：先选提供商，再进编辑 */
-  function renderProviderPicker(): HTMLElement {
-    const box = el('div');
-
-    const head = el('div', 'ojpp-picker-head');
-    const back = el('button', 'ojpp-btn ojpp-btn-ghost', `← ${t('settings.backToList')}`);
-    back.addEventListener('click', () => {
-      providerView = 'list';
-      render();
+    requestAnimationFrame(() => {
+      const items = Array.from(list.children) as HTMLElement[];
+      applyStagger(items, 0, 15);
     });
-    head.append(back, el('strong', undefined, t('settings.chooseProvider')));
-    box.append(head);
-    box.append(el('div', 'ojpp-hint', t('settings.chooseProviderHint')));
 
-    const search = textInput('', t('settings.providerSearch'));
-    search.addEventListener('input', () => paint(search.value));
-    box.append(search);
-
-    const grid = el('div', 'ojpp-preset-grid');
-    box.append(grid);
-
-    const pick = (preset: ProviderPreset) => {
-      const provider = createProvider(preset);
-      draft.providers.push(provider);
-      selectedId = provider.id;
-      draft.activeProviderId = provider.id;
-      providerView = 'edit';
-      render();
-    };
-
-    const paint = (query: string) => {
-      grid.replaceChildren();
-      const q = query.trim().toLowerCase();
-      // “自定义”就是 PROVIDER_PRESETS 里的 custom 项，排在最前方便自己填地址。
-      // 不要另外再拼一个按钮，否则会出现两个自定义入口。
-      const matched = PROVIDER_PRESETS.filter(
-        (preset) => !q || preset.label.toLowerCase().includes(q) || preset.baseUrl.toLowerCase().includes(q),
-      ).sort((a, b) => (a.key === 'custom' ? -1 : b.key === 'custom' ? 1 : 0));
-
-      matched.forEach((preset) => {
-        const item = el('button', 'ojpp-preset-item');
-        item.append(el('span', 'ojpp-preset-name', preset.label));
-        const meta = preset.baseUrl.replace(/^https?:\/\//, '');
-        if (meta) item.append(el('span', 'ojpp-preset-meta', meta));
-        item.addEventListener('click', () => pick(preset));
-        grid.append(item);
-      });
-
-      if (matched.length === 0) {
-        grid.append(el('div', 'ojpp-hint', t('settings.noProviderMatch')));
-      }
-    };
-    paint('');
-
-    return box;
+    return container;
   }
 
-  function renderProviderEditor(
-    provider: ProviderConfig,
-    onNameChange: (name: string) => void,
-  ): HTMLElement {
-    const box = el('div');
+  // 编辑提供商
+  function renderEdit(provider: ProviderConfig): HTMLElement {
+    const container = el('div');
 
-    const nameInput = textInput(provider.name, t('settings.providerNamePlaceholder'));
-    // 只同步数据与列表文字，不重绘面板，否则每敲一个字母都会失焦
-    nameInput.addEventListener('input', () => {
+    const sec1 = section(t('settings.basic'));
+    const nameInput = input(provider.name, t('settings.providerNamePlaceholder'));
+    nameInput.oninput = () => {
       provider.name = nameInput.value;
-      onNameChange(nameInput.value);
-    });
-    box.append(field(t('settings.providerName'), nameInput));
+      titleNode.textContent = nameInput.value || t('common.unnamed');
+      save();
+    };
 
-    const protocolSelect = el('select') as HTMLSelectElement;
-    (Object.keys(PROTOCOL_LABEL) as Protocol[]).forEach((key) => {
-      const option = el('option') as HTMLOptionElement;
-      option.value = key;
-      option.textContent = PROTOCOL_LABEL[key];
-      option.selected = provider.protocol === key;
-      protocolSelect.append(option);
-    });
-    protocolSelect.addEventListener('change', () => {
+    const protocolSelect = select(
+      (Object.keys(PROTOCOL_LABEL) as Protocol[]).map((k) => [k, PROTOCOL_LABEL[k]]),
+      provider.protocol
+    );
+    protocolSelect.onchange = () => {
       provider.protocol = protocolSelect.value as Protocol;
-      render();
-    });
-    box.append(field(t('settings.protocol'), protocolSelect, t('settings.protocolHint')));
+      save();
+    };
 
-    const baseInput = textInput(provider.baseUrl, 'https://api.openai.com/v1');
-    baseInput.addEventListener('input', () => (provider.baseUrl = baseInput.value));
-    box.append(field(t('settings.baseUrl'), baseInput, t('settings.baseUrlHint')));
+    const baseInput = input(provider.baseUrl, 'https://api.openai.com/v1');
+    baseInput.oninput = () => {
+      provider.baseUrl = baseInput.value;
+      save();
+    };
 
-    const modelInput = textInput(provider.model, 'gpt-6-luna');
-    modelInput.addEventListener('input', () => (provider.model = modelInput.value));
-    box.append(field(t('settings.model'), modelInput));
+    const modelInput = input(provider.model, 'gpt-4o');
+    modelInput.oninput = () => {
+      provider.model = modelInput.value;
+      save();
+    };
 
-    const keyInput = textInput(provider.apiKey, t('settings.apiKeyPlaceholder'), 'password');
-    keyInput.addEventListener('input', () => (provider.apiKey = keyInput.value));
-    box.append(field('API Key', keyInput, t('settings.apiKeyHint')));
+    const keyInput = input(provider.apiKey, '', 'password');
+    keyInput.oninput = () => {
+      provider.apiKey = keyInput.value;
+      save();
+    };
 
-    const row = el('div', 'ojpp-row');
-    const reasoningSelect = el('select') as HTMLSelectElement;
-    [
-      { value: 'default', label: t('settings.effortDefault') },
-      { value: 'enabled', label: t('settings.effortEnabled') },
-      { value: 'disabled', label: t('settings.effortDisabled') },
-    ].forEach(({ value, label }) => {
-      const option = el('option') as HTMLOptionElement;
-      option.value = value;
-      option.textContent = label;
-      option.selected =
-        value === 'default'
-          ? provider.reasoning.enabled === null
-          : value === 'enabled'
-            ? provider.reasoning.enabled === true
-            : provider.reasoning.enabled === false;
-      reasoningSelect.append(option);
-    });
-    reasoningSelect.addEventListener('change', () => {
+    // 协议与模型并排一行；el() 只接受 (tag, className, text)，
+    // 多出来的子元素要用 append，不能当参数传。
+    const protocolModelRow = el('div', 'ojpp-row');
+    protocolModelRow.append(
+      field(t('settings.protocol'), protocolSelect),
+      field(t('settings.model'), modelInput),
+    );
+    sec1.body.append(
+      field(t('settings.providerName'), nameInput),
+      protocolModelRow,
+      field(t('settings.baseUrl'), baseInput),
+      field('API Key', keyInput),
+    );
+    container.append(sec1.container);
+
+    // 高级选项
+    const sec2 = section(t('settings.advancedOptions'));
+
+    // Reasoning
+    const row1 = el('div', 'ojpp-row');
+    const reasoningSelect = select([
+      ['', t('settings.effortDefault')],
+      ['enabled', t('settings.effortEnabled')],
+      ['disabled', t('settings.effortDisabled')],
+    ], provider.reasoning.enabled === null ? '' : provider.reasoning.enabled ? 'enabled' : 'disabled');
+    reasoningSelect.onchange = () => {
       const v = reasoningSelect.value;
-      provider.reasoning.enabled = v === 'default' ? null : v === 'enabled';
-    });
+      provider.reasoning.enabled = v === '' ? null : v === 'enabled';
+      save();
+    };
 
-    const effortInput = textInput(provider.reasoning.effort, 'low / medium / high');
-    effortInput.addEventListener(
-      'input',
-      () => (provider.reasoning.effort = effortInput.value),
-    );
-    row.append(
-      field(t('settings.reasoning'), reasoningSelect, t('settings.reasoningHint')),
-      field(t('settings.reasoningEffort'), effortInput, t('settings.reasoningEffortHint')),
-    );
-    box.append(row);
+    const effortSelect = select([
+      ['', t('settings.effortDefault')],
+      ['low', 'Low'],
+      ['medium', 'Medium'],
+      ['high', 'High'],
+    ], provider.reasoning.effort || '');
+    effortSelect.onchange = () => {
+      provider.reasoning.effort = effortSelect.value;
+      save();
+    };
 
-    const headerArea = el('textarea') as HTMLTextAreaElement;
-    headerArea.value = Object.entries(provider.headers)
+    row1.append(
+      field(t('settings.reasoning'), reasoningSelect),
+      field(t('settings.reasoningEffort'), effortSelect)
+    );
+    sec2.body.append(row1);
+
+    // Headers
+    const headersArea = el('textarea') as HTMLTextAreaElement;
+    headersArea.value = Object.entries(provider.headers)
       .map(([k, v]) => `${k}: ${v}`)
       .join('\n');
-    headerArea.placeholder = t('settings.headersPlaceholder');
-    headerArea.addEventListener('input', () => {
-      provider.headers = parsePairs(headerArea.value);
-    });
-    box.append(field(t('settings.headers'), headerArea, t('settings.headersHint')));
+    headersArea.placeholder = t('settings.headersPlaceholder');
+    headersArea.style.minHeight = '60px';
+    headersArea.oninput = () => {
+      provider.headers = parsePairs(headersArea.value);
+      save();
+    };
+    sec2.body.append(field(t('settings.headers'), headersArea));
 
+    // Body
     const bodyArea = el('textarea') as HTMLTextAreaElement;
     bodyArea.value = JSON.stringify(provider.body ?? {}, null, 2);
     bodyArea.placeholder = '{}';
-    bodyArea.addEventListener('input', () => {
+    bodyArea.style.minHeight = '60px';
+    bodyArea.oninput = () => {
       try {
         const parsed = JSON.parse(bodyArea.value || '{}');
-        if (parsed && typeof parsed === 'object') provider.body = parsed;
-        bodyArea.style.borderColor = '';
+        if (parsed && typeof parsed === 'object') {
+          provider.body = parsed;
+          bodyArea.style.borderColor = '';
+          save();
+        }
       } catch {
-        bodyArea.style.borderColor = '#b42318';
+        bodyArea.style.borderColor = 'var(--color-danger)';
       }
-    });
-    box.append(field(t('settings.body'), bodyArea, t('settings.bodyHint')));
+    };
+    sec2.body.append(field(t('settings.body'), bodyArea));
 
+    container.append(sec2.container);
+
+    // 操作区
+    const sec3 = section(t('settings.actions'));
     const status = el('div', 'ojpp-status');
     const actions = el('div', 'ojpp-row');
+    
     const testBtn = el('button', 'ojpp-btn', t('settings.test'));
-    const dupBtn = el('button', 'ojpp-btn', t('settings.copyProvider'));
-    const delBtn = el('button', 'ojpp-btn ojpp-btn-danger', t('settings.deleteProvider'));
-
-    testBtn.addEventListener('click', async () => {
+    testBtn.onclick = async () => {
       testBtn.disabled = true;
-      status.dataset.kind = '';
       status.textContent = t('settings.testing');
+      status.dataset.kind = '';
       try {
         const reply = await testConnection(options.request, draft, provider);
         status.dataset.kind = 'ok';
-        status.textContent = t('settings.testOk', { reply: reply.slice(0, 200) });
+        status.textContent = t('settings.testOk', { reply: reply.slice(0, 100) });
       } catch (error) {
         status.dataset.kind = 'error';
         status.textContent = t('settings.testFail', {
@@ -505,132 +425,190 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
       } finally {
         testBtn.disabled = false;
       }
-    });
+    };
 
-    dupBtn.addEventListener('click', () => {
+    const dupBtn = el('button', 'ojpp-btn', t('settings.duplicate'));
+    dupBtn.onclick = () => {
       const copy: ProviderConfig = {
         ...structuredClone(provider),
         id: newId(),
         name: t('settings.providerCopySuffix', { name: provider.name }),
       };
       draft.providers.push(copy);
-      selectedId = copy.id;
       draft.activeProviderId = copy.id;
-      providerView = 'edit';
-      render();
-    });
+      switchView('edit', copy.id);
+    };
 
-    delBtn.addEventListener('click', () => {
+    const delBtn = el('button', 'ojpp-btn ojpp-btn-danger', t('settings.delete'));
+    delBtn.onclick = () => {
       if (draft.providers.length <= 1) {
         status.dataset.kind = 'error';
         status.textContent = t('settings.keepOne');
+        return;
+      }
+      if (!confirm(t('settings.deleteConfirm', { name: provider.name || t('common.unnamed') }))) {
         return;
       }
       draft.providers = draft.providers.filter((p) => p.id !== provider.id);
       if (draft.activeProviderId === provider.id) {
         draft.activeProviderId = draft.providers[0]?.id ?? null;
       }
-      selectedId = draft.activeProviderId;
-      providerView = 'list';
-      render();
-    });
+      switchView('providers');
+    };
 
     actions.append(testBtn, dupBtn, delBtn);
-    box.append(actions, status);
-    return box;
-  }
+    sec3.body.append(actions, status);
+    container.append(sec3.container);
 
-  function renderAdvanced(): HTMLElement {
-    const box = el('div');
-    const info = el('div', 'ojpp-hint');
-    info.textContent = t('settings.providerFooter');
-    box.append(info);
-
-    const exportArea = el('textarea') as HTMLTextAreaElement;
-    exportArea.value = JSON.stringify(
-      {
-        ...draft,
-        // 空 Key 保持为空，不要显示成 ***，否则导入后以为已经填过
-        providers: draft.providers.map((p) => ({
-          ...p,
-          apiKey: p.apiKey ? '***' : '',
-        })),
-      },
-      null,
-      2,
-    );
-    exportArea.readOnly = true;
-    box.append(field(t('settings.preview'), exportArea));
-
-    const importArea = el('textarea') as HTMLTextAreaElement;
-    importArea.placeholder = t('settings.importPlaceholder');
-    const importBtn = el('button', 'ojpp-btn', t('settings.import'));
-    const status = el('div', 'ojpp-status');
-    importBtn.addEventListener('click', () => {
-      try {
-        const parsed = JSON.parse(importArea.value) as Settings;
-        if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.providers)) {
-          throw new Error(t('settings.importMissing'));
-        }
-        Object.assign(draft, migrate(parsed));
-        selectedId = draft.activeProviderId;
-        status.dataset.kind = 'ok';
-        status.textContent = t('settings.importOk');
-        render();
-      } catch (error) {
-        status.dataset.kind = 'error';
-        status.textContent = t('settings.importFail', {
-          message: error instanceof Error ? error.message : String(error),
-        });
-      }
+    requestAnimationFrame(() => {
+      const sections = Array.from(container.querySelectorAll('.ojpp-section')) as HTMLElement[];
+      applyStagger(sections, 0, 15);
     });
-    box.append(field(t('settings.importTitle'), importArea), importBtn, status);
-    return box;
+
+    return container;
   }
 
-  function checkRow(
-    label: string,
-    value: boolean,
-    hint: string,
-    onChange: (v: boolean) => void,
-  ): HTMLElement {
+  function parsePairs(text: string): Record<string, string> {
+    const out: Record<string, string> = {};
+    for (const line of text.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const index = trimmed.indexOf(':');
+      if (index <= 0) continue;
+      out[trimmed.slice(0, index).trim()] = trimmed.slice(index + 1).trim();
+    }
+    return out;
+  }
+
+  // 选择预设
+  function renderPicker(): HTMLElement {
+    const container = el('div');
+    container.style.padding = '16px';
+
+    const search = input('', t('settings.search'));
+    search.oninput = () => paint(search.value);
+    container.append(search);
+
+    const grid = el('div', 'ojpp-preset-grid');
+    container.append(grid);
+
+    const paint = (query: string) => {
+      grid.replaceChildren();
+      const q = query.trim().toLowerCase();
+      // 自定义排在最前，方便自己填地址；否则用户要滚到底才能找到
+      const matched = PROVIDER_PRESETS.filter(
+        (preset) =>
+          !q || preset.label.toLowerCase().includes(q) || preset.baseUrl.toLowerCase().includes(q),
+      ).sort((a, b) => (a.key === 'custom' ? -1 : b.key === 'custom' ? 1 : 0));
+
+      matched.forEach((preset) => {
+        const item = el('button', 'ojpp-preset-item');
+        item.append(el('span', 'ojpp-preset-name', preset.label));
+        // 自定义没有 baseUrl，不显示空的 meta 行
+        const meta = preset.baseUrl.replace(/^https?:\/\//, '');
+        if (meta) item.append(el('span', 'ojpp-preset-meta', meta));
+        item.onclick = () => {
+          const provider = createProvider(preset);
+          draft.providers.push(provider);
+          draft.activeProviderId = provider.id;
+          switchView('edit', provider.id);
+        };
+        grid.append(item);
+      });
+
+      if (matched.length === 0) {
+        grid.append(el('div', 'ojpp-hint', t('settings.noMatch')));
+      }
+
+      requestAnimationFrame(() => {
+        const items = Array.from(grid.querySelectorAll('.ojpp-preset-item')) as HTMLElement[];
+        applyStagger(items, 0, 10);
+      });
+    };
+
+    paint('');
+    requestAnimationFrame(() => search.focus());
+
+    return container;
+  }
+
+  // 工具函数
+  function section(title: string, badge?: string) {
+    const container = el('div', 'ojpp-section');
+    const header = el('div', 'ojpp-section-header');
+    const titleEl = el('h4', 'ojpp-section-title', title);
+    header.append(titleEl);
+    if (badge) {
+      header.append(el('span', 'ojpp-section-badge', badge));
+    }
+    const body = el('div', 'ojpp-section-body');
+    container.append(header, body);
+    return { header, body, container };
+  }
+
+  function field(label: string, control: HTMLElement) {
+    const wrap = el('div', 'ojpp-field');
+    const labelNode = el('label', undefined, label);
+    if (/^(INPUT|SELECT|TEXTAREA)$/.test(control.tagName)) {
+      control.id ||= `ojpp-${newId()}`;
+      labelNode.htmlFor = control.id;
+    }
+    wrap.append(labelNode, control);
+    return wrap;
+  }
+
+  function input(value: string, placeholder = '', type: 'text' | 'password' = 'text') {
+    const input = el('input') as HTMLInputElement;
+    input.type = type;
+    input.value = value;
+    input.placeholder = placeholder;
+    return input;
+  }
+
+  function select(options: Array<[string, string]>, value: string) {
+    const select = el('select') as HTMLSelectElement;
+    options.forEach(([val, label]) => {
+      const option = el('option') as HTMLOptionElement;
+      option.value = val;
+      option.textContent = label;
+      option.selected = val === value;
+      select.append(option);
+    });
+    return select;
+  }
+
+  function check(label: string, value: boolean, onChange: (v: boolean) => void) {
     const row = el('div', 'ojpp-check');
     const input = el('input') as HTMLInputElement;
     input.type = 'checkbox';
     input.checked = value;
-    input.id = `ojpp-${label}`;
-    input.addEventListener('change', () => onChange(input.checked));
-    const wrap = el('label');
-    wrap.htmlFor = input.id;
-    wrap.append(el('div', undefined, label), el('div', 'ojpp-hint', hint));
-    row.append(input, wrap);
+    input.id = `ojpp-${newId()}`;
+    input.onchange = () => onChange(input.checked);
+    const labelEl = el('label', undefined, label);
+    labelEl.htmlFor = input.id;
+    row.append(input, labelEl);
     return row;
   }
 
-  tabGeneral.addEventListener('click', () => {
-    activeTab = 'general';
-    render();
-  });
-  tabProvider.addEventListener('click', () => {
-    activeTab = 'provider';
-    render();
-  });
-  tabAdvanced.addEventListener('click', () => {
-    activeTab = 'advanced';
-    render();
-  });
-
+  // 关闭逻辑
   let closed = false;
   const close = () => {
     if (closed) return;
     closed = true;
-    mask.remove();
-    document.removeEventListener('keydown', onKey);
-    options.onClose();
+    mask.style.transition = 'opacity 300ms var(--ease-out)';
+    mask.style.opacity = '0';
+    panel.style.transition = 'opacity 300ms var(--ease-out), transform 300ms var(--ease-out)';
+    panel.style.opacity = '0';
+    panel.style.transform = 'scale(0.96) translateY(20px)';
+    setTimeout(() => {
+      mask.remove();
+      document.removeEventListener('keydown', onKey);
+      options.onClose();
+    }, 300);
   };
 
-  const onKey = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') close();
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') close();
   };
 
   const persist = async (next: Settings | null) => {
@@ -641,52 +619,66 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
       close();
     } catch (error) {
       saveStatus.dataset.kind = 'error';
-      saveStatus.textContent = t('settings.saveFailed', { message: error instanceof Error ? error.message : String(error) });
+      saveStatus.textContent = t('settings.saveFailed', {
+        message: error instanceof Error ? error.message : String(error)
+      });
     } finally {
       saveBtn.disabled = resetBtn.disabled = false;
     }
   };
-  saveBtn.addEventListener('click', () => {
+
+  saveBtn.onclick = () => {
     if (!draft.activeProviderId && draft.providers[0]) {
       draft.activeProviderId = draft.providers[0].id;
     }
     void persist(draft);
-  });
-  cancelBtn.addEventListener('click', close);
-  closeBtn.addEventListener('click', close);
-  resetBtn.addEventListener('click', () => {
-    if (confirm(t('settings.resetConfirm'))) void persist(null);
-  });
+  };
 
-  // 只有同一次手势从遮罩开始、在遮罩结束，且没有拖动，才关闭。
-  let maskPress: { id: number; x: number; y: number } | undefined;
-  mask.addEventListener('pointerdown', (event) => {
-    maskPress = event.target === mask && event.button === 0
-      ? { id: event.pointerId, x: event.clientX, y: event.clientY }
-      : undefined;
-  });
-  mask.addEventListener('pointercancel', () => { maskPress = undefined; });
-  mask.addEventListener('pointerup', (event) => {
+  closeBtn.onclick = close;
+
+  resetBtn.onclick = () => {
+    if (confirm(t('settings.resetConfirm'))) void persist(null);
+  };
+
+  // 点击遮罩关闭。
+  //
+  // 难点是要区分两种情况：
+  //   1. 用户点了遮罩（面板外）→ 应该关闭
+  //   2. 用户在面板里拖选文字，松开时指针落在遮罩上
+  //      → 不应该关闭，否则拖选文字就会误关设置
+  //
+  // 浏览器在拖选结束后会向遮罩补发一对 pointerdown/pointerup，
+  // 坐标几乎相同，光看位移分辨不出来。
+  // 也不能用“一段时间内忽略所有点击”，那样用户得点两次才关得掉。
+  //
+  // 可靠的做法是记录指针按下时到底在谁身上：
+  // 只有“按下也在遮罩上”才关闭。拖选是从面板内部开始的，
+  // 补发的那对事件虽然 target 是遮罩，但 press 会被标记为来自面板。
+  let maskPress: { id: number; fromMask: boolean } | undefined;
+  mask.onpointerdown = (e) => {
+    if (e.button !== 0) {
+      maskPress = undefined;
+      return;
+    }
+    maskPress = { id: e.pointerId, fromMask: e.target === mask };
+  };
+  mask.onpointercancel = () => { maskPress = undefined; };
+  mask.onpointerup = (e) => {
     const press = maskPress;
     maskPress = undefined;
-    if (press && event.pointerId === press.id && event.target === mask &&
-        Math.hypot(event.clientX - press.x, event.clientY - press.y) < 4) close();
-  });
+    // 按下时不在遮罩上（例如从面板里拖选过来），不关闭
+    if (!press || press.id !== e.pointerId || !press.fromMask) return;
+    if (e.target !== mask) return;
+    close();
+  };
+  // 拖选起点在面板里时，把补发到遮罩的 pointerdown 标记成“不是从遮罩开始”
+  panel.addEventListener('pointerdown', (e) => {
+    maskPress = { id: e.pointerId, fromMask: false };
+  }, true);
+
   document.addEventListener('keydown', onKey);
-
-  render();
+  switchView('main');
   document.body.append(mask);
-  return close;
-}
 
-function parsePairs(text: string): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const line of text.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const index = trimmed.indexOf(':');
-    if (index <= 0) continue;
-    out[trimmed.slice(0, index).trim()] = trimmed.slice(index + 1).trim();
-  }
-  return out;
+  return close;
 }

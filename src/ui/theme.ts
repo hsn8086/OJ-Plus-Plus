@@ -21,9 +21,13 @@ export function resolveTheme(setting: Theme): 'light' | 'dark' {
 export function applyTheme(setting: Theme): void {
   const root = document.documentElement;
   const theme = resolveTheme(setting);
+  const previous = root.getAttribute(THEME_ATTR);
   root.setAttribute(THEME_ATTR, theme);
   // 让浏览器把滚动条、表单控件也切成对应配色
   root.style.colorScheme = theme;
+  // 从暗色切回浅色时，把之前清掉的内联颜色还回去
+  if (previous === 'dark' && theme !== 'dark') restoreInlineColors();
+  if (theme === 'dark') stripInlineColors(document);
 }
 
 /** 系统配色变化时通知调用方；返回取消订阅函数。 */
@@ -32,4 +36,56 @@ export function watchSystemTheme(onChange: () => void): () => void {
   const media = matchMedia('(prefers-color-scheme: dark)');
   media.addEventListener('change', onChange);
   return () => media.removeEventListener('change', onChange);
+}
+
+/**
+ * 清掉元素上的内联 color，让样式表里的暗色规则能生效。
+ *
+ * 有些站点元素写死了 `style="color:black !important"`（例如博客标题的链接）。
+ * 内联的 !important 优先级高于任何选择器，CSS 覆盖不掉，只能改属性本身。
+ *
+ * 只在切到暗色时执行：浅色下这些内联样式是对的，动了反而出问题。
+ * 记录被清掉的元素，切回浅色时还原。
+ */
+const strippedInline = new Map<HTMLElement, string>();
+
+function stripInlineColors(root: ParentNode): void {
+  for (const el of root.querySelectorAll<HTMLElement>('[style*="color"]')) {
+    const style = el.getAttribute('style');
+    if (!style || strippedInline.has(el)) continue;
+    // 只处理显式写了颜色的声明，保留其它内联样式
+    const cleaned = style
+      .split(';')
+      .filter((part) => !/^\s*color\s*:/i.test(part))
+      .join(';')
+      .trim();
+    if (cleaned === style.trim()) continue;
+    strippedInline.set(el, style);
+    if (cleaned) el.setAttribute('style', cleaned);
+    else el.removeAttribute('style');
+  }
+}
+
+function restoreInlineColors(): void {
+  for (const [el, style] of strippedInline) {
+    if (el.isConnected) el.setAttribute('style', style);
+  }
+  strippedInline.clear();
+}
+
+/**
+ * 监听页面变化，持续清理内联颜色。
+ * 站点的博客列表等内容是异步加载的，只处理一次会漏掉后插入的节点。
+ */
+export function watchInlineColors(): () => void {
+  const run = () => {
+    if (document.documentElement.getAttribute(THEME_ATTR) === 'dark') stripInlineColors(document);
+  };
+  run();
+  const observer = new MutationObserver(() => run());
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+  return () => {
+    observer.disconnect();
+    restoreInlineColors();
+  };
 }

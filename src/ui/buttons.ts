@@ -24,14 +24,24 @@ export function bindCopy(
   const icon = button.innerHTML;
   const title = button.title;
   let timer: ReturnType<typeof setTimeout> | undefined;
+  
   button.addEventListener('click', async () => {
     clearTimeout(timer);
+    button.disabled = true;
+    
     try {
       await writeClipboard(readText());
+      button.dataset.state = 'done';
       setIcon(button, ICON_CHECK, t('common.copied'));
     } catch {
+      button.dataset.state = 'error';
       setIcon(button, ICON_CROSS, t('common.copyFailed'));
     }
-    timer = setTimeout(() => setIcon(button, icon, title), 1200);
+    
+    timer = setTimeout(() => {
+      button.dataset.state = '';
+      setIcon(button, icon, title);
+      button.disabled = false;
+    }, 1500);
   });
 }

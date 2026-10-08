@@ -60,9 +60,23 @@
 		"result.copy": "Copy translation",
 		"result.collapse": "Collapse",
 		"result.expand": "Expand",
+		"settings.title": "Settings",
 		"settings.tab.general": "Translation",
 		"settings.tab.provider": "Providers",
 		"settings.tab.advanced": "Advanced",
+		"settings.general": "General",
+		"settings.basic": "Basic",
+		"settings.behavior": "Behavior",
+		"settings.providers": "Providers",
+		"settings.language": "Language",
+		"settings.name": "Name",
+		"settings.manage": "Manage",
+		"settings.edit": "Edit",
+		"settings.duplicate": "Duplicate",
+		"settings.delete": "Delete",
+		"settings.noProvider": "No providers",
+		"settings.noMatch": "No matches",
+		"settings.search": "Search...",
 		"settings.reset": "Reset to defaults",
 		"settings.resetConfirm": "Reset to default settings? Your current configuration will be cleared.",
 		"settings.saveFailed": "Save failed: {message}",
@@ -106,6 +120,12 @@
 		"settings.inUse": "In use",
 		"settings.addFromPreset": "Add from preset",
 		"settings.add": "Add",
+		"settings.providerActive": "Active: {name} · {model}",
+		"settings.manageProviders": "Manage providers",
+		"settings.providerConfig": "Basic configuration",
+		"settings.advancedOptions": "Advanced options",
+		"settings.actions": "Actions",
+		"settings.deleteProvider": "Delete",
 		"settings.providerName": "Label",
 		"settings.providerNamePlaceholder": "Name this configuration",
 		"settings.protocol": "Protocol",
@@ -132,7 +152,6 @@
 		"settings.testOk": "Connected. Model replied: {reply}",
 		"settings.testFail": "Connection failed: {message}",
 		"settings.copyProvider": "Duplicate configuration",
-		"settings.deleteProvider": "Delete configuration",
 		"settings.providerCopySuffix": "{name} copy",
 		"settings.keepOne": "At least one configuration is required.",
 		"settings.providerFooter": "Configurations are stored in this platform's local storage. Translation content and API Key are sent to your configured Provider; you can test the connection on the Providers tab.",
@@ -189,9 +208,23 @@
 		"result.copy": "复制译文",
 		"result.collapse": "收起",
 		"result.expand": "展开",
+		"settings.title": "设置",
 		"settings.tab.general": "翻译设置",
 		"settings.tab.provider": "提供商",
 		"settings.tab.advanced": "高级",
+		"settings.general": "通用",
+		"settings.basic": "基础配置",
+		"settings.behavior": "翻译行为",
+		"settings.providers": "提供商",
+		"settings.language": "界面语言",
+		"settings.name": "名称",
+		"settings.manage": "管理",
+		"settings.edit": "编辑",
+		"settings.duplicate": "复制",
+		"settings.delete": "删除",
+		"settings.noProvider": "无提供商",
+		"settings.noMatch": "无匹配结果",
+		"settings.search": "搜索...",
 		"settings.reset": "恢复默认",
 		"settings.resetConfirm": "确定恢复默认设置？当前配置会被清空。",
 		"settings.saveFailed": "保存失败：{message}",
@@ -235,6 +268,12 @@
 		"settings.inUse": "使用中",
 		"settings.addFromPreset": "从预设新增",
 		"settings.add": "新增",
+		"settings.providerActive": "当前使用：{name} · {model}",
+		"settings.manageProviders": "管理提供商",
+		"settings.providerConfig": "基础配置",
+		"settings.advancedOptions": "高级选项",
+		"settings.actions": "操作",
+		"settings.deleteProvider": "删除",
 		"settings.providerName": "备注名",
 		"settings.providerNamePlaceholder": "给这个配置起个名字",
 		"settings.protocol": "接口协议",
@@ -261,7 +300,6 @@
 		"settings.testOk": "连接成功，模型回复：{reply}",
 		"settings.testFail": "连接失败：{message}",
 		"settings.copyProvider": "复制配置",
-		"settings.deleteProvider": "删除配置",
 		"settings.providerCopySuffix": "{name} 副本",
 		"settings.keepOne": "至少保留一个配置。",
 		"settings.providerFooter": "配置保存在当前平台的本地存储中。翻译内容与 API Key 发往你配置的提供商；可在「提供商」页测试连接。",
@@ -475,13 +513,20 @@
 		let timer;
 		button.addEventListener("click", async () => {
 			clearTimeout(timer);
+			button.disabled = true;
 			try {
 				await writeClipboard(readText());
+				button.dataset.state = "done";
 				setIcon(button, ICON_CHECK, t("common.copied"));
 			} catch {
+				button.dataset.state = "error";
 				setIcon(button, ICON_CROSS, t("common.copyFailed"));
 			}
-			timer = setTimeout(() => setIcon(button, icon, title), 1200);
+			timer = setTimeout(() => {
+				button.dataset.state = "";
+				setIcon(button, icon, title);
+				button.disabled = false;
+			}, 1500);
 		});
 	}
 	function createSseParser() {
@@ -32312,6 +32357,7 @@ $$` : `${n}$$`;
 				return;
 			}
 			clearTimeout(feedbackTimer);
+			if (translate.dataset.state === "done") state("idle", ICON_TRANSLATE, t("toolbar.retranslate"));
 			const text = readMarkdown();
 			if (!text.trim()) {
 				state("error", ICON_CROSS, t("toolbar.noContent"));
@@ -32393,8 +32439,11 @@ $$` : `${n}$$`;
 	function applyTheme(setting) {
 		const root = document.documentElement;
 		const theme = resolveTheme(setting);
+		const previous = root.getAttribute(THEME_ATTR);
 		root.setAttribute(THEME_ATTR, theme);
 		root.style.colorScheme = theme;
+		if (previous === "dark" && theme !== "dark") restoreInlineColors();
+		if (theme === "dark") stripInlineColors(document);
 	}
 	function watchSystemTheme(onChange) {
 		if (typeof matchMedia !== "function") return () => {};
@@ -32402,264 +32451,385 @@ $$` : `${n}$$`;
 		media.addEventListener("change", onChange);
 		return () => media.removeEventListener("change", onChange);
 	}
+	var strippedInline = new Map();
+	function stripInlineColors(root) {
+		for (const el of root.querySelectorAll("[style*=\"color\"]")) {
+			const style = el.getAttribute("style");
+			if (!style || strippedInline.has(el)) continue;
+			const cleaned = style.split(";").filter((part) => !/^\s*color\s*:/i.test(part)).join(";").trim();
+			if (cleaned === style.trim()) continue;
+			strippedInline.set(el, style);
+			if (cleaned) el.setAttribute("style", cleaned);
+			else el.removeAttribute("style");
+		}
+	}
+	function restoreInlineColors() {
+		for (const [el, style] of strippedInline) if (el.isConnected) el.setAttribute("style", style);
+		strippedInline.clear();
+	}
+	function watchInlineColors() {
+		const run = () => {
+			if (document.documentElement.getAttribute("data-ojpp-theme") === "dark") stripInlineColors(document);
+		};
+		run();
+		const observer = new MutationObserver(() => run());
+		observer.observe(document.documentElement, {
+			childList: true,
+			subtree: true
+		});
+		return () => {
+			observer.disconnect();
+			restoreInlineColors();
+		};
+	}
+	var EASING = {
+		out: "cubic-bezier(0.23, 1, 0.32, 1)",
+		inOut: "cubic-bezier(0.77, 0, 0.175, 1)",
+		drawer: "cubic-bezier(0.32, 0.72, 0, 1)",
+		standard: "ease"
+	};
+	var DURATION = {
+		press: 100,
+		tooltip: 150,
+		dropdown: 200,
+		modal: 300,
+		page: 400
+	};
+	function applyStagger(elements, baseDelay = 0, staggerDelay = 50) {
+		elements.forEach((el, i) => {
+			el.style.opacity = "0";
+			el.style.transform = "translateY(8px)";
+			setTimeout(() => {
+				el.style.transition = `opacity ${DURATION.dropdown}ms ${EASING.out}, transform ${DURATION.dropdown}ms ${EASING.out}`;
+				el.style.opacity = "1";
+				el.style.transform = "translateY(0)";
+			}, baseDelay + i * staggerDelay);
+		});
+	}
+	var iconChevronLeft = "<svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m15 18-6-6 6-6\"/></svg>";
+	var iconPlus = "<svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 5v14m-7-7h14\"/></svg>";
+	var iconPencil = "<svg viewBox=\"0 0 24 24\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z\"/></svg>";
+	var iconX = "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 6 6 18M6 6l12 12\"/></svg>";
+	var iconCheck = "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 6 9 17l-5-5\"/></svg>";
 	function el(tag, className, text) {
 		const node = document.createElement(tag);
 		if (className) node.className = className;
 		if (text !== void 0) node.textContent = text;
 		return node;
 	}
-	function field(label, control, hint) {
-		const wrap = el("div", "ojpp-field");
-		const labelNode = el("label", void 0, label);
-		if (/^(INPUT|SELECT|TEXTAREA)$/.test(control.tagName)) {
-			control.id ||= `ojpp-field-${newId()}`;
-			labelNode.htmlFor = control.id;
-		}
-		wrap.append(labelNode, control);
-		if (hint) wrap.append(el("div", "ojpp-hint", hint));
-		return wrap;
-	}
-	function textInput(value, placeholder = "", type = "text") {
-		const input = el("input");
-		input.type = type;
-		input.value = value;
-		input.placeholder = placeholder;
-		return input;
-	}
 	function openSettingsPanel(options) {
 		const draft = structuredClone(options.settings);
-		let selectedId = draft.activeProviderId ?? draft.providers[0]?.id ?? null;
 		const mask = el("div", "ojpp-mask");
 		const panel = el("div", "ojpp-panel");
-		const head = el("div", "ojpp-panel-head");
 		panel.setAttribute("role", "dialog");
 		panel.setAttribute("aria-modal", "true");
-		const titleNode = el("h3", void 0, t("app.settingsTitle", { name: APP_NAME }));
-		head.append(titleNode);
-		const closeBtn = el("button", "ojpp-btn ojpp-btn-ghost", t("common.close"));
-		head.append(closeBtn);
+		const head = el("div", "ojpp-panel-head");
+		const backBtn = el("button", "ojpp-back-btn");
+		backBtn.innerHTML = iconChevronLeft;
+		backBtn.style.display = "none";
+		const titleNode = el("h3");
+		const closeBtn = el("button", "ojpp-panel-close");
+		closeBtn.innerHTML = iconX;
+		closeBtn.setAttribute("aria-label", t("common.close"));
+		head.append(backBtn, titleNode, closeBtn);
 		const body = el("div", "ojpp-panel-body");
-		const tabs = el("div", "ojpp-tabs");
-		const tabGeneral = el("button", "ojpp-tab", t("settings.tab.general"));
-		const tabProvider = el("button", "ojpp-tab", t("settings.tab.provider"));
-		const tabAdvanced = el("button", "ojpp-tab", t("settings.tab.advanced"));
-		tabs.append(tabGeneral, tabProvider, tabAdvanced);
-		const content = el("div");
-		body.append(tabs, content);
 		const foot = el("div", "ojpp-panel-foot");
 		const resetBtn = el("button", "ojpp-btn ojpp-btn-danger", t("settings.reset"));
-		const cancelBtn = el("button", "ojpp-btn", t("common.cancel"));
 		const saveBtn = el("button", "ojpp-btn ojpp-btn-primary", t("common.save"));
 		const saveStatus = el("span", "ojpp-status");
 		saveStatus.setAttribute("role", "status");
-		foot.append(saveStatus, resetBtn, cancelBtn, saveBtn);
+		foot.append(resetBtn, saveStatus, saveBtn);
 		panel.append(head, body, foot);
 		mask.append(panel);
-		let activeTab = "general";
 		const retitle = () => {
-			const title = t("app.settingsTitle", { name: APP_NAME });
-			panel.setAttribute("aria-label", title);
-			titleNode.textContent = title;
-			closeBtn.textContent = t("common.close");
-			tabGeneral.textContent = t("settings.tab.general");
-			tabProvider.textContent = t("settings.tab.provider");
-			tabAdvanced.textContent = t("settings.tab.advanced");
+			closeBtn.setAttribute("aria-label", t("common.close"));
 			resetBtn.textContent = t("settings.reset");
-			cancelBtn.textContent = t("common.cancel");
 			saveBtn.textContent = t("common.save");
 		};
-		const render = () => {
+		const switchView = (view, data) => {
 			retitle();
-			tabGeneral.dataset.active = activeTab === "general" ? "1" : "0";
-			tabProvider.dataset.active = activeTab === "provider" ? "1" : "0";
-			tabAdvanced.dataset.active = activeTab === "advanced" ? "1" : "0";
-			content.replaceChildren();
-			if (activeTab === "general") content.append(renderGeneral());
-			else if (activeTab === "provider") content.append(renderProviders());
-			else content.append(renderAdvanced());
-		};
-		function renderGeneral() {
-			const box = el("div");
-			const localeSelect = el("select");
-			[
-				{
-					value: "auto",
-					label: t("settings.localeAuto")
-				},
-				{
-					value: "zh",
-					label: t("settings.localeZh")
-				},
-				{
-					value: "en",
-					label: t("settings.localeEn")
+			if (view === "main") {
+				titleNode.textContent = APP_NAME;
+				backBtn.style.display = "none";
+				body.replaceChildren(renderMain());
+			} else if (view === "providers") {
+				titleNode.textContent = t("settings.providers");
+				backBtn.style.display = "flex";
+				backBtn.onclick = () => switchView("main");
+				body.replaceChildren(renderProviders());
+			} else if (view === "edit" && data) {
+				const provider = draft.providers.find((p) => p.id === data);
+				if (provider) {
+					titleNode.textContent = provider.name || t("common.unnamed");
+					backBtn.style.display = "flex";
+					backBtn.onclick = () => switchView("providers");
+					body.replaceChildren(renderEdit(provider));
 				}
-			].forEach(({ value, label }) => {
-				const option = el("option");
-				option.value = value;
-				option.textContent = label;
-				option.selected = draft.locale === value;
-				localeSelect.append(option);
-			});
-			localeSelect.addEventListener("change", () => {
+			} else if (view === "picker") {
+				titleNode.textContent = t("settings.addProvider");
+				backBtn.style.display = "flex";
+				backBtn.onclick = () => switchView("providers");
+				body.replaceChildren(renderPicker());
+			}
+		};
+		function renderMain() {
+			const container = el("div");
+			const sec1 = section(t("settings.general"));
+			const row1 = el("div", "ojpp-row");
+			const localeSelect = select([
+				["auto", t("settings.localeAuto")],
+				["zh", "中文"],
+				["en", "English"]
+			], draft.locale);
+			localeSelect.onchange = () => {
 				draft.locale = localeSelect.value;
 				setLocale(resolveLocale(draft.locale));
-				render();
-			});
-			box.append(field(t("settings.uiLanguage"), localeSelect, t("settings.uiLanguageHint")));
-			const themeSelect = el("select");
-			[
-				{
-					value: "auto",
-					label: t("settings.themeAuto")
-				},
-				{
-					value: "light",
-					label: t("settings.themeLight")
-				},
-				{
-					value: "dark",
-					label: t("settings.themeDark")
-				}
-			].forEach(({ value, label }) => {
-				const option = el("option");
-				option.value = value;
-				option.textContent = label;
-				option.selected = draft.theme === value;
-				themeSelect.append(option);
-			});
-			themeSelect.addEventListener("change", () => {
+				switchView("main");
+			};
+			const themeSelect = select([
+				["auto", t("settings.themeAuto")],
+				["light", t("settings.themeLight")],
+				["dark", t("settings.themeDark")]
+			], draft.theme);
+			themeSelect.onchange = () => {
 				draft.theme = themeSelect.value;
 				applyTheme(draft.theme);
-			});
-			box.append(field(t("settings.theme"), themeSelect, t("settings.themeHint")));
-			const langInput = textInput(draft.targetLang, t("settings.targetLangPlaceholder"));
-			langInput.addEventListener("input", () => draft.targetLang = langInput.value);
-			box.append(field(t("settings.targetLang"), langInput, t("settings.targetLangHint")));
+			};
+			row1.append(field(t("settings.language"), localeSelect), field(t("settings.theme"), themeSelect));
+			const targetInput = input(draft.targetLang, t("settings.targetLangPlaceholder"));
+			targetInput.oninput = () => draft.targetLang = targetInput.value;
 			const promptArea = el("textarea");
 			promptArea.value = draft.extraPrompt;
 			promptArea.placeholder = t("settings.extraPromptPlaceholder");
-			promptArea.addEventListener("input", () => draft.extraPrompt = promptArea.value);
-			box.append(field(t("settings.extraPrompt"), promptArea, t("settings.extraPromptHint")));
-			box.append(checkRow(t("settings.wholeBlock"), draft.translateWholeBlock, t("settings.wholeBlockHint"), (v) => draft.translateWholeBlock = v));
-			box.append(checkRow(t("settings.autoTranslate"), draft.autoTranslate, t("settings.autoTranslateHint"), (v) => draft.autoTranslate = v));
-			box.append(checkRow(t("settings.streaming"), draft.streaming, t("settings.streamingHint"), (v) => draft.streaming = v));
-			const row = el("div", "ojpp-row");
-			const timeout = textInput(String(draft.timeoutMs), "120000", "number");
-			timeout.addEventListener("input", () => {
-				const n = Number(timeout.value);
+			promptArea.style.minHeight = "60px";
+			promptArea.oninput = () => draft.extraPrompt = promptArea.value;
+			sec1.body.append(row1, field(t("settings.targetLang"), targetInput), field(t("settings.extraPrompt"), promptArea));
+			container.append(sec1.container);
+			const sec2 = section(t("settings.behavior"));
+			sec2.body.append(check(t("settings.wholeBlock"), draft.translateWholeBlock, (v) => draft.translateWholeBlock = v), check(t("settings.autoTranslate"), draft.autoTranslate, (v) => draft.autoTranslate = v), check(t("settings.streaming"), draft.streaming, (v) => draft.streaming = v));
+			const row2 = el("div", "ojpp-row");
+			const timeoutInput = input(String(draft.timeoutMs), "120000");
+			timeoutInput.type = "number";
+			timeoutInput.oninput = () => {
+				const n = Number(timeoutInput.value);
 				if (Number.isFinite(n) && n > 0) draft.timeoutMs = n;
-			});
-			const retries = textInput(String(draft.retries), "1", "number");
-			retries.addEventListener("input", () => {
-				const n = Number(retries.value);
+			};
+			const retriesInput = input(String(draft.retries), "1");
+			retriesInput.type = "number";
+			retriesInput.oninput = () => {
+				const n = Number(retriesInput.value);
 				if (Number.isFinite(n) && n >= 0) draft.retries = n;
+			};
+			row2.append(field(t("settings.timeout"), timeoutInput), field(t("settings.retries"), retriesInput));
+			sec2.body.append(row2);
+			container.append(sec2.container);
+			const sec3 = section(t("settings.providers"), String(draft.providers.length));
+			const active = draft.providers.find((p) => p.id === draft.activeProviderId);
+			const summary = el("div", "ojpp-provider-summary");
+			if (active) summary.textContent = `${active.name || t("common.unnamed")} · ${active.model || "—"}`;
+			else summary.textContent = t("settings.noProvider");
+			const manageBtn = el("button", "ojpp-btn ojpp-btn-primary", t("settings.manage"));
+			manageBtn.onclick = () => switchView("providers");
+			sec3.body.append(summary, manageBtn);
+			container.append(sec3.container);
+			requestAnimationFrame(() => {
+				applyStagger(Array.from(container.querySelectorAll(".ojpp-section")), 0, 15);
 			});
-			row.append(field(t("settings.timeout"), timeout), field(t("settings.retries"), retries, t("settings.retriesHint")));
-			box.append(row);
-			return box;
+			return container;
 		}
-		let providerView = "list";
 		function renderProviders() {
-			const box = el("div");
-			if (providerView === "add") {
-				box.append(renderProviderPicker());
-				return box;
-			}
-			if (providerView === "edit") {
-				const current = draft.providers.find((p) => p.id === selectedId);
-				if (current) {
-					const head = el("div", "ojpp-picker-head");
-					const back = el("button", "ojpp-btn ojpp-btn-ghost", `← ${t("settings.backToList")}`);
-					back.addEventListener("click", () => {
-						providerView = "list";
-						render();
-					});
-					head.append(back, el("strong", void 0, current.name || t("common.unnamed")));
-					box.append(head);
-					box.append(renderProviderEditor(current, () => {}));
-					return box;
-				}
-				providerView = "list";
-			}
-			box.append(renderProviderList());
-			return box;
-		}
-		function renderProviderList() {
-			const box = el("div");
-			const addBtn = el("button", "ojpp-btn ojpp-btn-primary ojpp-add-provider", `+ ${t("settings.addProvider")}`);
-			addBtn.addEventListener("click", () => {
-				providerView = "add";
-				render();
-			});
-			box.append(addBtn);
-			const list = el("div", "ojpp-provider-list");
+			const container = el("div", "ojpp-section-body");
+			container.style.padding = "16px";
+			const addBtn = el("button", "ojpp-add-provider");
+			addBtn.innerHTML = iconPlus;
+			addBtn.title = t("settings.addProvider");
+			addBtn.onclick = () => switchView("picker");
+			container.append(addBtn);
 			if (draft.providers.length === 0) {
-				const empty = el("div", "ojpp-hint", t("settings.providerListEmpty"));
-				box.append(empty);
-				return box;
+				const empty = el("div", "ojpp-hint", t("settings.noProvider"));
+				empty.style.textAlign = "center";
+				empty.style.padding = "40px 20px";
+				container.append(empty);
+				return container;
 			}
-			draft.providers.forEach((provider) => {
+			const list = el("div", "ojpp-provider-list");
+			draft.providers.forEach((p) => {
 				const item = el("div", "ojpp-provider-item");
-				item.dataset.active = provider.id === draft.activeProviderId ? "1" : "0";
+				item.dataset.active = p.id === draft.activeProviderId ? "1" : "0";
 				const radio = el("input");
 				radio.type = "radio";
-				radio.name = "ojpp-provider";
-				radio.checked = provider.id === draft.activeProviderId;
-				radio.title = t("settings.enableProvider");
-				radio.addEventListener("change", () => {
-					draft.activeProviderId = provider.id;
-					render();
-				});
+				radio.name = "provider";
+				radio.checked = p.id === draft.activeProviderId;
+				radio.onclick = () => {
+					draft.activeProviderId = p.id;
+					switchView("providers");
+				};
 				const text = el("div", "ojpp-provider-text");
-				const name = el("div", "ojpp-provider-name", provider.name || t("common.unnamed"));
-				const meta = el("div", "ojpp-provider-meta", `${PROTOCOL_LABEL[provider.protocol]} · ${provider.model || t("common.notFilled")}`);
-				text.append(name, meta);
-				const badge = el("span", "ojpp-provider-badge", t("settings.inUse"));
-				if (provider.id !== draft.activeProviderId) badge.style.visibility = "hidden";
-				const edit = el("button", "ojpp-btn ojpp-btn-ghost ojpp-provider-edit", t("settings.editProvider"));
-				edit.addEventListener("click", (event) => {
-					event.stopPropagation();
-					selectedId = provider.id;
-					providerView = "edit";
-					render();
-				});
-				item.addEventListener("click", (event) => {
-					if (event.target === radio || event.target === edit) return;
-					selectedId = provider.id;
-					providerView = "edit";
-					render();
-				});
-				item.append(radio, text, badge, edit);
+				text.append(el("div", "ojpp-provider-name", p.name || t("common.unnamed")), el("div", "ojpp-provider-meta", `${PROTOCOL_LABEL[p.protocol]} · ${p.model || "—"}`));
+				const badge = el("span", "ojpp-provider-badge", iconCheck);
+				badge.innerHTML = iconCheck;
+				if (p.id !== draft.activeProviderId) badge.style.visibility = "hidden";
+				const editBtn = el("button", "ojpp-provider-edit");
+				editBtn.innerHTML = iconPencil;
+				editBtn.title = t("settings.edit");
+				editBtn.onclick = (e) => {
+					e.stopPropagation();
+					switchView("edit", p.id);
+				};
+				item.onclick = () => switchView("edit", p.id);
+				item.append(radio, text, badge, editBtn);
 				list.append(item);
 			});
-			box.append(list);
-			return box;
-		}
-		function renderProviderPicker() {
-			const box = el("div");
-			const head = el("div", "ojpp-picker-head");
-			const back = el("button", "ojpp-btn ojpp-btn-ghost", `← ${t("settings.backToList")}`);
-			back.addEventListener("click", () => {
-				providerView = "list";
-				render();
+			container.append(list);
+			requestAnimationFrame(() => {
+				applyStagger(Array.from(list.children), 0, 15);
 			});
-			head.append(back, el("strong", void 0, t("settings.chooseProvider")));
-			box.append(head);
-			box.append(el("div", "ojpp-hint", t("settings.chooseProviderHint")));
-			const search = textInput("", t("settings.providerSearch"));
-			search.addEventListener("input", () => paint(search.value));
-			box.append(search);
-			const grid = el("div", "ojpp-preset-grid");
-			box.append(grid);
-			const pick = (preset) => {
-				const provider = createProvider(preset);
-				draft.providers.push(provider);
-				selectedId = provider.id;
-				draft.activeProviderId = provider.id;
-				providerView = "edit";
-				render();
+			return container;
+		}
+		function renderEdit(provider) {
+			const container = el("div");
+			const sec1 = section(t("settings.basic"));
+			const nameInput = input(provider.name, t("settings.providerNamePlaceholder"));
+			nameInput.oninput = () => {
+				provider.name = nameInput.value;
+				titleNode.textContent = nameInput.value || t("common.unnamed");
 			};
+			const protocolSelect = select(Object.keys(PROTOCOL_LABEL).map((k) => [k, PROTOCOL_LABEL[k]]), provider.protocol);
+			protocolSelect.onchange = () => {
+				provider.protocol = protocolSelect.value;
+			};
+			const baseInput = input(provider.baseUrl, "https://api.openai.com/v1");
+			baseInput.oninput = () => {
+				provider.baseUrl = baseInput.value;
+			};
+			const modelInput = input(provider.model, "gpt-4o");
+			modelInput.oninput = () => {
+				provider.model = modelInput.value;
+			};
+			const keyInput = input(provider.apiKey, "", "password");
+			keyInput.oninput = () => {
+				provider.apiKey = keyInput.value;
+			};
+			const protocolModelRow = el("div", "ojpp-row");
+			protocolModelRow.append(field(t("settings.protocol"), protocolSelect), field(t("settings.model"), modelInput));
+			sec1.body.append(field(t("settings.providerName"), nameInput), protocolModelRow, field(t("settings.baseUrl"), baseInput), field("API Key", keyInput));
+			container.append(sec1.container);
+			const sec2 = section(t("settings.advancedOptions"));
+			const row1 = el("div", "ojpp-row");
+			const reasoningSelect = select([
+				["", t("settings.effortDefault")],
+				["enabled", t("settings.effortEnabled")],
+				["disabled", t("settings.effortDisabled")]
+			], provider.reasoning.enabled === null ? "" : provider.reasoning.enabled ? "enabled" : "disabled");
+			reasoningSelect.onchange = () => {
+				const v = reasoningSelect.value;
+				provider.reasoning.enabled = v === "" ? null : v === "enabled";
+			};
+			const effortSelect = select([
+				["", t("settings.effortDefault")],
+				["low", "Low"],
+				["medium", "Medium"],
+				["high", "High"]
+			], provider.reasoning.effort || "");
+			effortSelect.onchange = () => {
+				provider.reasoning.effort = effortSelect.value;
+			};
+			row1.append(field(t("settings.reasoning"), reasoningSelect), field(t("settings.reasoningEffort"), effortSelect));
+			sec2.body.append(row1);
+			const headersArea = el("textarea");
+			headersArea.value = Object.entries(provider.headers).map(([k, v]) => `${k}: ${v}`).join("\n");
+			headersArea.placeholder = t("settings.headersPlaceholder");
+			headersArea.style.minHeight = "60px";
+			headersArea.oninput = () => {
+				provider.headers = parsePairs(headersArea.value);
+			};
+			sec2.body.append(field(t("settings.headers"), headersArea));
+			const bodyArea = el("textarea");
+			bodyArea.value = JSON.stringify(provider.body ?? {}, null, 2);
+			bodyArea.placeholder = "{}";
+			bodyArea.style.minHeight = "60px";
+			bodyArea.oninput = () => {
+				try {
+					const parsed = JSON.parse(bodyArea.value || "{}");
+					if (parsed && typeof parsed === "object") {
+						provider.body = parsed;
+						bodyArea.style.borderColor = "";
+					}
+				} catch {
+					bodyArea.style.borderColor = "var(--color-danger)";
+				}
+			};
+			sec2.body.append(field(t("settings.body"), bodyArea));
+			container.append(sec2.container);
+			const sec3 = section(t("settings.actions"));
+			const status = el("div", "ojpp-status");
+			const actions = el("div", "ojpp-row");
+			const testBtn = el("button", "ojpp-btn", t("settings.test"));
+			testBtn.onclick = async () => {
+				testBtn.disabled = true;
+				status.textContent = t("settings.testing");
+				status.dataset.kind = "";
+				try {
+					const reply = await testConnection(options.request, draft, provider);
+					status.dataset.kind = "ok";
+					status.textContent = t("settings.testOk", { reply: reply.slice(0, 100) });
+				} catch (error) {
+					status.dataset.kind = "error";
+					status.textContent = t("settings.testFail", { message: error instanceof Error ? error.message : String(error) });
+				} finally {
+					testBtn.disabled = false;
+				}
+			};
+			const dupBtn = el("button", "ojpp-btn", t("settings.duplicate"));
+			dupBtn.onclick = () => {
+				const copy = {
+					...structuredClone(provider),
+					id: newId(),
+					name: t("settings.providerCopySuffix", { name: provider.name })
+				};
+				draft.providers.push(copy);
+				draft.activeProviderId = copy.id;
+				switchView("edit", copy.id);
+			};
+			const delBtn = el("button", "ojpp-btn ojpp-btn-danger", t("settings.delete"));
+			delBtn.onclick = () => {
+				if (draft.providers.length <= 1) {
+					status.dataset.kind = "error";
+					status.textContent = t("settings.keepOne");
+					return;
+				}
+				if (!confirm(t("settings.deleteConfirm", { name: provider.name || t("common.unnamed") }))) return;
+				draft.providers = draft.providers.filter((p) => p.id !== provider.id);
+				if (draft.activeProviderId === provider.id) draft.activeProviderId = draft.providers[0]?.id ?? null;
+				switchView("providers");
+			};
+			actions.append(testBtn, dupBtn, delBtn);
+			sec3.body.append(actions, status);
+			container.append(sec3.container);
+			requestAnimationFrame(() => {
+				applyStagger(Array.from(container.querySelectorAll(".ojpp-section")), 0, 15);
+			});
+			return container;
+		}
+		function parsePairs(text) {
+			const out = {};
+			for (const line of text.split("\n")) {
+				const trimmed = line.trim();
+				if (!trimmed || trimmed.startsWith("#")) continue;
+				const index = trimmed.indexOf(":");
+				if (index <= 0) continue;
+				out[trimmed.slice(0, index).trim()] = trimmed.slice(index + 1).trim();
+			}
+			return out;
+		}
+		function renderPicker() {
+			const container = el("div");
+			container.style.padding = "16px";
+			const search = input("", t("settings.search"));
+			search.oninput = () => paint(search.value);
+			container.append(search);
+			const grid = el("div", "ojpp-preset-grid");
+			container.append(grid);
 			const paint = (query) => {
 				grid.replaceChildren();
 				const q = query.trim().toLowerCase();
@@ -32669,213 +32839,94 @@ $$` : `${n}$$`;
 					item.append(el("span", "ojpp-preset-name", preset.label));
 					const meta = preset.baseUrl.replace(/^https?:\/\//, "");
 					if (meta) item.append(el("span", "ojpp-preset-meta", meta));
-					item.addEventListener("click", () => pick(preset));
+					item.onclick = () => {
+						const provider = createProvider(preset);
+						draft.providers.push(provider);
+						draft.activeProviderId = provider.id;
+						switchView("edit", provider.id);
+					};
 					grid.append(item);
 				});
-				if (matched.length === 0) grid.append(el("div", "ojpp-hint", t("settings.noProviderMatch")));
+				if (matched.length === 0) grid.append(el("div", "ojpp-hint", t("settings.noMatch")));
+				requestAnimationFrame(() => {
+					applyStagger(Array.from(grid.querySelectorAll(".ojpp-preset-item")), 0, 10);
+				});
 			};
 			paint("");
-			return box;
+			requestAnimationFrame(() => search.focus());
+			return container;
 		}
-		function renderProviderEditor(provider, onNameChange) {
-			const box = el("div");
-			const nameInput = textInput(provider.name, t("settings.providerNamePlaceholder"));
-			nameInput.addEventListener("input", () => {
-				provider.name = nameInput.value;
-				onNameChange(nameInput.value);
-			});
-			box.append(field(t("settings.providerName"), nameInput));
-			const protocolSelect = el("select");
-			Object.keys(PROTOCOL_LABEL).forEach((key) => {
+		function section(title, badge) {
+			const container = el("div", "ojpp-section");
+			const header = el("div", "ojpp-section-header");
+			const titleEl = el("h4", "ojpp-section-title", title);
+			header.append(titleEl);
+			if (badge) header.append(el("span", "ojpp-section-badge", badge));
+			const body = el("div", "ojpp-section-body");
+			container.append(header, body);
+			return {
+				header,
+				body,
+				container
+			};
+		}
+		function field(label, control) {
+			const wrap = el("div", "ojpp-field");
+			const labelNode = el("label", void 0, label);
+			if (/^(INPUT|SELECT|TEXTAREA)$/.test(control.tagName)) {
+				control.id ||= `ojpp-${newId()}`;
+				labelNode.htmlFor = control.id;
+			}
+			wrap.append(labelNode, control);
+			return wrap;
+		}
+		function input(value, placeholder = "", type = "text") {
+			const input = el("input");
+			input.type = type;
+			input.value = value;
+			input.placeholder = placeholder;
+			return input;
+		}
+		function select(options, value) {
+			const select = el("select");
+			options.forEach(([val, label]) => {
 				const option = el("option");
-				option.value = key;
-				option.textContent = PROTOCOL_LABEL[key];
-				option.selected = provider.protocol === key;
-				protocolSelect.append(option);
-			});
-			protocolSelect.addEventListener("change", () => {
-				provider.protocol = protocolSelect.value;
-				render();
-			});
-			box.append(field(t("settings.protocol"), protocolSelect, t("settings.protocolHint")));
-			const baseInput = textInput(provider.baseUrl, "https://api.openai.com/v1");
-			baseInput.addEventListener("input", () => provider.baseUrl = baseInput.value);
-			box.append(field(t("settings.baseUrl"), baseInput, t("settings.baseUrlHint")));
-			const modelInput = textInput(provider.model, "gpt-6-luna");
-			modelInput.addEventListener("input", () => provider.model = modelInput.value);
-			box.append(field(t("settings.model"), modelInput));
-			const keyInput = textInput(provider.apiKey, t("settings.apiKeyPlaceholder"), "password");
-			keyInput.addEventListener("input", () => provider.apiKey = keyInput.value);
-			box.append(field("API Key", keyInput, t("settings.apiKeyHint")));
-			const row = el("div", "ojpp-row");
-			const reasoningSelect = el("select");
-			[
-				{
-					value: "default",
-					label: t("settings.effortDefault")
-				},
-				{
-					value: "enabled",
-					label: t("settings.effortEnabled")
-				},
-				{
-					value: "disabled",
-					label: t("settings.effortDisabled")
-				}
-			].forEach(({ value, label }) => {
-				const option = el("option");
-				option.value = value;
+				option.value = val;
 				option.textContent = label;
-				option.selected = value === "default" ? provider.reasoning.enabled === null : value === "enabled" ? provider.reasoning.enabled === true : provider.reasoning.enabled === false;
-				reasoningSelect.append(option);
+				option.selected = val === value;
+				select.append(option);
 			});
-			reasoningSelect.addEventListener("change", () => {
-				const v = reasoningSelect.value;
-				provider.reasoning.enabled = v === "default" ? null : v === "enabled";
-			});
-			const effortInput = textInput(provider.reasoning.effort, "low / medium / high");
-			effortInput.addEventListener("input", () => provider.reasoning.effort = effortInput.value);
-			row.append(field(t("settings.reasoning"), reasoningSelect, t("settings.reasoningHint")), field(t("settings.reasoningEffort"), effortInput, t("settings.reasoningEffortHint")));
-			box.append(row);
-			const headerArea = el("textarea");
-			headerArea.value = Object.entries(provider.headers).map(([k, v]) => `${k}: ${v}`).join("\n");
-			headerArea.placeholder = t("settings.headersPlaceholder");
-			headerArea.addEventListener("input", () => {
-				provider.headers = parsePairs(headerArea.value);
-			});
-			box.append(field(t("settings.headers"), headerArea, t("settings.headersHint")));
-			const bodyArea = el("textarea");
-			bodyArea.value = JSON.stringify(provider.body ?? {}, null, 2);
-			bodyArea.placeholder = "{}";
-			bodyArea.addEventListener("input", () => {
-				try {
-					const parsed = JSON.parse(bodyArea.value || "{}");
-					if (parsed && typeof parsed === "object") provider.body = parsed;
-					bodyArea.style.borderColor = "";
-				} catch {
-					bodyArea.style.borderColor = "#b42318";
-				}
-			});
-			box.append(field(t("settings.body"), bodyArea, t("settings.bodyHint")));
-			const status = el("div", "ojpp-status");
-			const actions = el("div", "ojpp-row");
-			const testBtn = el("button", "ojpp-btn", t("settings.test"));
-			const dupBtn = el("button", "ojpp-btn", t("settings.copyProvider"));
-			const delBtn = el("button", "ojpp-btn ojpp-btn-danger", t("settings.deleteProvider"));
-			testBtn.addEventListener("click", async () => {
-				testBtn.disabled = true;
-				status.dataset.kind = "";
-				status.textContent = t("settings.testing");
-				try {
-					const reply = await testConnection(options.request, draft, provider);
-					status.dataset.kind = "ok";
-					status.textContent = t("settings.testOk", { reply: reply.slice(0, 200) });
-				} catch (error) {
-					status.dataset.kind = "error";
-					status.textContent = t("settings.testFail", { message: error instanceof Error ? error.message : String(error) });
-				} finally {
-					testBtn.disabled = false;
-				}
-			});
-			dupBtn.addEventListener("click", () => {
-				const copy = {
-					...structuredClone(provider),
-					id: newId(),
-					name: t("settings.providerCopySuffix", { name: provider.name })
-				};
-				draft.providers.push(copy);
-				selectedId = copy.id;
-				draft.activeProviderId = copy.id;
-				providerView = "edit";
-				render();
-			});
-			delBtn.addEventListener("click", () => {
-				if (draft.providers.length <= 1) {
-					status.dataset.kind = "error";
-					status.textContent = t("settings.keepOne");
-					return;
-				}
-				draft.providers = draft.providers.filter((p) => p.id !== provider.id);
-				if (draft.activeProviderId === provider.id) draft.activeProviderId = draft.providers[0]?.id ?? null;
-				selectedId = draft.activeProviderId;
-				providerView = "list";
-				render();
-			});
-			actions.append(testBtn, dupBtn, delBtn);
-			box.append(actions, status);
-			return box;
+			return select;
 		}
-		function renderAdvanced() {
-			const box = el("div");
-			const info = el("div", "ojpp-hint");
-			info.textContent = t("settings.providerFooter");
-			box.append(info);
-			const exportArea = el("textarea");
-			exportArea.value = JSON.stringify({
-				...draft,
-				providers: draft.providers.map((p) => ({
-					...p,
-					apiKey: p.apiKey ? "***" : ""
-				}))
-			}, null, 2);
-			exportArea.readOnly = true;
-			box.append(field(t("settings.preview"), exportArea));
-			const importArea = el("textarea");
-			importArea.placeholder = t("settings.importPlaceholder");
-			const importBtn = el("button", "ojpp-btn", t("settings.import"));
-			const status = el("div", "ojpp-status");
-			importBtn.addEventListener("click", () => {
-				try {
-					const parsed = JSON.parse(importArea.value);
-					if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.providers)) throw new Error(t("settings.importMissing"));
-					Object.assign(draft, migrate(parsed));
-					selectedId = draft.activeProviderId;
-					status.dataset.kind = "ok";
-					status.textContent = t("settings.importOk");
-					render();
-				} catch (error) {
-					status.dataset.kind = "error";
-					status.textContent = t("settings.importFail", { message: error instanceof Error ? error.message : String(error) });
-				}
-			});
-			box.append(field(t("settings.importTitle"), importArea), importBtn, status);
-			return box;
-		}
-		function checkRow(label, value, hint, onChange) {
+		function check(label, value, onChange) {
 			const row = el("div", "ojpp-check");
 			const input = el("input");
 			input.type = "checkbox";
 			input.checked = value;
-			input.id = `ojpp-${label}`;
-			input.addEventListener("change", () => onChange(input.checked));
-			const wrap = el("label");
-			wrap.htmlFor = input.id;
-			wrap.append(el("div", void 0, label), el("div", "ojpp-hint", hint));
-			row.append(input, wrap);
+			input.id = `ojpp-${newId()}`;
+			input.onchange = () => onChange(input.checked);
+			const labelEl = el("label", void 0, label);
+			labelEl.htmlFor = input.id;
+			row.append(input, labelEl);
 			return row;
 		}
-		tabGeneral.addEventListener("click", () => {
-			activeTab = "general";
-			render();
-		});
-		tabProvider.addEventListener("click", () => {
-			activeTab = "provider";
-			render();
-		});
-		tabAdvanced.addEventListener("click", () => {
-			activeTab = "advanced";
-			render();
-		});
 		let closed = false;
 		const close = () => {
 			if (closed) return;
 			closed = true;
-			mask.remove();
-			document.removeEventListener("keydown", onKey);
-			options.onClose();
+			mask.style.transition = "opacity 300ms var(--ease-out)";
+			mask.style.opacity = "0";
+			panel.style.transition = "opacity 300ms var(--ease-out), transform 300ms var(--ease-out)";
+			panel.style.opacity = "0";
+			panel.style.transform = "scale(0.96) translateY(20px)";
+			setTimeout(() => {
+				mask.remove();
+				document.removeEventListener("keydown", onKey);
+				options.onClose();
+			}, 300);
 		};
-		const onKey = (event) => {
-			if (event.key === "Escape") close();
+		const onKey = (e) => {
+			if (e.key === "Escape") close();
 		};
 		const persist = async (next) => {
 			saveBtn.disabled = resetBtn.disabled = true;
@@ -32890,65 +32941,116 @@ $$` : `${n}$$`;
 				saveBtn.disabled = resetBtn.disabled = false;
 			}
 		};
-		saveBtn.addEventListener("click", () => {
+		saveBtn.onclick = () => {
 			if (!draft.activeProviderId && draft.providers[0]) draft.activeProviderId = draft.providers[0].id;
 			persist(draft);
-		});
-		cancelBtn.addEventListener("click", close);
-		closeBtn.addEventListener("click", close);
-		resetBtn.addEventListener("click", () => {
+		};
+		closeBtn.onclick = close;
+		resetBtn.onclick = () => {
 			if (confirm(t("settings.resetConfirm"))) persist(null);
-		});
+		};
 		let maskPress;
-		mask.addEventListener("pointerdown", (event) => {
-			maskPress = event.target === mask && event.button === 0 ? {
-				id: event.pointerId,
-				x: event.clientX,
-				y: event.clientY
-			} : void 0;
-		});
-		mask.addEventListener("pointercancel", () => {
+		mask.onpointerdown = (e) => {
+			if (e.button !== 0) {
+				maskPress = void 0;
+				return;
+			}
+			maskPress = {
+				id: e.pointerId,
+				fromMask: e.target === mask
+			};
+		};
+		mask.onpointercancel = () => {
 			maskPress = void 0;
-		});
-		mask.addEventListener("pointerup", (event) => {
+		};
+		mask.onpointerup = (e) => {
 			const press = maskPress;
 			maskPress = void 0;
-			if (press && event.pointerId === press.id && event.target === mask && Math.hypot(event.clientX - press.x, event.clientY - press.y) < 4) close();
-		});
+			if (!press || press.id !== e.pointerId || !press.fromMask) return;
+			if (e.target !== mask) return;
+			close();
+		};
+		panel.addEventListener("pointerdown", (e) => {
+			maskPress = {
+				id: e.pointerId,
+				fromMask: false
+			};
+		}, true);
 		document.addEventListener("keydown", onKey);
-		render();
+		switchView("main");
 		document.body.append(mask);
 		return close;
 	}
-	function parsePairs(text) {
-		const out = {};
-		for (const line of text.split("\n")) {
-			const trimmed = line.trim();
-			if (!trimmed || trimmed.startsWith("#")) continue;
-			const index = trimmed.indexOf(":");
-			if (index <= 0) continue;
-			out[trimmed.slice(0, index).trim()] = trimmed.slice(index + 1).trim();
-		}
-		return out;
-	}
 	var CSS = `
-/* ---------- 内联图标工具栏 ---------- */
+/* ---------- CSS 变量：设计 Token ---------- */
+:root {
+  /* 缓动曲线 */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  
+  /* 时长 */
+  --duration-press: 100ms;
+  --duration-tooltip: 150ms;
+  --duration-dropdown: 200ms;
+  --duration-modal: 300ms;
+  
+  /* 间距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  
+  /* 圆角 */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.16), 0 8px 16px rgba(0, 0, 0, 0.08);
+  
+  /* 颜色 */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8f9fa;
+  --color-bg-tertiary: #f1f3f5;
+  --color-bg-hover: rgba(0, 0, 0, 0.04);
+  
+  --color-border: #e9ecef;
+  --color-border-hover: #dee2e6;
+  --color-border-focus: #4c6ef5;
+  
+  --color-text-primary: #212529;
+  --color-text-secondary: #495057;
+  --color-text-tertiary: #868e96;
+  
+  --color-accent: #4c6ef5;
+  --color-accent-bg: rgba(76, 110, 245, 0.08);
+  --color-accent-light: #dbe4ff;
+  
+  --color-success: #40c057;
+  --color-success-bg: rgba(64, 192, 87, 0.08);
+  --color-danger: #fa5252;
+  --color-danger-bg: rgba(250, 82, 82, 0.08);
+}
+
+/* ---------- 工具栏 ---------- */
 .ojpp-toolbar {
   display: inline-flex;
   gap: 2px;
   align-items: center;
-  margin-left: 8px;
+  margin-left: var(--spacing-sm);
   vertical-align: middle;
 }
-/* 浮到标题行最右边。用 float 而不是 absolute，
-   因为站点的标题容器高度常常是 auto，absolute 会溢出。 */
+
 .ojpp-toolbar-right {
   float: right;
-  margin-left: 12px;
+  margin-left: var(--spacing-md);
   margin-right: 0;
 }
-/* 单独一行靠右。用于标题区下方（如 Codeforces 的时限/内存限制之后），
-   用 flex 而不是 float，这样它一定会独占一行。 */
+
 .ojpp-toolbar-block {
   display: flex;
   justify-content: flex-end;
@@ -32957,126 +33059,214 @@ $$` : `${n}$$`;
   width: 100%;
   margin: 2px 0 6px;
 }
+
 .ojpp-toolbar-block .ojpp-icon-btn {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
 }
+
 .ojpp-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   padding: 0;
-  border: 1px solid transparent;
-  border-radius: 5px;
+  border: none;
+  border-radius: var(--radius-sm);
   background: transparent;
-  color: #8a9099;
+  color: var(--color-text-tertiary);
   cursor: pointer;
-  transition: background .15s, color .15s, border-color .15s;
+  transition: 
+    background var(--duration-tooltip) var(--ease-out),
+    color var(--duration-tooltip) var(--ease-out),
+    transform var(--duration-press) var(--ease-out);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
+
 .ojpp-icon-btn:hover {
-  background: rgba(0, 0, 0, .06);
-  color: #24292f;
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
 }
+
+.ojpp-icon-btn:active {
+  transform: scale(0.92);
+}
+
 .ojpp-icon-btn:focus-visible {
-  outline: 2px solid #bfdbfe;
+  outline: 2px solid var(--color-border-focus);
   outline-offset: 1px;
 }
-.ojpp-icon-btn[data-state="busy"] { color: #2563eb; }
-.ojpp-icon-btn[data-state="busy"] svg { animation: ojpp-spin 1s linear infinite; }
-.ojpp-icon-btn[data-state="done"] { color: #067647; }
-.ojpp-icon-btn[data-state="error"] { color: #b42318; }
-.ojpp-icon-btn[data-state="active"] { color: #2563eb; background: rgba(37, 99, 235, .1); }
-.ojpp-icon-btn:disabled { cursor: default; }
-@keyframes ojpp-spin { to { transform: rotate(360deg); } }
 
-/* 右上角设置入口 */
+.ojpp-icon-btn[data-state="busy"] { 
+  color: var(--color-accent); 
+  pointer-events: none;
+}
+.ojpp-icon-btn[data-state="busy"] svg { 
+  animation: ojpp-spin 1s linear infinite; 
+}
+.ojpp-icon-btn[data-state="done"] { color: var(--color-success); }
+.ojpp-icon-btn[data-state="error"] { color: var(--color-danger); }
+.ojpp-icon-btn[data-state="active"] { 
+  color: var(--color-accent); 
+  background: var(--color-accent-bg); 
+}
+.ojpp-icon-btn:disabled { 
+  cursor: not-allowed; 
+  opacity: 0.4;
+}
+
+@keyframes ojpp-spin { 
+  to { transform: rotate(360deg); } 
+}
+
 .ojpp-icon-btn.ojpp-settings-floating {
   position: fixed;
   top: 12px;
   right: 12px;
   z-index: 2147482998;
-  width: 28px;
-  height: 28px;
-  background: rgba(255, 255, 255, .92);
-  border-color: #d0d7de;
-  color: #57606a;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(12px);
+  transition: 
+    transform var(--duration-press) var(--ease-out),
+    box-shadow var(--duration-tooltip) var(--ease-out),
+    background var(--duration-tooltip) var(--ease-out);
 }
 
-/* ---------- 译文面板 ---------- */
-.ojpp-result {
-  margin: 10px 0;
-  border: 1px solid #e6e9ee;
-  border-radius: 6px;
-  background: #fcfdfe;
-  overflow: hidden;
+.ojpp-icon-btn.ojpp-settings-floating:hover {
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: var(--shadow-lg);
+  color: var(--color-text-primary);
 }
+
+.ojpp-icon-btn.ojpp-settings-floating:active {
+  transform: scale(0.9);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---------- 结果面板 ---------- */
+.ojpp-result {
+  margin: 12px 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-primary);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: 
+    border-color var(--duration-tooltip) var(--ease-out),
+    box-shadow var(--duration-tooltip) var(--ease-out);
+}
+
+.ojpp-result:hover {
+  border-color: var(--color-border-hover);
+  box-shadow: var(--shadow-md);
+}
+
 .ojpp-result-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 5px 10px;
-  background: #f6f8fa;
-  border-bottom: 1px solid #e6e9ee;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
   font-size: 12px;
 }
-.ojpp-result-title { font-weight: 600; color: #57606a; }
-.ojpp-result-status { color: #8a9099; flex: 1; }
-.ojpp-result-status[data-kind="error"] { color: #b42318; }
-.ojpp-result-actions { display: flex; gap: 2px; }
-.ojpp-result-actions .ojpp-icon-btn { width: 22px; height: 22px; }
+
+.ojpp-result-title { 
+  font-weight: 600; 
+  color: var(--color-text-secondary); 
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ojpp-result-status { 
+  color: var(--color-text-tertiary); 
+  flex: 1;
+  font-size: 11px;
+}
+.ojpp-result-status[data-kind="error"] { color: var(--color-danger); }
+
+.ojpp-result-actions { 
+  display: flex; 
+  gap: 2px;
+  margin: -4px -4px -4px 0;
+}
+.ojpp-result-actions .ojpp-icon-btn { 
+  width: 24px; 
+  height: 24px; 
+}
+
 .ojpp-result-body {
-  padding: 10px 14px;
+  padding: 16px;
   font-size: 14px;
-  line-height: 1.75;
-  color: #1f2328;
+  line-height: 1.7;
+  color: var(--color-text-primary);
   overflow-x: auto;
 }
-.ojpp-result-body > :first-child { margin-top: 0; }.ojpp-result-body > :last-child { margin-bottom: 0; }
+
+.ojpp-result-body > :first-child { margin-top: 0; }
+.ojpp-result-body > :last-child { margin-bottom: 0; }
 .ojpp-result-body img { max-width: 100%; }
-.ojpp-result-body table { border-collapse: collapse; margin: 8px 0; }
-.ojpp-result-body th, .ojpp-result-body td {
-  border: 1px solid #d0d7de;
-  padding: 4px 8px;
+.ojpp-result-body table { 
+  border-collapse: collapse; 
+  margin: 12px 0; 
+}
+.ojpp-result-body th, 
+.ojpp-result-body td {
+  border: 1px solid var(--color-border);
+  padding: 6px 10px;
 }
 .ojpp-result-body pre {
-  background: #f6f8fa;
-  padding: 10px;
-  border-radius: 6px;
+  background: var(--color-bg-secondary);
+  padding: 12px;
+  border-radius: var(--radius-sm);
   overflow-x: auto;
 }
 .ojpp-result-body code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 13px;
-  background: rgba(175, 184, 193, .2);
-  padding: 1px 4px;
+  background: var(--color-bg-tertiary);
+  padding: 2px 5px;
   border-radius: 3px;
 }
-.ojpp-result-body pre code { background: none; padding: 0; }
-.ojpp-collapsed .ojpp-result-body { display: none; }
-/* 流式生成中：末尾光标，提示内容还在继续 */
+.ojpp-result-body pre code { 
+  background: none; 
+  padding: 0; 
+}
+
+.ojpp-collapsed .ojpp-result-body { 
+  display: none; 
+}
+
 .ojpp-streaming .ojpp-result-body > :last-child::after {
   content: '';
   display: inline-block;
-  width: 7px;
+  width: 2px;
   height: 1em;
-  margin-left: 2px;
+  margin-left: 3px;
   vertical-align: text-bottom;
-  background: currentColor;
-  opacity: .5;
+  background: var(--color-accent);
+  opacity: 1;
   animation: ojpp-caret 1s steps(2) infinite;
 }
-@keyframes ojpp-caret { 50% { opacity: 0; } }
+@keyframes ojpp-caret { 
+  50% { opacity: 0; } 
+}
 
 .ojpp-md-source {
   white-space: pre-wrap;
   word-break: break-word;
-  background: #f6f8fa;
-  border: 1px dashed #d0d7de;
-  border-radius: 6px;
-  padding: 10px;
+  background: var(--color-bg-secondary);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
   font-family: ui-monospace, Menlo, Consolas, monospace;
   font-size: 12px;
   line-height: 1.6;
@@ -33086,302 +33276,726 @@ $$` : `${n}$$`;
 .ojpp-mask {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, .45);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
   z-index: 2147483000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 20px;
+  animation: ojpp-mask-in var(--duration-modal) var(--ease-out);
 }
+
+@keyframes ojpp-mask-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .ojpp-panel {
-  width: min(860px, 100%);
-  max-height: 88vh;
+  width: min(620px, 100%);
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
-  background: #fff;
-  color: #1f2328;
-  border-radius: 10px;
-  box-shadow: 0 18px 48px rgba(15, 23, 42, .28);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.5;
+  animation: ojpp-panel-in var(--duration-modal) var(--ease-out);
+  overflow: hidden;
 }
-.ojpp-panel * { box-sizing: border-box; }
+
+@keyframes ojpp-panel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.ojpp-panel * { 
+  box-sizing: border-box; 
+}
+
 .ojpp-panel-head {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid #e6e9ee;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--color-border);
 }
-.ojpp-panel-head h3 { margin: 0; font-size: 15px; flex: 1; }
-.ojpp-panel-body { padding: 12px 16px; overflow-y: auto; }
+
+.ojpp-back-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: 
+    background var(--duration-tooltip) var(--ease-out),
+    color var(--duration-tooltip) var(--ease-out),
+    transform var(--duration-press) var(--ease-out);
+}
+
+.ojpp-back-btn:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.ojpp-back-btn:active {
+  transform: scale(0.92);
+}
+
+.ojpp-panel-head h3 { 
+  margin: 0; 
+  font-size: 16px;
+  font-weight: 600;
+  flex: 1;
+  letter-spacing: -0.01em;
+}
+
+.ojpp-panel-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: 
+    background var(--duration-tooltip) var(--ease-out),
+    color var(--duration-tooltip) var(--ease-out),
+    transform var(--duration-press) var(--ease-out);
+}
+
+.ojpp-panel-close:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+.ojpp-panel-close:active {
+  transform: scale(0.9);
+}
+
+.ojpp-panel-body { 
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
 .ojpp-panel-foot {
   display: flex;
   gap: 8px;
-  justify-content: flex-end;
-  padding: 12px 16px;
-  border-top: 1px solid #e6e9ee;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
 }
-.ojpp-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
-.ojpp-tab {
-  padding: 5px 12px;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  color: #57606a;
-  background: transparent;
-  font: inherit;
+
+/* 分段 */
+.ojpp-section {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--color-border);
 }
-.ojpp-tab[data-active="1"] { background: #eef2f7; color: #1f2328; font-weight: 600; }
-.ojpp-field { margin-bottom: 12px; }
-.ojpp-field > label { display: block; font-weight: 600; margin-bottom: 4px; }
-.ojpp-hint { color: #6b7280; font-size: 12px; margin-top: 3px; }
+
+.ojpp-section:last-child {
+  border-bottom: none;
+}
+
+.ojpp-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ojpp-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ojpp-section-badge {
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.ojpp-section-body {
+  display: grid;
+  gap: 10px;
+}
+
+/* 表单 */
+.ojpp-field { 
+  display: grid;
+  gap: 5px;
+}
+
+.ojpp-field > label { 
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
 .ojpp-panel input[type="text"],
 .ojpp-panel input[type="password"],
 .ojpp-panel input[type="number"],
 .ojpp-panel select,
 .ojpp-panel textarea {
   width: 100%;
-  padding: 6px 8px;
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   font: inherit;
-  background: #fff;
-  color: inherit;
+  font-size: 13px;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  transition: 
+    border-color var(--duration-tooltip) var(--ease-out),
+    box-shadow var(--duration-tooltip) var(--ease-out);
 }
+
 .ojpp-panel textarea {
+  height: auto;
+  padding: 8px 10px;
   resize: vertical;
-  min-height: 64px;
   font-family: ui-monospace, Menlo, monospace;
   font-size: 12px;
+  line-height: 1.5;
 }
-.ojpp-panel input:focus, .ojpp-panel select:focus, .ojpp-panel textarea:focus {
-  outline: 2px solid #bfdbfe;
-  border-color: #2563eb;
+
+.ojpp-panel input:hover,
+.ojpp-panel select:hover,
+.ojpp-panel textarea:hover {
+  border-color: var(--color-border-hover);
 }
-.ojpp-row { display: flex; gap: 10px; align-items: flex-end; }
-.ojpp-row > .ojpp-field { flex: 1; min-width: 0; }
-.ojpp-row > .ojpp-btn { flex: none; }
-.ojpp-check { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
-.ojpp-check input { margin-top: 3px; }
-.ojpp-check label { flex: 1; }
-.ojpp-provider-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-.ojpp-provider-item {
-  display: flex;
-  align-items: center;
+
+.ojpp-panel input:focus, 
+.ojpp-panel select:focus,
+.ojpp-panel textarea:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px var(--color-accent-bg);
+}
+
+.ojpp-row { 
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 10px;
-  padding: 8px 10px;
-  border: 1px solid #e6e9ee;
-  border-radius: 6px;
+}
+
+/* 复选框 */
+.ojpp-check { 
+  display: flex; 
+  align-items: center; 
+  gap: 8px;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  transition: background var(--duration-tooltip) var(--ease-out);
   cursor: pointer;
 }
-.ojpp-provider-item[data-active="1"] { border-color: #2563eb; background: #f5f8ff; }
-.ojpp-provider-item .ojpp-provider-name { font-weight: 600; flex: 1; }
-.ojpp-provider-item .ojpp-provider-meta { color: #6b7280; font-size: 12px; }
 
-/* 添加提供商按钮：整行、醒目 */
-.ojpp-add-provider {
-  display: block;
-  width: 100%;
-  margin-bottom: 12px;
-  text-align: center;
+.ojpp-check:hover {
+  background: var(--color-bg-hover);
 }
-/* 列表项：左边选择框，中间名称与说明，右边编辑按钮 */
-.ojpp-provider-text { flex: 1; min-width: 0; }
-.ojpp-provider-badge {
-  flex: none;
-  font-size: 11px;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: rgba(37, 99, 235, .12);
-  color: #2563eb;
-}
-.ojpp-provider-edit { flex: none; }
-.ojpp-provider-item:hover { background: rgba(0, 0, 0, .02); }
 
-/* 添加面板的标题行与预设网格 */
-.ojpp-picker-head {
-  display: flex;
+.ojpp-check input[type="checkbox"] { 
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.ojpp-check label { 
+  flex: 1;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* 提供商摘要 */
+.ojpp-provider-summary {
+  padding: 10px 12px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-bottom: 10px;
+}
+
+/* 提供商列表 */
+.ojpp-provider-list { 
+  display: grid;
+  gap: 6px;
+}
+
+.ojpp-provider-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
   align-items: center;
   gap: 10px;
-  margin-bottom: 8px;
+  padding: 10px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: 
+    border-color var(--duration-tooltip) var(--ease-out),
+    background var(--duration-tooltip) var(--ease-out),
+    transform var(--duration-press) var(--ease-out),
+    box-shadow var(--duration-tooltip) var(--ease-out);
 }
+
+.ojpp-provider-item:hover {
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-hover);
+  box-shadow: var(--shadow-sm);
+}
+
+.ojpp-provider-item:active {
+  transform: scale(0.99);
+}
+
+.ojpp-provider-item[data-active="1"] { 
+  border-color: var(--color-accent);
+  background: var(--color-accent-bg);
+  box-shadow: 0 0 0 3px rgba(76, 110, 245, 0.06);
+}
+
+.ojpp-provider-item input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  margin: 0;
+}
+
+.ojpp-provider-text { 
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.ojpp-provider-name { 
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ojpp-provider-meta { 
+  color: var(--color-text-tertiary); 
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ojpp-provider-badge {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  font-size: 12px;
+}
+
+.ojpp-provider-edit { 
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 
+    background var(--duration-tooltip) var(--ease-out),
+    color var(--duration-tooltip) var(--ease-out),
+    transform var(--duration-press) var(--ease-out);
+}
+
+.ojpp-provider-edit:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+.ojpp-provider-edit:active {
+  transform: scale(0.9);
+}
+
+/* 添加按钮 */
+.ojpp-add-provider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  margin-bottom: 10px;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font: inherit;
+  font-size: 24px;
+  cursor: pointer;
+  transition: 
+    border-color var(--duration-tooltip) var(--ease-out),
+    color var(--duration-tooltip) var(--ease-out),
+    background var(--duration-tooltip) var(--ease-out),
+    transform var(--duration-press) var(--ease-out);
+}
+
+.ojpp-add-provider:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-bg);
+}
+
+.ojpp-add-provider:active {
+  transform: scale(0.99);
+}
+
+/* 预设网格 */
 .ojpp-preset-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 8px;
   margin-top: 10px;
-  max-height: 46vh;
-  overflow-y: auto;
 }
+
 .ojpp-preset-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 10px 12px;
-  border: 1px solid #e6e9ee;
-  border-radius: 8px;
-  background: #fff;
-  color: inherit;
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
   font: inherit;
   text-align: left;
   cursor: pointer;
+  transition: 
+    border-color var(--duration-tooltip) var(--ease-out),
+    background var(--duration-tooltip) var(--ease-out),
+    transform var(--duration-press) var(--ease-out),
+    box-shadow var(--duration-tooltip) var(--ease-out);
 }
-.ojpp-preset-item:hover { border-color: #2563eb; background: #f5f8ff; }
-.ojpp-preset-name { font-weight: 600; }
-.ojpp-preset-meta { font-size: 12px; color: #6b7280; word-break: break-all; }
-.ojpp-status {
-  margin-top: 8px;
+
+.ojpp-preset-item:hover { 
+  border-color: var(--color-accent);
+  background: var(--color-accent-bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.ojpp-preset-item:active {
+  transform: scale(0.98);
+}
+
+.ojpp-preset-name { 
+  font-weight: 600;
   font-size: 12px;
+}
+
+.ojpp-preset-meta { 
+  font-size: 10px; 
+  color: var(--color-text-tertiary); 
+  word-break: break-all;
+  line-height: 1.3;
+}
+
+/* 状态 */
+.ojpp-status {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  line-height: 1.4;
   white-space: pre-wrap;
   word-break: break-word;
-  max-height: 160px;
+  max-height: 120px;
   overflow-y: auto;
 }
-.ojpp-status[data-kind="error"] { color: #b42318; }
-.ojpp-status[data-kind="ok"] { color: #067647; }
 
-.ojpp-btn {
-  padding: 6px 12px;
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
-  background: #fff;
-  color: #1f2328;
-  font: inherit;
-  cursor: pointer;
+.ojpp-status[data-kind="error"] { 
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
 }
-.ojpp-btn-primary { background: #2563eb; color: #fff; border-color: #2563eb; }
-.ojpp-btn-danger { color: #b42318; }
-.ojpp-btn-ghost { border-color: transparent; background: transparent; }
-.ojpp-btn:disabled { cursor: wait; opacity: .6; }
 
+.ojpp-status[data-kind="ok"] { 
+  color: var(--color-success);
+  background: var(--color-success-bg);
+}
+
+/* 按钮 */
+.ojpp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: 
+    background var(--duration-tooltip) var(--ease-out),
+    border-color var(--duration-tooltip) var(--ease-out),
+    color var(--duration-tooltip) var(--ease-out),
+    transform var(--duration-press) var(--ease-out),
+    box-shadow var(--duration-tooltip) var(--ease-out);
+}
+
+.ojpp-btn:hover {
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-hover);
+}
+
+.ojpp-btn:active {
+  transform: scale(0.96);
+}
+
+.ojpp-btn:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+.ojpp-btn-primary { 
+  background: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.ojpp-btn-primary:hover {
+  background: #4263eb;
+  border-color: #4263eb;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ojpp-btn-primary:active {
+  background: #3b5bdb;
+  border-color: #3b5bdb;
+}
+
+.ojpp-btn-danger { 
+  color: var(--color-danger);
+  border-color: transparent;
+  background: transparent;
+}
+
+.ojpp-btn-danger:hover {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger);
+}
+
+.ojpp-btn:disabled { 
+  cursor: not-allowed;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Toast */
 .ojpp-toast {
   position: fixed;
   right: 20px;
   bottom: 20px;
   z-index: 2147483001;
-  background: #1f2328;
-  color: #fff;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
-  max-width: 420px;
+  background: var(--color-text-primary);
+  color: white;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  max-width: 320px;
+  animation: ojpp-toast-in var(--duration-dropdown) var(--ease-out);
+  backdrop-filter: blur(12px);
 }
-.ojpp-toast[data-kind="error"] { background: #b42318; }
+
+@keyframes ojpp-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(100%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ojpp-toast[data-kind="error"] { 
+  background: var(--color-danger);
+}
+
+.ojpp-toast[data-kind="success"] {
+  background: var(--color-success);
+}
+
+/* 响应式 */
+@media (max-width: 640px) {
+  .ojpp-panel {
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  
+  .ojpp-preset-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .ojpp-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 减少动画 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .ojpp-icon-btn:active,
+  .ojpp-btn:active,
+  .ojpp-provider-item:active,
+  .ojpp-preset-item:active {
+    transform: none;
+  }
+}
 `;
 	var DARK_CSS = `
 html[data-ojpp-theme="dark"] {
-  --ojpp-bg: #1c2128;
-  --ojpp-bg-soft: #22272e;
-  --ojpp-border: #373e47;
-  --ojpp-text: #cdd9e5;
-  --ojpp-text-dim: #909dab;
-  --ojpp-accent: #539bf5;
-  --ojpp-danger: #f47067;
-  --ojpp-ok: #57ab5a;
+  --color-bg-primary: #1a1b1e;
+  --color-bg-secondary: #25262b;
+  --color-bg-tertiary: #2c2e33;
+  --color-bg-hover: rgba(255, 255, 255, 0.05);
+  
+  --color-border: #373a40;
+  --color-border-hover: #495057;
+  --color-border-focus: #748ffc;
+  
+  --color-text-primary: #ececec;
+  --color-text-secondary: #c1c2c5;
+  --color-text-tertiary: #909296;
+  
+  --color-accent: #748ffc;
+  --color-accent-bg: rgba(116, 143, 252, 0.12);
+  --color-accent-light: rgba(116, 143, 252, 0.15);
+  
+  --color-success: #51cf66;
+  --color-success-bg: rgba(81, 207, 102, 0.12);
+  --color-danger: #ff6b6b;
+  --color-danger-bg: rgba(255, 107, 107, 0.12);
+  
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.6), 0 8px 16px rgba(0, 0, 0, 0.4);
 }
-html[data-ojpp-theme="dark"] .ojpp-icon-btn { color: #909dab; }
-html[data-ojpp-theme="dark"] .ojpp-icon-btn:hover {
-  background: rgba(255, 255, 255, .1); color: #cdd9e5;
+
+html[data-ojpp-theme="dark"] .ojpp-mask {
+  background: rgba(0, 0, 0, 0.6);
 }
-html[data-ojpp-theme="dark"] .ojpp-icon-btn:focus-visible { outline-color: #316dca; }
-html[data-ojpp-theme="dark"] .ojpp-icon-btn[data-state="busy"] { color: #539bf5; }
-html[data-ojpp-theme="dark"] .ojpp-icon-btn[data-state="done"] { color: #57ab5a; }
-html[data-ojpp-theme="dark"] .ojpp-icon-btn[data-state="error"] { color: #f47067; }
-html[data-ojpp-theme="dark"] .ojpp-icon-btn[data-state="active"] {
-  color: #539bf5; background: rgba(83, 155, 245, .16);
-}
+
 html[data-ojpp-theme="dark"] .ojpp-icon-btn.ojpp-settings-floating {
-  background: rgba(34, 39, 46, .94);
-  border-color: #373e47;
-  color: #909dab;
+  background: rgba(37, 38, 43, 0.92);
 }
 
-html[data-ojpp-theme="dark"] .ojpp-result {
-  background: #22272e; border-color: #373e47;
-}
-html[data-ojpp-theme="dark"] .ojpp-result-header {
-  background: #2d333b; border-bottom-color: #373e47;
-}
-html[data-ojpp-theme="dark"] .ojpp-result-title { color: #909dab; }
-html[data-ojpp-theme="dark"] .ojpp-result-status { color: #768390; }
-html[data-ojpp-theme="dark"] .ojpp-result-status[data-kind="error"] { color: #f47067; }
-html[data-ojpp-theme="dark"] .ojpp-result-body { color: #cdd9e5; }
-html[data-ojpp-theme="dark"] .ojpp-result-body th,
-html[data-ojpp-theme="dark"] .ojpp-result-body td { border-color: #373e47; }
-html[data-ojpp-theme="dark"] .ojpp-result-body pre { background: #2d333b; }
-html[data-ojpp-theme="dark"] .ojpp-result-body code {
-  background: rgba(99, 110, 123, .4);
-}
-html[data-ojpp-theme="dark"] .ojpp-result-body a { color: #539bf5; }
-html[data-ojpp-theme="dark"] .ojpp-md-source {
-  background: #2d333b; border-color: #373e47; color: #cdd9e5;
+html[data-ojpp-theme="dark"] .ojpp-icon-btn.ojpp-settings-floating:hover {
+  background: rgba(37, 38, 43, 0.98);
 }
 
-html[data-ojpp-theme="dark"] .ojpp-mask { background: rgba(0, 0, 0, .6); }
 html[data-ojpp-theme="dark"] .ojpp-panel {
-  background: #22272e; color: #cdd9e5; border: 1px solid #373e47;
+  border: 1px solid var(--color-border);
 }
-html[data-ojpp-theme="dark"] .ojpp-panel-head,
-html[data-ojpp-theme="dark"] .ojpp-panel-foot { border-color: #373e47; }
-html[data-ojpp-theme="dark"] .ojpp-tab { color: #909dab; }
-html[data-ojpp-theme="dark"] .ojpp-tab[data-active="1"] {
-  background: #2d333b; color: #cdd9e5;
+
+html[data-ojpp-theme="dark"] .ojpp-toast {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
 }
-html[data-ojpp-theme="dark"] .ojpp-hint { color: #768390; }
-html[data-ojpp-theme="dark"] .ojpp-panel input[type="text"],
-html[data-ojpp-theme="dark"] .ojpp-panel input[type="password"],
-html[data-ojpp-theme="dark"] .ojpp-panel input[type="number"],
-html[data-ojpp-theme="dark"] .ojpp-panel select,
-html[data-ojpp-theme="dark"] .ojpp-panel textarea {
-  background: #1c2128; border-color: #444c56; color: #cdd9e5;
+
+html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="error"] {
+  background: var(--color-danger);
+  color: white;
+  border: none;
 }
-html[data-ojpp-theme="dark"] .ojpp-panel input:focus,
-html[data-ojpp-theme="dark"] .ojpp-panel select:focus,
-html[data-ojpp-theme="dark"] .ojpp-panel textarea:focus {
-  outline-color: #316dca; border-color: #539bf5;
+
+html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
+  background: var(--color-success);
+  color: white;
+  border: none;
 }
-html[data-ojpp-theme="dark"] .ojpp-provider-item { border-color: #373e47; }
-html[data-ojpp-theme="dark"] .ojpp-provider-item[data-active="1"] {
-  border-color: #539bf5; background: rgba(83, 155, 245, .1);
-}
-html[data-ojpp-theme="dark"] .ojpp-provider-item .ojpp-provider-meta { color: #768390; }
-html[data-ojpp-theme="dark"] .ojpp-provider-item:hover { background: rgba(255, 255, 255, .03); }
-html[data-ojpp-theme="dark"] .ojpp-provider-badge {
-  background: rgba(83, 155, 245, .18); color: #79b8ff;
-}
-html[data-ojpp-theme="dark"] .ojpp-preset-item {
-  background: #22272e; border-color: #373e47; color: #cdd9e5;
-}
-html[data-ojpp-theme="dark"] .ojpp-preset-item:hover {
-  border-color: #539bf5; background: #2d333b;
-}
-html[data-ojpp-theme="dark"] .ojpp-preset-meta { color: #768390; }
-html[data-ojpp-theme="dark"] .ojpp-status[data-kind="error"] { color: #f47067; }
-html[data-ojpp-theme="dark"] .ojpp-status[data-kind="ok"] { color: #57ab5a; }
-html[data-ojpp-theme="dark"] .ojpp-btn {
-  background: #2d333b; border-color: #444c56; color: #cdd9e5;
-}
-html[data-ojpp-theme="dark"] .ojpp-btn:hover { background: #373e47; }
-html[data-ojpp-theme="dark"] .ojpp-btn-primary {
-  background: #316dca; border-color: #316dca; color: #fff;
-}
-html[data-ojpp-theme="dark"] .ojpp-btn-danger { color: #f47067; }
-html[data-ojpp-theme="dark"] .ojpp-toast { background: #2d333b; color: #cdd9e5; }
-html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="error"] { background: #a33a3a; }
 `;
 	var timer;
+	var currentToast;
 	function toast(message, kind = "info") {
-		document.querySelector(".ojpp-toast")?.remove();
+		if (currentToast) {
+			const old = currentToast;
+			old.style.animation = "none";
+			old.style.transition = "opacity var(--duration-dropdown) var(--ease-out), transform var(--duration-dropdown) var(--ease-out)";
+			old.style.opacity = "0";
+			old.style.transform = "translateY(100%) scale(0.9)";
+			setTimeout(() => old.remove(), 200);
+		}
 		clearTimeout(timer);
 		const node = document.createElement("div");
 		node.className = "ojpp-toast";
 		node.dataset.kind = kind;
-		node.setAttribute("role", "status");
+		node.setAttribute("role", kind === "error" ? "alert" : "status");
 		node.textContent = message;
 		document.body.append(node);
-		timer = setTimeout(() => node.remove(), kind === "error" ? 6e3 : 3e3);
+		currentToast = node;
+		timer = setTimeout(() => {
+			if (node === currentToast) {
+				node.style.transition = "opacity var(--duration-dropdown) var(--ease-out), transform var(--duration-dropdown) var(--ease-out)";
+				node.style.opacity = "0";
+				node.style.transform = "translateY(100%) scale(0.9)";
+				setTimeout(() => {
+					node.remove();
+					if (currentToast === node) currentToast = void 0;
+				}, 200);
+			}
+		}, kind === "error" ? 6e3 : 3e3);
 	}
 	async function startApp(platform, site) {
 		if (document.readyState === "loading") await new Promise((resolve) => document.addEventListener("DOMContentLoaded", () => resolve(), { once: true }));
@@ -33392,6 +34006,7 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="error"] { background: #a33a3
 		style.textContent = CSS + (site.styles ?? "") + DARK_CSS + (site.darkStyles ?? "");
 		document.head.append(style);
 		const stopThemeWatch = watchSystemTheme(() => applyTheme(settings.theme));
+		const stopInlineWatch = watchInlineColors();
 		let closeSettings;
 		const settingsButton = iconButton(ICON_SETTINGS, t("app.settingsTitle", { name: APP_NAME }), "ojpp-settings-btn");
 		settingsButton.addEventListener("click", () => {
@@ -33424,14 +34039,12 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="error"] { background: #a33a3
 		};
 		const reconcile = () => {
 			const sections = site.collectSections(document);
+			if (!settingsButton.isConnected) site.mountSettingsButton(settingsButton, document);
 			if (sections.length === 0) {
-				closeSettings?.();
-				settingsButton.remove();
 				for (const handle of mounted.values()) handle.dispose();
 				mounted.clear();
 				return;
 			}
-			if (!settingsButton.isConnected) site.mountSettingsButton(settingsButton, document);
 			const active = new Set(sections.map((section) => section.content));
 			for (const [content, handle] of mounted) if (!active.has(content) || !handle.toolbar.isConnected) {
 				handle.dispose();
@@ -33453,6 +34066,7 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="error"] { background: #a33a3
 		return () => {
 			stopObserving();
 			stopThemeWatch();
+			stopInlineWatch();
 			closeSettings?.();
 			for (const handle of mounted.values()) handle.dispose();
 			mounted.clear();
@@ -33868,10 +34482,19 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="error"] { background: #a33a3
     /* ---------- 表格（最近提交、标签等） ---------- */
     html[data-ojpp-theme="dark"] .datatable,
     html[data-ojpp-theme="dark"] .datatable th,
-    html[data-ojpp-theme="dark"] .datatable td {
-      background: #22272e;
-      border-color: #373e47;
+    html[data-ojpp-theme="dark"] .datatable td,
+    /* datatable 外面还有一层包装容器，站点给它设了 #e1e1e1 */
+    html[data-ojpp-theme="dark"] .datatable > div,
+    html[data-ojpp-theme="dark"] div.datatable > div {
+      background: #22272e !important;
+      border-color: #373e47 !important;
       color: #cdd9e5;
+    }
+    /* 分页信息那一行（“1-50 of 1234”） */
+    html[data-ojpp-theme="dark"] .datatable .pagination,
+    html[data-ojpp-theme="dark"] .datatable > div:last-child {
+      background: #22272e !important;
+      color: #909dab;
     }
     html[data-ojpp-theme="dark"] .datatable th {
       background: #2d333b;
@@ -33982,6 +34605,336 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="error"] { background: #a33a3
     html[data-ojpp-theme="dark"] .second-level-menu-list li.current a {
       color: #e6edf3 !important;
     }
+
+    /* ---------- 全局链接 ---------- */
+    /* 站点几乎所有正文链接都是 #0000cc 这种深蓝，深底上对比不足。
+       这是提交记录、状态、博客、题面里最普遍的问题，所以放在最前面兜底。 */
+    html[data-ojpp-theme="dark"] a,
+    html[data-ojpp-theme="dark"] a:visited {
+      color: #539bf5;
+    }
+    html[data-ojpp-theme="dark"] a:hover,
+    html[data-ojpp-theme="dark"] a:active {
+      color: #79b8ff;
+    }
+    /* 已访问过的链接不要变成紫色，暗色下同样难读 */
+    html[data-ojpp-theme="dark"] a:visited {
+      color: #b083f0;
+    }
+
+    /* ---------- 评级颜色 ---------- */
+    /* 站点用 .user-* 类给用户名上色，色值是纯红/纯蓝/gray 这类，
+       在深底上要么刺眼要么看不清。这里换成同色系的亮版本，
+       保持“颜色代表段位”这个语义，只调整明度。 */
+    /* user-black 是“未评级/黑名”，站点用纯黑，深底上完全看不见 */
+    html[data-ojpp-theme="dark"] .user-black { color: #9aa4b2 !important; }
+    html[data-ojpp-theme="dark"] .user-gray { color: #9aa4b2 !important; }
+    html[data-ojpp-theme="dark"] .user-green { color: #57ab5a !important; }
+    html[data-ojpp-theme="dark"] .user-cyan { color: #39c5bb !important; }
+    html[data-ojpp-theme="dark"] .user-blue { color: #539bf5 !important; }
+    html[data-ojpp-theme="dark"] .user-violet { color: #c297ff !important; }
+    html[data-ojpp-theme="dark"] .user-orange { color: #f0883e !important; }
+    html[data-ojpp-theme="dark"] .user-red { color: #f85149 !important; }
+    html[data-ojpp-theme="dark"] .user-legendary { color: #f85149 !important; }
+    /* legendary 段位的首字母被站点强制成黑色（.user-legendary::first-letter），
+       深底上就变成“首字母看不见、其余红色”。改成白色首字母。 */
+    html[data-ojpp-theme="dark"] .user-legendary::first-letter,
+    html[data-ojpp-theme="dark"] .legendary-user-first-letter {
+      color: #ffffff !important;
+    }
+    /* 链接形式的用户名：站点的 a 颜色会盖掉段位色，这里让段位色优先 */
+    html[data-ojpp-theme="dark"] a.rated-user {
+      color: inherit;
+    }
+
+    /* ---------- 表格（提交记录、状态、排行榜等） ---------- */
+    /* 站点给状态表用了浅色底与斑马纹，暗色下是整片亮块 */
+    html[data-ojpp-theme="dark"] table.status-frame-datatable,
+    html[data-ojpp-theme="dark"] .status-frame-datatable,
+    html[data-ojpp-theme="dark"] table.problems,
+    html[data-ojpp-theme="dark"] table.standings,
+    html[data-ojpp-theme="dark"] .datatable,
+    html[data-ojpp-theme="dark"] table {
+      background: #22272e;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .status-frame-datatable tr,
+    html[data-ojpp-theme="dark"] .datatable tr,
+    html[data-ojpp-theme="dark"] table tr {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+    }
+    /* 斑马纹：隔行稍亮一点，保留可读性 */
+    html[data-ojpp-theme="dark"] .status-frame-datatable tr:nth-child(even),
+    html[data-ojpp-theme="dark"] .datatable tr:nth-child(even),
+    html[data-ojpp-theme="dark"] table tr:nth-child(even) {
+      background: #272d36 !important;
+    }
+    html[data-ojpp-theme="dark"] .status-frame-datatable th,
+    html[data-ojpp-theme="dark"] .status-frame-datatable td,
+    html[data-ojpp-theme="dark"] .datatable th,
+    html[data-ojpp-theme="dark"] .datatable td,
+    html[data-ojpp-theme="dark"] table th,
+    html[data-ojpp-theme="dark"] table td {
+      background: transparent !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .status-frame-datatable th,
+    html[data-ojpp-theme="dark"] .datatable th,
+    html[data-ojpp-theme="dark"] table th {
+      background: #2d333b !important;
+      color: #e6edf3;
+    }
+    html[data-ojpp-theme="dark"] table tr:hover td,
+    html[data-ojpp-theme="dark"] .datatable tr:hover td {
+      background: #2d333b !important;
+    }
+    /* 表头里的排序箭头/小图标是深色 PNG */
+    html[data-ojpp-theme="dark"] table th img,
+    html[data-ojpp-theme="dark"] .datatable th img {
+      filter: invert(1) brightness(1.3);
+    }
+    /* 表格分页条 */
+    html[data-ojpp-theme="dark"] .pagination,
+    html[data-ojpp-theme="dark"] .pagination span,
+    html[data-ojpp-theme="dark"] .pagination a {
+      background: transparent !important;
+      color: #adbac7;
+      border-color: #373e47;
+    }
+    html[data-ojpp-theme="dark"] .pagination span.active {
+      background: #2d333b !important;
+      color: #e6edf3;
+    }
+    html[data-ojpp-theme="dark"] .pagination a:hover {
+      background: #2d333b !important;
+    }
+
+    /* ---------- 表单（提交页、筛选面板） ---------- */
+    /* 站点大量使用原生 select / input，暗色下会是白底。
+       这里统一处理，并去掉 Chrome 的原生立体感。 */
+    html[data-ojpp-theme="dark"] select,
+    html[data-ojpp-theme="dark"] input[type="text"],
+    html[data-ojpp-theme="dark"] input[type="password"],
+    html[data-ojpp-theme="dark"] input[type="number"],
+    html[data-ojpp-theme="dark"] input[type="email"],
+    html[data-ojpp-theme="dark"] input:not([type]),
+    html[data-ojpp-theme="dark"] textarea {
+      background-color: #2d333b !important;
+      color: #cdd9e5 !important;
+      border: 1px solid #444c56 !important;
+      border-radius: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    /* select 被去掉原生外观后需要自己补一个下拉箭头 */
+    html[data-ojpp-theme="dark"] select {
+      background-image: linear-gradient(45deg, transparent 50%, #909dab 50%),
+                        linear-gradient(135deg, #909dab 50%, transparent 50%);
+      background-position: calc(100% - 14px) calc(50% - 2px), calc(100% - 9px) calc(50% - 2px);
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      padding-right: 24px;
+    }
+    html[data-ojpp-theme="dark"] input::placeholder,
+    html[data-ojpp-theme="dark"] textarea::placeholder {
+      color: #768390;
+    }
+    /* 提交页的代码编辑器（站点用 CodeMirror 或 textarea） */
+    html[data-ojpp-theme="dark"] .CodeMirror,
+    html[data-ojpp-theme="dark"] .CodeMirror-scroll,
+    html[data-ojpp-theme="dark"] .CodeMirror-gutters,
+    html[data-ojpp-theme="dark"] #editor,
+    html[data-ojpp-theme="dark"] .editor {
+      background: #22272e !important;
+      color: #cdd9e5 !important;
+      border-color: #373e47 !important;
+    }
+    html[data-ojpp-theme="dark"] .CodeMirror-gutters {
+      background: #1c2128 !important;
+      border-right-color: #373e47 !important;
+    }
+    html[data-ojpp-theme="dark"] .CodeMirror-linenumber { color: #768390; }
+    html[data-ojpp-theme="dark"] .CodeMirror-cursor { border-left-color: #cdd9e5; }
+    html[data-ojpp-theme="dark"] .CodeMirror-selected { background: #373e47 !important; }
+    html[data-ojpp-theme="dark"] .CodeMirror-activeline-background { background: #2d333b !important; }
+    /* 文件选择按钮 */
+    html[data-ojpp-theme="dark"] input[type="file"]::file-selector-button {
+      background: #2d333b;
+      color: #cdd9e5;
+      border: 1px solid #444c56;
+      border-radius: 4px;
+    }
+
+    /* ---------- 首页 / 公告 ---------- */
+    /* 首页公告里的标题与表格：站点用深色文字，暗色下看不见 */
+    html[data-ojpp-theme="dark"] .topic,
+    html[data-ojpp-theme="dark"] .topic h1,
+    html[data-ojpp-theme="dark"] .topic h2,
+    html[data-ojpp-theme="dark"] .topic h3,
+    html[data-ojpp-theme="dark"] .topic p,
+    html[data-ojpp-theme="dark"] .topic li,
+    html[data-ojpp-theme="dark"] .topic div,
+    html[data-ojpp-theme="dark"] .ttypography h1,
+    html[data-ojpp-theme="dark"] .ttypography h2,
+    html[data-ojpp-theme="dark"] .ttypography h3,
+    html[data-ojpp-theme="dark"] .ttypography h4,
+    html[data-ojpp-theme="dark"] .ttypography h5,
+    html[data-ojpp-theme="dark"] .ttypography h6 {
+      color: #e6edf3;
+    }
+    /* 首页的评分表：表头原本是深色底、正文是白底 */
+    html[data-ojpp-theme="dark"] .topic table,
+    html[data-ojpp-theme="dark"] .ttypography table {
+      border-color: #373e47 !important;
+    }
+    /* 公告里的引用块左侧竖线 */
+    html[data-ojpp-theme="dark"] .topic blockquote,
+    html[data-ojpp-theme="dark"] .ttypography blockquote {
+      border-left-color: #475060;
+      color: #adbac7;
+    }
+    /* 隐藏的公告标题（首页 “Hello, Codeforces!” 那种被压暗的标题） */
+    html[data-ojpp-theme="dark"] .topic .spoiler-title,
+    html[data-ojpp-theme="dark"] .spoiler-title {
+      color: #e6edf3;
+    }
+
+    /* ---------- 博客 / changelog ---------- */
+    html[data-ojpp-theme="dark"] .blog-entry,
+    html[data-ojpp-theme="dark"] .blog-entry .title,
+    html[data-ojpp-theme="dark"] .blog-entry .info,
+    html[data-ojpp-theme="dark"] .comment,
+    html[data-ojpp-theme="dark"] .comment .content {
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .blog-entry .title a,
+    html[data-ojpp-theme="dark"] .comment a {
+      color: #539bf5 !important;
+    }
+    /* changelog 里的日期与作者信息 */
+    html[data-ojpp-theme="dark"] .blog-entry .info,
+    html[data-ojpp-theme="dark"] .comment .info {
+      color: #909dab;
+    }
+
+    /* ---------- 日历 ---------- */
+    html[data-ojpp-theme="dark"] .calendar,
+    html[data-ojpp-theme="dark"] .calendar-table,
+    html[data-ojpp-theme="dark"] table.calendar {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .calendar td,
+    html[data-ojpp-theme="dark"] .calendar th,
+    html[data-ojpp-theme="dark"] table.calendar td,
+    html[data-ojpp-theme="dark"] table.calendar th {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .calendar .day,
+    html[data-ojpp-theme="dark"] table.calendar td.day {
+      color: #cdd9e5;
+    }
+    /* 日历里表示“有比赛”的标记色块，原色在深底上过暗 */
+    html[data-ojpp-theme="dark"] .calendar .contest,
+    html[data-ojpp-theme="dark"] table.calendar .contest {
+      background: #2d333b !important;
+      color: #adbac7;
+    }
+
+    /* ---------- 搜索框与筛选表单 ---------- */
+    /* 状态页的筛选面板：站点用 fieldset 包裹，标题是蓝色 */
+    html[data-ojpp-theme="dark"] fieldset,
+    html[data-ojpp-theme="dark"] .filter-box {
+      border-color: #373e47 !important;
+    }
+    html[data-ojpp-theme="dark"] fieldset legend,
+    html[data-ojpp-theme="dark"] .filter-box label {
+      color: #adbac7;
+    }
+    /* 筛选面板里的蓝色标签（Problem: / Verdict: 等） */
+    html[data-ojpp-theme="dark"] .status-filter label,
+    html[data-ojpp-theme="dark"] .filter-box b,
+    html[data-ojpp-theme="dark"] .filter-box strong {
+      color: #79b8ff;
+    }
+
+    /* ---------- 首页列表 ---------- */
+    /* 公告与比赛的标题：站点用 #3b5998 深蓝（.topic .title 里的链接） */
+    html[data-ojpp-theme="dark"] .topic .title a,
+    html[data-ojpp-theme="dark"] .topic .title,
+    html[data-ojpp-theme="dark"] .topic a,
+    /* 标题文字实际落在 a 里的 <p> 上，颜色设在那里而不是 a 上 */
+    html[data-ojpp-theme="dark"] .topic .title a p,
+    html[data-ojpp-theme="dark"] .topic a p,
+    html[data-ojpp-theme="dark"] .contestList .contestName a,
+    html[data-ojpp-theme="dark"] .recent-actions a,
+    html[data-ojpp-theme="dark"] .roundbox .caption a {
+      color: #79b8ff !important;
+    }
+    /* 首页右栏的“Top rated”之类列表：用户名是黑色 */
+    html[data-ojpp-theme="dark"] .personal-sidebar a,
+    html[data-ojpp-theme="dark"] .sidebox a,
+    html[data-ojpp-theme="dark"] .roundbox a {
+      color: #cdd9e5 !important;
+    }
+    /* 公告的 rating 变化：.topic-rating 是 #008000 深绿 */
+    html[data-ojpp-theme="dark"] .topic-rating,
+    html[data-ojpp-theme="dark"] .green,
+    html[data-ojpp-theme="dark"] .rating-up {
+      color: #57ab5a !important;
+    }
+    html[data-ojpp-theme="dark"] .red,
+    html[data-ojpp-theme="dark"] .rating-down {
+      color: #f85149 !important;
+    }
+
+    /* ---------- 博客与评论区 ---------- */
+    /* 博客标题：站点的结构是 h3 > a，没有稳定的 class，
+       所以直接按标签层级选，并排除页脚等区域 */
+    html[data-ojpp-theme="dark"] #pageContent h3 a,
+    html[data-ojpp-theme="dark"] #pageContent h3,
+    html[data-ojpp-theme="dark"] .blog-entry h3 a,
+    html[data-ojpp-theme="dark"] .blog-entry .title {
+      color: #79b8ff !important;
+    }
+    /* 评论的投票分数：正值 #008000、负值 #800000 */
+    html[data-ojpp-theme="dark"] .commentRating,
+    html[data-ojpp-theme="dark"] .commentRating span {
+      color: #57ab5a !important;
+    }
+    html[data-ojpp-theme="dark"] .commentRating.negative,
+    html[data-ojpp-theme="dark"] .commentRating.negative span {
+      color: #f85149 !important;
+    }
+    /* 代码高亮（Google prettify）：站点为浅色背景设计的配色，
+       深底上几乎全是深色，直接按语法类别换成亮色版本 */
+    html[data-ojpp-theme="dark"] .prettyprint,
+    html[data-ojpp-theme="dark"] code.prettyprint,
+    html[data-ojpp-theme="dark"] pre.prettyprint {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5 !important;
+    }
+    html[data-ojpp-theme="dark"] .prettyprint .pln,
+    html[data-ojpp-theme="dark"] .prettyprint .pun { color: #cdd9e5 !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .kwd,
+    html[data-ojpp-theme="dark"] .prettyprint .kwd span { color: #f47067 !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .typ,
+    html[data-ojpp-theme="dark"] .prettyprint .atn { color: #79b8ff !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .lit,
+    html[data-ojpp-theme="dark"] .prettyprint .str,
+    html[data-ojpp-theme="dark"] .prettyprint .atv { color: #8ddb8c !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .com { color: #768390 !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .tag { color: #f47067 !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .dec,
+    html[data-ojpp-theme="dark"] .prettyprint .var { color: #dcbdfb !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .fun { color: #dcbdfb !important; }
 
     /* ---------- 提示条与代码编辑器 ---------- */
     html[data-ojpp-theme="dark"] div.alert-info,

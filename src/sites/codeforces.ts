@@ -281,10 +281,19 @@ export const codeforces: SiteAdapter = {
     /* ---------- 表格（最近提交、标签等） ---------- */
     html[data-ojpp-theme="dark"] .datatable,
     html[data-ojpp-theme="dark"] .datatable th,
-    html[data-ojpp-theme="dark"] .datatable td {
-      background: #22272e;
-      border-color: #373e47;
+    html[data-ojpp-theme="dark"] .datatable td,
+    /* datatable 外面还有一层包装容器，站点给它设了 #e1e1e1 */
+    html[data-ojpp-theme="dark"] .datatable > div,
+    html[data-ojpp-theme="dark"] div.datatable > div {
+      background: #22272e !important;
+      border-color: #373e47 !important;
       color: #cdd9e5;
+    }
+    /* 分页信息那一行（“1-50 of 1234”） */
+    html[data-ojpp-theme="dark"] .datatable .pagination,
+    html[data-ojpp-theme="dark"] .datatable > div:last-child {
+      background: #22272e !important;
+      color: #909dab;
     }
     html[data-ojpp-theme="dark"] .datatable th {
       background: #2d333b;
@@ -395,6 +404,336 @@ export const codeforces: SiteAdapter = {
     html[data-ojpp-theme="dark"] .second-level-menu-list li.current a {
       color: #e6edf3 !important;
     }
+
+    /* ---------- 全局链接 ---------- */
+    /* 站点几乎所有正文链接都是 #0000cc 这种深蓝，深底上对比不足。
+       这是提交记录、状态、博客、题面里最普遍的问题，所以放在最前面兜底。 */
+    html[data-ojpp-theme="dark"] a,
+    html[data-ojpp-theme="dark"] a:visited {
+      color: #539bf5;
+    }
+    html[data-ojpp-theme="dark"] a:hover,
+    html[data-ojpp-theme="dark"] a:active {
+      color: #79b8ff;
+    }
+    /* 已访问过的链接不要变成紫色，暗色下同样难读 */
+    html[data-ojpp-theme="dark"] a:visited {
+      color: #b083f0;
+    }
+
+    /* ---------- 评级颜色 ---------- */
+    /* 站点用 .user-* 类给用户名上色，色值是纯红/纯蓝/gray 这类，
+       在深底上要么刺眼要么看不清。这里换成同色系的亮版本，
+       保持“颜色代表段位”这个语义，只调整明度。 */
+    /* user-black 是“未评级/黑名”，站点用纯黑，深底上完全看不见 */
+    html[data-ojpp-theme="dark"] .user-black { color: #9aa4b2 !important; }
+    html[data-ojpp-theme="dark"] .user-gray { color: #9aa4b2 !important; }
+    html[data-ojpp-theme="dark"] .user-green { color: #57ab5a !important; }
+    html[data-ojpp-theme="dark"] .user-cyan { color: #39c5bb !important; }
+    html[data-ojpp-theme="dark"] .user-blue { color: #539bf5 !important; }
+    html[data-ojpp-theme="dark"] .user-violet { color: #c297ff !important; }
+    html[data-ojpp-theme="dark"] .user-orange { color: #f0883e !important; }
+    html[data-ojpp-theme="dark"] .user-red { color: #f85149 !important; }
+    html[data-ojpp-theme="dark"] .user-legendary { color: #f85149 !important; }
+    /* legendary 段位的首字母被站点强制成黑色（.user-legendary::first-letter），
+       深底上就变成“首字母看不见、其余红色”。改成白色首字母。 */
+    html[data-ojpp-theme="dark"] .user-legendary::first-letter,
+    html[data-ojpp-theme="dark"] .legendary-user-first-letter {
+      color: #ffffff !important;
+    }
+    /* 链接形式的用户名：站点的 a 颜色会盖掉段位色，这里让段位色优先 */
+    html[data-ojpp-theme="dark"] a.rated-user {
+      color: inherit;
+    }
+
+    /* ---------- 表格（提交记录、状态、排行榜等） ---------- */
+    /* 站点给状态表用了浅色底与斑马纹，暗色下是整片亮块 */
+    html[data-ojpp-theme="dark"] table.status-frame-datatable,
+    html[data-ojpp-theme="dark"] .status-frame-datatable,
+    html[data-ojpp-theme="dark"] table.problems,
+    html[data-ojpp-theme="dark"] table.standings,
+    html[data-ojpp-theme="dark"] .datatable,
+    html[data-ojpp-theme="dark"] table {
+      background: #22272e;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .status-frame-datatable tr,
+    html[data-ojpp-theme="dark"] .datatable tr,
+    html[data-ojpp-theme="dark"] table tr {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+    }
+    /* 斑马纹：隔行稍亮一点，保留可读性 */
+    html[data-ojpp-theme="dark"] .status-frame-datatable tr:nth-child(even),
+    html[data-ojpp-theme="dark"] .datatable tr:nth-child(even),
+    html[data-ojpp-theme="dark"] table tr:nth-child(even) {
+      background: #272d36 !important;
+    }
+    html[data-ojpp-theme="dark"] .status-frame-datatable th,
+    html[data-ojpp-theme="dark"] .status-frame-datatable td,
+    html[data-ojpp-theme="dark"] .datatable th,
+    html[data-ojpp-theme="dark"] .datatable td,
+    html[data-ojpp-theme="dark"] table th,
+    html[data-ojpp-theme="dark"] table td {
+      background: transparent !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .status-frame-datatable th,
+    html[data-ojpp-theme="dark"] .datatable th,
+    html[data-ojpp-theme="dark"] table th {
+      background: #2d333b !important;
+      color: #e6edf3;
+    }
+    html[data-ojpp-theme="dark"] table tr:hover td,
+    html[data-ojpp-theme="dark"] .datatable tr:hover td {
+      background: #2d333b !important;
+    }
+    /* 表头里的排序箭头/小图标是深色 PNG */
+    html[data-ojpp-theme="dark"] table th img,
+    html[data-ojpp-theme="dark"] .datatable th img {
+      filter: invert(1) brightness(1.3);
+    }
+    /* 表格分页条 */
+    html[data-ojpp-theme="dark"] .pagination,
+    html[data-ojpp-theme="dark"] .pagination span,
+    html[data-ojpp-theme="dark"] .pagination a {
+      background: transparent !important;
+      color: #adbac7;
+      border-color: #373e47;
+    }
+    html[data-ojpp-theme="dark"] .pagination span.active {
+      background: #2d333b !important;
+      color: #e6edf3;
+    }
+    html[data-ojpp-theme="dark"] .pagination a:hover {
+      background: #2d333b !important;
+    }
+
+    /* ---------- 表单（提交页、筛选面板） ---------- */
+    /* 站点大量使用原生 select / input，暗色下会是白底。
+       这里统一处理，并去掉 Chrome 的原生立体感。 */
+    html[data-ojpp-theme="dark"] select,
+    html[data-ojpp-theme="dark"] input[type="text"],
+    html[data-ojpp-theme="dark"] input[type="password"],
+    html[data-ojpp-theme="dark"] input[type="number"],
+    html[data-ojpp-theme="dark"] input[type="email"],
+    html[data-ojpp-theme="dark"] input:not([type]),
+    html[data-ojpp-theme="dark"] textarea {
+      background-color: #2d333b !important;
+      color: #cdd9e5 !important;
+      border: 1px solid #444c56 !important;
+      border-radius: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    /* select 被去掉原生外观后需要自己补一个下拉箭头 */
+    html[data-ojpp-theme="dark"] select {
+      background-image: linear-gradient(45deg, transparent 50%, #909dab 50%),
+                        linear-gradient(135deg, #909dab 50%, transparent 50%);
+      background-position: calc(100% - 14px) calc(50% - 2px), calc(100% - 9px) calc(50% - 2px);
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      padding-right: 24px;
+    }
+    html[data-ojpp-theme="dark"] input::placeholder,
+    html[data-ojpp-theme="dark"] textarea::placeholder {
+      color: #768390;
+    }
+    /* 提交页的代码编辑器（站点用 CodeMirror 或 textarea） */
+    html[data-ojpp-theme="dark"] .CodeMirror,
+    html[data-ojpp-theme="dark"] .CodeMirror-scroll,
+    html[data-ojpp-theme="dark"] .CodeMirror-gutters,
+    html[data-ojpp-theme="dark"] #editor,
+    html[data-ojpp-theme="dark"] .editor {
+      background: #22272e !important;
+      color: #cdd9e5 !important;
+      border-color: #373e47 !important;
+    }
+    html[data-ojpp-theme="dark"] .CodeMirror-gutters {
+      background: #1c2128 !important;
+      border-right-color: #373e47 !important;
+    }
+    html[data-ojpp-theme="dark"] .CodeMirror-linenumber { color: #768390; }
+    html[data-ojpp-theme="dark"] .CodeMirror-cursor { border-left-color: #cdd9e5; }
+    html[data-ojpp-theme="dark"] .CodeMirror-selected { background: #373e47 !important; }
+    html[data-ojpp-theme="dark"] .CodeMirror-activeline-background { background: #2d333b !important; }
+    /* 文件选择按钮 */
+    html[data-ojpp-theme="dark"] input[type="file"]::file-selector-button {
+      background: #2d333b;
+      color: #cdd9e5;
+      border: 1px solid #444c56;
+      border-radius: 4px;
+    }
+
+    /* ---------- 首页 / 公告 ---------- */
+    /* 首页公告里的标题与表格：站点用深色文字，暗色下看不见 */
+    html[data-ojpp-theme="dark"] .topic,
+    html[data-ojpp-theme="dark"] .topic h1,
+    html[data-ojpp-theme="dark"] .topic h2,
+    html[data-ojpp-theme="dark"] .topic h3,
+    html[data-ojpp-theme="dark"] .topic p,
+    html[data-ojpp-theme="dark"] .topic li,
+    html[data-ojpp-theme="dark"] .topic div,
+    html[data-ojpp-theme="dark"] .ttypography h1,
+    html[data-ojpp-theme="dark"] .ttypography h2,
+    html[data-ojpp-theme="dark"] .ttypography h3,
+    html[data-ojpp-theme="dark"] .ttypography h4,
+    html[data-ojpp-theme="dark"] .ttypography h5,
+    html[data-ojpp-theme="dark"] .ttypography h6 {
+      color: #e6edf3;
+    }
+    /* 首页的评分表：表头原本是深色底、正文是白底 */
+    html[data-ojpp-theme="dark"] .topic table,
+    html[data-ojpp-theme="dark"] .ttypography table {
+      border-color: #373e47 !important;
+    }
+    /* 公告里的引用块左侧竖线 */
+    html[data-ojpp-theme="dark"] .topic blockquote,
+    html[data-ojpp-theme="dark"] .ttypography blockquote {
+      border-left-color: #475060;
+      color: #adbac7;
+    }
+    /* 隐藏的公告标题（首页 “Hello, Codeforces!” 那种被压暗的标题） */
+    html[data-ojpp-theme="dark"] .topic .spoiler-title,
+    html[data-ojpp-theme="dark"] .spoiler-title {
+      color: #e6edf3;
+    }
+
+    /* ---------- 博客 / changelog ---------- */
+    html[data-ojpp-theme="dark"] .blog-entry,
+    html[data-ojpp-theme="dark"] .blog-entry .title,
+    html[data-ojpp-theme="dark"] .blog-entry .info,
+    html[data-ojpp-theme="dark"] .comment,
+    html[data-ojpp-theme="dark"] .comment .content {
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .blog-entry .title a,
+    html[data-ojpp-theme="dark"] .comment a {
+      color: #539bf5 !important;
+    }
+    /* changelog 里的日期与作者信息 */
+    html[data-ojpp-theme="dark"] .blog-entry .info,
+    html[data-ojpp-theme="dark"] .comment .info {
+      color: #909dab;
+    }
+
+    /* ---------- 日历 ---------- */
+    html[data-ojpp-theme="dark"] .calendar,
+    html[data-ojpp-theme="dark"] .calendar-table,
+    html[data-ojpp-theme="dark"] table.calendar {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .calendar td,
+    html[data-ojpp-theme="dark"] .calendar th,
+    html[data-ojpp-theme="dark"] table.calendar td,
+    html[data-ojpp-theme="dark"] table.calendar th {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .calendar .day,
+    html[data-ojpp-theme="dark"] table.calendar td.day {
+      color: #cdd9e5;
+    }
+    /* 日历里表示“有比赛”的标记色块，原色在深底上过暗 */
+    html[data-ojpp-theme="dark"] .calendar .contest,
+    html[data-ojpp-theme="dark"] table.calendar .contest {
+      background: #2d333b !important;
+      color: #adbac7;
+    }
+
+    /* ---------- 搜索框与筛选表单 ---------- */
+    /* 状态页的筛选面板：站点用 fieldset 包裹，标题是蓝色 */
+    html[data-ojpp-theme="dark"] fieldset,
+    html[data-ojpp-theme="dark"] .filter-box {
+      border-color: #373e47 !important;
+    }
+    html[data-ojpp-theme="dark"] fieldset legend,
+    html[data-ojpp-theme="dark"] .filter-box label {
+      color: #adbac7;
+    }
+    /* 筛选面板里的蓝色标签（Problem: / Verdict: 等） */
+    html[data-ojpp-theme="dark"] .status-filter label,
+    html[data-ojpp-theme="dark"] .filter-box b,
+    html[data-ojpp-theme="dark"] .filter-box strong {
+      color: #79b8ff;
+    }
+
+    /* ---------- 首页列表 ---------- */
+    /* 公告与比赛的标题：站点用 #3b5998 深蓝（.topic .title 里的链接） */
+    html[data-ojpp-theme="dark"] .topic .title a,
+    html[data-ojpp-theme="dark"] .topic .title,
+    html[data-ojpp-theme="dark"] .topic a,
+    /* 标题文字实际落在 a 里的 <p> 上，颜色设在那里而不是 a 上 */
+    html[data-ojpp-theme="dark"] .topic .title a p,
+    html[data-ojpp-theme="dark"] .topic a p,
+    html[data-ojpp-theme="dark"] .contestList .contestName a,
+    html[data-ojpp-theme="dark"] .recent-actions a,
+    html[data-ojpp-theme="dark"] .roundbox .caption a {
+      color: #79b8ff !important;
+    }
+    /* 首页右栏的“Top rated”之类列表：用户名是黑色 */
+    html[data-ojpp-theme="dark"] .personal-sidebar a,
+    html[data-ojpp-theme="dark"] .sidebox a,
+    html[data-ojpp-theme="dark"] .roundbox a {
+      color: #cdd9e5 !important;
+    }
+    /* 公告的 rating 变化：.topic-rating 是 #008000 深绿 */
+    html[data-ojpp-theme="dark"] .topic-rating,
+    html[data-ojpp-theme="dark"] .green,
+    html[data-ojpp-theme="dark"] .rating-up {
+      color: #57ab5a !important;
+    }
+    html[data-ojpp-theme="dark"] .red,
+    html[data-ojpp-theme="dark"] .rating-down {
+      color: #f85149 !important;
+    }
+
+    /* ---------- 博客与评论区 ---------- */
+    /* 博客标题：站点的结构是 h3 > a，没有稳定的 class，
+       所以直接按标签层级选，并排除页脚等区域 */
+    html[data-ojpp-theme="dark"] #pageContent h3 a,
+    html[data-ojpp-theme="dark"] #pageContent h3,
+    html[data-ojpp-theme="dark"] .blog-entry h3 a,
+    html[data-ojpp-theme="dark"] .blog-entry .title {
+      color: #79b8ff !important;
+    }
+    /* 评论的投票分数：正值 #008000、负值 #800000 */
+    html[data-ojpp-theme="dark"] .commentRating,
+    html[data-ojpp-theme="dark"] .commentRating span {
+      color: #57ab5a !important;
+    }
+    html[data-ojpp-theme="dark"] .commentRating.negative,
+    html[data-ojpp-theme="dark"] .commentRating.negative span {
+      color: #f85149 !important;
+    }
+    /* 代码高亮（Google prettify）：站点为浅色背景设计的配色，
+       深底上几乎全是深色，直接按语法类别换成亮色版本 */
+    html[data-ojpp-theme="dark"] .prettyprint,
+    html[data-ojpp-theme="dark"] code.prettyprint,
+    html[data-ojpp-theme="dark"] pre.prettyprint {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5 !important;
+    }
+    html[data-ojpp-theme="dark"] .prettyprint .pln,
+    html[data-ojpp-theme="dark"] .prettyprint .pun { color: #cdd9e5 !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .kwd,
+    html[data-ojpp-theme="dark"] .prettyprint .kwd span { color: #f47067 !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .typ,
+    html[data-ojpp-theme="dark"] .prettyprint .atn { color: #79b8ff !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .lit,
+    html[data-ojpp-theme="dark"] .prettyprint .str,
+    html[data-ojpp-theme="dark"] .prettyprint .atv { color: #8ddb8c !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .com { color: #768390 !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .tag { color: #f47067 !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .dec,
+    html[data-ojpp-theme="dark"] .prettyprint .var { color: #dcbdfb !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .fun { color: #dcbdfb !important; }
 
     /* ---------- 提示条与代码编辑器 ---------- */
     html[data-ojpp-theme="dark"] div.alert-info,

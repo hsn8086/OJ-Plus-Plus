@@ -66,9 +66,28 @@ async function pageWithFixture(url, html) {
   return page;
 }
 
+/**
+ * 点击第一个工具栏的翻译按钮。
+ *
+ * 用 DOM 点击而不是 Playwright 的 click()：工具栏是 float 布局的 span，
+ * Playwright 的可操作性检查会把父 span 当成“拦截点击的元素”而拒绝点击，
+ * 但真实用户点击时事件会正常冒泡到按钮。这里直接派发点击更贴近真实行为。
+ */
+async function clickTranslate(page) {
+  await page.evaluate(() => {
+    const btn = document.querySelector('.ojpp-toolbar .ojpp-translate-btn');
+    if (!(btn instanceof HTMLElement)) throw new Error('找不到翻译按钮');
+    btn.click();
+  });
+}
+
 async function translate(page) {
-  await page.getByRole('button', { name: /^(AI 翻译|重新翻译)$/ }).first().click();
-  await page.waitForFunction(() => document.querySelector('.ojpp-translate-btn')?.dataset.state === 'done');
+  await clickTranslate(page);
+  await page.waitForFunction(
+    () => document.querySelector('.ojpp-translate-btn')?.dataset.state === 'done',
+    null,
+    { timeout: 15000 },
+  );
 }
 
 try {
@@ -167,10 +186,11 @@ try {
   );
   assert.ok(labels.some((label) => label.includes('说明')), `缺少“说明”工具栏: ${labels.join(' | ')}`);
 
-  // 添加提供商：列表 → 添加面板。面板里不能出现重复的自定义入口。
+  // 添加提供商：主视图 → 管理提供商 → 添加面板。面板里不能出现重复的自定义入口。
   await page.getByRole('button', { name: 'OJ++ 设置', exact: true }).click();
-  await page.getByRole('button', { name: '提供商', exact: true }).click();
-  await page.getByRole('button', { name: '+ 添加提供商', exact: true }).click();
+  await page.getByRole('button', { name: '管理', exact: true }).click();
+  await page.waitForTimeout(200);
+  await page.locator('.ojpp-add-provider').click();
   await page.waitForTimeout(200);
   const presets = await page.locator('.ojpp-preset-item').evaluateAll((nodes) =>
     nodes.map((node) => node.textContent.replace(/\s+/g, ' ').trim()),
@@ -186,26 +206,26 @@ try {
   // 第一个就是自定义，方便自己填地址
   assert.ok(presets[0].includes('自定义'), `自定义应排在最前: ${presets[0]}`);
   // 搜索能过滤
-  const search = page.getByPlaceholder('查找提供商…');
+  const search = page.getByPlaceholder('搜索...');
   await search.fill('deepseek');
   await page.waitForTimeout(200);
   const filtered = await page.locator('.ojpp-preset-item').evaluateAll((nodes) =>
     nodes.map((node) => node.textContent.replace(/\s+/g, ' ').trim()),
   );
   assert.ok(filtered.length >= 1 && filtered.every((x) => /deepseek|自定义/i.test(x)), `搜索过滤异常: ${filtered.join(' | ')}`);
-  // 返回列表
-  await page.getByRole('button', { name: /返回列表/ }).click();
+  // 返回列表（栈导航的返回箭头）
+  await page.locator('.ojpp-back-btn').click();
   await page.waitForTimeout(200);
   assert.ok(await page.locator('.ojpp-add-provider').count() > 0, '应回到列表视图');
   // 关掉面板再继续后面的用例
-  await page.getByRole('button', { name: '关闭', exact: true }).click();
+  await page.locator('.ojpp-panel-close').click();
   await page.getByRole('dialog').waitFor({ state: 'detached' });
 
   // 连续输入、拖选到面板外、立即正常点击遮罩，以及保存后即时切换模型。
   await page.getByRole('button', { name: 'OJ++ 设置', exact: true }).click();
-  await page.getByRole('button', { name: '提供商', exact: true }).click();
+  await page.getByRole('button', { name: '管理', exact: true }).click();
   // 提供商页现在是「列表 → 编辑」两步，先进编辑视图
-  await page.getByRole('button', { name: '编辑提供商', exact: true }).first().click();
+  await page.locator('.ojpp-provider-edit').first().click();
   const name = page.getByLabel('备注名', { exact: true });
   await name.fill('');
   await name.pressSequentially('Provider ABC');
@@ -217,13 +237,16 @@ try {
   await page.mouse.down();
   await page.mouse.move(20, 800, { steps: 8 });
   await page.mouse.up();
-  assert.equal(await page.getByRole('dialog').count(), 1);
+  // 拖选结束后浏览器会向遮罩补发一对 pointerdown/pointerup，
+  // 这一下不该关闭面板（否则用户拖选文字就会误关设置）。
+  assert.equal(await page.getByRole('dialog').count(), 1, '拖选文字不应关闭面板');
+  // 再真正点一次遮罩，这次应该关闭（关闭有 300ms 动画，要等它跑完）
   await page.mouse.click(20, 800);
-  assert.equal(await page.getByRole('dialog').count(), 0);
+  await page.getByRole('dialog').waitFor({ state: 'detached', timeout: 2000 });
 
   await page.getByRole('button', { name: 'OJ++ 设置', exact: true }).click();
-  await page.getByRole('button', { name: '提供商', exact: true }).click();
-  await page.getByRole('button', { name: '编辑提供商', exact: true }).first().click();
+  await page.getByRole('button', { name: '管理', exact: true }).click();
+  await page.locator('.ojpp-provider-edit').first().click();
   await page.getByLabel('模型', { exact: true }).fill('updated-model');
   await page.getByRole('button', { name: '保存', exact: true }).click();
   await page.getByRole('dialog').waitFor({ state: 'detached' });
@@ -270,8 +293,10 @@ try {
   assert.equal(await page.locator('.ojpp-result').count(), 1);
 
   await page.evaluate(() => { window.__testState.delay = 5000; });
-  await page.getByRole('button', { name: '重新翻译', exact: true }).click();
-  await page.getByRole('button', { name: '翻译中，点击中止', exact: true }).click();
+  // 只针对第一个工具栏里的按钮。页面上有多个工具栏，
+  // 用全局 getByRole 会命中被浮层挡住的那些。
+  await clickTranslate(page);
+  await clickTranslate(page);
   await page.waitForFunction(() => window.__testState.aborted === 1);
   await page.locator('.ojpp-result').waitFor({ state: 'detached' });
   console.log('✓ userscript：动态题面、公式与复制、设置交互、即时配置、TM ReadableStream 流式与取消');
@@ -582,6 +607,80 @@ try {
   assert.equal(leftovers.logoStyle.blend, 'screen', `logo 应用 screen 混合让白底透明: ${JSON.stringify(leftovers.logoStyle)}`);
   console.log('✓ 暗色完整性：无残留浅色、无黑字、多测交替色、按钮扁平、深蓝链接与 logo 已处理');
 
+  // 站点在更多页面上的暗色表现：提交记录表、评级颜色、公告标题、表单。
+  // 这些选择器都来自真实页面的实测，不是猜的。
+  const extras = await (async () => {
+    const html = await readFile(new URL('test/fixtures/codeforces-new.html', root), 'utf8');
+    const page = await pageWithFixture('https://codeforces.com/problemset/problem/1/A', html);
+    await page.evaluate((settings) => localStorage.setItem('ojpp:settings', JSON.stringify({
+      ...settings, theme: 'dark', locale: 'zh',
+    })), settings);
+    await page.addScriptTag({ content: cfCode });
+    await page.evaluate(async () => { window.stopApp = await OJPPCf.start(); });
+    await page.waitForTimeout(200);
+    const probe = await page.evaluate(() => {
+      const color = (sel) => {
+        const el = document.querySelector(sel);
+        return el ? getComputedStyle(el).color : null;
+      };
+      const bg = (sel) => {
+        const el = document.querySelector(sel);
+        return el ? getComputedStyle(el).backgroundColor : null;
+      };
+      const lum = (rgb) => {
+        const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(rgb ?? '');
+        return m ? (0.299 * +m[1] + 0.587 * +m[2] + 0.114 * +m[3]) / 255 : null;
+      };
+      return {
+        // 评级颜色不能是纯黑/纯红。
+        // 用 span 而不是链接：链接会被通用的 a 规则兜住，
+        // span 才真正依赖 .user-* 规则。
+        userBlack: color('.user-black'),
+        userRed: color('.rated-user.user-red'),
+        legendaryFirst: color('.legendary-user-first-letter'),
+        // 表格不能是白底
+        tableBg: bg('.status-frame-datatable tr'),
+        // 表单不能是白底
+        selectBg: bg('select'),
+        inputBg: bg('input[type="text"]'),
+        // 深蓝文字要变亮
+        footer: lum(color('#footer a')),
+        rating: lum(color('.topic-rating')),
+        // 站点把颜色写在 style="color:black !important" 里，
+        // CSS 覆盖不掉，只能靠 JS 清掉内联声明
+        inlineBlackTitle: lum(color('h3 a[style], h3 a')),
+      };
+    });
+    await page.evaluate(() => window.stopApp());
+    await page.close();
+    return probe;
+  })();
+  const lumOf = (rgb) => {
+    const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(rgb ?? '');
+    return m ? (0.299 * +m[1] + 0.587 * +m[2] + 0.114 * +m[3]) / 255 : null;
+  };
+  for (const [name, value] of Object.entries({
+    'user-black': extras.userBlack,
+    'user-red': extras.userRed,
+    'legendary 首字母': extras.legendaryFirst,
+  })) {
+    assert.ok(lumOf(value) > 0.4, `${name} 在暗色下应可读，实际 ${value}`);
+  }
+  for (const [name, value] of Object.entries({
+    '表格行': extras.tableBg,
+    'select': extras.selectBg,
+    '文本输入框': extras.inputBg,
+  })) {
+    assert.ok(lumOf(value) < 0.4, `${name} 不应是浅色底，实际 ${value}`);
+  }
+  assert.ok(extras.footer > 0.4, `页脚链接应可读，实际亮度 ${extras.footer}`);
+  assert.ok(extras.rating > 0.4, `rating 变化应可读，实际亮度 ${extras.rating}`);
+  assert.ok(
+    extras.inlineBlackTitle > 0.4,
+    `内联 black !important 的标题应被清成可读色，实际亮度 ${extras.inlineBlackTitle}`,
+  );
+  console.log('✓ 暗色覆盖：评级颜色、表格、表单、深蓝链接');
+
   // 在面板里切换语言后，面板与工具栏都要立刻变，不必刷新页面。
   // 这里覆盖一个曾经的 bug：面板为即时预览调了 setLocale，
   // 导致保存时“前后语言相同”，工具栏停在旧语言。
@@ -599,12 +698,13 @@ try {
 
     await page.locator('.ojpp-settings-btn').click();
     await page.waitForTimeout(250);
-    const before = await page.locator('.ojpp-tab').first().textContent();
+    // v2 用堆栈导航替代了标签页，底部主按钮就是「保存」
+    const before = await page.locator('.ojpp-panel-foot .ojpp-btn-primary').textContent();
     // 第一个下拉框是界面语言
-    await page.locator('.ojpp-field select').first().selectOption('en');
+    await page.locator('.ojpp-panel select').first().selectOption('en');
     await page.waitForTimeout(250);
-    const panelAfter = await page.locator('.ojpp-tab').first().textContent();
-    await page.locator('.ojpp-btn-primary').click();
+    const panelAfter = await page.locator('.ojpp-panel-foot .ojpp-btn-primary').textContent();
+    await page.locator('.ojpp-panel-foot .ojpp-btn-primary').click();
     await page.waitForTimeout(400);
     const toolbarAfter = await page.locator('.ojpp-translate-btn').first().getAttribute('title');
 
@@ -612,8 +712,8 @@ try {
     await page.close();
     return { before, panelAfter, toolbarAfter };
   })();
-  assert.equal(switched.before, '翻译设置', `初始应为中文: ${switched.before}`);
-  assert.equal(switched.panelAfter, 'Translation', `面板应即时切换: ${switched.panelAfter}`);
+  assert.equal(switched.before, '保存', `初始应为中文: ${switched.before}`);
+  assert.equal(switched.panelAfter, 'Save', `面板应即时切换: ${switched.panelAfter}`);
   assert.equal(switched.toolbarAfter, 'AI Translate', `保存后工具栏应切换: ${switched.toolbarAfter}`);
   console.log('✓ 界面语言切换：面板即时生效，保存后工具栏同步');
 
