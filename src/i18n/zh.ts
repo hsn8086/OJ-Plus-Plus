@@ -175,6 +175,32 @@ export const zh = {
 
   // 预设
   'preset.customOpenAI': '自定义（兼容 OpenAI Chat）',
+
+  // 代码编辑器
+  'editor.title': '代码',
+  'editor.run': '测试样例',
+  'editor.custom': '自定义测试',
+  'editor.customPlaceholder': '输入数据（stdin）',
+  'editor.runOne': '运行',
+  'editor.submit': '提交',
+  'editor.submitting': '提交中…',
+  'editor.submitted': '已提交，查看提交记录 →',
+  'editor.submitFailed': '提交失败',
+  'editor.running': '运行中…',
+  'editor.done': '完成',
+  'editor.match': '输出一致',
+  'editor.mismatch': '输出不一致',
+  'editor.runError': '运行失败',
+  'editor.sample': '样例',
+  'editor.expected': '期望输出',
+  'editor.customRun': '自定义测试',
+  'editor.noSamples': '页面里没找到样例',
+  'editor.noProblem': '当前页面识别不到题号，无法提交',
+  'editor.enabled': '题目页代码编辑器',
+  'editor.enabledHint': '在支持的站点题目页显示代码编辑器，可测样例、自定义测试并直接提交。',
+  'editor.lspUrl': 'LSP 地址',
+  'editor.lspUrlPlaceholder': 'ws://localhost:20876（留空关闭）',
+  'editor.lspUrlHint': '连接本机 LSP WebSocket 桥（如 lsp-ws-proxy）做语义补全；留空只用关键字补全。',
 };
 
 export type MessageKey = keyof typeof zh;

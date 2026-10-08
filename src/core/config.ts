@@ -99,6 +99,11 @@ export function defaultSettings(): Settings {
     streaming: true,
     locale: 'auto',
     theme: 'auto',
+    editorEnabled: true,
+    editorFontSize: 13,
+    editorLspUrl: '',
+    editorLanguage: {},
+    editorCode: {},
   };
 }
 
@@ -133,6 +138,16 @@ export function migrate(raw: unknown): Settings {
     providers,
     version: base.version,
   };
+  // 草稿代码最多留 30 份，超出按最近更新淘汰
+  if (settings.editorCode && typeof settings.editorCode === 'object') {
+    const entries = Object.entries(settings.editorCode).filter(
+      ([, v]) => v && typeof v === 'object' && typeof (v as { code?: unknown }).code === 'string'
+    );
+    entries.sort((a, b) => (b[1].updated ?? 0) - (a[1].updated ?? 0));
+    settings.editorCode = Object.fromEntries(entries.slice(0, 30));
+  } else {
+    settings.editorCode = {};
+  }
   if (!settings.providers.some((p) => p.id === settings.activeProviderId)) {
     settings.activeProviderId = settings.providers[0]?.id ?? null;
   }

@@ -1,5 +1,5 @@
 import { t } from '../i18n/index.ts';
-import type { ContentSection, SiteAdapter } from './types.ts';
+import type { ContentSection, EditorLanguage, EditorTestResult, SiteAdapter } from './types.ts';
 
 /**
  * Codeforces 的公式有两种完全不同的形态，取决于题目年代：
@@ -86,6 +86,22 @@ function isStandaloneSpan(span: Element): boolean {
   return (parent.textContent ?? '').trim() === (span.textContent ?? '').trim()
     && (parent.textContent ?? '').trim().length > 0;
 }
+
+const CF_LANGUAGES: readonly EditorLanguage[] = [
+  { id: '54', name: 'GNU G++17 7.3.0', mode: 'cpp' },
+  { id: '89', name: 'GNU G++20 13.2', mode: 'cpp' },
+  { id: '91', name: 'GNU G++23 14.2', mode: 'cpp' },
+  { id: '43', name: 'GNU GCC C11 5.1.0', mode: 'cpp' },
+  { id: '87', name: 'Java 21 64bit', mode: 'java' },
+  { id: '36', name: 'Java 8 32bit', mode: 'java' },
+  { id: '31', name: 'Python 3.13.2', mode: 'python' },
+  { id: '70', name: 'PyPy 3.10 (7.3.15)', mode: 'python' },
+  { id: '7', name: 'Python 2.7.18', mode: 'python' },
+  { id: '32', name: 'Go 1.22.2', mode: 'text' },
+  { id: '75', name: 'Rust 1.89.0', mode: 'text' },
+  { id: '83', name: 'Kotlin 1.7.20', mode: 'text' },
+  { id: '65', name: 'C# 8 (.NET Core 3.1)', mode: 'text' },
+];
 
 export const codeforces: SiteAdapter = {
   id: 'codeforces',
@@ -1564,9 +1580,234 @@ export const codeforces: SiteAdapter = {
       window.removeEventListener('load', onReady);
     };
   },
+
+  /* ---------- 代码编辑器（CM6 + customtest + submit） ---------- */
+  editor: {
+    languages: CF_LANGUAGES,
+
+    editorMountPoint(doc) {
+      // 题目页：挂在 .problem-statement 之后
+      const statement = doc.querySelector<HTMLElement>('.problem-statement');
+      if (!statement) return null;
+      const parent = statement.parentElement;
+      if (!parent) return null;
+      return { anchor: statement, position: 'afterend' };
+    },
+
+    problemCode(doc) {
+      // /problemset/problem/1/A → "1A"；/contest/242/problem/B → "242B"；/gym/106748/problem/A → "106748A"
+      const p = doc.location.pathname;
+      const m = /^\/problemset\/problem\/(\d+)\/([A-Z]\w*)/.exec(p)
+        ?? /^\/(?:contest|gym)\/(\d+)\/problem\/([A-Z]\w*)/.exec(p);
+      return m ? `${m[1]}${m[2]}` : null;
+    },
+
+    getSamples(doc) {
+      const out: { input: string; output: string }[] = [];
+      for (const test of doc.querySelectorAll<HTMLElement>('.sample-test')) {
+        const input = test.querySelector<HTMLElement>('.input pre')?.innerText?.trim();
+        const output = test.querySelector<HTMLElement>('.output pre')?.innerText?.trim();
+        if (input !== undefined) out.push({ input, output: output ?? '' });
+      }
+      return out;
+    },
+
+    async runCustomTest(code, languageId, input) {
+      // 真实路径（页内 JS）：POST /data/customtest {action:'submitSourceCode'}
+      // 拿 customTestSubmitId，再轮询 {action:'getVerdict'}。
+      // 原生表单 POST 到页面 URL 只会退回表单页，不建任务。
+      const csrf = csrfToken();
+      const submitBody = new URLSearchParams({
+        csrf_token: csrf,
+        communityCode: '',
+        action: 'submitSourceCode',
+        programTypeId: languageId,
+        sourceCode: code,
+        source: code,
+        input,
+        tabSize: '4',
+        output: '',
+        _tta: ttaValue(),
+      });
+      const submitRes = await fetch('/data/customtest', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: submitBody.toString(),
+      });
+      const submitJson = (await submitRes.json()) as {
+        customTestSubmitId?: number | string;
+        error?: string;
+      };
+      if (!submitJson?.customTestSubmitId) {
+        return { output: '', error: submitJson?.error ?? '提交失败（customTestSubmitId 为空）' };
+      }
+      const id = String(submitJson.customTestSubmitId);
+      const deadline = Date.now() + 60_000;
+      while (Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, 1500));
+        const vb = new URLSearchParams({
+          csrf_token: csrf,
+          communityCode: '',
+          action: 'getVerdict',
+          customTestSubmitId: id,
+        });
+        const vr = await fetch('/data/customtest', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+          body: vb.toString(),
+        });
+        const vj = (await vr.json().catch(() => null)) as {
+          verdict?: string;
+          output?: string;
+          stat?: string;
+        } | null;
+        if (vj?.verdict != null) {
+          const result: EditorTestResult = {
+            output: String(vj.output ?? ''),
+            used: [vj.verdict, vj.stat].filter(Boolean).join(', ') || undefined,
+          };
+          if (vj.verdict !== 'OK' && !result.output) {
+            result.error = result.used;
+          }
+          return result;
+        }
+      }
+      return { output: '', error: '等待判题结果超时' };
+    },
+
+    async submit(code, languageId, problemCode) {
+      const csrf = csrfToken();
+      const doc = await postFormToIframe('/problemset/submit', {
+        csrf_token: csrf,
+        action: 'submitSolutionFormSubmitted',
+        submittedProblemCode: problemCode,
+        programTypeId: languageId,
+        source: code,
+        tabSize: '4',
+        ftaa: ftaaValue(),
+        bfaa: bfaaValue(),
+        _tta: ttaValue(),
+      });
+      const url = doc.URL;
+      const errorText = doc.querySelector('.error, .error__text, .forbidden, [class*="error"]')?.textContent?.trim();
+      const ok = /\/(?:contest\/\d+|gym\/\d+)?\/?(my|status)/.test(url) || /status|contest\/\d+\/my/.test(url);
+      return { ok: ok && !errorText, url: ok ? url : undefined, error: errorText ?? (ok ? undefined : parseSubmitError(doc)) };
+    },
+  },
 };
 
 /** .property-title 后面要跟冒号（如 "time limit per test: "），.section-title 不要。 */
 function selectorEndsWithProperty(el: Element): boolean {
   return el.classList.contains('property-title');
+}
+
+/* ---------- 编辑器辅助 ---------- */
+
+
+function csrfToken(): string {
+  return document.querySelector<HTMLInputElement>('input[name="csrf_token"]')?.value ?? '';
+}
+
+function ttaValue(): string {
+  return document.querySelector<HTMLInputElement>('input[name="_tta"]')?.value ?? '237';
+}
+
+function ftaaValue(): string {
+  return antiBotToken('ftaa');
+}
+
+function bfaaValue(): string {
+  return antiBotToken('bfaa');
+}
+
+/** ftaa/bfaa 是页面脚本注入的 window 全局（反自动化参数）。 */
+function antiBotToken(name: 'ftaa' | 'bfaa'): string {
+  const win = window as unknown as Record<string, string | undefined>;
+  const direct = win[`_${name}`] ?? win[name];
+  if (typeof direct === 'string' && direct) return direct;
+  for (const s of document.querySelectorAll('script:not([src])')) {
+    const m = new RegExp(`_${name}\\s*=\\s*"([^"]+)"`).exec(s.textContent ?? '')
+      ?? new RegExp(`${name}\\s*:\\s*"([^"]+)"`).exec(s.textContent ?? '');
+    if (m) return m[1];
+  }
+  return '';
+}
+
+function parseSubmitError(doc: Document): string | undefined {
+  const text = doc.body?.textContent ?? '';
+  const m = /(?:error|forbidden|wrong)[^\n]{0,160}/i.exec(text);
+  return m?.[0]?.trim();
+}
+
+/**
+ * 两段式隐藏 iframe 表单提交：
+ * 先 GET 目标页（customtest/submit），再在其文档内建表单 POST。
+ * 这样 Referer 就是目标页自身，和用户在页面上点按钮完全一致——
+ * fetch/跨页 iframe POST 都会被服务端退回表单页。
+ */
+function postFormToIframe(
+  pageUrl: string,
+  fields: Record<string, string>,
+): Promise<Document> {
+  return new Promise((resolve, reject) => {
+    const frame = document.createElement('iframe');
+    // allow-scripts 不能给：CF 有 frame-buster，被嵌页会把自己的内容清空。
+    // 服务端渲染的表单与结果照常可读，同源 + 表单提交足够。
+    frame.setAttribute('sandbox', 'allow-same-origin allow-forms');
+    frame.style.display = 'none';
+    let submitted = false;
+    let prevDoc: Document | null = null;
+    const done = () => {
+      clearInterval(poll);
+      clearTimeout(timeout);
+      setTimeout(() => frame.remove(), 200);
+    };
+    const timeout = setTimeout(() => {
+      done();
+      reject(new Error('请求超时'));
+    }, 90_000);
+    const poll = setInterval(() => {
+      let doc: Document | null = null;
+      try {
+        doc = frame.contentDocument;
+      } catch {
+        return;
+      }
+      if (!doc) return;
+      if (!submitted) {
+        // 第一段：等目标页加载完，在其文档内建表单提交。
+        // 用 URL + readyState 判断，不依赖 load 事件时序。
+        if (!doc.URL.includes(pageUrl) || doc.readyState !== 'complete') return;
+        prevDoc = doc;
+        const form = doc.createElement('form');
+        form.method = 'POST';
+        form.action = '';
+        form.style.display = 'none';
+        for (const [name, value] of Object.entries(fields)) {
+          const input = doc.createElement('input');
+          input.type = 'hidden';
+          input.name = name;
+          input.value = value;
+          form.append(input);
+        }
+        doc.body.append(form);
+        submitted = true;
+        HTMLFormElement.prototype.submit.call(form);
+      } else {
+        // 第二段：POST 响应换上新 Document（引用变了即到达）
+        if (doc === prevDoc) return;
+        if (doc.readyState !== 'complete') return;
+        done();
+        resolve(doc);
+      }
+    }, 250);
+    document.body.append(frame);
+    frame.src = pageUrl;
+  });
 }

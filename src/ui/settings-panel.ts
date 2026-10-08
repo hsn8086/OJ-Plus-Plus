@@ -160,12 +160,23 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
     promptArea.style.minHeight = '60px';
     promptArea.oninput = () => draft.extraPrompt = promptArea.value;
 
+    const lspInput = input(draft.editorLspUrl, t('editor.lspUrlPlaceholder'));
+    lspInput.oninput = () => draft.editorLspUrl = lspInput.value.trim();
+
     sec1.body.append(
       row1,
       field(t('settings.targetLang'), targetInput),
       field(t('settings.extraPrompt'), promptArea)
     );
     container.append(sec1.container);
+
+    // 编辑器
+    const secEditor = section(t('editor.title'));
+    secEditor.body.append(
+      check(t('editor.enabled'), draft.editorEnabled, (v) => draft.editorEnabled = v),
+      field(t('editor.lspUrl'), lspInput),
+    );
+    container.append(secEditor.container);
 
     // 翻译行为
     const sec2 = section(t('settings.behavior'));

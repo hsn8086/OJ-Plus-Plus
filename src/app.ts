@@ -6,10 +6,11 @@ import type { Platform } from './platforms/types.ts';
 import type { SiteAdapter } from './sites/types.ts';
 import { iconButton } from './ui/buttons.ts';
 import { ICON_SETTINGS } from './ui/icons.ts';
+import { mountEditorPanel } from './ui/editor-panel.ts';
 import { mountSection } from './ui/section.ts';
 import { openSettingsPanel } from './ui/settings-panel.ts';
 import { CSS, DARK_CSS } from './ui/styles.ts';
-import { applyTheme, watchInlineColors, watchSystemTheme } from './ui/theme.ts';
+import { applyTheme, THEME_ATTR, watchInlineColors, watchSystemTheme } from './ui/theme.ts';
 import { toast } from './ui/toast.ts';
 
 /** 组合根：通用功能只接收站点与平台契约，不选择具体适配器。 */
@@ -40,10 +41,12 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
         await saveSettings(platform.storage, updated);
         // 保存后应用配色，并在语言真的变了时重建工具栏。
         // 面板内的即时预览已经改过 setLocale，所以对比的是实际渲染语言。
+        const editorWas = settings.editorEnabled;
         settings = updated;
         setLocale(resolveLocale(updated.locale));
         applyTheme(settings.theme);
         toast(t('app.settingsSaved'));
+        if (updated.editorEnabled !== editorWas) reconcileEditor();
         if (getLocale() !== renderedLocale) remountAll();
       },
       onClose() { closeSettings = undefined; },
@@ -51,6 +54,39 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
   });
 
   const mounted = new Map<HTMLElement, ReturnType<typeof mountSection>>();
+  let editorPanel: ReturnType<typeof mountEditorPanel> | undefined;
+  const persist = () => void saveSettings(platform.storage, settings);
+  const isDarkNow = () => document.documentElement.getAttribute(THEME_ATTR) === 'dark';
+  const darkWatchers = new Set<(dark: boolean) => void>();
+  const themeAttrObserver = new MutationObserver(() => {
+    const dark = isDarkNow();
+    for (const cb of darkWatchers) cb(dark);
+  });
+  themeAttrObserver.observe(document.documentElement, { attributes: true, attributeFilter: [THEME_ATTR] });
+  const onDarkChange = (cb: (dark: boolean) => void) => {
+    darkWatchers.add(cb);
+    return () => darkWatchers.delete(cb);
+  };
+  const reconcileEditor = () => {
+    const mount = site.editor?.editorMountPoint(document);
+    const want = settings.editorEnabled && !!mount && !!site.editor;
+    if (!want) {
+      editorPanel?.dispose();
+      editorPanel = undefined;
+      return;
+    }
+    if (editorPanel?.el.isConnected) return;
+    editorPanel?.dispose();
+    editorPanel = mountEditorPanel({
+      site,
+      support: site.editor!,
+      getSettings: () => settings,
+      persist,
+      isDark: isDarkNow,
+      onDarkChange,
+    });
+    mount!.anchor.insertAdjacentElement(mount!.position, editorPanel.el);
+  };
   /**
    * 当前工具栏是用哪个语言建的。
    *
@@ -62,6 +98,8 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
   const remountAll = () => {
     for (const handle of mounted.values()) handle.dispose();
     mounted.clear();
+    editorPanel?.dispose();
+    editorPanel = undefined;
     settingsButton.remove();
     renderedLocale = getLocale();
     reconcile();
@@ -98,13 +136,19 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
       }
     }
   };
-  reconcile();
-  const stopObserving = site.observe(document, reconcile);
+  const reconcileAll = () => {
+    reconcile();
+    reconcileEditor();
+  };
+  reconcileAll();
+  const stopObserving = site.observe(document, reconcileAll);
   return () => {
     stopObserving();
     stopThemeWatch();
     stopInlineWatch();
+    themeAttrObserver.disconnect();
     closeSettings?.();
+    editorPanel?.dispose();
     for (const handle of mounted.values()) handle.dispose();
     mounted.clear();
     settingsButton.remove();

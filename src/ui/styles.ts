@@ -892,6 +892,144 @@ export const CSS = `
   background: var(--color-success);
 }
 
+/* ---------- 题目页代码编辑器 ---------- */
+.ojpp-editor {
+  margin: 12px 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  overflow: hidden;
+  font-size: 13px;
+}
+
+.ojpp-editor-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ojpp-editor-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text-primary);
+}
+
+.ojpp-editor-lang {
+  height: 26px;
+  max-width: 220px;
+  padding: 0 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-size: 12px;
+}
+
+.ojpp-editor-spacer { flex: 1; }
+
+.ojpp-btn-sm {
+  height: 26px;
+  padding: 0 10px;
+  font-size: 11px;
+}
+
+.ojpp-editor-cm .cm-editor {
+  max-height: 420px;
+}
+.ojpp-editor-cm .cm-scroller {
+  max-height: 420px;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.ojpp-editor-custom {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border-top: 1px solid var(--color-border);
+}
+
+.ojpp-editor-input {
+  flex: 1;
+  min-height: 56px;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  resize: vertical;
+}
+
+.ojpp-editor-results:empty { display: none; }
+.ojpp-editor-results {
+  border-top: 1px solid var(--color-border);
+}
+
+.ojpp-editor-empty {
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.ojpp-editor-result {
+  padding: 8px 10px;
+}
+.ojpp-editor-result + .ojpp-editor-result {
+  border-top: 1px dashed var(--color-border);
+}
+
+.ojpp-editor-result-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+.ojpp-editor-result-name { color: var(--color-text-secondary); font-weight: 500; }
+.ojpp-editor-result-status { color: var(--color-accent); }
+.ojpp-editor-result-status.ok { color: var(--color-success); }
+.ojpp-editor-result-status.warn { color: #e8890c; }
+.ojpp-editor-result-status.error { color: var(--color-danger); }
+
+.ojpp-editor-result-body {
+  margin-top: 6px;
+  display: grid;
+  gap: 6px;
+}
+
+.ojpp-editor-out {
+  margin: 0;
+  padding: 6px 8px;
+  max-height: 160px;
+  overflow: auto;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--color-text-primary);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.ojpp-editor-out.expected { color: var(--color-text-tertiary); }
+.ojpp-editor-out.error { color: var(--color-danger); }
+
+.ojpp-editor-used {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+.ojpp-editor-submitok,
+.ojpp-editor-submiterr {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+.ojpp-editor-submitok { color: var(--color-success); }
+.ojpp-editor-submitok a { color: var(--color-accent); }
+.ojpp-editor-submiterr { color: var(--color-danger); }
+
 /* 响应式 */
 @media (max-width: 640px) {
   .ojpp-panel {

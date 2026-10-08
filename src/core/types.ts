@@ -48,6 +48,16 @@ export interface Settings {
   locale: Locale;
   /** 站点配色；auto 跟随系统 */
   theme: Theme;
+  /** 题目页代码编辑器总开关（站点支持时才显示） */
+  editorEnabled: boolean;
+  /** 编辑器字号 */
+  editorFontSize: number;
+  /** LSP WebSocket 地址（如 ws://localhost:20876），空为关闭 */
+  editorLspUrl: string;
+  /** 各站点最近选择的提交语言 id */
+  editorLanguage: Record<string, string>;
+  /** 按「站点:题号」保存的草稿代码 */
+  editorCode: Record<string, { code: string; updated: number }>;
 }
 
 export interface ChatMessage {
