@@ -53873,28 +53873,50 @@ $$` : `${n}$$`;
 			restoreInlineColors();
 		};
 	}
+	var DEFAULT_EXCLUDE = "pre, code, textarea, script, style, noscript, option, .cm-editor, .ace_editor, .MathJax, .tex-span, [class*=\"ojpp-\"]";
 	function applyPageI18n(doc, rules) {
-		for (const rule of rules) for (const scope of doc.querySelectorAll(rule.scope)) {
-			if (rule.map) {
-				const walker = doc.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
-				const hit = [];
-				let n;
-				while (n = walker.nextNode()) {
-					const text = n.textContent?.trim();
-					if (text && rule.map[text]) hit.push({
-						node: n,
-						to: rule.map[text]
-					});
+		for (const rule of rules) {
+			const exclude = rule.exclude ?? DEFAULT_EXCLUDE;
+			const prefixEntries = rule.prefixMap ? Object.entries(rule.prefixMap) : null;
+			for (const scope of doc.querySelectorAll(rule.scope)) {
+				if (rule.map || prefixEntries) {
+					const walker = doc.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
+					const hit = [];
+					let n;
+					while (n = walker.nextNode()) {
+						const parent = n.parentElement;
+						if (!parent || parent.closest(exclude) || parent.dataset.ojppI18n === "skip") continue;
+						const text = n.textContent?.trim();
+						if (!text) continue;
+						if (rule.map?.[text]) {
+							hit.push({
+								node: n,
+								from: text,
+								to: rule.map[text]
+							});
+							continue;
+						}
+						if (prefixEntries) {
+							for (const [from, to] of prefixEntries) if (text === from || text.startsWith(from + " ") || text.startsWith(from + ",")) {
+								hit.push({
+									node: n,
+									from,
+									to
+								});
+								break;
+							}
+						}
+					}
+					for (const { node, from, to } of hit) node.textContent = node.textContent?.replace(from, to) ?? node.textContent;
 				}
-				for (const { node, to } of hit) node.textContent = node.textContent?.replace(node.textContent.trim(), to) ?? node.textContent;
-			}
-			if (rule.values) for (const el of scope.querySelectorAll("input, button")) {
-				if (el.dataset.ojppI18n) continue;
-				const v = (el.tagName === "INPUT" ? el.value : el.textContent)?.trim() ?? "";
-				if (v && rule.values[v]) {
-					if (el.tagName === "INPUT" && el.value) el.value = rule.values[v];
-					else el.textContent = rule.values[v];
-					el.dataset.ojppI18n = "1";
+				if (rule.values) for (const el of scope.querySelectorAll("input, button")) {
+					if (el.dataset.ojppI18n || el.closest(exclude)) continue;
+					const v = (el.tagName === "INPUT" ? el.value : el.textContent)?.trim() ?? "";
+					if (v && rule.values[v]) {
+						if (el.tagName === "INPUT" && el.value) el.value = rule.values[v];
+						else el.textContent = rule.values[v];
+						el.dataset.ojppI18n = "1";
+					}
 				}
 			}
 		}
@@ -55584,42 +55606,166 @@ $$` : `${n}$$`;
 		i18nPage(doc, locale) {
 			if (locale !== "zh") return;
 			applyPageI18n(doc, [{
-				scope: "form.submit-form, form.customtest",
-				map: {
-					"Source:": "源代码：",
-					"Source code:": "源代码：",
-					"Problem:": "题目：",
-					"Compiler:": "编译器：",
-					"Language:": "语言：",
-					"Input:": "输入：",
-					"Output:": "输出：",
-					"Tab size:": "缩进宽度：",
-					"Switch off editor": "关闭编辑器",
-					"Use custom test": "使用自定义测试",
-					"No more than 256 KB": "不超过 256 KB",
-					"First 255 bytes only": "只显示前 255 字节",
-					"Choose File": "选择文件",
-					"Choose file": "选择文件",
-					"choose file": "选择文件",
-					"Browse": "浏览",
-					"Or click here": "或点这里",
-					"or click here": "或点这里"
-				},
-				values: {
-					"Run": "运行",
-					"Submit": "提交"
-				}
-			}, {
-				scope: ".problem-statement",
-				map: {
-					"Examples": "样例",
-					"Note": "说明",
-					"Input": "输入",
-					"Output": "输出",
-					"Copy": "复制"
-				}
+				scope: "body",
+				map: CF_I18N_ZH,
+				prefixMap: CF_I18N_ZH_PREFIX,
+				values: CF_I18N_ZH_VALUES
 			}]);
 		}
+	};
+	var CF_I18N_ZH = {
+		"Home": "首页",
+		"Top": "主页",
+		"Catalog": "目录",
+		"Contests": "比赛",
+		"Gym": "Gym",
+		"Problemset": "题库",
+		"Groups": "群组",
+		"Rating": "排行榜",
+		"Edu": "Edu",
+		"Calendar": "日历",
+		"Help": "帮助",
+		"Enter": "登录",
+		"Register": "注册",
+		"Logout": "登出",
+		"Profile": "个人资料",
+		"Messages": "消息",
+		"Settings": "设置",
+		"Search": "搜索",
+		"Favourites": "收藏",
+		"My submissions": "我的提交",
+		"My status": "我的状态",
+		"Friends status": "好友状态",
+		"My blog": "我的博客",
+		"Input": "输入",
+		"Output": "输出",
+		"Examples": "样例",
+		"Note": "说明",
+		"Copy": "复制",
+		"input": "输入",
+		"output": "输出",
+		"interactive": "交互题",
+		"Submit?": "提交",
+		"Tutorial": "题解",
+		"Materials": "资料",
+		"Problem": "题目",
+		"time limit per test": "每组数据时限",
+		"memory limit per test": "每组数据内存限制",
+		"standard input": "标准输入",
+		"standard output": "标准输出",
+		"Problem Tags": "题目标签",
+		"Verdict": "判定",
+		"Status": "状态",
+		"Submissions": "提交",
+		"When": "提交时间",
+		"Who": "用户",
+		"Lang": "语言",
+		"Time": "用时",
+		"Memory": "内存",
+		"Score": "分数",
+		"Rank": "排名",
+		"Penalty": "罚时",
+		"Solved": "已通过",
+		"Points": "分数",
+		"Rating change": "Rating 变化",
+		"Contest": "比赛",
+		"Contestants": "参赛者",
+		"Standings": "排行榜",
+		"Problems": "题目",
+		"Accepted": "通过",
+		"Judgement failed": "评测失败",
+		"In queue": "队列中",
+		"Submit": "提交",
+		"Save": "保存",
+		"Cancel": "取消",
+		"Compare": "对比",
+		"Source": "源码",
+		"Send": "发送",
+		"Back": "返回",
+		"Next": "下一个",
+		"Previous": "上一个",
+		"Filter": "筛选",
+		"Apply": "应用",
+		"Diagnostics": "诊断",
+		"Compile and Run": "编译并运行",
+		"Edit": "编辑",
+		"Delete": "删除",
+		"Reply": "回复",
+		"Like": "赞",
+		"Dislike": "踩",
+		"Comments": "评论",
+		"Views": "浏览",
+		"Tags": "标签",
+		"More": "更多",
+		"Less": "收起",
+		"Show": "显示",
+		"Hide": "隐藏",
+		"Loading": "加载中",
+		"Run": "运行",
+		"Read": "阅读",
+		"Difficulty": "难度",
+		"Choose problem": "选择题号",
+		"Before contest": "赛前",
+		"Attention": "注意",
+		"Source:": "源代码：",
+		"Source code:": "源代码：",
+		"Problem:": "题目：",
+		"Compiler:": "编译器：",
+		"Language:": "语言：",
+		"Input:": "输入：",
+		"Output:": "输出：",
+		"Tab size:": "缩进宽度：",
+		"Switch off editor": "关闭编辑器",
+		"Use custom test": "使用自定义测试",
+		"No more than 256 KB": "不超过 256 KB",
+		"First 255 bytes only": "只显示前 255 字节",
+		"Choose File": "选择文件",
+		"Choose file": "选择文件",
+		"choose file": "选择文件",
+		"Browse": "浏览",
+		"or click here": "或点这里",
+		"Official": "正式",
+		"Unofficial": "非正式",
+		"Register now": "立即报名",
+		"Virtual participation": "虚拟参赛",
+		"Start virtual": "开始虚拟赛",
+		"Friends only": "只看好友",
+		"All": "全部",
+		"Final": "终榜",
+		"Unofficial standings": "非正式榜单",
+		"Custom test": "自定义测试",
+		"View the change": "查看变更",
+		"The problem statement has recently been changed.": "题面最近有改动。"
+	};
+	var CF_I18N_ZH_PREFIX = {
+		"Wrong answer": "答案错误",
+		"Time limit exceeded": "超出时间限制",
+		"Memory limit exceeded": "超出内存限制",
+		"Idleness limit exceeded": "超出空闲限制",
+		"Runtime error": "运行错误",
+		"Compilation error": "编译错误",
+		"Presentation error": "格式错误",
+		"Execution failed": "执行失败",
+		"Denial of judgement": "拒绝评测",
+		"Security violation": "安全违规",
+		"Pretests passed": "预测试通过",
+		"Partial": "部分分",
+		"Hacked": "被 Hack",
+		"Skipped": "跳过",
+		"Rejected": "被拒",
+		"Testing": "评测中",
+		"Contest is running": "比赛进行中"
+	};
+	var CF_I18N_ZH_VALUES = {
+		"Run": "运行",
+		"Submit": "提交",
+		"Save": "保存",
+		"Cancel": "取消",
+		"Send": "发送",
+		"Apply": "应用",
+		"Reset": "重置",
+		"Search": "搜索",
+		"Compile and Run": "编译并运行"
 	};
 	function selectorEndsWithProperty(el) {
 		return el.classList.contains("property-title");
@@ -55722,7 +55868,7 @@ $$` : `${n}$$`;
 	function isBullet(latex) {
 		return /^\\(hspace\s*\{[^{}]*\})?\s*\\bullet\b/.test(latex.trim());
 	}
-	var sites = [{
+	var nowcoder = {
 		id: "nowcoder",
 		get name() {
 			return t$1("site.nowcoder");
@@ -55850,6 +55996,15 @@ $$` : `${n}$$`;
 			};
 		},
 		i18nPage(doc, locale) {
+			if (locale === "en") {
+				applyPageI18n(doc, [{
+					scope: "body",
+					map: NC_I18N_EN,
+					prefixMap: NC_I18N_EN_PREFIX,
+					values: NC_I18N_EN_VALUES
+				}]);
+				return;
+			}
 			if (locale !== "zh") return;
 			applyPageI18n(doc, [{
 				scope: ".question-ide, .submit-box, .nc-post-content",
@@ -55867,7 +56022,96 @@ $$` : `${n}$$`;
 				}
 			}]);
 		}
-	}, codeforces];
+	};
+	var NC_I18N_EN = {
+		"输入": "Input",
+		"输出": "Output",
+		"输入描述:": "Input description:",
+		"输入描述：": "Input description:",
+		"输出描述:": "Output description:",
+		"输出描述：": "Output description:",
+		"说明": "Note",
+		"示例": "Example",
+		"示例1": "Example 1",
+		"复制": "Copy",
+		"题目描述": "Problem description",
+		"题目纠错": "Report error",
+		"返回全部题目": "All problems",
+		"比赛主页": "Contest home",
+		"我的提交": "My submissions",
+		"提交记录": "Submissions",
+		"题解": "Solutions",
+		"讨论": "Discussions",
+		"只看题目内容": "Problem only",
+		"做题遇到困难？": "Stuck?",
+		"查看编程常见问题": "FAQ",
+		"查看语言环境详情": "Environment details",
+		"在线IDE": "Online IDE",
+		"自测输入": "Test input",
+		"自测运行": "Test run",
+		"自测输入输出": "Test I/O",
+		"运行结果": "Result",
+		"提交": "Submit",
+		"保存并提交": "Save & Submit",
+		"运行": "Run",
+		"重置": "Reset",
+		"主题": "Theme",
+		"字体大小": "Font size",
+		"键位绑定": "Key bindings",
+		"编辑器快捷键": "Editor shortcuts",
+		"代码右缩进": "Indent right",
+		"代码左缩进": "Indent left",
+		"代码自动补全": "Auto complete",
+		"行注释": "Line comment",
+		"撤销": "Undo",
+		"通用": "General",
+		"快速加载复制代码": "Load template",
+		"快速加载最优代码": "Load best code",
+		"检测": "Check",
+		"函数方法参数文档提示": "Parameter hints",
+		"剪切": "Cut",
+		"2个空格": "2 spaces",
+		"4个空格": "4 spaces",
+		"8个空格": "8 spaces",
+		"已通过": "Accepted",
+		"答案错误": "Wrong Answer",
+		"编译错误": "Compile Error",
+		"运行错误": "Runtime Error",
+		"超出时间限制": "Time Limit Exceeded",
+		"超出内存限制": "Memory Limit Exceeded",
+		"等待评测": "Pending",
+		"评测中": "Judging",
+		"部分通过": "Partial",
+		"竞赛": "Contests",
+		"题库": "Problems",
+		"课程": "Courses",
+		"求职": "Jobs",
+		"登录": "Login",
+		"注册": "Register",
+		"登出": "Logout",
+		"搜索": "Search",
+		"设置": "Settings",
+		"难度": "Difficulty",
+		"通过率": "Acceptance",
+		"标签": "Tags",
+		"上一题": "Previous",
+		"下一题": "Next",
+		"收藏": "Favorite",
+		"分享": "Share",
+		"默认": "Default"
+	};
+	var NC_I18N_EN_PREFIX = {
+		"载入示例": "Load sample",
+		"加载中": "Loading",
+		"列表加载中": "Loading"
+	};
+	var NC_I18N_EN_VALUES = {
+		"提交": "Submit",
+		"运行": "Run",
+		"保存并提交": "Save & Submit",
+		"重置": "Reset"
+	};
+	var sites = [nowcoder, codeforces];
 	sites.flatMap((site) => site.hosts.map((host) => `https://${host}/*`));
 	function resolveSite(url) {
 		if (url.protocol !== "https:") return void 0;

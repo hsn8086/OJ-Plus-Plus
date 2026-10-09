@@ -200,8 +200,20 @@ export const nowcoder: SiteAdapter = {
   },
 
   i18nPage(doc, locale) {
-    // 牛客界面本来就中文；这里只兜少数漏网英文（ide/提交区）
+    if (locale === 'en') {
+      // 目标语言英文：把牛客中文界面翻成英文
+      applyPageI18n(doc, [
+        {
+          scope: 'body',
+          map: NC_I18N_EN,
+          prefixMap: NC_I18N_EN_PREFIX,
+          values: NC_I18N_EN_VALUES,
+        },
+      ]);
+      return;
+    }
     if (locale !== 'zh') return;
+    // 牛客界面本来就中文；只兜少数漏网英文
     applyPageI18n(doc, [
       {
         scope: '.question-ide, .submit-box, .nc-post-content',
@@ -220,4 +232,100 @@ export const nowcoder: SiteAdapter = {
       },
     ]);
   },
+};
+
+/** 牛客界面文本 → 英文（目标语言=en 时）。 */
+const NC_I18N_EN: Record<string, string> = {
+  // 题目页
+  '输入': 'Input',
+  '输出': 'Output',
+  '输入描述:': 'Input description:',
+  '输入描述：': 'Input description:',
+  '输出描述:': 'Output description:',
+  '输出描述：': 'Output description:',
+  '说明': 'Note',
+  '示例': 'Example',
+  '示例1': 'Example 1',
+  '复制': 'Copy',
+  '题目描述': 'Problem description',
+  '题目纠错': 'Report error',
+  '返回全部题目': 'All problems',
+  '比赛主页': 'Contest home',
+  '我的提交': 'My submissions',
+  '提交记录': 'Submissions',
+  '题解': 'Solutions',
+  '讨论': 'Discussions',
+  '只看题目内容': 'Problem only',
+  '做题遇到困难？': 'Stuck?',
+  '查看编程常见问题': 'FAQ',
+  '查看语言环境详情': 'Environment details',
+  // IDE
+  '在线IDE': 'Online IDE',
+  '自测输入': 'Test input',
+  '自测运行': 'Test run',
+  '自测输入输出': 'Test I/O',
+  '运行结果': 'Result',
+  '提交': 'Submit',
+  '保存并提交': 'Save & Submit',
+  '运行': 'Run',
+  '重置': 'Reset',
+  '主题': 'Theme',
+  '字体大小': 'Font size',
+  '键位绑定': 'Key bindings',
+  '编辑器快捷键': 'Editor shortcuts',
+  '代码右缩进': 'Indent right',
+  '代码左缩进': 'Indent left',
+  '代码自动补全': 'Auto complete',
+  '行注释': 'Line comment',
+  '撤销': 'Undo',
+  '通用': 'General',
+  '快速加载复制代码': 'Load template',
+  '快速加载最优代码': 'Load best code',
+  '检测': 'Check',
+  '函数方法参数文档提示': 'Parameter hints',
+  '剪切': 'Cut',
+  '2个空格': '2 spaces',
+  '4个空格': '4 spaces',
+  '8个空格': '8 spaces',
+  // 判定
+  '已通过': 'Accepted',
+  '答案错误': 'Wrong Answer',
+  '编译错误': 'Compile Error',
+  '运行错误': 'Runtime Error',
+  '超出时间限制': 'Time Limit Exceeded',
+  '超出内存限制': 'Memory Limit Exceeded',
+  '等待评测': 'Pending',
+  '评测中': 'Judging',
+  '部分通过': 'Partial',
+  // 导航与通用
+  '竞赛': 'Contests',
+  '题库': 'Problems',
+  '课程': 'Courses',
+  '求职': 'Jobs',
+  '登录': 'Login',
+  '注册': 'Register',
+  '登出': 'Logout',
+  '搜索': 'Search',
+  '设置': 'Settings',
+  '难度': 'Difficulty',
+  '通过率': 'Acceptance',
+  '标签': 'Tags',
+  '上一题': 'Previous',
+  '下一题': 'Next',
+  '收藏': 'Favorite',
+  '分享': 'Share',
+  '默认': 'Default',
+};
+
+const NC_I18N_EN_PREFIX: Record<string, string> = {
+  '载入示例': 'Load sample',
+  '加载中': 'Loading',
+  '列表加载中': 'Loading',
+};
+
+const NC_I18N_EN_VALUES: Record<string, string> = {
+  '提交': 'Submit',
+  '运行': 'Run',
+  '保存并提交': 'Save & Submit',
+  '重置': 'Reset',
 };
