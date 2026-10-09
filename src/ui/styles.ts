@@ -944,17 +944,75 @@ export const CSS = `
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
-.ojpp-editor-custom {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
+
+.ojpp-editor-submitok,
+.ojpp-editor-submiterr {
   padding: 8px 10px;
+  font-size: 12px;
+}
+.ojpp-editor-submitok { color: var(--color-success); }
+.ojpp-editor-submitok a { color: var(--color-accent); }
+.ojpp-editor-submiterr { color: var(--color-danger); }
+
+/* ---------- 测试行 ---------- */
+.ojpp-editor-empty {
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+.ojpp-editor-tests:empty { display: none; }
+.ojpp-editor-tests {
   border-top: 1px solid var(--color-border);
 }
 
-.ojpp-editor-input {
-  flex: 1;
-  min-height: 56px;
+.ojpp-test {
+  border-top: 1px dashed var(--color-border);
+  padding: 8px 10px;
+}
+.ojpp-test:first-child { border-top: none; }
+
+.ojpp-test-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.ojpp-test-name { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); }
+.ojpp-test-actions { display: inline-flex; gap: 4px; margin-left: auto; }
+.ojpp-test-status { font-size: 12px; }
+.ojpp-test-status.running { color: var(--color-accent); }
+.ojpp-test-status.ok { color: var(--color-success); }
+.ojpp-test-status.warn { color: #e8890c; }
+.ojpp-test-status.error { color: var(--color-danger); }
+
+.ojpp-btn-xs {
+  height: 22px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.ojpp-test-del {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+}
+
+.ojpp-test-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ojpp-test-label {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-bottom: 3px;
+}
+
+.ojpp-test-input,
+.ojpp-test-expected {
+  width: 100%;
+  min-height: 52px;
   padding: 6px 8px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -962,45 +1020,31 @@ export const CSS = `
   color: var(--color-text-primary);
   font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   resize: vertical;
+  box-sizing: border-box;
 }
 
-.ojpp-editor-results:empty { display: none; }
-.ojpp-editor-results {
-  border-top: 1px solid var(--color-border);
+.ojpp-test-pre {
+  margin: 0;
+  padding: 6px 8px;
+  max-height: 120px;
+  overflow: auto;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--color-text-primary);
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
-.ojpp-editor-empty {
-  padding: 8px 10px;
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-}
-
-.ojpp-editor-result {
-  padding: 8px 10px;
-}
-.ojpp-editor-result + .ojpp-editor-result {
-  border-top: 1px dashed var(--color-border);
-}
-
-.ojpp-editor-result-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-}
-.ojpp-editor-result-name { color: var(--color-text-secondary); font-weight: 500; }
-.ojpp-editor-result-status { color: var(--color-accent); }
-.ojpp-editor-result-status.ok { color: var(--color-success); }
-.ojpp-editor-result-status.warn { color: #e8890c; }
-.ojpp-editor-result-status.error { color: var(--color-danger); }
-
-.ojpp-editor-result-body {
+.ojpp-test-body:empty { display: none; }
+.ojpp-test-body {
   margin-top: 6px;
   display: grid;
   gap: 6px;
 }
 
-.ojpp-editor-out {
+.ojpp-test-out {
   margin: 0;
   padding: 6px 8px;
   max-height: 160px;
@@ -1013,22 +1057,14 @@ export const CSS = `
   white-space: pre-wrap;
   word-break: break-all;
 }
-.ojpp-editor-out.expected { color: var(--color-text-tertiary); }
-.ojpp-editor-out.error { color: var(--color-danger); }
+.ojpp-test-out.error { color: var(--color-danger); }
 
-.ojpp-editor-used {
+.ojpp-test-used {
   font-size: 11px;
   color: var(--color-text-tertiary);
 }
 
-.ojpp-editor-submitok,
-.ojpp-editor-submiterr {
-  padding: 8px 10px;
-  font-size: 12px;
-}
-.ojpp-editor-submitok { color: var(--color-success); }
-.ojpp-editor-submitok a { color: var(--color-accent); }
-.ojpp-editor-submiterr { color: var(--color-danger); }
+.ojpp-editor-submitline:empty { display: none; }
 
 /* 响应式 */
 @media (max-width: 640px) {

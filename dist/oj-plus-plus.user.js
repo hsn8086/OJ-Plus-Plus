@@ -200,8 +200,13 @@
 		"editor.sample": "Sample",
 		"editor.expected": "Expected output",
 		"editor.customRun": "Custom test",
-		"editor.noSamples": "No samples found on this page",
+		"editor.noSamples": "No samples found — click \"+ Custom test\" to add one",
 		"editor.noProblem": "Cannot detect problem code on this page",
+		"editor.runAll": "Run all",
+		"editor.addTest": "+ Custom test",
+		"editor.customN": "Custom",
+		"editor.delete": "Delete",
+		"editor.input": "Input",
 		"editor.enabled": "Problem page code editor",
 		"editor.enabledHint": "Show a code editor on supported sites’ problem pages — test samples, run custom input, and submit directly.",
 		"editor.lspUrl": "LSP address",
@@ -372,8 +377,13 @@
 		"editor.sample": "样例",
 		"editor.expected": "期望输出",
 		"editor.customRun": "自定义测试",
-		"editor.noSamples": "页面里没找到样例",
+		"editor.noSamples": "页面里没找到样例，点「+自定义测试」手动添加",
 		"editor.noProblem": "当前页面识别不到题号，无法提交",
+		"editor.runAll": "运行全部",
+		"editor.addTest": "+自定义测试",
+		"editor.customN": "自定义",
+		"editor.delete": "删除",
+		"editor.input": "输入",
 		"editor.enabled": "题目页代码编辑器",
 		"editor.enabledHint": "在支持的站点题目页显示代码编辑器，可测样例、自定义测试并直接提交。",
 		"editor.lspUrl": "LSP 地址",
@@ -496,7 +506,8 @@
 			editorFontSize: 13,
 			editorLspUrl: "",
 			editorLanguage: {},
-			editorCode: {}
+			editorCode: {},
+			editorTests: {}
 		};
 	}
 	function migrate(raw) {
@@ -533,6 +544,15 @@
 			entries.sort((a, b) => (b[1].updated ?? 0) - (a[1].updated ?? 0));
 			settings.editorCode = Object.fromEntries(entries.slice(0, 30));
 		} else settings.editorCode = {};
+		if (settings.editorTests && typeof settings.editorTests === "object") {
+			const clean = {};
+			for (const [key, list] of Object.entries(settings.editorTests)) {
+				if (!Array.isArray(list)) continue;
+				const items = list.filter((t) => !!t && typeof t === "object" && typeof t.input === "string" && typeof t.expected === "string").slice(0, 10);
+				if (items.length) clean[key] = items;
+			}
+			settings.editorTests = clean;
+		} else settings.editorTests = {};
 		if (!settings.providers.some((p) => p.id === settings.activeProviderId)) settings.activeProviderId = settings.providers[0]?.id ?? null;
 		return settings;
 	}
@@ -21554,6 +21574,7 @@
 		const { site, support, getSettings, persist, isDark, onDarkChange } = options;
 		const problemCode = support.problemCode(document);
 		const settings = getSettings();
+		const key = problemCode ? draftKey(site.id, problemCode) : null;
 		const root = el$1("div", "ojpp-editor");
 		const head = el$1("div", "ojpp-editor-head");
 		const title = el$1("span", "ojpp-editor-title", t$1("editor.title"));
@@ -21567,30 +21588,24 @@
 		const defaultLang = support.languages.find((l) => l.id === savedLang) ?? support.languages[0];
 		langSel.value = defaultLang.id;
 		const spacer = el$1("span", "ojpp-editor-spacer");
-		const runBtn = el$1("button", "ojpp-btn ojpp-btn-sm", t$1("editor.run"));
-		const customBtn = el$1("button", "ojpp-btn ojpp-btn-sm", t$1("editor.custom"));
+		const addTestBtn = el$1("button", "ojpp-btn ojpp-btn-sm", t$1("editor.addTest"));
+		const runAllBtn = el$1("button", "ojpp-btn ojpp-btn-sm", t$1("editor.runAll"));
 		const submitBtn = el$1("button", "ojpp-btn ojpp-btn-sm ojpp-btn-primary", t$1("editor.submit"));
-		head.append(title, langSel, spacer, runBtn, customBtn, submitBtn);
+		head.append(title, langSel, spacer, addTestBtn, runAllBtn, submitBtn);
 		const cmHost = el$1("div", "ojpp-editor-cm");
-		const customArea = el$1("div", "ojpp-editor-custom");
-		customArea.hidden = true;
-		const customInput = el$1("textarea", "ojpp-editor-input");
-		customInput.placeholder = t$1("editor.customPlaceholder");
-		const customRun = el$1("button", "ojpp-btn ojpp-btn-sm", t$1("editor.runOne"));
-		customArea.append(customInput, customRun);
-		const results = el$1("div", "ojpp-editor-results");
-		root.append(head, cmHost, customArea, results);
+		const tests = el$1("div", "ojpp-editor-tests");
+		const submitLine = el$1("div", "ojpp-editor-submitline");
+		root.append(head, cmHost, tests, submitLine);
 		const editor = createEditor(cmHost, {
-			doc: problemCode ? settings.editorCode[draftKey(site.id, problemCode)]?.code ?? "" : "",
+			doc: key ? settings.editorCode[key]?.code ?? "" : "",
 			mode: defaultLang.mode,
 			dark: isDark(),
 			fontSize: settings.editorFontSize,
 			tabSize: 4,
 			lspUrl: settings.editorLspUrl,
 			onChange: (code) => {
-				if (!problemCode) return;
-				const s = getSettings();
-				s.editorCode[draftKey(site.id, problemCode)] = {
+				if (!key) return;
+				getSettings().editorCode[key] = {
 					code,
 					updated: Date.now()
 				};
@@ -21609,105 +21624,179 @@
 			getSettings().editorLanguage[site.id] = lang.id;
 			persist();
 		};
-		let busy = false;
-		const run = async (input, label, expected) => {
-			if (busy) return;
-			busy = true;
-			const row = el$1("div", "ojpp-editor-result");
-			const headRow = el$1("div", "ojpp-editor-result-head");
-			const name = el$1("span", "ojpp-editor-result-name", label);
-			const status = el$1("span", "ojpp-editor-result-status", t$1("editor.running"));
-			headRow.append(name, status);
-			row.append(headRow);
-			results.append(row);
-			row.scrollIntoView({ block: "nearest" });
+		const rows = [];
+		const runRow = async (row) => {
+			const input = row.kind === "custom" ? row.row.querySelector(".ojpp-test-input").value : row.input;
+			const expected = row.kind === "custom" ? row.row.querySelector(".ojpp-test-expected").value : row.expected;
+			row.statusEl.textContent = t$1("editor.running");
+			row.statusEl.className = "ojpp-test-status running";
+			row.bodyEl.replaceChildren();
 			try {
 				const res = await support.runCustomTest(editor.getCode(), langSel.value, input);
-				row.classList.add("done");
 				if (res.error) {
-					status.textContent = t$1("editor.runError");
-					status.classList.add("error");
-				} else if (expected !== void 0) {
-					const ok = res.output.trim() === expected.trim();
-					status.textContent = ok ? t$1("editor.match") : t$1("editor.mismatch");
-					status.classList.add(ok ? "ok" : "warn");
+					row.statusEl.textContent = t$1("editor.runError");
+					row.statusEl.className = "ojpp-test-status error";
 				} else {
-					status.textContent = res.used ?? t$1("editor.done");
-					status.classList.add("ok");
+					const ok = res.output.trim() === expected.trim();
+					row.statusEl.textContent = ok ? t$1("editor.match") : t$1("editor.mismatch");
+					row.statusEl.className = `ojpp-test-status ${ok ? "ok" : "warn"}`;
 				}
-				const body = el$1("div", "ojpp-editor-result-body");
 				if (res.output) {
-					const out = el$1("pre", "ojpp-editor-out");
+					const out = el$1("pre", "ojpp-test-out");
 					out.textContent = res.output;
-					body.append(out);
+					row.bodyEl.append(out);
 				}
 				if (res.error) {
-					const err = el$1("pre", "ojpp-editor-out error");
+					const err = el$1("pre", "ojpp-test-out error");
 					err.textContent = res.error;
-					body.append(err);
+					row.bodyEl.append(err);
 				}
-				if (expected !== void 0 && expected.trim()) {
-					const exp = el$1("pre", "ojpp-editor-out expected");
-					exp.textContent = `${t$1("editor.expected")}:\n${expected}`;
-					body.append(exp);
-				}
-				if (res.used && expected === void 0) {} else if (res.used) {
-					const u = el$1("div", "ojpp-editor-used", res.used);
-					body.append(u);
-				}
-				if (body.childElementCount) row.append(body);
+				if (res.used) row.bodyEl.append(el$1("div", "ojpp-test-used", res.used));
 			} catch (e) {
-				status.textContent = t$1("editor.runError");
-				status.classList.add("error");
-				const err = el$1("pre", "ojpp-editor-out error", e instanceof Error ? e.message : String(e));
-				row.append(err);
+				row.statusEl.textContent = t$1("editor.runError");
+				row.statusEl.className = "ojpp-test-status error";
+				row.bodyEl.append(el$1("pre", "ojpp-test-out error", e instanceof Error ? e.message : String(e)));
+			}
+		};
+		function addCustomRow(item, customIndex) {
+			const row = el$1("div", "ojpp-test ojpp-test-custom");
+			const headRow = el$1("div", "ojpp-test-head");
+			const name = el$1("span", "ojpp-test-name", `${t$1("editor.customN")} ${customIndex + 1}`);
+			const status = el$1("span", "ojpp-test-status");
+			const actions = el$1("span", "ojpp-test-actions");
+			const runOne = el$1("button", "ojpp-btn ojpp-btn-xs", t$1("editor.runOne"));
+			const del = el$1("button", "ojpp-icon-btn ojpp-test-del");
+			del.innerHTML = ICON_CROSS;
+			del.title = t$1("editor.delete");
+			actions.append(runOne, del);
+			headRow.append(name, actions, status);
+			const grid = el$1("div", "ojpp-test-grid");
+			const inputTa = el$1("textarea", "ojpp-test-input");
+			inputTa.placeholder = t$1("editor.customPlaceholder");
+			inputTa.value = item.input;
+			const expTa = el$1("textarea", "ojpp-test-expected");
+			expTa.placeholder = t$1("editor.expected");
+			expTa.value = item.expected;
+			grid.append(fieldWrap(t$1("editor.input"), inputTa), fieldWrap(t$1("editor.expected"), expTa));
+			const body = el$1("div", "ojpp-test-body");
+			row.append(headRow, grid, body);
+			const rec = {
+				kind: "custom",
+				input: "",
+				expected: "",
+				row,
+				statusEl: status,
+				bodyEl: body,
+				customIndex
+			};
+			runOne.onclick = () => void runRow(rec);
+			del.onclick = () => {
+				rows.splice(rows.indexOf(rec), 1);
+				row.remove();
+				saveCustomTests();
+			};
+			rows.push(rec);
+			tests.append(row);
+			return rec;
+		}
+		function addSampleRow(sample, index) {
+			const row = el$1("div", "ojpp-test ojpp-test-sample");
+			const headRow = el$1("div", "ojpp-test-head");
+			const name = el$1("span", "ojpp-test-name", `${t$1("editor.sample")} ${index + 1}`);
+			const status = el$1("span", "ojpp-test-status");
+			const actions = el$1("span", "ojpp-test-actions");
+			const runOne = el$1("button", "ojpp-btn ojpp-btn-xs", t$1("editor.runOne"));
+			actions.append(runOne);
+			headRow.append(name, actions, status);
+			const grid = el$1("div", "ojpp-test-grid");
+			const inPre = el$1("pre", "ojpp-test-pre");
+			inPre.textContent = sample.input || " ";
+			const expPre = el$1("pre", "ojpp-test-pre");
+			expPre.textContent = sample.output || " ";
+			grid.append(fieldWrap(t$1("editor.input"), inPre), fieldWrap(t$1("editor.expected"), expPre));
+			const body = el$1("div", "ojpp-test-body");
+			row.append(headRow, grid, body);
+			const rec = {
+				kind: "sample",
+				input: sample.input,
+				expected: sample.output,
+				row,
+				statusEl: status,
+				bodyEl: body
+			};
+			runOne.onclick = () => void runRow(rec);
+			rows.push(rec);
+			tests.append(row);
+			return rec;
+		}
+		function fieldWrap(label, control) {
+			const wrap = el$1("div", "ojpp-test-field");
+			wrap.append(el$1("div", "ojpp-test-label", label), control);
+			return wrap;
+		}
+		function saveCustomTests() {
+			if (!key) return;
+			const list = rows.filter((r) => r.kind === "custom").map((r) => ({
+				input: r.row.querySelector(".ojpp-test-input").value,
+				expected: r.row.querySelector(".ojpp-test-expected").value
+			}));
+			getSettings().editorTests[key] = list;
+			persistDebounced();
+		}
+		(key ? settings.editorTests[key] ?? [] : []).forEach((item, i) => addCustomRow(item, i));
+		support.getSamples(document).forEach((s, i) => addSampleRow(s, i));
+		if (!rows.length) tests.append(el$1("div", "ojpp-editor-empty", t$1("editor.noSamples")));
+		addTestBtn.onclick = () => {
+			tests.querySelector(".ojpp-editor-empty")?.remove();
+			const rec = addCustomRow({
+				input: "",
+				expected: ""
+			}, rows.filter((r) => r.kind === "custom").length);
+			rec.row.querySelector(".ojpp-test-input").focus();
+			rec.row.scrollIntoView({ block: "nearest" });
+			saveCustomTests();
+		};
+		tests.addEventListener("input", (e) => {
+			if (e.target.matches(".ojpp-test-input, .ojpp-test-expected")) saveCustomTests();
+		});
+		let runningAll = false;
+		runAllBtn.onclick = async () => {
+			if (runningAll) return;
+			runningAll = true;
+			runAllBtn.disabled = true;
+			const old = runAllBtn.textContent;
+			runAllBtn.textContent = t$1("editor.running");
+			try {
+				for (const row of rows) {
+					if (!runningAll) break;
+					await runRow(row);
+				}
 			} finally {
-				busy = false;
+				runningAll = false;
+				runAllBtn.disabled = false;
+				runAllBtn.textContent = old;
 			}
-		};
-		runBtn.onclick = () => {
-			const samples = support.getSamples(document);
-			results.replaceChildren();
-			if (!samples.length) {
-				results.append(el$1("div", "ojpp-editor-empty", t$1("editor.noSamples")));
-				return;
-			}
-			samples.forEach((s, i) => {
-				run(s.input, `${t$1("editor.sample")} ${i + 1}`, s.output);
-			});
-		};
-		customBtn.onclick = () => {
-			customArea.hidden = !customArea.hidden;
-			if (!customArea.hidden) customInput.focus();
-		};
-		customRun.onclick = () => {
-			results.replaceChildren();
-			run(customInput.value, t$1("editor.customRun"));
 		};
 		submitBtn.onclick = async () => {
-			if (busy) return;
 			if (!problemCode) {
-				results.replaceChildren(el$1("div", "ojpp-editor-empty", t$1("editor.noProblem")));
+				submitLine.replaceChildren(el$1("div", "ojpp-editor-empty", t$1("editor.noProblem")));
 				return;
 			}
-			busy = true;
 			submitBtn.disabled = true;
 			const old = submitBtn.textContent;
 			submitBtn.textContent = t$1("editor.submitting");
 			try {
 				const res = await support.submit(editor.getCode(), langSel.value, problemCode);
-				const row = el$1("div", res.ok ? "ojpp-editor-submitok" : "ojpp-editor-submiterr");
-				if (res.ok && res.url) {
-					const a = el$1("a", void 0, t$1("editor.submitted"));
-					a.href = res.url;
-					a.target = "_blank";
-					row.append(a);
-				} else row.textContent = res.error ?? t$1("editor.submitFailed");
-				results.prepend(row);
+				if (res.ok) {
+					if (res.url) {
+						window.location.href = res.url;
+						return;
+					}
+					submitLine.prepend(el$1("div", "ojpp-editor-submitok", t$1("editor.submitted")));
+				} else submitLine.prepend(el$1("div", "ojpp-editor-submiterr", res.error ?? t$1("editor.submitFailed")));
 			} catch (e) {
-				results.prepend(el$1("div", "ojpp-editor-submiterr", e instanceof Error ? e.message : String(e)));
+				submitLine.prepend(el$1("div", "ojpp-editor-submiterr", e instanceof Error ? e.message : String(e)));
 			} finally {
-				busy = false;
 				submitBtn.disabled = false;
 				submitBtn.textContent = old;
 			}
@@ -57028,17 +57117,75 @@ $$` : `${n}$$`;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
-.ojpp-editor-custom {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
+
+.ojpp-editor-submitok,
+.ojpp-editor-submiterr {
   padding: 8px 10px;
+  font-size: 12px;
+}
+.ojpp-editor-submitok { color: var(--color-success); }
+.ojpp-editor-submitok a { color: var(--color-accent); }
+.ojpp-editor-submiterr { color: var(--color-danger); }
+
+/* ---------- 测试行 ---------- */
+.ojpp-editor-empty {
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+.ojpp-editor-tests:empty { display: none; }
+.ojpp-editor-tests {
   border-top: 1px solid var(--color-border);
 }
 
-.ojpp-editor-input {
-  flex: 1;
-  min-height: 56px;
+.ojpp-test {
+  border-top: 1px dashed var(--color-border);
+  padding: 8px 10px;
+}
+.ojpp-test:first-child { border-top: none; }
+
+.ojpp-test-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.ojpp-test-name { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); }
+.ojpp-test-actions { display: inline-flex; gap: 4px; margin-left: auto; }
+.ojpp-test-status { font-size: 12px; }
+.ojpp-test-status.running { color: var(--color-accent); }
+.ojpp-test-status.ok { color: var(--color-success); }
+.ojpp-test-status.warn { color: #e8890c; }
+.ojpp-test-status.error { color: var(--color-danger); }
+
+.ojpp-btn-xs {
+  height: 22px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.ojpp-test-del {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+}
+
+.ojpp-test-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ojpp-test-label {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-bottom: 3px;
+}
+
+.ojpp-test-input,
+.ojpp-test-expected {
+  width: 100%;
+  min-height: 52px;
   padding: 6px 8px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -57046,45 +57193,31 @@ $$` : `${n}$$`;
   color: var(--color-text-primary);
   font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   resize: vertical;
+  box-sizing: border-box;
 }
 
-.ojpp-editor-results:empty { display: none; }
-.ojpp-editor-results {
-  border-top: 1px solid var(--color-border);
+.ojpp-test-pre {
+  margin: 0;
+  padding: 6px 8px;
+  max-height: 120px;
+  overflow: auto;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--color-text-primary);
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
-.ojpp-editor-empty {
-  padding: 8px 10px;
-  font-size: 12px;
-  color: var(--color-text-tertiary);
-}
-
-.ojpp-editor-result {
-  padding: 8px 10px;
-}
-.ojpp-editor-result + .ojpp-editor-result {
-  border-top: 1px dashed var(--color-border);
-}
-
-.ojpp-editor-result-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-}
-.ojpp-editor-result-name { color: var(--color-text-secondary); font-weight: 500; }
-.ojpp-editor-result-status { color: var(--color-accent); }
-.ojpp-editor-result-status.ok { color: var(--color-success); }
-.ojpp-editor-result-status.warn { color: #e8890c; }
-.ojpp-editor-result-status.error { color: var(--color-danger); }
-
-.ojpp-editor-result-body {
+.ojpp-test-body:empty { display: none; }
+.ojpp-test-body {
   margin-top: 6px;
   display: grid;
   gap: 6px;
 }
 
-.ojpp-editor-out {
+.ojpp-test-out {
   margin: 0;
   padding: 6px 8px;
   max-height: 160px;
@@ -57097,22 +57230,14 @@ $$` : `${n}$$`;
   white-space: pre-wrap;
   word-break: break-all;
 }
-.ojpp-editor-out.expected { color: var(--color-text-tertiary); }
-.ojpp-editor-out.error { color: var(--color-danger); }
+.ojpp-test-out.error { color: var(--color-danger); }
 
-.ojpp-editor-used {
+.ojpp-test-used {
   font-size: 11px;
   color: var(--color-text-tertiary);
 }
 
-.ojpp-editor-submitok,
-.ojpp-editor-submiterr {
-  padding: 8px 10px;
-  font-size: 12px;
-}
-.ojpp-editor-submitok { color: var(--color-success); }
-.ojpp-editor-submitok a { color: var(--color-accent); }
-.ojpp-editor-submiterr { color: var(--color-danger); }
+.ojpp-editor-submitline:empty { display: none; }
 
 /* 响应式 */
 @media (max-width: 640px) {

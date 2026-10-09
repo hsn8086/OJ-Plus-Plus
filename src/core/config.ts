@@ -104,6 +104,7 @@ export function defaultSettings(): Settings {
     editorLspUrl: '',
     editorLanguage: {},
     editorCode: {},
+    editorTests: {},
   };
 }
 
@@ -147,6 +148,21 @@ export function migrate(raw: unknown): Settings {
     settings.editorCode = Object.fromEntries(entries.slice(0, 30));
   } else {
     settings.editorCode = {};
+  }
+  // 自定义测试：过滤非法项，每题最多 10 条
+  if (settings.editorTests && typeof settings.editorTests === 'object') {
+    const clean: Record<string, { input: string; expected: string }[]> = {};
+    for (const [key, list] of Object.entries(settings.editorTests)) {
+      if (!Array.isArray(list)) continue;
+      const items = list
+        .filter((t): t is { input: string; expected: string } =>
+          !!t && typeof t === 'object' && typeof t.input === 'string' && typeof t.expected === 'string')
+        .slice(0, 10);
+      if (items.length) clean[key] = items;
+    }
+    settings.editorTests = clean;
+  } else {
+    settings.editorTests = {};
   }
   if (!settings.providers.some((p) => p.id === settings.activeProviderId)) {
     settings.activeProviderId = settings.providers[0]?.id ?? null;

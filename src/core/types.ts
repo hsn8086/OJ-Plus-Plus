@@ -58,6 +58,8 @@ export interface Settings {
   editorLanguage: Record<string, string>;
   /** 按「站点:题号」保存的草稿代码 */
   editorCode: Record<string, { code: string; updated: number }>;
+  /** 按「站点:题号」保存的自定义测试（输入 + 期望输出） */
+  editorTests: Record<string, { input: string; expected: string }[]>;
 }
 
 export interface ChatMessage {
