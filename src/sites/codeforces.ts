@@ -1,5 +1,6 @@
 import { t } from '../i18n/index.ts';
 import { applyPageI18n } from '../core/page-i18n.ts';
+import { CF_SUBS_RULES } from './codeforces-i18n-subs.ts';
 import type { ContentSection, EditorLanguage, EditorTestResult, SiteAdapter } from './types.ts';
 
 /**
@@ -1750,6 +1751,8 @@ export const codeforces: SiteAdapter = {
         prefixMap: CF_I18N_ZH_PREFIX,
         values: CF_I18N_ZH_VALUES,
       },
+      // OJBetter subs 词典：scope 化正则规则，覆盖二级菜单/侧栏/弹窗等
+      ...CF_SUBS_RULES,
     ]);
   },
 };
@@ -1884,8 +1887,21 @@ const CF_I18N_ZH: Record<string, string> = {
   'Final': '终榜',
   'Unofficial standings': '非正式榜单',
   'Custom test': '自定义测试',
+  'Terms and Conditions': '服务条款',
+  'Privacy Policy': '隐私政策',
+  'Supported by': '由提供支持',
+  'No items': '暂无条目',
+  'Powered by': '由提供支持',
   'View the change': '查看变更',
+  'View the changes.': '查看变更',
+  'View the changes': '查看变更',
   'The problem statement has recently been changed.': '题面最近有改动。',
+  'Submit code': '提交代码',
+  'Hacks': 'Hack',
+  'Room': '房间',
+  'Custom invocation': '自定义测试',
+  'Custom tests': '自定义测试',
+  'Start virtual contest': '开始虚拟赛',
 
   // 侧边栏与杂项
   'Finished': '已结束',
@@ -1908,7 +1924,7 @@ const CF_I18N_ZH: Record<string, string> = {
   'Contests are running': '比赛进行中',
 
   // CF 题目标签
-  'implementation': '实现',
+  'implementation': '模拟',
   'math': '数学',
   'greedy': '贪心',
   'dp': '动态规划',
@@ -1964,6 +1980,10 @@ const CF_I18N_ZH_VALUES: Record<string, string> = {
   'Reset': '重置',
   'Search': '搜索',
   'Compile and Run': '编译并运行',
+  'Clone Contest': '克隆比赛',
+  'Start virtual contest': '开始虚拟赛',
+  'Register for virtual participation': '报名虚拟参赛',
+  'Register for practice': '报名练习',
 };
 
 /** .property-title 后面要跟冒号（如 "time limit per test: "），.section-title 不要。 */

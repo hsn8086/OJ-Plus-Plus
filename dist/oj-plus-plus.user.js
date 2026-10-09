@@ -53879,15 +53879,24 @@ $$` : `${n}$$`;
 			const exclude = rule.exclude ?? DEFAULT_EXCLUDE;
 			const prefixEntries = rule.prefixMap ? Object.entries(rule.prefixMap) : null;
 			for (const scope of doc.querySelectorAll(rule.scope)) {
-				if (rule.map || prefixEntries) {
+				if (rule.map || prefixEntries || rule.replaceMap) {
+					const replaceEntries = rule.replaceMap ? Object.entries(rule.replaceMap) : null;
 					const walker = doc.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
 					const hit = [];
+					const regexHit = [];
 					let n;
 					while (n = walker.nextNode()) {
 						const parent = n.parentElement;
 						if (!parent || parent.closest(exclude) || parent.dataset.ojppI18n === "skip") continue;
 						const text = n.textContent?.trim();
 						if (!text) continue;
+						if (replaceEntries) for (const [pattern, to] of replaceEntries) try {
+							if (text.match(new RegExp(pattern))) regexHit.push({
+								node: n,
+								pattern,
+								to
+							});
+						} catch {}
 						const arrow = /^[\u2192\u00bb\u25b8\u2794\u279C>\s]+\s*/.exec(text)?.[0] ?? "";
 						const core = arrow ? text.slice(arrow.length).trim() : text;
 						if (rule.map?.[core]) {
@@ -53919,6 +53928,9 @@ $$` : `${n}$$`;
 						}
 					}
 					for (const { node, from, to } of hit) node.textContent = node.textContent?.replace(from, to) ?? node.textContent;
+					for (const { node, pattern, to } of regexHit) try {
+						node.textContent = node.textContent?.replace(new RegExp(pattern, "g"), to) ?? node.textContent;
+					} catch {}
 				}
 				if (rule.values) for (const el of scope.querySelectorAll("input, button")) {
 					if (el.dataset.ojppI18n || el.closest(exclude)) continue;
@@ -53929,9 +53941,839 @@ $$` : `${n}$$`;
 						el.dataset.ojppI18n = "1";
 					}
 				}
+				if (rule.replaceValues) for (const el of scope.querySelectorAll("input, button")) {
+					if (el.closest(exclude)) continue;
+					const raw = el.tagName === "INPUT" ? el.value : el.textContent;
+					if (!raw) continue;
+					let v = raw;
+					for (const [pattern, to] of Object.entries(rule.replaceValues)) try {
+						v = v.replace(new RegExp(pattern, "g"), to);
+					} catch {}
+					if (v !== raw) {
+						if (el.tagName === "INPUT" && el.value) el.value = v;
+						else el.textContent = v;
+					}
+				}
 			}
 		}
 	}
+	var CF_SUBS_RULES = [
+		{
+			scope: ".datatable",
+			replaceMap: {
+				"Virtual participation »": "参加虚拟重现赛 »",
+				"Enter »": "进入 »",
+				"Current standings": "当前榜单",
+				"Final standings": "最终榜单",
+				"Preliminary results": "初步结果",
+				"open hacking:": "开放黑客攻击中",
+				"School/University/City/Region Championship": "学校/大学/城市/区域比赛",
+				"Official School Contest": "学校官方比赛",
+				"Training Contest": "训练赛",
+				"Training Camp Contest": "训练营比赛",
+				"Official ICPC Contest": "ICPC官方比赛",
+				"Official International Personal Contest": "官方国际个人赛",
+				"China": "中国",
+				"Statements": "题目描述",
+				"in Chinese": "中文",
+				"Trainings": "训练",
+				"Prepared by": "编写人",
+				"Current or upcoming contests": "当前或即将举行的比赛",
+				"Rating:\xA0users\xA0participated\xA0in\xA0recent\xA06\xA0months": "评级：最近 6 个月有参与的用户",
+				"Past contests": "过去的比赛",
+				"Exclusions": "排除",
+				"Before start": "距比赛开始还有",
+				"Before registration": "距报名开始还有",
+				"Until closing ": "距报名结束还有",
+				"Before extra registration": "额外报名还未开始",
+				"Register »": "报名 »",
+				"Registration completed": "已报名",
+				"Registration closed": "报名已结束",
+				"Problems\n": "问题集",
+				"My Submissions": "我的提交",
+				"Standings": "榜单",
+				"Questions about problems": "关于问题的提问",
+				"Contest status": "比赛状态",
+				"Invited users": "邀请的用户",
+				"Invitation links": "邀请链接",
+				"API keys": "API密钥"
+			}
+		},
+		{
+			scope: ".first-row, .datatable .top",
+			replaceMap: {
+				"When": "提交时间",
+				"Who": "提交者",
+				"Problem": "问题",
+				"Lang": "语言",
+				"Verdict": "判题状态",
+				"Time": "时间",
+				"Memory": "内存",
+				"Author": "提交者",
+				"Sent": "提交时间",
+				"Judged": "判题时间",
+				"Name": "比赛名称",
+				"Writers": "编写者",
+				"Start": "开始时间",
+				"Length": "持续时长"
+			}
+		},
+		{
+			scope: ".datatable .problems, .datatable .status-small",
+			replaceMap: {
+				"进入": "Enter",
+				"题目描述": "Statements",
+				"训练": "Trainings",
+				"问题集": "Problems",
+				"榜单": "Standings"
+			}
+		},
+		{
+			scope: ".menu-list.main-menu-list",
+			replaceMap: {
+				"Home": "主页",
+				"Top": "热门",
+				"Catalog": "指南目录",
+				"Contests": "比赛",
+				"Gym": "训练营",
+				"Problemset": "题库",
+				"Groups": "团体",
+				"Rating": "排行榜",
+				"Edu": "培训",
+				"Calendar": "日历",
+				"ICPC Challenge": "ICPC挑战赛",
+				"Help": "帮助"
+			}
+		},
+		{
+			scope: ".nav-links",
+			replaceMap: {
+				"Settings": "设置",
+				"Blog": "博客",
+				"Teams": "队伍",
+				"Submissions": "提交记录",
+				"Favourites": "收藏",
+				"Problemsetting": "参与编写的问题",
+				"Groups": "团体",
+				"Propose a contest/problems": "提议比赛/题目",
+				"Talks": "私信",
+				"Contests": "比赛"
+			}
+		},
+		{
+			scope: ".contest-state-phase",
+			replaceMap: {
+				"Before contest": "即将进行的比赛",
+				"Contest is running": "比赛进行中",
+				"Registration is running": "报名进行中"
+			}
+		},
+		{
+			scope: ".notice",
+			replaceMap: {
+				"has extra registration": "有额外的报名时期",
+				"If you are late to register in 5 minutes before the start, you can register later during the extra registration. Extra registration opens 10 minutes after the contest starts and lasts 25 minutes.": "如果您在比赛开始前5分钟前还未报名，您可以在额外的报名期间稍后报名。额外的报名将在比赛开始后10分钟开放，并持续25分钟。",
+				"in timezone ([^)]*)": "$1 时区",
+				"Contest will be available for virtual participation when over. Leave this field blank to allow virtual participation at any time": "比赛结束后将允许虚拟参赛。将此字段留空以允许随时进行虚拟参赛",
+				"Contest duration in minutes": "比赛持续时间（分钟）",
+				"or choose": "或选择",
+				"Standings freeze period in minutes": "榜单冻结时间（分钟）",
+				"Time when final results are available": "最终结果可用时间",
+				"Is it allowed to solve contest problems unofficially after the end": "比赛结束后是否允许非官方解决比赛问题",
+				"Is it allowed to run contest as virtual after the end": "比赛结束后是否允许虚拟参赛",
+				"Is it allowed participate in contest out of competition": "是否允许非竞赛参赛",
+				"Are participants allowed to register for the contest themselves": "是否允许参赛者自行报名",
+				"Can non-registered users and anonyms view contest standings, problems and other statistics": "是否允许未注册用户和匿名用户查看比赛榜单、问题和其他统计信息",
+				"If unchecked they will view only personal status": "如果未选中，他们将只能查看个人状态",
+				"To manage allowed program languages": "管理允许的编程语言",
+				"The system will automatically adjust time limits for some languages. Recommended for use only for educational purpose.": "系统将自动调整某些语言的时间限制。仅建议用于教育目的。",
+				"Check it if you want to allow contestants view statements": "如果允许参赛者查看题目描述，请勾选此项",
+				"Check it if contestants can view standings": "如果允许参赛者查看榜单，请勾选此项",
+				"Where the contest was held originally": "比赛原本举办的地点",
+				"Official contest site URL": "官方比赛网站URL",
+				"Enter a name for your new API key. It should describe what this key is used for.": "为您的新API密钥输入一个名称。它应该描述这个密钥的用途。",
+				"Enter your account password to confirm access. If you do not have password, logout and use password recovery feature.": "输入您的账户密码以确认访问。如果您没有密码，请注销并使用密码恢复功能。"
+			}
+		},
+		{
+			scope: ".propertyLinks",
+			replaceMap: {
+				"Rating": "等级分",
+				"Contribution": "贡献"
+			}
+		},
+		{
+			scope: ".contests-table",
+			replaceMap: { "Contest history": "比赛历史" }
+		},
+		{
+			scope: ".roundbox.sidebox.borderTopRound",
+			replaceMap: {
+				"Register now": "现在报名",
+				"No tag edit access": "没有标签编辑权限",
+				"Problem:": "问题:",
+				"Verdict:": "判题状态:",
+				"Language:": "语言:",
+				"Test:": "测试点数量:",
+				"Participant": "参赛者",
+				"Choose file:": "选择文件:",
+				"Want to solve the contest problems after the official contest ends\\? Just register for practice and you will be able to submit solutions.": "想在正式比赛结束后解决比赛问题吗？只需登录或注册账号，您就可以提交代码。",
+				"The package for this problem was not updated by the problem writer or Codeforces administration after we've upgraded the judging servers. To adjust the time limit constraint, a solution execution time will be multiplied by 2. For example, if your solution works for 400 ms on judging servers, then the value 800 ms will be displayed and used to determine the verdict.": "这个题目的数据包未在我们升级评测服务器后由出题人或Codeforces管理团队更新。为了调整时间限制的约束，一个解答的执行时间将被乘以2。例如，如果你的解答在评测服务器上运行了400毫秒，那么将显示并使用800毫秒的值来确定结果。",
+				"Virtual contest is a way to take part in past contest, as close as possible to participation on time. It is supported only ICPC mode for virtual contests.": "虚拟比赛是一种参加过去比赛的方式，尽可能接近实时参赛。目前只支持ICPC模式的虚拟赛事。",
+				"If you've seen these problems, a virtual contest is not for you - solve these problems in the archive.": "如果你已经看过这些题目，虚拟赛事就不适合你——应该在题库中解决这些题目。",
+				"If you just want to solve some problem from a contest, a virtual contest is not for you - solve this problem in the archive.": "如果你只是想解决比赛中的某个问题，虚拟赛事也不适合你——应该在题库中解决这个问题。",
+				"Never use someone else's code, read the tutorials or communicate with other person during a virtual contest.": "在虚拟比赛期间，切勿使用别人的代码，阅读题解或与他人交流。",
+				"You can clone this contest to a mashup.": "您可以将此比赛克隆到混搭比赛中。",
+				"Mashup is a special type of training contest, which consists of public problems from past Codeforces rounds. Also it is possible to add": "混搭是一种特殊类型的训练比赛，由过去Codeforces比赛的公开问题组成。还可以添加",
+				"problems to mashup contest.": "问题到混搭比赛。",
+				"Such contests can not be made public, they are only for personal training purpose. Also it is allowed to add mashups to groups. To specify additional information about mashup contest, use Gym contest edit form.": "这样的比赛不能公开，只用于个人训练目的。还可以将混搭添加到团体中。要指定有关混搭比赛的其他信息，请使用训练营比赛编辑表单。"
+			}
+		},
+		{
+			scope: ".roundbox.sidebox.virtual-contests.borderTopRound",
+			replaceMap: {
+				"Contest": "比赛名称",
+				"Time": "开始时间",
+				"Enter »": "进入 »"
+			}
+		},
+		{
+			scope: ".roundbox.sidebox.top-contributed.borderTopRound",
+			replaceMap: {
+				"User": "用户名",
+				"Rating": "等级分",
+				"Contrib.": "贡献"
+			}
+		},
+		{
+			scope: ".roundbox.sidebox.borderTopRound .rtable.smaller",
+			replaceMap: {
+				"Submission": "#",
+				"Time": "提交时间",
+				"Verdict": "判题状态",
+				"提交时间 limit exceeded": "Time limit exceeded"
+			}
+		},
+		{
+			scope: ".reset-status-filter",
+			replaceMap: {
+				"Status filter is used, click ": "状态筛选已启用，点击",
+				"here": "此处",
+				" to reset ": "重置"
+			}
+		},
+		{
+			scope: ".icon-eye-close.icon-large",
+			replaceMap: { "Add to exclusions": "添加到排除列表" }
+		},
+		{
+			scope: ".roundbox.sidebox.sidebar-menu.borderTopRound",
+			replaceMap: {
+				"Announcement": "公告",
+				"Statements": "题面陈述",
+				"Tutorial": "题解"
+			}
+		},
+		{
+			scope: ".second-level-menu",
+			replaceMap: {
+				"Problems": "问题",
+				"Submit Code": "提交代码",
+				"My Submissions": "我的提交",
+				"Status": "状态",
+				"Standings": "榜单",
+				"Adm.": "管理",
+				"Edit": "编辑",
+				"Custom Invocation": "自定义调试",
+				"Common standings": "全部排行",
+				"Friends standings": "只看关注",
+				"Rating Changes": "全部评级变化",
+				"Friends 全部评级变化": "关注评级变化",
+				"Submit": "提交",
+				"Hacks": "黑客",
+				"Room": "房间",
+				"Custom test": "自定义测试",
+				"Blog": "博客",
+				"Teams": "队伍",
+				"Submissions": "提交记录",
+				"Groups": "团体",
+				"Rating": "评级",
+				"Friends rating": "关注的评级",
+				"Favourites": "收藏",
+				"Contests": "比赛",
+				"Magic": "魔法",
+				"Handle": "账号",
+				"Members": "成员",
+				"问题etting": "参与编写的问题",
+				"Streams": "直播",
+				"Gym": "训练营",
+				"Mashups": "组合混搭",
+				"Posts": "帖子",
+				"Comments": "回复",
+				"Main": "主题库",
+				"Settings": "设置",
+				"Lists": "列表",
+				"General": "基本",
+				"Sidebar": "侧边栏",
+				"Social": "社会信息",
+				"Address": "地址",
+				"Wallets": "钱包"
+			}
+		},
+		{
+			scope: ".topic-toggle-collapse",
+			replaceMap: { "Expand": "展开" }
+		},
+		{
+			scope: ".topic-read-more",
+			replaceMap: { "Full text and comments": "阅读全文/评论" }
+		},
+		{
+			scope: ".toggleEditorCheckboxLabel",
+			replaceMap: { "Switch off editor": "关闭编辑器语法高亮" }
+		},
+		{
+			scope: ".submit",
+			replaceMap: { "Registration for the contest": "比赛报名" }
+		},
+		{
+			scope: "._FilterByTagsFrame_difficulty",
+			replaceMap: { "Difficulty:": "难度:" }
+		},
+		{
+			scope: "._FilterByTagsFrame_addTagLink",
+			replaceMap: { "Add\xA0tag": "添加标签" }
+		},
+		{
+			scope: ".alert",
+			replaceMap: {
+				"Rating changes for last rounds are temporarily rolled back. They will be returned soon.": "上一轮的评级变化暂时回滚。它们将很快恢复。",
+				"Reminder: in case of any technical issues, you can use the lightweight website": "提醒：如果出现任何技术问题，您可以使用轻量网站",
+				"Please subscribe to the official Codeforces channel in Telegram via the link": "请通过链接订阅Codeforces的官方Telegram频道",
+				"Thank you for your interest in Codeforces. You have been successfully registered.": "感谢您对Codeforces的关注。您已成功注册。",
+				"Now you need to confirm your email. A letter was sent to your email, follow the instructions to complete the registration.": "现在您需要确认您的电子邮件。一封信已发送到您的电子邮件，请按照说明完成注册。",
+				"If for any reason the letter did not come, it can be sent again": "如果由于任何原因信件未到达，可以再次发送",
+				"The user is disabled.": "该用户已被封禁。"
+			}
+		},
+		{
+			scope: ".lang-chooser",
+			replaceMap: {
+				"Enter": "登录",
+				"Register": "注册",
+				"Contest rating": "等级分",
+				"Logout": "退出登录"
+			}
+		},
+		{
+			scope: ".userbox",
+			replaceMap: {
+				"Change photo": "更换图片",
+				"Contest rating": "等级分",
+				"Contribution": "贡献",
+				"Friend of": "粉丝",
+				"My friends": "我的好友",
+				"Change settings": "改变设置",
+				"Last visit": "最后访问",
+				"not visible": "不可见的",
+				"Registered": "注册于",
+				"Blog entries": "博客条目",
+				"comments": "评论",
+				"Write new entry": "编写新条目",
+				"View my talks": "查看我的私信",
+				"Talks": "私信",
+				"Send message": "发送消息"
+			}
+		},
+		{
+			scope: "#vote-reset-filterDifficultyLowerBorder",
+			replaceMap: { "Reset": "重置" }
+		},
+		{
+			scope: "#vote-reset-filterDifficultyUpperBorder",
+			replaceMap: { "Reset": "重置" }
+		},
+		{
+			scope: ".alert.alert-info",
+			replaceMap: {
+				"The problem statement has recently been changed.": "题目描述最近已被更改。",
+				"View the changes.": "查看更改"
+			}
+		},
+		{
+			scope: ".enterPage",
+			replaceMap: {
+				"Fill in the form to login into Codeforces.": "填写表单以登录到Codeforces。",
+				"You can use": "你也可以使用",
+				"as an alternative way to enter.": "登录"
+			}
+		},
+		{
+			scope: ".notice.small",
+			replaceMap: { "\\* To view the complete list, click ": "* 要查看完整列表，请点击" }
+		},
+		{
+			scope: ".setting-name",
+			replaceMap: {
+				"Contest type:": "比赛类型：",
+				"Rated:": "已评级：",
+				"Tried:": "已尝试：",
+				"Substring:": "关键字："
+			}
+		},
+		{
+			scope: ".shiftUp",
+			replaceMap: { "In contest title and writers": "在比赛标题与编写者中搜索" }
+		},
+		{
+			scope: ".by-form",
+			replaceMap: {
+				"Sort by:": "排序依据：",
+				"relevance": "相关",
+				"popularity": "热度",
+				"time": "时间"
+			}
+		},
+		{
+			scope: ".roundbox.borderTopRound",
+			replaceMap: {
+				"If you invite users to this contest, the contest will become visible to them regardless of its visibility. You can share the contest using the link:": "如果您邀请用户参加此竞赛，则无论其可见性如何，该竞赛都将对用户可见。您可以使用以下链接分享比赛：",
+				"Generate link and share it with other users": "生成链接并与其他用户共享",
+				"Show Log »": "展示日志 »",
+				"Move all to practice\xA0»": "全部移至练习者 »",
+				"Remove All »": "移除全部 »",
+				"Add »": "添加 »",
+				"Set »": "设置 »",
+				"Download Archive »": "下载归档 »"
+			}
+		},
+		{
+			scope: ".caption.titled",
+			replaceMap: {
+				"Pay attention": "注意",
+				"Top rated": "评级排行",
+				"Top contributors": "贡献者排行",
+				"Find user": "查找用户",
+				"Recent actions": "最新动态",
+				"Training filter": "过滤筛选",
+				"Find training": "搜索比赛/问题",
+				"Virtual participation": "什么是虚拟参赛",
+				"Contest materials": "比赛相关资料",
+				"Settings": "设置",
+				"Create Mashup Contest": "创建混搭比赛",
+				"Clone Contest to Mashup": "克隆比赛到组合混搭",
+				"Invitations": "邀请",
+				"Status filter": "状态过滤器",
+				"Administration": "管理",
+				"Submit": "提交",
+				"Practice": "练习",
+				"Problem tags": "问题标签",
+				"Filter Problems": "过滤问题",
+				"Last unsolved": "上次未解决",
+				"Attention": "注意",
+				"Past contests filter": "筛选过去的比赛",
+				"Recent virt. contests": "过去的虚拟参赛",
+				"About Contest": "关于比赛",
+				"Last submissions": "提交历史",
+				"Streams": "直播",
+				"Coach rights": "教练权限",
+				"Advices to fill address": "填写地址的建议",
+				"Hacks filter": "黑客过滤器",
+				"Score table": "评分表",
+				"Contests": "比赛",
+				"History": "编辑历史",
+				"Login into Codeforces": "登录 Codeforces",
+				"Export the judgment log to DAT-file": "导出判题日志为 DAT 文件",
+				"Contest managers": "比赛管理员",
+				"Contest writers": "比赛编写者",
+				"Spectator ranklists": "观众排名列表",
+				"Ghosts:": "幽灵选手",
+				"Export Submissions": "导出提交",
+				"Register in Codeforces": "注册 Codeforces",
+				"Password recovery": "密码恢复"
+			}
+		},
+		{
+			scope: "#gym-filter-form div label, #gym-filter-form div",
+			replaceMap: {
+				"Contest type:": "比赛类型:",
+				"ICPC region:": "ICPC地区:",
+				"Contest format:": "比赛形式:",
+				"Order by:": "排序方式:",
+				"Secondary order by:": "次要排序方式:",
+				"Hide, if participated:": "隐藏我参加过的:",
+				"Hide excluded gyms": "隐藏已排除的:",
+				"Season:": "时间范围（年度）",
+				"Duration, hours:": "持续时间（小时）:",
+				"Difficulty:": "难度:"
+			}
+		},
+		{
+			scope: ".setting-value select option, .setting-last-value select option",
+			replaceMap: {
+				"Official ACM-ICPC Contest": "ICPC官方比赛",
+				"Official School Contest": "学校官方比赛",
+				"Opencup Contest": "Opencup比赛",
+				"School/University/City/Region Championship": "学校/大学/城市/地区锦标赛",
+				"Training Camp Contest": "训练营比赛",
+				"Official International Personal Contest": "官方国际个人赛",
+				"Training Contest": "训练比赛",
+				"ID_ASC": "创建时间（升序）",
+				"ID_DESC": "创建时间（降序）",
+				"RATING_ASC": "评分（升序）",
+				"RATING_DESC": "评分（降序）",
+				"DIFFICULTY_ASC": "难度（升序）",
+				"DIFFICULTY_DESC": "难度（降序）",
+				"START_TIME_ASC": "开始时间（升序）",
+				"START_TIME_DESC": "开始时间（降序）",
+				"DURATION_ASC": "持续时间（升序）",
+				"DURATION_DESC": "持续时间（降序）",
+				"POPULARITY_ASC": "热度（升序）",
+				"POPULARITY_DESC": "热度（降序）",
+				"UPDATE_TIME_ASC": "更新时间（升序）",
+				"UPDATE_TIME_DESC": "更新时间（降序）"
+			}
+		},
+		{
+			scope: ".options li label, .CaptionCont span",
+			replaceMap: {
+				"Educational": "教育性",
+				"Global": "全球",
+				"VK Cup": "VK杯",
+				"Long Rounds": "长期回合",
+				"April Fools": "愚人节",
+				"Team Contests": "团队比赛",
+				"ICPC Scoring": "ICPC计分",
+				"Doesn't matter": "----",
+				"Any": "所有",
+				"Yes$": "是",
+				"No$": "否",
+				"No submission(s)": "无提交",
+				"Have submission(s)": "有提交",
+				"No solved problem(s)": "无解决问题",
+				"Have solved problem(s)": "有解决问题"
+			}
+		},
+		{
+			scope: ".sidebox div label",
+			replaceMap: {
+				"Show tags for unsolved problems": "显示未解决问题的标签",
+				"Hide solved problems": "隐藏已解决的问题"
+			}
+		},
+		{
+			scope: "td.field-name label",
+			replaceMap: {
+				"Postal/zip code": "邮政编码/邮编",
+				"Country //(English//)": "国家（英文）",
+				"State //(English//)": "州/省份（英文）",
+				"City //(English//)": "城市（英文）",
+				"Address //(English//)": "地址（英文）",
+				"Recipient //(English//)": "收件人姓名（英文）",
+				"Country //(Native//)": "国家（本地语言）",
+				"State //(Native//)": "州/省份（本地语言）",
+				"City //(Native//)": "城市（本地语言）",
+				"Address //(Native//)": "地址（本地语言）",
+				"Recipient //(Native//)": "收件人姓名（本地语言）",
+				"Phone": "电话",
+				"TON Wallet:": "TON 钱包:",
+				"Secret Code:": "验证码:",
+				"Terms of agreement:": "协议条款:",
+				"Choose team:": "选择团队:"
+			}
+		},
+		{
+			scope: "._FilterByTagsFrame_addTagLabel select option, ._FilterByTagsFrame_tagBoxCaption, .notice, .tag-box",
+			replaceMap: {
+				"combine tags by OR": "按逻辑或组合我选择的标签",
+				"combine-tags-by-or": "按逻辑或组合我选择的标签（combine-tags-by-or）",
+				"2-sat": "2-SAT（2-sat）",
+				"binary search": "二分（binary search）",
+				"bitmasks": "状态压缩（bitmasks）",
+				"brute force": "暴力枚举（brute force）",
+				"chinese remainder theorem": "中国剩余定理（chinese remainder theorem）",
+				"combinatorics": "组合数学（combinatorics）",
+				"constructive algorithms": "构造（constructive algorithms）",
+				"data structures": "数据结构（data structures）",
+				"dfs and similar": "DFS及其变种（dfs and similar）",
+				"divide and conquer": "分治（divide and conquer）",
+				"dp": "动态规划（dp）",
+				"dsu": "并查集（dsu）",
+				"expression parsing": "表达式解析（expression parsing）",
+				"fft": "快速傅里叶变换（fft）",
+				"flows": "流（flows）",
+				"games": "博弈论（games）",
+				"geometry": "计算几何（geometry）",
+				"graph matchings": "图匹配（graph matchings）",
+				"graphs": "图论（graphs）",
+				"greedy": "贪心（greedy）",
+				"hashing": "哈希表（hashing）",
+				"implementation": "模拟（implementation）",
+				"interactive": "交互题（interactive）",
+				"math": "数学（math）",
+				"matrices": "矩阵（matrices）",
+				"meet-in-the-middle": "双向搜索（meet-in-the-middle）",
+				"number theory": "数论（number theory）",
+				"probabilities": "概率论（probabilities）",
+				"schedules": "调度算法（schedules）",
+				"shortest paths": "最短路（shortest paths）",
+				"sortings": "排序（sortings）",
+				"string suffix structures": "字符串后缀结构（string suffix structures）",
+				"strings": "字符串处理（strings）",
+				"ternary search": "三分（ternary search）",
+				"trees": "树形结构（trees）",
+				"two pointers": "双指针（two pointers）"
+			}
+		},
+		{
+			scope: ".field-name",
+			replaceMap: {
+				"Hide sidebar block \"Find user\"": "隐藏侧边栏块“查找用户”",
+				"Hide sidebar block \"Current user\"": "隐藏侧边栏块“当前用户”",
+				"Hide sidebar block \"Recent аctions\"": "隐藏侧边栏块“最新动态”",
+				"Hide sidebar block \"Favourite groups\"": "隐藏侧边栏块“收藏组”",
+				"Hide sidebar block \"Top contributors\"": "隐藏侧边栏块“贡献者排行”",
+				"Hide sidebar block \"Top rated\"": "隐藏侧边栏块“评级排行”",
+				"Hide sidebar block \"Streams\"": "隐藏侧边栏块“直播”",
+				"Old password": "旧密码",
+				"New password": "新密码",
+				"Confirm new password": "确认新密码",
+				"Contest email notification": "比赛邮件通知",
+				"Send email on new user talk": "在有新用户对话时发送电子邮件",
+				"Send email on new comment": "在有新评论时发送电子邮件",
+				"Hide contact information": "隐藏联系人信息",
+				"Remember me by Gmail, Facebook and etc": "通过 Gmail、Facebook 等记住我",
+				"Show tags for unsolved problems": "显示未解决问题的标签",
+				"Hide solved problems from problemset": "从问题集中隐藏已解决的问题",
+				"Hide low rated blogs": "隐藏评级较低的博客",
+				"Offer to publish great rating rises": "提供展示Rating显著提升的机会",
+				"Enforce https": "强制 HTTPS",
+				"Show private activity in the profile": "在个人资料中显示私人活动",
+				"Show diagnostics": "显示诊断信息"
+			}
+		},
+		{
+			scope: ".field-name",
+			replaceMap: {
+				"Problem:": "题目:",
+				"Question": "问题",
+				"Language:": "语言:",
+				"Source code:": "源代码:",
+				"Or choose file:": "或者选择文件:",
+				"Choose file:": "选择文件:",
+				"Notice:": "注意:",
+				"virtual participation:": "虚拟参与:",
+				"Registration for the contest:": "比赛报名:",
+				"Take part:": "参与:",
+				"as individual participant:": "作为个人参与者:",
+				"as a team member:": "作为团队成员:",
+				"Virtual start time:": "虚拟开始时间:",
+				"Complete problemset:": "完整的问题集:",
+				"First name \\(English\\)": "名字（英文）",
+				"Last name \\(English\\)": "姓氏（英文）",
+				"First name \\(Native\\)": "名字（本地语言）",
+				"Last name \\(Native\\)": "姓氏（本地语言）",
+				"Birth date": "出生日期",
+				"Country": "国家",
+				"City": "城市",
+				"Organization": "组织",
+				"Handle/Email": "账号/邮箱",
+				"Name": "名称",
+				"Handle": "账号",
+				"Email": "邮箱",
+				"Confirm": "确认",
+				"Password": "密码",
+				"New Rank": "新的Rank",
+				"Training name \\(English\\):": "训练名称（英文）:",
+				"Training name \\(Russian\\):": "训练名称（俄语）:",
+				"Contest format:": "比赛格式:",
+				"Start time:": "开始时间:",
+				"Duration:": "持续时间:",
+				"Visibility:": "可见性:",
+				"Attach parent contest\\?:": "关联父级比赛?",
+				"Participation type:": "参与类型:",
+				"Freeze period:": "冻结期间:",
+				"Unfreeze time:": "解冻时间:",
+				"Is practice allowed\\?:": "是否允许练习?",
+				"Is virtual allowed\\?:": "是否允许虚拟参赛?",
+				"Is out of competition allowed\\?:": "是否允许非竞赛参赛?",
+				"Is self-registration allowed\\?:": "是否允许自助注册?",
+				"Can non-registered view the contest\\?:": "未注册用户能否查看比赛?",
+				"Can participants view common status\\?:": "参赛选手能否查看共享状态?",
+				"Contest testdata policy:": "比赛测试数据策略:",
+				"Allow view other submissions to:": "允许查看其他提交给:",
+				"Manage program languages:": "管理编程语言:",
+				"Use time limits scaling policy\\?:": "使用时间限制缩放策略?",
+				"Allow statements\\?:": "允许查看题目描述?",
+				"Allow standings\\?:": "允许查看排名?",
+				"Season:": "季节:",
+				"Contest type:": "比赛类型:",
+				"ICPC region:": "ICPC 地区:",
+				"Country:": "国家:",
+				"City:": "城市:",
+				"Contest difficulty:": "比赛难度:",
+				"Website URL:": "网站链接:",
+				"Description \\(English\\):": "描述（英文）:",
+				"Description \\(Russian\\):": "描述（俄语）:",
+				"Registration confirmation text \\(English\\):": "注册确认文字（英文）:",
+				"Registration confirmation text \\(Russian\\):": "注册确认文字（俄语）:",
+				"Logo \\(English\\):": "徽标（英文）:",
+				"Logo \\(Russian\\):": "徽标（俄语）:",
+				"End time:": "结束时间:",
+				"Name:": "名称:",
+				"Contest\\(s\\):": "比赛:",
+				"Add contest:": "添加比赛:",
+				"Show Contestants:": "显示参赛选手:",
+				"Show Out of Competition Participants:": "显示非竞赛参与者:",
+				"Show Practices:": "显示练习:",
+				"Show Virtuals:": "显示虚拟选手:",
+				"Show Ghosts:": "显示幽灵选手:",
+				"Text:": "文本:",
+				"Rewrite Examples:": "重写样例:",
+				"Add images:": "添加图片:",
+				"Do not use:": "不使用:",
+				"Problem short name:": "题目简称:",
+				"Source problem:": "源问题:",
+				"Problem name \\(English\\):": "题目名称（英文）:",
+				"Input file name:": "输入文件名:",
+				"Output file name:": "输出文件名:",
+				"Time Limit:": "时间限制:",
+				"Memory Limit:": "内存限制:",
+				"Output only:": "仅输出:"
+			}
+		},
+		{
+			scope: ".ask-question-link",
+			replaceMap: { "Ask a question": "提一个问题" }
+		},
+		{
+			scope: ".add-announcement-link",
+			replaceMap: { "Add announcement": "添加公告" }
+		},
+		{
+			scope: "#pageContent > div:nth-child(7) > div",
+			replaceMap: { "You may double click into cells \\(or ctrl\\+click\\) to view the submissions(\\s)*history or hack the solution": "你可以双击单元格（或者按住Ctrl并点击）来查看提交历史或者对其他人的代码进行攻击。" }
+		},
+		{
+			scope: ".choose-order",
+			replaceMap: {
+				"Default order": "默认顺序",
+				"Submission time": "提交时间",
+				"Judging Time": "判题时间",
+				"Solution Size": "代码长度",
+				"Execution Time": "执行时间"
+			}
+		},
+		{
+			scope: ".error.for__password",
+			replaceMap: { "Please, confirm email before entering the website.": "在进入网站之前请先验证电子邮件。" }
+		},
+		{
+			scope: "#enterForm",
+			replaceMap: {
+				"Remember me for a month": "记住我一个月",
+				"Forgot your password": "忘记密码"
+			}
+		},
+		{
+			scope: ".centered-message",
+			replaceMap: { "Password recovery letter has been sent successfully": "密码恢复邮件已成功发送" }
+		},
+		{
+			scope: "button",
+			replaceMap: { "Compare": "比较" }
+		},
+		{
+			scope: ".click-to-view-tests-div",
+			replaceMap: {
+				"Click": "点击",
+				"to see test details": "查看测试详情"
+			}
+		},
+		{
+			scope: ".unrated-allowed",
+			replaceMap: { "Unrated allowed": "允许未评级报名" }
+		},
+		{
+			scope: ".contestRegistration",
+			replaceMap: {
+				"The registration confirms that you:": "报名即代表你：",
+				"\\* have read the contest rules  by the links http://codeforces.com/blog/entry/456 and http://codeforces.com/blog/entry/4088": "* 已阅读比赛规则，链接：http://codeforces.com/blog/entry/456、http://codeforces.com/blog/entry/4088",
+				"\\* will not violate the rules described on http://codeforces.com/blog/entry/456 and/or http://codeforces.com/blog/entry/4088": "* 不会违反规则，规则描述见：http://codeforces.com/blog/entry/456、http://codeforces.com/blog/entry/4088",
+				"\\* have read the regulations on AI assistants at the following link: https://codeforces.com/blog/entry/133941 and agree to comply with them": "* 已阅读以下链接中的 AI 使用规定并同意遵守：https://codeforces.com/blog/entry/133941",
+				"\\* will not communicate with other participants, share ideas of solutions and hacks": "* 不会与其他参赛者交流、分享解题和 hack 思路。",
+				"\\* will not use third-party code, except stated in http://codeforces.com/blog/entry/8790": "* 不会使用第三方代码，除非属于该规则中明确列出的允许情形：http://codeforces.com/blog/entry/8790",
+				"\\* will not attempt to deliberately destabilize the testing process and try to hack the contest system in any form": "* 不会故意干扰评测过程，也不会以任何形式试图攻击比赛系统。",
+				"\\* will not use multiple accounts and will take part in the contest using your personal and the single account\\.": "* 不会使用多个账号，仅使用你的个人且唯一账号参赛。",
+				"I want to register unrated": "我想非评级报名"
+			}
+		},
+		{
+			scope: "#jGrowl",
+			replaceMap: {
+				"Welcome": "欢迎",
+				"Goodbye, ": "再见，",
+				"Looking forward to seeing you at Codeforces.": "期待再次在Codeforces见到你。",
+				"You have been successfully registered": "您已成功报名",
+				"No such contests": "没有该比赛",
+				"The example input has been copied into the clipboard": "样例输入已复制到剪贴板",
+				"The example output has been copied into the clipboard": "样例输出已复制到剪贴板",
+				"The source code has been copied into the clipboard": "源代码已复制到剪贴板",
+				"Settings have been updated": "设置已更新",
+				"Solution to the problem": "问题",
+				"has been submitted successfully": "的解答已成功提交",
+				"Settings have been saved": "设置已保存",
+				"Contest is over": "比赛已结束",
+				"Illegal contest ID": "非法的比赛ID",
+				"No such contest": "没有该比赛",
+				"Can't find such user": "找不到此用户",
+				"No such blog entry": "没有该博客条目",
+				"Compilation error": "编译错误",
+				"No registration is opened now": "现在没有开放报名",
+				"Blog entry has been deleted": "博客条目已删除",
+				"Added to liked": "已点击喜欢",
+				"Hold Ctrl\\+Alt and click to hide column. Also, you can drag\\&drop columns to reorder them.": "按住Ctrl+Alt并点击一列可以隐藏该列。此外，您还可以通过拖放列来重新排序它们。"
+			}
+		},
+		{
+			scope: "input[type='submit']",
+			replaceValues: {
+				"Register for virtual participation": "报名虚拟参赛",
+				"Register for practice": "登录以开始练习",
+				"Apply": "应用",
+				"Register": "报名",
+				"Login": "登录",
+				"Run": "运行",
+				"Start virtual contest": "开始虚拟参赛",
+				"Manage invitations": "管理邀请",
+				"Disable manager mode": "临时关闭管理模式",
+				"Enable manager mode": "开启管理模式",
+				"Clone Contest": "克隆比赛",
+				"Submit": "提交",
+				"Save changes": "保存设置",
+				"Filter": "过滤",
+				"Find": "查找",
+				"Save": "保存",
+				"Create Mashup Contest": "创建混搭比赛",
+				"Delete problem": "删除问题",
+				"Restore problem": "恢复问题",
+				"Generate": "生成",
+				"Send": "发送",
+				"Recover": "恢复"
+			}
+		},
+		{
+			scope: "input[type='button']",
+			replaceValues: {
+				"Reset": "重置",
+				"Delete contest": "删除比赛",
+				"Preview": "预览",
+				"Delete": "删除",
+				"Save draft": "保存草稿",
+				"Post": "发布"
+			}
+		}
+	];
 	var MATHJAX_RENDERED = [
 		".MathJax",
 		".MathJax_Display",
@@ -55621,7 +56463,7 @@ $$` : `${n}$$`;
 				map: CF_I18N_ZH,
 				prefixMap: CF_I18N_ZH_PREFIX,
 				values: CF_I18N_ZH_VALUES
-			}]);
+			}, ...CF_SUBS_RULES]);
 		}
 	};
 	var CF_I18N_ZH = {
@@ -55742,8 +56584,21 @@ $$` : `${n}$$`;
 		"Final": "终榜",
 		"Unofficial standings": "非正式榜单",
 		"Custom test": "自定义测试",
+		"Terms and Conditions": "服务条款",
+		"Privacy Policy": "隐私政策",
+		"Supported by": "由提供支持",
+		"No items": "暂无条目",
+		"Powered by": "由提供支持",
 		"View the change": "查看变更",
+		"View the changes.": "查看变更",
+		"View the changes": "查看变更",
 		"The problem statement has recently been changed.": "题面最近有改动。",
+		"Submit code": "提交代码",
+		"Hacks": "Hack",
+		"Room": "房间",
+		"Custom invocation": "自定义测试",
+		"Custom tests": "自定义测试",
+		"Start virtual contest": "开始虚拟赛",
 		"Finished": "已结束",
 		"Practice": "练习",
 		"Problem tags": "题目标签",
@@ -55762,7 +56617,7 @@ $$` : `${n}$$`;
 		"My contests": "我的比赛",
 		"All contests": "全部比赛",
 		"Contests are running": "比赛进行中",
-		"implementation": "实现",
+		"implementation": "模拟",
 		"math": "数学",
 		"greedy": "贪心",
 		"dp": "动态规划",
@@ -55813,7 +56668,11 @@ $$` : `${n}$$`;
 		"Apply": "应用",
 		"Reset": "重置",
 		"Search": "搜索",
-		"Compile and Run": "编译并运行"
+		"Compile and Run": "编译并运行",
+		"Clone Contest": "克隆比赛",
+		"Start virtual contest": "开始虚拟赛",
+		"Register for virtual participation": "报名虚拟参赛",
+		"Register for practice": "报名练习"
 	};
 	function selectorEndsWithProperty(el) {
 		return el.classList.contains("property-title");

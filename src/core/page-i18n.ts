@@ -18,6 +18,10 @@ export interface PageI18nRule {
   prefixMap?: Record<string, string>;
   /** input/button 的 value 或文本（trim 后精确匹配）→ 中文 */
   values?: Record<string, string>;
+  /** 正则替换：pattern → 替换（作用在每个文本节点 textContent 上，OJBetter subs 的原始格式） */
+  replaceMap?: Record<string, string>;
+  /** input/button 的正则替换（作用于 value 或文本内容） */
+  replaceValues?: Record<string, string>;
 }
 
 /** 默认不翻译的祖先选择器：代码块、编辑器、我们脚本注入的 UI */
@@ -34,16 +38,27 @@ export function applyPageI18n(doc: Document, rules: PageI18nRule[]): void {
     const exclude = rule.exclude ?? DEFAULT_EXCLUDE;
     const prefixEntries = rule.prefixMap ? Object.entries(rule.prefixMap) : null;
     for (const scope of doc.querySelectorAll(rule.scope)) {
-      if (rule.map || prefixEntries) {
+      if (rule.map || prefixEntries || rule.replaceMap) {
+        const replaceEntries = rule.replaceMap ? Object.entries(rule.replaceMap) : null;
         const walker = doc.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
         const hit: { node: Text; from: string; to: string }[] = [];
+        const regexHit: { node: Text; pattern: string; to: string }[] = [];
         let n: Node | null;
         while ((n = walker.nextNode())) {
           const parent = n.parentElement;
           if (!parent || parent.closest(exclude) || parent.dataset.ojppI18n === 'skip') continue;
           const text = n.textContent?.trim();
           if (!text) continue;
-          // 剥掉菜单装饰前缀（→、»、&raquo; 渲染出的箭头），保留箭头只翻文本
+          if (replaceEntries) {
+            for (const [pattern, to] of replaceEntries) {
+              try {
+                if (text.match(new RegExp(pattern))) {
+                  regexHit.push({ node: n as Text, pattern, to });
+                }
+              } catch { /* 非法正则跳过 */ }
+            }
+          }
+          // 剥掉菜单装饰前缀（→、»、▸ 渲染出的箭头），保留箭头只翻文本
           const arrow = /^[\u2192\u00bb\u25b8\u2794\u279C>\s]+\s*/.exec(text)?.[0] ?? '';
           const core = arrow ? text.slice(arrow.length).trim() : text;
           if (rule.map?.[core]) {
@@ -67,6 +82,11 @@ export function applyPageI18n(doc: Document, rules: PageI18nRule[]): void {
         for (const { node, from, to } of hit) {
           node.textContent = node.textContent?.replace(from, to) ?? node.textContent;
         }
+        for (const { node, pattern, to } of regexHit) {
+          try {
+            node.textContent = node.textContent?.replace(new RegExp(pattern, 'g'), to) ?? node.textContent;
+          } catch { /* 非法正则跳过 */ }
+        }
       }
       if (rule.values) {
         for (const el of scope.querySelectorAll<HTMLInputElement | HTMLButtonElement>('input, button')) {
@@ -79,6 +99,26 @@ export function applyPageI18n(doc: Document, rules: PageI18nRule[]): void {
               el.textContent = rule.values[v];
             }
             el.dataset.ojppI18n = '1';
+          }
+        }
+      }
+      if (rule.replaceValues) {
+        for (const el of scope.querySelectorAll<HTMLInputElement | HTMLButtonElement>('input, button')) {
+          if (el.closest(exclude)) continue;
+          const raw = el.tagName === 'INPUT' ? (el as HTMLInputElement).value : el.textContent;
+          if (!raw) continue;
+          let v = raw;
+          for (const [pattern, to] of Object.entries(rule.replaceValues)) {
+            try {
+              v = v.replace(new RegExp(pattern, 'g'), to);
+            } catch { /* 非法正则跳过 */ }
+          }
+          if (v !== raw) {
+            if (el.tagName === 'INPUT' && (el as HTMLInputElement).value) {
+              (el as HTMLInputElement).value = v;
+            } else {
+              el.textContent = v;
+            }
           }
         }
       }
