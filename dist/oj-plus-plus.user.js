@@ -196,6 +196,8 @@
 		"editor.done": "Done",
 		"editor.match": "Output matches",
 		"editor.mismatch": "Output differs",
+		"editor.accepted": "Accepted",
+		"editor.wrongAnswer": "Wrong answer",
 		"editor.runError": "Run failed",
 		"editor.sample": "Sample",
 		"editor.expected": "Expected output",
@@ -203,7 +205,7 @@
 		"editor.noSamples": "No samples found — click \"+ Custom test\" to add one",
 		"editor.noProblem": "Cannot detect problem code on this page",
 		"editor.runAll": "Run all",
-		"editor.addTest": "+ Custom test",
+		"editor.addTest": "Add custom test",
 		"editor.customN": "Custom",
 		"editor.delete": "Delete",
 		"editor.input": "Input",
@@ -373,6 +375,8 @@
 		"editor.done": "完成",
 		"editor.match": "输出一致",
 		"editor.mismatch": "输出不一致",
+		"editor.accepted": "Accepted",
+		"editor.wrongAnswer": "Wrong answer",
 		"editor.runError": "运行失败",
 		"editor.sample": "样例",
 		"editor.expected": "期望输出",
@@ -380,7 +384,7 @@
 		"editor.noSamples": "页面里没找到样例，点「+自定义测试」手动添加",
 		"editor.noProblem": "当前页面识别不到题号，无法提交",
 		"editor.runAll": "运行全部",
-		"editor.addTest": "+自定义测试",
+		"editor.addTest": "添加自定义测试",
 		"editor.customN": "自定义",
 		"editor.delete": "删除",
 		"editor.input": "输入",
@@ -584,6 +588,9 @@
 	var ICON_CHEVRON_RIGHT = svg("<path d=\"m6 9 6 6 6-6\"/>");
 	var ICON_CROSS = svg("<path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/>");
 	var ICON_SPINNER = svg("<path d=\"M21 12a9 9 0 1 1-6.2-8.6\"/>");
+	var ICON_PLAY = svg("<polygon points=\"6 3 20 12 6 21 6 3\" fill=\"currentColor\" stroke=\"none\"/>");
+	var ICON_PLUS = svg("<path d=\"M12 5v14M5 12h14\"/>");
+	var ICON_SEND = svg("<path d=\"m22 2-7 20-4-9-9-4 20-7z\"/><path d=\"M22 2 11 13\"/>");
 	function setIcon(button, icon, title) {
 		button.innerHTML = icon;
 		button.title = title;
@@ -21588,14 +21595,25 @@
 		const defaultLang = support.languages.find((l) => l.id === savedLang) ?? support.languages[0];
 		langSel.value = defaultLang.id;
 		const spacer = el$1("span", "ojpp-editor-spacer");
-		const addTestBtn = el$1("button", "ojpp-btn ojpp-btn-sm", t$1("editor.addTest"));
-		const runAllBtn = el$1("button", "ojpp-btn ojpp-btn-sm", t$1("editor.runAll"));
-		const submitBtn = el$1("button", "ojpp-btn ojpp-btn-sm ojpp-btn-primary", t$1("editor.submit"));
-		head.append(title, langSel, spacer, addTestBtn, runAllBtn, submitBtn);
+		head.append(title, langSel, spacer);
 		const cmHost = el$1("div", "ojpp-editor-cm");
+		const actionsBar = el$1("div", "ojpp-editor-actions");
+		const runAllBtn = el$1("button", "ojpp-icon-btn ojpp-editor-act");
+		runAllBtn.innerHTML = ICON_PLAY;
+		runAllBtn.title = t$1("editor.runAll");
+		runAllBtn.setAttribute("aria-label", t$1("editor.runAll"));
+		const addTestBtn = el$1("button", "ojpp-icon-btn ojpp-editor-act");
+		addTestBtn.innerHTML = ICON_PLUS;
+		addTestBtn.title = t$1("editor.addTest");
+		addTestBtn.setAttribute("aria-label", t$1("editor.addTest"));
+		const submitBtn = el$1("button", "ojpp-icon-btn ojpp-editor-act ojpp-editor-submit");
+		submitBtn.innerHTML = ICON_SEND;
+		submitBtn.title = t$1("editor.submit");
+		submitBtn.setAttribute("aria-label", t$1("editor.submit"));
+		actionsBar.append(runAllBtn, addTestBtn, submitBtn);
 		const tests = el$1("div", "ojpp-editor-tests");
 		const submitLine = el$1("div", "ojpp-editor-submitline");
-		root.append(head, cmHost, tests, submitLine);
+		root.append(head, cmHost, actionsBar, tests, submitLine);
 		const editor = createEditor(cmHost, {
 			doc: key ? settings.editorCode[key]?.code ?? "" : "",
 			mode: defaultLang.mode,
@@ -21631,17 +21649,20 @@
 			row.statusEl.textContent = t$1("editor.running");
 			row.statusEl.className = "ojpp-test-status running";
 			row.bodyEl.replaceChildren();
+			for (const u of row.row.querySelectorAll(".ojpp-test-used")) u.remove();
+			row.row.classList.remove("collapsed");
 			try {
 				const res = await support.runCustomTest(editor.getCode(), langSel.value, input);
 				if (res.error) {
-					row.statusEl.textContent = t$1("editor.runError");
+					row.statusEl.textContent = res.verdict ?? t$1("editor.runError");
 					row.statusEl.className = "ojpp-test-status error";
 				} else {
 					const ok = res.output.trim() === expected.trim();
-					row.statusEl.textContent = ok ? t$1("editor.match") : t$1("editor.mismatch");
-					row.statusEl.className = `ojpp-test-status ${ok ? "ok" : "warn"}`;
+					row.statusEl.textContent = res.verdict && res.verdict !== "OK" ? res.verdict : ok ? t$1("editor.accepted") : t$1("editor.wrongAnswer");
+					row.statusEl.className = `ojpp-test-status ${ok && (!res.verdict || res.verdict === "OK") ? "ok" : "warn"}`;
+					row.row.classList.add("collapsed");
 				}
-				if (res.output) {
+				if (res.output && res.output.trim()) {
 					const out = el$1("pre", "ojpp-test-out");
 					out.textContent = res.output;
 					row.bodyEl.append(out);
@@ -21651,7 +21672,10 @@
 					err.textContent = res.error;
 					row.bodyEl.append(err);
 				}
-				if (res.used) row.bodyEl.append(el$1("div", "ojpp-test-used", res.used));
+				if (res.used) {
+					const u = el$1("span", "ojpp-test-used", res.used.replace(/^[^,]+,\s*/, ""));
+					row.statusEl.after(u);
+				}
 			} catch (e) {
 				row.statusEl.textContent = t$1("editor.runError");
 				row.statusEl.className = "ojpp-test-status error";
@@ -21664,7 +21688,9 @@
 			const name = el$1("span", "ojpp-test-name", `${t$1("editor.customN")} ${customIndex + 1}`);
 			const status = el$1("span", "ojpp-test-status");
 			const actions = el$1("span", "ojpp-test-actions");
-			const runOne = el$1("button", "ojpp-btn ojpp-btn-xs", t$1("editor.runOne"));
+			const runOne = el$1("button", "ojpp-icon-btn ojpp-test-run");
+			runOne.innerHTML = ICON_PLAY;
+			runOne.title = t$1("editor.runOne");
 			const del = el$1("button", "ojpp-icon-btn ojpp-test-del");
 			del.innerHTML = ICON_CROSS;
 			del.title = t$1("editor.delete");
@@ -21695,6 +21721,10 @@
 				row.remove();
 				saveCustomTests();
 			};
+			headRow.addEventListener("click", (e) => {
+				if (e.target.closest("button")) return;
+				row.classList.toggle("collapsed");
+			});
 			rows.push(rec);
 			tests.append(row);
 			return rec;
@@ -21705,7 +21735,9 @@
 			const name = el$1("span", "ojpp-test-name", `${t$1("editor.sample")} ${index + 1}`);
 			const status = el$1("span", "ojpp-test-status");
 			const actions = el$1("span", "ojpp-test-actions");
-			const runOne = el$1("button", "ojpp-btn ojpp-btn-xs", t$1("editor.runOne"));
+			const runOne = el$1("button", "ojpp-icon-btn ojpp-test-run");
+			runOne.innerHTML = ICON_PLAY;
+			runOne.title = t$1("editor.runOne");
 			actions.append(runOne);
 			headRow.append(name, actions, status);
 			const grid = el$1("div", "ojpp-test-grid");
@@ -21725,6 +21757,10 @@
 				bodyEl: body
 			};
 			runOne.onclick = () => void runRow(rec);
+			headRow.addEventListener("click", (e) => {
+				if (e.target.closest("button")) return;
+				row.classList.toggle("collapsed");
+			});
 			rows.push(rec);
 			tests.append(row);
 			return rec;
@@ -55396,7 +55432,8 @@ $$` : `${n}$$`;
 					if (vj?.verdict != null) {
 						const result = {
 							output: String(vj.output ?? ""),
-							used: [vj.verdict, vj.stat].filter(Boolean).join(", ") || void 0
+							used: [vj.verdict, vj.stat].filter(Boolean).join(", ") || void 0,
+							verdict: vj.verdict
 						};
 						if (vj.verdict !== "OK" && !result.output) result.error = result.used;
 						return result;
@@ -57128,6 +57165,23 @@ $$` : `${n}$$`;
 .ojpp-editor-submitok a { color: var(--color-accent); }
 .ojpp-editor-submiterr { color: var(--color-danger); }
 
+/* ---------- 动作条（代码框与样例列表之间） ---------- */
+.ojpp-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-top: 1px solid var(--color-border);
+}
+
+.ojpp-editor-act {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+}
+
+.ojpp-editor-submit { color: var(--color-accent); }
+
 /* ---------- 测试行 ---------- */
 .ojpp-editor-empty {
   padding: 8px 10px;
@@ -57150,6 +57204,19 @@ $$` : `${n}$$`;
   align-items: center;
   gap: 8px;
   margin-bottom: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* 跑完折叠成一行：只留标题行 */
+.ojpp-test.collapsed .ojpp-test-head { margin-bottom: 0; }
+.ojpp-test.collapsed .ojpp-test-grid,
+.ojpp-test.collapsed .ojpp-test-body { display: none; }
+
+.ojpp-test-run {
+  width: 22px;
+  height: 22px;
+  padding: 0;
 }
 .ojpp-test-name { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); }
 .ojpp-test-actions { display: inline-flex; gap: 4px; margin-left: auto; }

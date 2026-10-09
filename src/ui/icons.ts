@@ -47,3 +47,15 @@ export const ICON_CROSS = svg(
 
 /** 加载中：缺口圆环，靠 CSS 旋转 */
 export const ICON_SPINNER = svg('<path d="M21 12a9 9 0 1 1-6.2-8.6"/>');
+
+/** 播放/运行：实心三角 */
+export const ICON_PLAY = svg('<polygon points="6 3 20 12 6 21 6 3" fill="currentColor" stroke="none"/>');
+
+/** 加号：添加 */
+export const ICON_PLUS = svg('<path d="M12 5v14M5 12h14"/>');
+
+/** 提交：纸飞机（send） */
+export const ICON_SEND = svg(
+  '<path d="m22 2-7 20-4-9-9-4 20-7z"/>' +
+    '<path d="M22 2 11 13"/>',
+);

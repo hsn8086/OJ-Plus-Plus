@@ -1678,6 +1678,7 @@ export const codeforces: SiteAdapter = {
           const result: EditorTestResult = {
             output: String(vj.output ?? ''),
             used: [vj.verdict, vj.stat].filter(Boolean).join(', ') || undefined,
+            verdict: vj.verdict,
           };
           if (vj.verdict !== 'OK' && !result.output) {
             result.error = result.used;

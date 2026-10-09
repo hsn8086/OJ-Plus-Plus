@@ -2,7 +2,7 @@ import { t } from '../i18n/index.ts';
 import type { Settings } from '../core/types.ts';
 import type { SiteAdapter, SiteEditorSupport } from '../sites/types.ts';
 import { createEditor, type EditorHandle } from '../editor/cm.ts';
-import { ICON_CROSS } from './icons.ts';
+import { ICON_CROSS, ICON_PLAY, ICON_PLUS, ICON_SEND } from './icons.ts';
 
 export interface EditorPanelOptions {
   site: SiteAdapter;
@@ -47,15 +47,29 @@ export function mountEditorPanel(options: EditorPanelOptions) {
   langSel.value = defaultLang.id;
 
   const spacer = el('span', 'ojpp-editor-spacer');
-  const addTestBtn = el('button', 'ojpp-btn ojpp-btn-sm', t('editor.addTest')) as HTMLButtonElement;
-  const runAllBtn = el('button', 'ojpp-btn ojpp-btn-sm', t('editor.runAll')) as HTMLButtonElement;
-  const submitBtn = el('button', 'ojpp-btn ojpp-btn-sm ojpp-btn-primary', t('editor.submit')) as HTMLButtonElement;
-  head.append(title, langSel, spacer, addTestBtn, runAllBtn, submitBtn);
+  head.append(title, langSel, spacer);
 
   const cmHost = el('div', 'ojpp-editor-cm');
+
+  // 动作条：代码框和样例列表之间
+  const actionsBar = el('div', 'ojpp-editor-actions');
+  const runAllBtn = el('button', 'ojpp-icon-btn ojpp-editor-act') as HTMLButtonElement;
+  runAllBtn.innerHTML = ICON_PLAY;
+  runAllBtn.title = t('editor.runAll');
+  runAllBtn.setAttribute('aria-label', t('editor.runAll'));
+  const addTestBtn = el('button', 'ojpp-icon-btn ojpp-editor-act') as HTMLButtonElement;
+  addTestBtn.innerHTML = ICON_PLUS;
+  addTestBtn.title = t('editor.addTest');
+  addTestBtn.setAttribute('aria-label', t('editor.addTest'));
+  const submitBtn = el('button', 'ojpp-icon-btn ojpp-editor-act ojpp-editor-submit') as HTMLButtonElement;
+  submitBtn.innerHTML = ICON_SEND;
+  submitBtn.title = t('editor.submit');
+  submitBtn.setAttribute('aria-label', t('editor.submit'));
+  actionsBar.append(runAllBtn, addTestBtn, submitBtn);
+
   const tests = el('div', 'ojpp-editor-tests');
   const submitLine = el('div', 'ojpp-editor-submitline');
-  root.append(head, cmHost, tests, submitLine);
+  root.append(head, cmHost, actionsBar, tests, submitLine);
 
   const initial = key ? (settings.editorCode[key]?.code ?? '') : '';
   const editor: EditorHandle = createEditor(cmHost, {
@@ -110,17 +124,25 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     row.statusEl.textContent = t('editor.running');
     row.statusEl.className = 'ojpp-test-status running';
     row.bodyEl.replaceChildren();
+    for (const u of row.row.querySelectorAll('.ojpp-test-used')) u.remove();
+    row.row.classList.remove('collapsed');
     try {
       const res = await support.runCustomTest(editor.getCode(), langSel.value, input);
       if (res.error) {
-        row.statusEl.textContent = t('editor.runError');
+        row.statusEl.textContent = res.verdict ?? t('editor.runError');
         row.statusEl.className = 'ojpp-test-status error';
       } else {
         const ok = res.output.trim() === expected.trim();
-        row.statusEl.textContent = ok ? t('editor.match') : t('editor.mismatch');
-        row.statusEl.className = `ojpp-test-status ${ok ? 'ok' : 'warn'}`;
+        row.statusEl.textContent = res.verdict && res.verdict !== 'OK'
+          ? res.verdict
+          : ok
+            ? t('editor.accepted')
+            : t('editor.wrongAnswer');
+        row.statusEl.className = `ojpp-test-status ${ok && (!res.verdict || res.verdict === 'OK') ? 'ok' : 'warn'}`;
+        // 跑完没有错误没有 stderr：折叠成一行，状态就是判定
+        row.row.classList.add('collapsed');
       }
-      if (res.output) {
+      if (res.output && res.output.trim()) {
         const out = el('pre', 'ojpp-test-out');
         out.textContent = res.output;
         row.bodyEl.append(out);
@@ -130,7 +152,12 @@ export function mountEditorPanel(options: EditorPanelOptions) {
         err.textContent = res.error;
         row.bodyEl.append(err);
       }
-      if (res.used) row.bodyEl.append(el('div', 'ojpp-test-used', res.used));
+      if (res.used) {
+        // used 形如 "OK, 46 ms, 0 KB"——折叠态下在标题行尾部显示纯用时
+        const stat = res.used.replace(/^[^,]+,\s*/, '');
+        const u = el('span', 'ojpp-test-used', stat);
+        row.statusEl.after(u);
+      }
     } catch (e) {
       row.statusEl.textContent = t('editor.runError');
       row.statusEl.className = 'ojpp-test-status error';
@@ -144,7 +171,9 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     const name = el('span', 'ojpp-test-name', `${t('editor.customN')} ${customIndex + 1}`);
     const status = el('span', 'ojpp-test-status');
     const actions = el('span', 'ojpp-test-actions');
-    const runOne = el('button', 'ojpp-btn ojpp-btn-xs', t('editor.runOne')) as HTMLButtonElement;
+    const runOne = el('button', 'ojpp-icon-btn ojpp-test-run') as HTMLButtonElement;
+    runOne.innerHTML = ICON_PLAY;
+    runOne.title = t('editor.runOne');
     const del = el('button', 'ojpp-icon-btn ojpp-test-del') as HTMLButtonElement;
     del.innerHTML = ICON_CROSS;
     del.title = t('editor.delete');
@@ -167,6 +196,11 @@ export function mountEditorPanel(options: EditorPanelOptions) {
       row.remove();
       saveCustomTests();
     };
+    // 折叠态点击标题重新展开
+    headRow.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('button')) return;
+      row.classList.toggle('collapsed');
+    });
     rows.push(rec);
     tests.append(row);
     return rec;
@@ -178,7 +212,9 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     const name = el('span', 'ojpp-test-name', `${t('editor.sample')} ${index + 1}`);
     const status = el('span', 'ojpp-test-status');
     const actions = el('span', 'ojpp-test-actions');
-    const runOne = el('button', 'ojpp-btn ojpp-btn-xs', t('editor.runOne')) as HTMLButtonElement;
+    const runOne = el('button', 'ojpp-icon-btn ojpp-test-run') as HTMLButtonElement;
+    runOne.innerHTML = ICON_PLAY;
+    runOne.title = t('editor.runOne');
     actions.append(runOne);
     headRow.append(name, actions, status);
     const grid = el('div', 'ojpp-test-grid');
@@ -191,6 +227,10 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     row.append(headRow, grid, body);
     const rec: TestRow = { kind: 'sample', input: sample.input, expected: sample.output, row, statusEl: status, bodyEl: body };
     runOne.onclick = () => void runRow(rec);
+    headRow.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('button')) return;
+      row.classList.toggle('collapsed');
+    });
     rows.push(rec);
     tests.append(row);
     return rec;

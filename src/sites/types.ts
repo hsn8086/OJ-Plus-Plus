@@ -33,6 +33,8 @@ export interface EditorTestResult {
   output: string;
   /** 运行信息，如 "46 ms, 0 KB"。 */
   used?: string;
+  /** 判题判定（OK / WRONG_ANSWER / TIME_LIMIT_EXCEEDED / COMPILATION_ERROR 等）。 */
+  verdict?: string;
   /** 运行/请求失败时的错误描述。 */
   error?: string;
 }

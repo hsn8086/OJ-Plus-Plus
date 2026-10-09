@@ -954,6 +954,23 @@ export const CSS = `
 .ojpp-editor-submitok a { color: var(--color-accent); }
 .ojpp-editor-submiterr { color: var(--color-danger); }
 
+/* ---------- 动作条（代码框与样例列表之间） ---------- */
+.ojpp-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-top: 1px solid var(--color-border);
+}
+
+.ojpp-editor-act {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+}
+
+.ojpp-editor-submit { color: var(--color-accent); }
+
 /* ---------- 测试行 ---------- */
 .ojpp-editor-empty {
   padding: 8px 10px;
@@ -976,6 +993,19 @@ export const CSS = `
   align-items: center;
   gap: 8px;
   margin-bottom: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* 跑完折叠成一行：只留标题行 */
+.ojpp-test.collapsed .ojpp-test-head { margin-bottom: 0; }
+.ojpp-test.collapsed .ojpp-test-grid,
+.ojpp-test.collapsed .ojpp-test-body { display: none; }
+
+.ojpp-test-run {
+  width: 22px;
+  height: 22px;
+  padding: 0;
 }
 .ojpp-test-name { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); }
 .ojpp-test-actions { display: inline-flex; gap: 4px; margin-left: auto; }
