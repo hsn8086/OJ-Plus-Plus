@@ -39,6 +39,7 @@ export function mountEditorPage(opts: {
   textarea: HTMLTextAreaElement;
   langSelect?: HTMLSelectElement;
   langMode(id: string): 'cpp' | 'java' | 'python' | 'text';
+  offToggle?: HTMLInputElement;
   syncBack?(code: string): void;
   getSettings(): Settings;
   isDark(): boolean;
@@ -69,11 +70,21 @@ export function mountEditorPage(opts: {
   };
   opts.langSelect?.addEventListener('change', onLang);
 
+  // 「关闭编辑器」开关：勾选 → 藏 CM6 露 textarea；不勾 → 露 CM6 继续压原生编辑器
+  const applyToggle = () => {
+    const off = opts.offToggle?.checked ?? false;
+    host.style.display = off ? 'none' : '';
+    if (!off && opts.hide) opts.hide.style.display = 'none';
+  };
+  opts.offToggle?.addEventListener('change', applyToggle);
+  applyToggle();
+
   return {
     el: host,
     dispose() {
       stopDark();
       opts.langSelect?.removeEventListener('change', onLang);
+      opts.offToggle?.removeEventListener('change', applyToggle);
       editor.destroy();
       host.remove();
       if (opts.hide) opts.hide.style.display = '';

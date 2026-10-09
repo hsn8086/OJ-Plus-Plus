@@ -21600,11 +21600,19 @@
 			if (opts.langSelect) editor.setMode(opts.langMode(opts.langSelect.value));
 		};
 		opts.langSelect?.addEventListener("change", onLang);
+		const applyToggle = () => {
+			const off = opts.offToggle?.checked ?? false;
+			host.style.display = off ? "none" : "";
+			if (!off && opts.hide) opts.hide.style.display = "none";
+		};
+		opts.offToggle?.addEventListener("change", applyToggle);
+		applyToggle();
 		return {
 			el: host,
 			dispose() {
 				stopDark();
 				opts.langSelect?.removeEventListener("change", onLang);
+				opts.offToggle?.removeEventListener("change", applyToggle);
 				editor.destroy();
 				host.remove();
 				if (opts.hide) opts.hide.style.display = "";
@@ -55438,6 +55446,7 @@ $$` : `${n}$$`;
 					hide: ace,
 					textarea: ta,
 					langSelect: doc.querySelector("select[name=\"programTypeId\"]") ?? void 0,
+					offToggle: doc.querySelector("#toggleEditorCheckbox") ?? void 0,
 					langMode: (id) => CF_LANGUAGES.find((l) => l.id === id)?.mode ?? "text",
 					syncBack: (code) => {
 						try {
@@ -57643,6 +57652,7 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
 				textarea: ep.textarea,
 				langSelect: ep.langSelect,
 				langMode: ep.langMode ?? ((id) => site.editor.languages.find((l) => l.id === id)?.mode ?? "text"),
+				offToggle: ep.offToggle,
 				syncBack: ep.syncBack,
 				getSettings: () => settings,
 				isDark: isDarkNow,

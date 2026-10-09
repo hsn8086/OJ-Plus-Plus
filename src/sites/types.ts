@@ -61,6 +61,8 @@ export interface SiteEditorSupport {
     langSelect?: HTMLSelectElement;
     /** programTypeId → CM6 高亮模式；缺省走 languages 查表 */
     langMode?(languageId: string): EditorLanguage['mode'];
+    /** 站点的「关闭编辑器」开关；勾选时我们的 CM6 也要跟着藏 */
+    offToggle?: HTMLInputElement;
     /** CM6 → 站点其它组件同步（如 ACE 实例），可选 */
     syncBack?(code: string): void;
   } | null;

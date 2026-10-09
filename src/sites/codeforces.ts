@@ -1605,6 +1605,8 @@ export const codeforces: SiteAdapter = {
         hide: ace,
         textarea: ta,
         langSelect: doc.querySelector<HTMLSelectElement>('select[name="programTypeId"]') ?? undefined,
+        // 「Switch off editor」勾选框：勾选 = 纯 textarea 模式
+        offToggle: doc.querySelector<HTMLInputElement>('#toggleEditorCheckbox') ?? undefined,
         langMode: (id) => CF_LANGUAGES.find((l) => l.id === id)?.mode ?? 'text',
         syncBack: (code) => {
           // customtest 的 ajaxSubmit 从 ACE 实例取代码——同步回去。

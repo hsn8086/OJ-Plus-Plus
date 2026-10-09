@@ -104,6 +104,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
       textarea: ep.textarea,
       langSelect: ep.langSelect,
       langMode: ep.langMode ?? ((id) => site.editor!.languages.find((l) => l.id === id)?.mode ?? 'text'),
+      offToggle: ep.offToggle,
       syncBack: ep.syncBack,
       getSettings: () => settings,
       isDark: isDarkNow,
