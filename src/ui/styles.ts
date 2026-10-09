@@ -1096,6 +1096,11 @@ export const CSS = `
 }
 
 .ojpp-editor-submitline:empty { display: none; }
+.ojpp-editor-submitline-item {
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--color-accent);
+}
 
 /* 响应式 */
 @media (max-width: 640px) {

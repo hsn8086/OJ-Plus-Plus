@@ -297,11 +297,8 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     runAllBtn.dataset.state = 'busy';
     runAllBtn.innerHTML = ICON_SPINNER;
     try {
-      // 先自定义再题面样例，串行跑避免并发判题
-      for (const row of rows) {
-        if (!runningAll) break;
-        await runRow(row);
-      }
+      // CF customtest 支持并发任务（各自独立 job id）——全部并行
+      await Promise.all(rows.map((row) => runRow(row)));
     } finally {
       runningAll = false;
       runAllBtn.disabled = false;
@@ -318,6 +315,8 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     submitBtn.disabled = true;
     submitBtn.dataset.state = 'busy';
     submitBtn.innerHTML = ICON_SPINNER;
+    const statusRow = el('div', 'ojpp-editor-submitline-item', t('editor.submitting'));
+    submitLine.replaceChildren(statusRow);
     try {
       const res = await support.submit(editor.getCode(), langSel.value, problemCode);
       if (res.ok) {
@@ -326,12 +325,15 @@ export function mountEditorPanel(options: EditorPanelOptions) {
           window.location.href = res.url;
           return;
         }
-        submitLine.prepend(el('div', 'ojpp-editor-submitok', t('editor.submitted')));
+        statusRow.className = 'ojpp-editor-submitok';
+        statusRow.textContent = t('editor.submitted');
       } else {
-        submitLine.prepend(el('div', 'ojpp-editor-submiterr', res.error ?? t('editor.submitFailed')));
+        statusRow.className = 'ojpp-editor-submiterr';
+        statusRow.textContent = res.error ?? t('editor.submitFailed');
       }
     } catch (e) {
-      submitLine.prepend(el('div', 'ojpp-editor-submiterr', e instanceof Error ? e.message : String(e)));
+      statusRow.className = 'ojpp-editor-submiterr';
+      statusRow.textContent = e instanceof Error ? e.message : String(e);
     } finally {
       submitBtn.disabled = false;
       submitBtn.dataset.state = '';

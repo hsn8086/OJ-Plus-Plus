@@ -21819,10 +21819,7 @@
 			runAllBtn.dataset.state = "busy";
 			runAllBtn.innerHTML = ICON_SPINNER;
 			try {
-				for (const row of rows) {
-					if (!runningAll) break;
-					await runRow(row);
-				}
+				await Promise.all(rows.map((row) => runRow(row)));
 			} finally {
 				runningAll = false;
 				runAllBtn.disabled = false;
@@ -21838,6 +21835,8 @@
 			submitBtn.disabled = true;
 			submitBtn.dataset.state = "busy";
 			submitBtn.innerHTML = ICON_SPINNER;
+			const statusRow = el$1("div", "ojpp-editor-submitline-item", t$1("editor.submitting"));
+			submitLine.replaceChildren(statusRow);
 			try {
 				const res = await support.submit(editor.getCode(), langSel.value, problemCode);
 				if (res.ok) {
@@ -21845,10 +21844,15 @@
 						window.location.href = res.url;
 						return;
 					}
-					submitLine.prepend(el$1("div", "ojpp-editor-submitok", t$1("editor.submitted")));
-				} else submitLine.prepend(el$1("div", "ojpp-editor-submiterr", res.error ?? t$1("editor.submitFailed")));
+					statusRow.className = "ojpp-editor-submitok";
+					statusRow.textContent = t$1("editor.submitted");
+				} else {
+					statusRow.className = "ojpp-editor-submiterr";
+					statusRow.textContent = res.error ?? t$1("editor.submitFailed");
+				}
 			} catch (e) {
-				submitLine.prepend(el$1("div", "ojpp-editor-submiterr", e instanceof Error ? e.message : String(e)));
+				statusRow.className = "ojpp-editor-submiterr";
+				statusRow.textContent = e instanceof Error ? e.message : String(e);
 			} finally {
 				submitBtn.disabled = false;
 				submitBtn.dataset.state = "";
@@ -57325,6 +57329,11 @@ $$` : `${n}$$`;
 }
 
 .ojpp-editor-submitline:empty { display: none; }
+.ojpp-editor-submitline-item {
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--color-accent);
+}
 
 /* 响应式 */
 @media (max-width: 640px) {
