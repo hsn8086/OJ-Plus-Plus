@@ -55483,7 +55483,8 @@ $$` : `${n}$$`;
 					_tta: ttaValue()
 				});
 				const url = doc.URL;
-				const errorText = doc.querySelector(".error, .error__text, .forbidden, [class*=\"error\"]")?.textContent?.trim();
+				const errors = [...doc.querySelectorAll(".error, .forbidden")].map((e) => e.textContent?.trim()).filter((t) => !!t);
+				const errorText = errors.length ? errors.join("; ") : void 0;
 				const ok = /\/(?:contest\/\d+|gym\/\d+)?\/?(my|status)/.test(url) || /status|contest\/\d+\/my/.test(url);
 				return {
 					ok: ok && !errorText,
@@ -55519,8 +55520,10 @@ $$` : `${n}$$`;
 		return "";
 	}
 	function parseSubmitError(doc) {
+		const t = doc.querySelector("[class*=\"error\"]")?.textContent?.trim();
+		if (t) return t.slice(0, 200);
 		const text = doc.body?.textContent ?? "";
-		return /(?:error|forbidden|wrong)[^\n]{0,160}/i.exec(text)?.[0]?.trim();
+		return /(?:have|must|cannot|can't|empty|invalid|choose|select|required|denied)[^\n]{0,120}/i.exec(text)?.[0]?.trim();
 	}
 	function postFormToIframe(pageUrl, fields) {
 		return new Promise((resolve, reject) => {

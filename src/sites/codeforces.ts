@@ -1703,7 +1703,11 @@ export const codeforces: SiteAdapter = {
         _tta: ttaValue(),
       });
       const url = doc.URL;
-      const errorText = doc.querySelector('.error, .error__text, .forbidden, [class*="error"]')?.textContent?.trim();
+      // 所有 .error.* 元素的错误文本（重复代码、空源码、未知题号等）
+      const errors = [...doc.querySelectorAll('.error, .forbidden')]
+        .map((e) => e.textContent?.trim())
+        .filter((t): t is string => !!t);
+      const errorText = errors.length ? errors.join('; ') : undefined;
       const ok = /\/(?:contest\/\d+|gym\/\d+)?\/?(my|status)/.test(url) || /status|contest\/\d+\/my/.test(url);
       return { ok: ok && !errorText, url: ok ? url : undefined, error: errorText ?? (ok ? undefined : parseSubmitError(doc)) };
     },
@@ -1748,8 +1752,12 @@ function antiBotToken(name: 'ftaa' | 'bfaa'): string {
 }
 
 function parseSubmitError(doc: Document): string | undefined {
+  // CF 的错误通常带 .error.for__* 类名；兜底找正文里的错误字样
+  const errEl = doc.querySelector('[class*="error"]');
+  const t = errEl?.textContent?.trim();
+  if (t) return t.slice(0, 200);
   const text = doc.body?.textContent ?? '';
-  const m = /(?:error|forbidden|wrong)[^\n]{0,160}/i.exec(text);
+  const m = /(?:have|must|cannot|can't|empty|invalid|choose|select|required|denied)[^\n]{0,120}/i.exec(text);
   return m?.[0]?.trim();
 }
 
