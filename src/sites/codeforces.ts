@@ -1,4 +1,5 @@
 import { t } from '../i18n/index.ts';
+import { applyPageI18n } from '../core/page-i18n.ts';
 import type { ContentSection, EditorLanguage, EditorTestResult, SiteAdapter } from './types.ts';
 
 /**
@@ -1738,6 +1739,51 @@ export const codeforces: SiteAdapter = {
       const ok = /\/(?:contest\/\d+|gym\/\d+)?\/?(my|status)/.test(url) || /status|contest\/\d+\/my/.test(url);
       return { ok: ok && !errorText, url: ok ? url : undefined, error: errorText ?? (ok ? undefined : parseSubmitError(doc)) };
     },
+  },
+
+  i18nPage(doc, locale) {
+    if (locale !== 'zh') return;
+    applyPageI18n(doc, [
+      // 提交/自定义测试表单
+      {
+        scope: 'form.submit-form, form.customtest',
+        map: {
+          'Source:': '源代码：',
+          'Source code:': '源代码：',
+          'Problem:': '题目：',
+          'Compiler:': '编译器：',
+          'Language:': '语言：',
+          'Input:': '输入：',
+          'Output:': '输出：',
+          'Tab size:': '缩进宽度：',
+          'Switch off editor': '关闭编辑器',
+          'Use custom test': '使用自定义测试',
+          'No more than 256 KB': '不超过 256 KB',
+          'First 255 bytes only': '只显示前 255 字节',
+          'Choose File': '选择文件',
+          'Choose file': '选择文件',
+          'choose file': '选择文件',
+          'Browse': '浏览',
+          'Or click here': '或点这里',
+          'or click here': '或点这里',
+        },
+        values: {
+          'Run': '运行',
+          'Submit': '提交',
+        },
+      },
+      // 题面里的区块标题与样例标签
+      {
+        scope: '.problem-statement',
+        map: {
+          'Examples': '样例',
+          'Note': '说明',
+          'Input': '输入',
+          'Output': '输出',
+          'Copy': '复制',
+        },
+      },
+    ]);
   },
 };
 

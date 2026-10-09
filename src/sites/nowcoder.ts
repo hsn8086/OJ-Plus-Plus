@@ -1,4 +1,5 @@
 import { t } from '../i18n/index.ts';
+import { applyPageI18n } from '../core/page-i18n.ts';
 import type { ContentSection, SiteAdapter } from './types.ts';
 
 function equationFromImg(img: HTMLImageElement): string | null {
@@ -196,5 +197,27 @@ export const nowcoder: SiteAdapter = {
       clearTimeout(timer);
       doc.removeEventListener('click', onClick);
     };
+  },
+
+  i18nPage(doc, locale) {
+    // 牛客界面本来就中文；这里只兜少数漏网英文（ide/提交区）
+    if (locale !== 'zh') return;
+    applyPageI18n(doc, [
+      {
+        scope: '.question-ide, .submit-box, .nc-post-content',
+        map: {
+          'Run': '运行',
+          'Submit': '提交',
+          'Reset': '重置',
+          'Editor': '编辑器',
+          'Sample': '样例',
+        },
+        values: {
+          'Run': '运行',
+          'Submit': '提交',
+          'Submit code': '提交代码',
+        },
+      },
+    ]);
   },
 };

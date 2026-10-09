@@ -95,4 +95,10 @@ export interface SiteAdapter {
   mountSettingsButton(button: HTMLButtonElement, doc: Document): void;
   /** 站点特有的动态更新监听，返回清理函数。 */
   observe(doc: Document, onChange: () => void): () => void;
+  /**
+   * 站点自有界面文本本地化（可选）。
+   * locale='zh' 时把英文标签换中文；其余语言不动。
+   * 用 core/page-i18n.ts 的 applyPageI18n 实现。
+   */
+  i18nPage?(doc: Document, locale: string): void;
 }

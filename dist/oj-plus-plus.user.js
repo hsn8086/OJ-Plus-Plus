@@ -53873,6 +53873,32 @@ $$` : `${n}$$`;
 			restoreInlineColors();
 		};
 	}
+	function applyPageI18n(doc, rules) {
+		for (const rule of rules) for (const scope of doc.querySelectorAll(rule.scope)) {
+			if (rule.map) {
+				const walker = doc.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
+				const hit = [];
+				let n;
+				while (n = walker.nextNode()) {
+					const text = n.textContent?.trim();
+					if (text && rule.map[text]) hit.push({
+						node: n,
+						to: rule.map[text]
+					});
+				}
+				for (const { node, to } of hit) node.textContent = node.textContent?.replace(node.textContent.trim(), to) ?? node.textContent;
+			}
+			if (rule.values) for (const el of scope.querySelectorAll("input, button")) {
+				if (el.dataset.ojppI18n) continue;
+				const v = (el.tagName === "INPUT" ? el.value : el.textContent)?.trim() ?? "";
+				if (v && rule.values[v]) {
+					if (el.tagName === "INPUT" && el.value) el.value = rule.values[v];
+					else el.textContent = rule.values[v];
+					el.dataset.ojppI18n = "1";
+				}
+			}
+		}
+	}
 	var MATHJAX_RENDERED = [
 		".MathJax",
 		".MathJax_Display",
@@ -55554,6 +55580,45 @@ $$` : `${n}$$`;
 					error: errorText ?? (ok ? void 0 : parseSubmitError(doc))
 				};
 			}
+		},
+		i18nPage(doc, locale) {
+			if (locale !== "zh") return;
+			applyPageI18n(doc, [{
+				scope: "form.submit-form, form.customtest",
+				map: {
+					"Source:": "源代码：",
+					"Source code:": "源代码：",
+					"Problem:": "题目：",
+					"Compiler:": "编译器：",
+					"Language:": "语言：",
+					"Input:": "输入：",
+					"Output:": "输出：",
+					"Tab size:": "缩进宽度：",
+					"Switch off editor": "关闭编辑器",
+					"Use custom test": "使用自定义测试",
+					"No more than 256 KB": "不超过 256 KB",
+					"First 255 bytes only": "只显示前 255 字节",
+					"Choose File": "选择文件",
+					"Choose file": "选择文件",
+					"choose file": "选择文件",
+					"Browse": "浏览",
+					"Or click here": "或点这里",
+					"or click here": "或点这里"
+				},
+				values: {
+					"Run": "运行",
+					"Submit": "提交"
+				}
+			}, {
+				scope: ".problem-statement",
+				map: {
+					"Examples": "样例",
+					"Note": "说明",
+					"Input": "输入",
+					"Output": "输出",
+					"Copy": "复制"
+				}
+			}]);
 		}
 	};
 	function selectorEndsWithProperty(el) {
@@ -55783,6 +55848,24 @@ $$` : `${n}$$`;
 				clearTimeout(timer);
 				doc.removeEventListener("click", onClick);
 			};
+		},
+		i18nPage(doc, locale) {
+			if (locale !== "zh") return;
+			applyPageI18n(doc, [{
+				scope: ".question-ide, .submit-box, .nc-post-content",
+				map: {
+					"Run": "运行",
+					"Submit": "提交",
+					"Reset": "重置",
+					"Editor": "编辑器",
+					"Sample": "样例"
+				},
+				values: {
+					"Run": "运行",
+					"Submit": "提交",
+					"Submit code": "提交代码"
+				}
+			}]);
 		}
 	}, codeforces];
 	sites.flatMap((site) => site.hosts.map((host) => `https://${host}/*`));
@@ -57669,7 +57752,7 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
 			editorPageMount = void 0;
 			settingsButton.remove();
 			renderedLocale = getLocale();
-			reconcile();
+			reconcileAll();
 		};
 		const reconcile = () => {
 			const sections = site.collectSections(document);
@@ -57699,6 +57782,7 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
 			reconcile();
 			reconcileEditor();
 			reconcileEditorPage();
+			site.i18nPage?.(document, getLocale());
 		};
 		reconcileAll();
 		const stopObserving = site.observe(document, reconcileAll);

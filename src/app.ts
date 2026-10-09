@@ -128,7 +128,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
     editorPageMount = undefined;
     settingsButton.remove();
     renderedLocale = getLocale();
-    reconcile();
+    reconcileAll();
   };
   const reconcile = () => {
     const sections = site.collectSections(document);
@@ -166,6 +166,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
     reconcile();
     reconcileEditor();
     reconcileEditorPage();
+    site.i18nPage?.(document, getLocale());
   };
   reconcileAll();
   const stopObserving = site.observe(document, reconcileAll);
