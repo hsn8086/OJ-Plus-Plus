@@ -315,6 +315,18 @@ const NC_I18N_EN: Record<string, string> = {
   '收藏': 'Favorite',
   '分享': 'Share',
   '默认': 'Default',
+  '牛客经典': 'Nowcoder Classic',
+  '列表加载中...': 'Loading...',
+  '列表加载中…': 'Loading…',
+  '加大': 'Bigger',
+  '更大': 'Bigger',
+  '大': 'Large',
+  '小': 'Small',
+  '中': 'Medium',
+  '编辑器设置': 'Editor settings',
+  '牛客网': 'Nowcoder',
+  '比赛': 'Contest',
+  '练习': 'Practice',
 };
 
 const NC_I18N_EN_PREFIX: Record<string, string> = {
