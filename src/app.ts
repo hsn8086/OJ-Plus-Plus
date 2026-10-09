@@ -6,7 +6,7 @@ import type { Platform } from './platforms/types.ts';
 import type { SiteAdapter } from './sites/types.ts';
 import { iconButton } from './ui/buttons.ts';
 import { ICON_SETTINGS } from './ui/icons.ts';
-import { mountEditorPanel } from './ui/editor-panel.ts';
+import { mountEditorPage, mountEditorPanel } from './ui/editor-panel.ts';
 import { mountSection } from './ui/section.ts';
 import { openSettingsPanel } from './ui/settings-panel.ts';
 import { CSS, DARK_CSS } from './ui/styles.ts';
@@ -46,7 +46,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
         setLocale(resolveLocale(updated.locale));
         applyTheme(settings.theme);
         toast(t('app.settingsSaved'));
-        if (updated.editorEnabled !== editorWas) reconcileEditor();
+        if (updated.editorEnabled !== editorWas) { reconcileEditor(); reconcileEditorPage(); }
         if (getLocale() !== renderedLocale) remountAll();
       },
       onClose() { closeSettings = undefined; },
@@ -87,6 +87,29 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
     });
     mount!.anchor.insertAdjacentElement(mount!.position, editorPanel.el);
   };
+  let editorPageMount: { el: HTMLElement; dispose(): void } | undefined;
+  const reconcileEditorPage = () => {
+    const ep = settings.editorEnabled ? site.editor?.editorPage?.(document) : null;
+    if (!ep) {
+      editorPageMount?.dispose();
+      editorPageMount = undefined;
+      return;
+    }
+    if (editorPageMount?.el.isConnected) return;
+    editorPageMount?.dispose();
+    editorPageMount = mountEditorPage({
+      anchor: ep.anchor,
+      position: ep.position,
+      hide: ep.hide,
+      textarea: ep.textarea,
+      langSelect: ep.langSelect,
+      langMode: ep.langMode ?? ((id) => site.editor!.languages.find((l) => l.id === id)?.mode ?? 'text'),
+      syncBack: ep.syncBack,
+      getSettings: () => settings,
+      isDark: isDarkNow,
+      onDarkChange,
+    });
+  };
   /**
    * 当前工具栏是用哪个语言建的。
    *
@@ -100,6 +123,8 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
     mounted.clear();
     editorPanel?.dispose();
     editorPanel = undefined;
+    editorPageMount?.dispose();
+    editorPageMount = undefined;
     settingsButton.remove();
     renderedLocale = getLocale();
     reconcile();
@@ -139,6 +164,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
   const reconcileAll = () => {
     reconcile();
     reconcileEditor();
+    reconcileEditorPage();
   };
   reconcileAll();
   const stopObserving = site.observe(document, reconcileAll);
@@ -149,6 +175,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
     themeAttrObserver.disconnect();
     closeSettings?.();
     editorPanel?.dispose();
+    editorPageMount?.dispose();
     for (const handle of mounted.values()) handle.dispose();
     mounted.clear();
     settingsButton.remove();

@@ -45,6 +45,25 @@ export interface SiteEditorSupport {
   editorMountPoint(doc: Document): MountPoint | null;
   /** 提交用的题号（如 1A、242A）。 */
   problemCode(doc: Document): string | null;
+  /**
+   * 站点自带的代码提交页（customtest/submit）：接管它的编辑器。
+   * 返回 null 表示当前页不需要接管。
+   */
+  editorPage?(doc: Document): {
+    /** CM6 挂载位置 */
+    anchor: HTMLElement;
+    position: InsertPosition;
+    /** 要隐藏的原生编辑器（如 ACE） */
+    hide?: HTMLElement;
+    /** 站点实际提交的源码 textarea —— CM6 内容同步进来 */
+    textarea: HTMLTextAreaElement;
+    /** 站点语言 select；变更时切 CM6 高亮 */
+    langSelect?: HTMLSelectElement;
+    /** programTypeId → CM6 高亮模式；缺省走 languages 查表 */
+    langMode?(languageId: string): EditorLanguage['mode'];
+    /** CM6 → 站点其它组件同步（如 ACE 实例），可选 */
+    syncBack?(code: string): void;
+  } | null;
   /** 题目页中的样例输入/期望输出对。 */
   getSamples(doc: Document): { input: string; output: string }[];
   /** 站点可选语言列表。 */

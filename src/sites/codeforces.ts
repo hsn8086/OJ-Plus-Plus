@@ -1594,6 +1594,31 @@ export const codeforces: SiteAdapter = {
       return { anchor: statement, position: 'afterend' };
     },
 
+    editorPage(doc) {
+      // customtest/submit 页：站点原生是 ACE（#editor + 隐藏 textarea#sourceCodeTextarea）
+      const ta = doc.querySelector<HTMLTextAreaElement>('textarea#sourceCodeTextarea');
+      const ace = doc.querySelector<HTMLElement>('#editor');
+      if (!ta || !ace) return null;
+      return {
+        anchor: ace,
+        position: 'afterend',
+        hide: ace,
+        textarea: ta,
+        langSelect: doc.querySelector<HTMLSelectElement>('select[name="programTypeId"]') ?? undefined,
+        langMode: (id) => CF_LANGUAGES.find((l) => l.id === id)?.mode ?? 'text',
+        syncBack: (code) => {
+          // customtest 的 ajaxSubmit 从 ACE 实例取代码——同步回去。
+          // ace 在页面世界，油猴沙箱要经 unsafeWindow 才能看到。
+          try {
+            const pageWin = ((globalThis as { unsafeWindow?: unknown }).unsafeWindow ?? doc.defaultView) as {
+              ace?: { edit(id: string): { setValue(v: string): void } | undefined };
+            };
+            pageWin.ace?.edit?.('editor')?.setValue?.(code);
+          } catch { /* ace 不可用就跳过 */ }
+        },
+      };
+    },
+
     problemCode(doc) {
       // /problemset/problem/1/A → "1A"；/contest/242/problem/B → "242B"；/gym/106748/problem/A → "106748A"
       const p = doc.location.pathname;

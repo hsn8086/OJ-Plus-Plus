@@ -985,6 +985,22 @@ export const CSS = `
 .ojpp-editor-status.ok { color: var(--color-success); }
 .ojpp-editor-status.err { color: var(--color-danger); }
 
+/* ---------- 站点提交页独立 CM6 ---------- */
+.ojpp-editor-page {
+  margin: 6px 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.ojpp-editor-page .cm-editor {
+  max-height: 480px;
+}
+.ojpp-editor-page .cm-scroller {
+  max-height: 480px;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
 /* ---------- 测试行 ---------- */
 .ojpp-editor-empty {
   padding: 8px 10px;

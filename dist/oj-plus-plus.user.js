@@ -21577,6 +21577,40 @@
 		return node;
 	}
 	var draftKey = (siteId, problemCode) => `${siteId}:${problemCode}`;
+	function mountEditorPage(opts) {
+		const host = document.createElement("div");
+		host.className = "ojpp-editor-page";
+		opts.anchor.insertAdjacentElement(opts.position, host);
+		if (opts.hide) opts.hide.style.display = "none";
+		const settings = opts.getSettings();
+		const editor = createEditor(host, {
+			doc: opts.textarea.value,
+			mode: opts.langMode(opts.langSelect?.value ?? ""),
+			dark: opts.isDark(),
+			fontSize: settings.editorFontSize,
+			tabSize: 4,
+			lspUrl: settings.editorLspUrl,
+			onChange: (code) => {
+				opts.textarea.value = code;
+				opts.syncBack?.(code);
+			}
+		});
+		const stopDark = opts.onDarkChange((dark) => editor.setDark(dark));
+		const onLang = () => {
+			if (opts.langSelect) editor.setMode(opts.langMode(opts.langSelect.value));
+		};
+		opts.langSelect?.addEventListener("change", onLang);
+		return {
+			el: host,
+			dispose() {
+				stopDark();
+				opts.langSelect?.removeEventListener("change", onLang);
+				editor.destroy();
+				host.remove();
+				if (opts.hide) opts.hide.style.display = "";
+			}
+		};
+	}
 	function mountEditorPanel(options) {
 		const { site, support, getSettings, persist, isDark, onDarkChange } = options;
 		const problemCode = support.problemCode(document);
@@ -53888,6 +53922,73 @@ $$` : `${n}$$`;
 		if (!parent) return false;
 		return (parent.textContent ?? "").trim() === (span.textContent ?? "").trim() && (parent.textContent ?? "").trim().length > 0;
 	}
+	var CF_LANGUAGES = [
+		{
+			id: "54",
+			name: "GNU G++17 7.3.0",
+			mode: "cpp"
+		},
+		{
+			id: "89",
+			name: "GNU G++20 13.2",
+			mode: "cpp"
+		},
+		{
+			id: "91",
+			name: "GNU G++23 14.2",
+			mode: "cpp"
+		},
+		{
+			id: "43",
+			name: "GNU GCC C11 5.1.0",
+			mode: "cpp"
+		},
+		{
+			id: "87",
+			name: "Java 21 64bit",
+			mode: "java"
+		},
+		{
+			id: "36",
+			name: "Java 8 32bit",
+			mode: "java"
+		},
+		{
+			id: "31",
+			name: "Python 3.13.2",
+			mode: "python"
+		},
+		{
+			id: "70",
+			name: "PyPy 3.10 (7.3.15)",
+			mode: "python"
+		},
+		{
+			id: "7",
+			name: "Python 2.7.18",
+			mode: "python"
+		},
+		{
+			id: "32",
+			name: "Go 1.22.2",
+			mode: "text"
+		},
+		{
+			id: "75",
+			name: "Rust 1.89.0",
+			mode: "text"
+		},
+		{
+			id: "83",
+			name: "Kotlin 1.7.20",
+			mode: "text"
+		},
+		{
+			id: "65",
+			name: "C# 8 (.NET Core 3.1)",
+			mode: "text"
+		}
+	];
 	var codeforces = {
 		id: "codeforces",
 		get name() {
@@ -55317,73 +55418,7 @@ $$` : `${n}$$`;
 			};
 		},
 		editor: {
-			languages: [
-				{
-					id: "54",
-					name: "GNU G++17 7.3.0",
-					mode: "cpp"
-				},
-				{
-					id: "89",
-					name: "GNU G++20 13.2",
-					mode: "cpp"
-				},
-				{
-					id: "91",
-					name: "GNU G++23 14.2",
-					mode: "cpp"
-				},
-				{
-					id: "43",
-					name: "GNU GCC C11 5.1.0",
-					mode: "cpp"
-				},
-				{
-					id: "87",
-					name: "Java 21 64bit",
-					mode: "java"
-				},
-				{
-					id: "36",
-					name: "Java 8 32bit",
-					mode: "java"
-				},
-				{
-					id: "31",
-					name: "Python 3.13.2",
-					mode: "python"
-				},
-				{
-					id: "70",
-					name: "PyPy 3.10 (7.3.15)",
-					mode: "python"
-				},
-				{
-					id: "7",
-					name: "Python 2.7.18",
-					mode: "python"
-				},
-				{
-					id: "32",
-					name: "Go 1.22.2",
-					mode: "text"
-				},
-				{
-					id: "75",
-					name: "Rust 1.89.0",
-					mode: "text"
-				},
-				{
-					id: "83",
-					name: "Kotlin 1.7.20",
-					mode: "text"
-				},
-				{
-					id: "65",
-					name: "C# 8 (.NET Core 3.1)",
-					mode: "text"
-				}
-			],
+			languages: CF_LANGUAGES,
 			editorMountPoint(doc) {
 				const statement = doc.querySelector(".problem-statement");
 				if (!statement) return null;
@@ -55391,6 +55426,24 @@ $$` : `${n}$$`;
 				return {
 					anchor: statement,
 					position: "afterend"
+				};
+			},
+			editorPage(doc) {
+				const ta = doc.querySelector("textarea#sourceCodeTextarea");
+				const ace = doc.querySelector("#editor");
+				if (!ta || !ace) return null;
+				return {
+					anchor: ace,
+					position: "afterend",
+					hide: ace,
+					textarea: ta,
+					langSelect: doc.querySelector("select[name=\"programTypeId\"]") ?? void 0,
+					langMode: (id) => CF_LANGUAGES.find((l) => l.id === id)?.mode ?? "text",
+					syncBack: (code) => {
+						try {
+							(globalThis.unsafeWindow ?? doc.defaultView).ace?.edit?.("editor")?.setValue?.(code);
+						} catch {}
+					}
 				};
 			},
 			problemCode(doc) {
@@ -57225,6 +57278,22 @@ $$` : `${n}$$`;
 .ojpp-editor-status.ok { color: var(--color-success); }
 .ojpp-editor-status.err { color: var(--color-danger); }
 
+/* ---------- 站点提交页独立 CM6 ---------- */
+.ojpp-editor-page {
+  margin: 6px 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.ojpp-editor-page .cm-editor {
+  max-height: 480px;
+}
+.ojpp-editor-page .cm-scroller {
+  max-height: 480px;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
 /* ---------- 测试行 ---------- */
 .ojpp-editor-empty {
   padding: 8px 10px;
@@ -57510,7 +57579,10 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
 					setLocale(resolveLocale(updated.locale));
 					applyTheme(settings.theme);
 					toast(t$1("app.settingsSaved"));
-					if (updated.editorEnabled !== editorWas) reconcileEditor();
+					if (updated.editorEnabled !== editorWas) {
+						reconcileEditor();
+						reconcileEditorPage();
+					}
 					if (getLocale() !== renderedLocale) remountAll();
 				},
 				onClose() {
@@ -57554,12 +57626,37 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
 			});
 			mount.anchor.insertAdjacentElement(mount.position, editorPanel.el);
 		};
+		let editorPageMount;
+		const reconcileEditorPage = () => {
+			const ep = settings.editorEnabled ? site.editor?.editorPage?.(document) : null;
+			if (!ep) {
+				editorPageMount?.dispose();
+				editorPageMount = void 0;
+				return;
+			}
+			if (editorPageMount?.el.isConnected) return;
+			editorPageMount?.dispose();
+			editorPageMount = mountEditorPage({
+				anchor: ep.anchor,
+				position: ep.position,
+				hide: ep.hide,
+				textarea: ep.textarea,
+				langSelect: ep.langSelect,
+				langMode: ep.langMode ?? ((id) => site.editor.languages.find((l) => l.id === id)?.mode ?? "text"),
+				syncBack: ep.syncBack,
+				getSettings: () => settings,
+				isDark: isDarkNow,
+				onDarkChange
+			});
+		};
 		let renderedLocale = getLocale();
 		const remountAll = () => {
 			for (const handle of mounted.values()) handle.dispose();
 			mounted.clear();
 			editorPanel?.dispose();
 			editorPanel = void 0;
+			editorPageMount?.dispose();
+			editorPageMount = void 0;
 			settingsButton.remove();
 			renderedLocale = getLocale();
 			reconcile();
@@ -57591,6 +57688,7 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
 		const reconcileAll = () => {
 			reconcile();
 			reconcileEditor();
+			reconcileEditorPage();
 		};
 		reconcileAll();
 		const stopObserving = site.observe(document, reconcileAll);
@@ -57601,6 +57699,7 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
 			themeAttrObserver.disconnect();
 			closeSettings?.();
 			editorPanel?.dispose();
+			editorPageMount?.dispose();
 			for (const handle of mounted.values()) handle.dispose();
 			mounted.clear();
 			settingsButton.remove();

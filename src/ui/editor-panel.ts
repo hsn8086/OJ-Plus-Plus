@@ -27,6 +27,60 @@ function el<K extends keyof HTMLElementTagNameMap>(
 
 const draftKey = (siteId: string, problemCode: string) => `${siteId}:${problemCode}`;
 
+/**
+ * 站点提交/测试页的独立 CM6 接管（无面板）：
+ * 隐藏站点原生编辑器（ACE），在同一位置放 CM6，
+ * 内容同步进真正提交的 textarea + syncBack（如 ACE 实例）。
+ */
+export function mountEditorPage(opts: {
+  anchor: HTMLElement;
+  position: InsertPosition;
+  hide?: HTMLElement;
+  textarea: HTMLTextAreaElement;
+  langSelect?: HTMLSelectElement;
+  langMode(id: string): 'cpp' | 'java' | 'python' | 'text';
+  syncBack?(code: string): void;
+  getSettings(): Settings;
+  isDark(): boolean;
+  onDarkChange(cb: (dark: boolean) => void): () => void;
+}): { el: HTMLElement; dispose(): void } {
+  const host = document.createElement('div');
+  host.className = 'ojpp-editor-page';
+  opts.anchor.insertAdjacentElement(opts.position, host);
+  if (opts.hide) opts.hide.style.display = 'none';
+
+  const settings = opts.getSettings();
+  const editor = createEditor(host, {
+    doc: opts.textarea.value,
+    mode: opts.langMode(opts.langSelect?.value ?? ''),
+    dark: opts.isDark(),
+    fontSize: settings.editorFontSize,
+    tabSize: 4,
+    lspUrl: settings.editorLspUrl,
+    onChange: (code) => {
+      opts.textarea.value = code;
+      opts.syncBack?.(code);
+    },
+  });
+  const stopDark = opts.onDarkChange((dark) => editor.setDark(dark));
+
+  const onLang = () => {
+    if (opts.langSelect) editor.setMode(opts.langMode(opts.langSelect.value));
+  };
+  opts.langSelect?.addEventListener('change', onLang);
+
+  return {
+    el: host,
+    dispose() {
+      stopDark();
+      opts.langSelect?.removeEventListener('change', onLang);
+      editor.destroy();
+      host.remove();
+      if (opts.hide) opts.hide.style.display = '';
+    },
+  };
+}
+
 export function mountEditorPanel(options: EditorPanelOptions) {
   const { site, support, getSettings, persist, isDark, onDarkChange } = options;
   const problemCode = support.problemCode(document);
