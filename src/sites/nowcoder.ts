@@ -222,6 +222,7 @@ export const nowcoder: SiteAdapter = {
           'Submit': '提交',
           'Reset': '重置',
           'Editor': '编辑器',
+          'Test': '自测',
           'Sample': '样例',
         },
         values: {
