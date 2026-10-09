@@ -21598,6 +21598,7 @@
 		head.append(title, langSel, spacer);
 		const cmHost = el$1("div", "ojpp-editor-cm");
 		const actionsBar = el$1("div", "ojpp-editor-actions");
+		const submitStatus = el$1("span", "ojpp-editor-status");
 		const runAllBtn = el$1("button", "ojpp-icon-btn ojpp-editor-act");
 		runAllBtn.innerHTML = ICON_PLAY;
 		runAllBtn.title = t$1("editor.runAll");
@@ -21610,10 +21611,9 @@
 		submitBtn.innerHTML = ICON_SEND;
 		submitBtn.title = t$1("editor.submit");
 		submitBtn.setAttribute("aria-label", t$1("editor.submit"));
-		actionsBar.append(runAllBtn, addTestBtn, submitBtn);
+		actionsBar.append(submitStatus, runAllBtn, addTestBtn, submitBtn);
 		const tests = el$1("div", "ojpp-editor-tests");
-		const submitLine = el$1("div", "ojpp-editor-submitline");
-		root.append(head, cmHost, actionsBar, tests, submitLine);
+		root.append(head, cmHost, actionsBar, tests);
 		const editor = createEditor(cmHost, {
 			doc: key ? settings.editorCode[key]?.code ?? "" : "",
 			mode: defaultLang.mode,
@@ -21832,14 +21832,15 @@
 		};
 		submitBtn.onclick = async () => {
 			if (!problemCode) {
-				submitLine.replaceChildren(el$1("div", "ojpp-editor-empty", t$1("editor.noProblem")));
+				submitStatus.textContent = t$1("editor.noProblem");
+				submitStatus.className = "ojpp-editor-status err";
 				return;
 			}
 			submitBtn.disabled = true;
 			submitBtn.dataset.state = "busy";
 			submitBtn.innerHTML = ICON_SPINNER;
-			const statusRow = el$1("div", "ojpp-editor-submitline-item", t$1("editor.submitting"));
-			submitLine.replaceChildren(statusRow);
+			submitStatus.textContent = t$1("editor.submitting");
+			submitStatus.className = "ojpp-editor-status busy";
 			try {
 				const res = await support.submit(editor.getCode(), langSel.value, problemCode);
 				if (res.ok) {
@@ -21847,15 +21848,15 @@
 						window.location.href = res.url;
 						return;
 					}
-					statusRow.className = "ojpp-editor-submitok";
-					statusRow.textContent = t$1("editor.submitted");
+					submitStatus.textContent = t$1("editor.submitted");
+					submitStatus.className = "ojpp-editor-status ok";
 				} else {
-					statusRow.className = "ojpp-editor-submiterr";
-					statusRow.textContent = res.error ?? t$1("editor.submitFailed");
+					submitStatus.textContent = res.error ?? t$1("editor.submitFailed");
+					submitStatus.className = "ojpp-editor-status err";
 				}
 			} catch (e) {
-				statusRow.className = "ojpp-editor-submiterr";
-				statusRow.textContent = e instanceof Error ? e.message : String(e);
+				submitStatus.textContent = e instanceof Error ? e.message : String(e);
+				submitStatus.className = "ojpp-editor-status err";
 			} finally {
 				submitBtn.disabled = false;
 				submitBtn.dataset.state = "";
@@ -57207,6 +57208,19 @@ $$` : `${n}$$`;
 }
 
 .ojpp-editor-submit { color: var(--color-accent); }
+
+.ojpp-editor-status {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ojpp-editor-status.busy { color: var(--color-accent); }
+.ojpp-editor-status.ok { color: var(--color-success); }
+.ojpp-editor-status.err { color: var(--color-danger); }
 
 /* ---------- 测试行 ---------- */
 .ojpp-editor-empty {

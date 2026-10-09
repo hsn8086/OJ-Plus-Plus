@@ -51,8 +51,9 @@ export function mountEditorPanel(options: EditorPanelOptions) {
 
   const cmHost = el('div', 'ojpp-editor-cm');
 
-  // 动作条：代码框和样例列表之间
+  // 动作条：代码框和样例列表之间；左侧状态文本，右侧图标
   const actionsBar = el('div', 'ojpp-editor-actions');
+  const submitStatus = el('span', 'ojpp-editor-status');
   const runAllBtn = el('button', 'ojpp-icon-btn ojpp-editor-act') as HTMLButtonElement;
   runAllBtn.innerHTML = ICON_PLAY;
   runAllBtn.title = t('editor.runAll');
@@ -65,11 +66,10 @@ export function mountEditorPanel(options: EditorPanelOptions) {
   submitBtn.innerHTML = ICON_SEND;
   submitBtn.title = t('editor.submit');
   submitBtn.setAttribute('aria-label', t('editor.submit'));
-  actionsBar.append(runAllBtn, addTestBtn, submitBtn);
+  actionsBar.append(submitStatus, runAllBtn, addTestBtn, submitBtn);
 
   const tests = el('div', 'ojpp-editor-tests');
-  const submitLine = el('div', 'ojpp-editor-submitline');
-  root.append(head, cmHost, actionsBar, tests, submitLine);
+  root.append(head, cmHost, actionsBar, tests);
 
   const initial = key ? (settings.editorCode[key]?.code ?? '') : '';
   const editor: EditorHandle = createEditor(cmHost, {
@@ -316,14 +316,15 @@ export function mountEditorPanel(options: EditorPanelOptions) {
 
   submitBtn.onclick = async () => {
     if (!problemCode) {
-      submitLine.replaceChildren(el('div', 'ojpp-editor-empty', t('editor.noProblem')));
+      submitStatus.textContent = t('editor.noProblem');
+      submitStatus.className = 'ojpp-editor-status err';
       return;
     }
     submitBtn.disabled = true;
     submitBtn.dataset.state = 'busy';
     submitBtn.innerHTML = ICON_SPINNER;
-    const statusRow = el('div', 'ojpp-editor-submitline-item', t('editor.submitting'));
-    submitLine.replaceChildren(statusRow);
+    submitStatus.textContent = t('editor.submitting');
+    submitStatus.className = 'ojpp-editor-status busy';
     try {
       const res = await support.submit(editor.getCode(), langSel.value, problemCode);
       if (res.ok) {
@@ -332,15 +333,15 @@ export function mountEditorPanel(options: EditorPanelOptions) {
           window.location.href = res.url;
           return;
         }
-        statusRow.className = 'ojpp-editor-submitok';
-        statusRow.textContent = t('editor.submitted');
+        submitStatus.textContent = t('editor.submitted');
+        submitStatus.className = 'ojpp-editor-status ok';
       } else {
-        statusRow.className = 'ojpp-editor-submiterr';
-        statusRow.textContent = res.error ?? t('editor.submitFailed');
+        submitStatus.textContent = res.error ?? t('editor.submitFailed');
+        submitStatus.className = 'ojpp-editor-status err';
       }
     } catch (e) {
-      statusRow.className = 'ojpp-editor-submiterr';
-      statusRow.textContent = e instanceof Error ? e.message : String(e);
+      submitStatus.textContent = e instanceof Error ? e.message : String(e);
+      submitStatus.className = 'ojpp-editor-status err';
     } finally {
       submitBtn.disabled = false;
       submitBtn.dataset.state = '';

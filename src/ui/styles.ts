@@ -972,6 +972,19 @@ export const CSS = `
 
 .ojpp-editor-submit { color: var(--color-accent); }
 
+.ojpp-editor-status {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ojpp-editor-status.busy { color: var(--color-accent); }
+.ojpp-editor-status.ok { color: var(--color-success); }
+.ojpp-editor-status.err { color: var(--color-danger); }
+
 /* ---------- 测试行 ---------- */
 .ojpp-editor-empty {
   padding: 8px 10px;
