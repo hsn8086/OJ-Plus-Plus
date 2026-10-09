@@ -206,8 +206,15 @@ export function mountEditorPanel(options: EditorPanelOptions) {
       if ((e.target as HTMLElement).closest('button')) return;
       row.classList.toggle('collapsed');
     });
-    rows.push(rec);
-    tests.append(row);
+    // 自定义行排在样例行上面——DOM 和 rows 数组都插到首个样例前
+    const firstSample = tests.querySelector('.ojpp-test-sample');
+    const emptyNote = tests.querySelector('.ojpp-editor-empty');
+    emptyNote?.remove();
+    if (firstSample) tests.insertBefore(row, firstSample);
+    else tests.append(row);
+    const sampleIdx = rows.findIndex((r) => r.kind === 'sample');
+    if (sampleIdx === -1) rows.push(rec);
+    else rows.splice(sampleIdx, 0, rec);
     return rec;
   }
 

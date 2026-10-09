@@ -21736,8 +21736,13 @@
 				if (e.target.closest("button")) return;
 				row.classList.toggle("collapsed");
 			});
-			rows.push(rec);
-			tests.append(row);
+			const firstSample = tests.querySelector(".ojpp-test-sample");
+			tests.querySelector(".ojpp-editor-empty")?.remove();
+			if (firstSample) tests.insertBefore(row, firstSample);
+			else tests.append(row);
+			const sampleIdx = rows.findIndex((r) => r.kind === "sample");
+			if (sampleIdx === -1) rows.push(rec);
+			else rows.splice(sampleIdx, 0, rec);
 			return rec;
 		}
 		function addSampleRow(sample, index) {
