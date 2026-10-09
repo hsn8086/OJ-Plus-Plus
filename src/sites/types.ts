@@ -11,7 +11,7 @@ export interface MountPoint {
 
 /** 一个可独立翻译、查看 Markdown、复制的区域。 */
 export interface ContentSection {
-  kind: 'statement' | 'input' | 'output' | 'solution';
+  kind: 'statement' | 'input' | 'output' | 'solution' | 'article' | 'comment';
   label: string;
   content: HTMLElement;
   toolbar: MountPoint;

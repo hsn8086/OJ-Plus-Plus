@@ -152,6 +152,9 @@ export const en: Record<MessageKey, string> = {
   'section.output': 'Output',
   'section.note': 'Note',
   'section.solution': 'Solution',
+  'section.blog': 'Blog',
+  'section.comment': 'Comment',
+  'section.talk': 'Message',
   'preset.customOpenAI': 'Custom (OpenAI Chat compatible)',
 
   // Code editor

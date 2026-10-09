@@ -182,6 +182,9 @@
 		"section.output": "Output",
 		"section.note": "Note",
 		"section.solution": "Solution",
+		"section.blog": "Blog",
+		"section.comment": "Comment",
+		"section.talk": "Message",
 		"preset.customOpenAI": "Custom (OpenAI Chat compatible)",
 		"editor.title": "Code",
 		"editor.run": "Test samples",
@@ -361,6 +364,9 @@
 		"section.output": "输出描述",
 		"section.note": "提示",
 		"section.solution": "题解",
+		"section.blog": "博文",
+		"section.comment": "评论",
+		"section.talk": "私信",
 		"preset.customOpenAI": "自定义（兼容 OpenAI Chat）",
 		"editor.title": "代码",
 		"editor.run": "测试样例",
@@ -56181,7 +56187,48 @@ $$` : `${n}$$`;
 		collectSections(doc) {
 			const sections = [];
 			const statement = doc.querySelector(".problem-statement");
-			if (!statement) return sections;
+			if (!statement) {
+				const post = doc.querySelector(".topic > .content > .ttypography");
+				if (post?.textContent?.trim()) {
+					const title = doc.querySelector(".topic .title, .content .title");
+					sections.push({
+						kind: "article",
+						label: t$1("section.blog"),
+						content: post,
+						toolbar: {
+							anchor: title ?? post,
+							position: title ? "beforeend" : "beforebegin",
+							align: "right"
+						},
+						result: {
+							anchor: post,
+							position: "afterend"
+						}
+					});
+				}
+				let idx = 0;
+				for (const comment of doc.querySelectorAll(".comment:not(.comment-reply-prototype)")) {
+					const content = comment.querySelector(".ttypography");
+					if (!content?.textContent?.trim()) continue;
+					const info = comment.querySelector(".info, .comment-info, td.right .info");
+					idx++;
+					sections.push({
+						kind: "comment",
+						label: `${t$1("section.comment")} ${idx}`,
+						content,
+						toolbar: {
+							anchor: info ?? content,
+							position: "beforeend",
+							align: "right"
+						},
+						result: {
+							anchor: content,
+							position: "afterend"
+						}
+					});
+				}
+				return sections;
+			}
 			const add = (content, heading, kind, label, toolbarAnchor) => {
 				if (!content || !heading || !content.textContent?.trim()) return;
 				const blockLevel = !!toolbarAnchor;
@@ -56462,7 +56509,16 @@ $$` : `${n}$$`;
 				scope: "body",
 				map: CF_I18N_ZH,
 				prefixMap: CF_I18N_ZH_PREFIX,
-				values: CF_I18N_ZH_VALUES
+				values: CF_I18N_ZH_VALUES,
+				replaceMap: {
+					"(\\d+)\\s+years?\\s+ago": "$1 年前",
+					"(\\d+)\\s+months?\\s+ago": "$1 个月前",
+					"(\\d+)\\s+days?\\s+ago": "$1 天前",
+					"(\\d+)\\s+hours?\\s+ago": "$1 小时前",
+					"(\\d+)\\s+minutes?\\s+ago": "$1 分钟前",
+					"(\\d+)\\s+seconds?\\s+ago": "$1 秒前",
+					"Rev\\.\\s*(\\d+)": "修订版 $1"
+				}
 			}, ...CF_SUBS_RULES]);
 		}
 	};
@@ -56599,6 +56655,19 @@ $$` : `${n}$$`;
 		"Custom invocation": "自定义测试",
 		"Custom tests": "自定义测试",
 		"Start virtual contest": "开始虚拟赛",
+		"Show archived": "显示已归档",
+		"Write comment?": "发表评论？",
+		"hide": "收起",
+		"history": "历史版本",
+		"By": "作者",
+		"ago": "前",
+		"months ago": "个月前",
+		"years ago": "年前",
+		"days ago": "天前",
+		"hours ago": "小时前",
+		"minutes ago": "分钟前",
+		"seconds ago": "秒前",
+		"yesterday": "昨天",
 		"Finished": "已结束",
 		"Practice": "练习",
 		"Problem tags": "题目标签",
@@ -56657,7 +56726,8 @@ $$` : `${n}$$`;
 		"Time limit exceeded": "超出时间限制",
 		"Memory limit exceeded": "超出内存限制",
 		"Idleness limit exceeded": "超出空闲限制",
-		"Contest is running": "比赛进行中"
+		"Contest is running": "比赛进行中",
+		"Comments": "评论"
 	};
 	var CF_I18N_ZH_VALUES = {
 		"Run": "运行",

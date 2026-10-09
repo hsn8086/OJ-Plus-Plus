@@ -172,6 +172,9 @@ export const zh = {
   'section.output': '输出描述',
   'section.note': '提示',
   'section.solution': '题解',
+  'section.blog': '博文',
+  'section.comment': '评论',
+  'section.talk': '私信',
 
   // 预设
   'preset.customOpenAI': '自定义（兼容 OpenAI Chat）',

@@ -1391,7 +1391,36 @@ export const codeforces: SiteAdapter = {
   collectSections(doc) {
     const sections: ContentSection[] = [];
     const statement = doc.querySelector<HTMLElement>('.problem-statement');
-    if (!statement) return sections;
+    if (!statement) {
+      // 非题目页：博文 / 评论 / 私聊消息
+      const post = doc.querySelector<HTMLElement>('.topic > .content > .ttypography');
+      if (post?.textContent?.trim()) {
+        const title = doc.querySelector<HTMLElement>('.topic .title, .content .title');
+        sections.push({
+          kind: 'article',
+          label: t('section.blog'),
+          content: post,
+          toolbar: { anchor: title ?? post, position: title ? 'beforeend' : 'beforebegin', align: 'right' },
+          result: { anchor: post, position: 'afterend' },
+        });
+      }
+      // 评论与私聊消息：.comment 里的 .ttypography（跳过回复原型）
+      let idx = 0;
+      for (const comment of doc.querySelectorAll<HTMLElement>('.comment:not(.comment-reply-prototype)')) {
+        const content = comment.querySelector<HTMLElement>('.ttypography');
+        if (!content?.textContent?.trim()) continue;
+        const info = comment.querySelector<HTMLElement>('.info, .comment-info, td.right .info');
+        idx++;
+        sections.push({
+          kind: 'comment',
+          label: `${t('section.comment')} ${idx}`,
+          content,
+          toolbar: { anchor: info ?? content, position: 'beforeend', align: 'right' },
+          result: { anchor: content, position: 'afterend' },
+        });
+      }
+      return sections;
+    }
 
     const add = (
       content: HTMLElement | null,
@@ -1750,6 +1779,16 @@ export const codeforces: SiteAdapter = {
         map: CF_I18N_ZH,
         prefixMap: CF_I18N_ZH_PREFIX,
         values: CF_I18N_ZH_VALUES,
+        replaceMap: {
+          // 相对时间与版本号
+          '(\\d+)\\s+years?\\s+ago': '$1 年前',
+          '(\\d+)\\s+months?\\s+ago': '$1 个月前',
+          '(\\d+)\\s+days?\\s+ago': '$1 天前',
+          '(\\d+)\\s+hours?\\s+ago': '$1 小时前',
+          '(\\d+)\\s+minutes?\\s+ago': '$1 分钟前',
+          '(\\d+)\\s+seconds?\\s+ago': '$1 秒前',
+          'Rev\\.\\s*(\\d+)': '修订版 $1',
+        },
       },
       // OJBetter subs 词典：scope 化正则规则，覆盖二级菜单/侧栏/弹窗等
       ...CF_SUBS_RULES,
@@ -1902,6 +1941,19 @@ const CF_I18N_ZH: Record<string, string> = {
   'Custom invocation': '自定义测试',
   'Custom tests': '自定义测试',
   'Start virtual contest': '开始虚拟赛',
+  'Show archived': '显示已归档',
+  'Write comment?': '发表评论？',
+  'hide': '收起',
+  'history': '历史版本',
+  'By': '作者',
+  'ago': '前',
+  'months ago': '个月前',
+  'years ago': '年前',
+  'days ago': '天前',
+  'hours ago': '小时前',
+  'minutes ago': '分钟前',
+  'seconds ago': '秒前',
+  'yesterday': '昨天',
 
   // 侧边栏与杂项
   'Finished': '已结束',
@@ -1967,6 +2019,7 @@ const CF_I18N_ZH_PREFIX: Record<string, string> = {
   'Memory limit exceeded': '超出内存限制',
   'Idleness limit exceeded': '超出空闲限制',
   'Contest is running': '比赛进行中',
+  'Comments': '评论',
 };
 
 /** input/button 的 value → 中文。 */
