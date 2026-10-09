@@ -21651,6 +21651,11 @@
 			row.bodyEl.replaceChildren();
 			for (const u of row.row.querySelectorAll(".ojpp-test-used")) u.remove();
 			row.row.classList.remove("collapsed");
+			const runBtn = row.row.querySelector(".ojpp-test-run");
+			if (runBtn) {
+				runBtn.dataset.state = "busy";
+				runBtn.innerHTML = ICON_SPINNER;
+			}
 			try {
 				const res = await support.runCustomTest(editor.getCode(), langSel.value, input);
 				if (res.error) {
@@ -21658,9 +21663,10 @@
 					row.statusEl.className = "ojpp-test-status error";
 				} else {
 					const ok = res.output.trim() === expected.trim();
+					const accepted = ok && (!res.verdict || res.verdict === "OK");
 					row.statusEl.textContent = res.verdict && res.verdict !== "OK" ? res.verdict : ok ? t$1("editor.accepted") : t$1("editor.wrongAnswer");
-					row.statusEl.className = `ojpp-test-status ${ok && (!res.verdict || res.verdict === "OK") ? "ok" : "warn"}`;
-					row.row.classList.add("collapsed");
+					row.statusEl.className = `ojpp-test-status ${accepted ? "ok" : "warn"}`;
+					if (accepted) row.row.classList.add("collapsed");
 				}
 				if (res.output && res.output.trim()) {
 					const out = el$1("pre", "ojpp-test-out");
@@ -21680,6 +21686,11 @@
 				row.statusEl.textContent = t$1("editor.runError");
 				row.statusEl.className = "ojpp-test-status error";
 				row.bodyEl.append(el$1("pre", "ojpp-test-out error", e instanceof Error ? e.message : String(e)));
+			} finally {
+				if (runBtn) {
+					runBtn.dataset.state = "";
+					runBtn.innerHTML = ICON_PLAY;
+				}
 			}
 		};
 		function addCustomRow(item, customIndex) {
@@ -21800,8 +21811,8 @@
 			if (runningAll) return;
 			runningAll = true;
 			runAllBtn.disabled = true;
-			const old = runAllBtn.textContent;
-			runAllBtn.textContent = t$1("editor.running");
+			runAllBtn.dataset.state = "busy";
+			runAllBtn.innerHTML = ICON_SPINNER;
 			try {
 				for (const row of rows) {
 					if (!runningAll) break;
@@ -21810,7 +21821,8 @@
 			} finally {
 				runningAll = false;
 				runAllBtn.disabled = false;
-				runAllBtn.textContent = old;
+				runAllBtn.dataset.state = "";
+				runAllBtn.innerHTML = ICON_PLAY;
 			}
 		};
 		submitBtn.onclick = async () => {
@@ -21819,8 +21831,8 @@
 				return;
 			}
 			submitBtn.disabled = true;
-			const old = submitBtn.textContent;
-			submitBtn.textContent = t$1("editor.submitting");
+			submitBtn.dataset.state = "busy";
+			submitBtn.innerHTML = ICON_SPINNER;
 			try {
 				const res = await support.submit(editor.getCode(), langSel.value, problemCode);
 				if (res.ok) {
@@ -21834,7 +21846,8 @@
 				submitLine.prepend(el$1("div", "ojpp-editor-submiterr", e instanceof Error ? e.message : String(e)));
 			} finally {
 				submitBtn.disabled = false;
-				submitBtn.textContent = old;
+				submitBtn.dataset.state = "";
+				submitBtn.innerHTML = ICON_SEND;
 			}
 		};
 		return {
@@ -57169,6 +57182,7 @@ $$` : `${n}$$`;
 .ojpp-editor-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 4px;
   padding: 4px 10px;
   border-top: 1px solid var(--color-border);

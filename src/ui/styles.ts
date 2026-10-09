@@ -958,6 +958,7 @@ export const CSS = `
 .ojpp-editor-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 4px;
   padding: 4px 10px;
   border-top: 1px solid var(--color-border);

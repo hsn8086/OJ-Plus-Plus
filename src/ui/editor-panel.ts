@@ -2,7 +2,7 @@ import { t } from '../i18n/index.ts';
 import type { Settings } from '../core/types.ts';
 import type { SiteAdapter, SiteEditorSupport } from '../sites/types.ts';
 import { createEditor, type EditorHandle } from '../editor/cm.ts';
-import { ICON_CROSS, ICON_PLAY, ICON_PLUS, ICON_SEND } from './icons.ts';
+import { ICON_CROSS, ICON_PLAY, ICON_PLUS, ICON_SEND, ICON_SPINNER } from './icons.ts';
 
 export interface EditorPanelOptions {
   site: SiteAdapter;
@@ -126,6 +126,8 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     row.bodyEl.replaceChildren();
     for (const u of row.row.querySelectorAll('.ojpp-test-used')) u.remove();
     row.row.classList.remove('collapsed');
+    const runBtn = row.row.querySelector<HTMLButtonElement>('.ojpp-test-run');
+    if (runBtn) { runBtn.dataset.state = 'busy'; runBtn.innerHTML = ICON_SPINNER; }
     try {
       const res = await support.runCustomTest(editor.getCode(), langSel.value, input);
       if (res.error) {
@@ -133,14 +135,15 @@ export function mountEditorPanel(options: EditorPanelOptions) {
         row.statusEl.className = 'ojpp-test-status error';
       } else {
         const ok = res.output.trim() === expected.trim();
+        const accepted = ok && (!res.verdict || res.verdict === 'OK');
         row.statusEl.textContent = res.verdict && res.verdict !== 'OK'
           ? res.verdict
           : ok
             ? t('editor.accepted')
             : t('editor.wrongAnswer');
-        row.statusEl.className = `ojpp-test-status ${ok && (!res.verdict || res.verdict === 'OK') ? 'ok' : 'warn'}`;
-        // 跑完没有错误没有 stderr：折叠成一行，状态就是判定
-        row.row.classList.add('collapsed');
+        row.statusEl.className = `ojpp-test-status ${accepted ? 'ok' : 'warn'}`;
+        // 只有 Accepted 才折叠成一行；WA/出错保持展开看输出
+        if (accepted) row.row.classList.add('collapsed');
       }
       if (res.output && res.output.trim()) {
         const out = el('pre', 'ojpp-test-out');
@@ -162,6 +165,8 @@ export function mountEditorPanel(options: EditorPanelOptions) {
       row.statusEl.textContent = t('editor.runError');
       row.statusEl.className = 'ojpp-test-status error';
       row.bodyEl.append(el('pre', 'ojpp-test-out error', e instanceof Error ? e.message : String(e)));
+    } finally {
+      if (runBtn) { runBtn.dataset.state = ''; runBtn.innerHTML = ICON_PLAY; }
     }
   };
 
@@ -282,8 +287,8 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     if (runningAll) return;
     runningAll = true;
     runAllBtn.disabled = true;
-    const old = runAllBtn.textContent;
-    runAllBtn.textContent = t('editor.running');
+    runAllBtn.dataset.state = 'busy';
+    runAllBtn.innerHTML = ICON_SPINNER;
     try {
       // 先自定义再题面样例，串行跑避免并发判题
       for (const row of rows) {
@@ -293,7 +298,8 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     } finally {
       runningAll = false;
       runAllBtn.disabled = false;
-      runAllBtn.textContent = old;
+      runAllBtn.dataset.state = '';
+      runAllBtn.innerHTML = ICON_PLAY;
     }
   };
 
@@ -303,8 +309,8 @@ export function mountEditorPanel(options: EditorPanelOptions) {
       return;
     }
     submitBtn.disabled = true;
-    const old = submitBtn.textContent;
-    submitBtn.textContent = t('editor.submitting');
+    submitBtn.dataset.state = 'busy';
+    submitBtn.innerHTML = ICON_SPINNER;
     try {
       const res = await support.submit(editor.getCode(), langSel.value, problemCode);
       if (res.ok) {
@@ -321,7 +327,8 @@ export function mountEditorPanel(options: EditorPanelOptions) {
       submitLine.prepend(el('div', 'ojpp-editor-submiterr', e instanceof Error ? e.message : String(e)));
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = old;
+      submitBtn.dataset.state = '';
+      submitBtn.innerHTML = ICON_SEND;
     }
   };
 
