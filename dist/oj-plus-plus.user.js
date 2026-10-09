@@ -57782,7 +57782,8 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
 			reconcile();
 			reconcileEditor();
 			reconcileEditorPage();
-			site.i18nPage?.(document, getLocale());
+			const targetZh = /中文|简体|繁体|汉语|zh|chinese/i.test(settings.targetLang);
+			site.i18nPage?.(document, targetZh ? "zh" : "en");
 		};
 		reconcileAll();
 		const stopObserving = site.observe(document, reconcileAll);

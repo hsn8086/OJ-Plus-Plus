@@ -166,7 +166,9 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
     reconcile();
     reconcileEditor();
     reconcileEditorPage();
-    site.i18nPage?.(document, getLocale());
+    // 站点界面 i18n 跟「目标语言」走：目标是中文才把站点英文换中文
+    const targetZh = /中文|简体|繁体|汉语|zh|chinese/i.test(settings.targetLang);
+    site.i18nPage?.(document, targetZh ? 'zh' : 'en');
   };
   reconcileAll();
   const stopObserving = site.observe(document, reconcileAll);
