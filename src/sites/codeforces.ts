@@ -1603,11 +1603,18 @@ export const codeforces: SiteAdapter = {
     },
 
     getSamples(doc) {
+      // 两种结构都覆盖：
+      // - 每对样例一个 .sample-test（多数题）
+      // - 一个 .sample-test 里连排多对 .input/.output（如 535/A）
+      // 统一按文档序收集所有 input/output pre 配对
+      const inputs = [...doc.querySelectorAll<HTMLElement>('.sample-tests .input pre, .sample-test .input pre')];
+      const outputs = [...doc.querySelectorAll<HTMLElement>('.sample-tests .output pre, .sample-test .output pre')];
       const out: { input: string; output: string }[] = [];
-      for (const test of doc.querySelectorAll<HTMLElement>('.sample-test')) {
-        const input = test.querySelector<HTMLElement>('.input pre')?.innerText?.trim();
-        const output = test.querySelector<HTMLElement>('.output pre')?.innerText?.trim();
-        if (input !== undefined) out.push({ input, output: output ?? '' });
+      for (let i = 0; i < inputs.length; i++) {
+        const input = inputs[i]?.innerText?.trim();
+        if (input !== undefined) {
+          out.push({ input, output: outputs[i]?.innerText?.trim() ?? '' });
+        }
       }
       return out;
     },

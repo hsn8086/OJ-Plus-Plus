@@ -55337,13 +55337,14 @@ $$` : `${n}$$`;
 				return m ? `${m[1]}${m[2]}` : null;
 			},
 			getSamples(doc) {
+				const inputs = [...doc.querySelectorAll(".sample-tests .input pre, .sample-test .input pre")];
+				const outputs = [...doc.querySelectorAll(".sample-tests .output pre, .sample-test .output pre")];
 				const out = [];
-				for (const test of doc.querySelectorAll(".sample-test")) {
-					const input = test.querySelector(".input pre")?.innerText?.trim();
-					const output = test.querySelector(".output pre")?.innerText?.trim();
+				for (let i = 0; i < inputs.length; i++) {
+					const input = inputs[i]?.innerText?.trim();
 					if (input !== void 0) out.push({
 						input,
-						output: output ?? ""
+						output: outputs[i]?.innerText?.trim() ?? ""
 					});
 				}
 				return out;
