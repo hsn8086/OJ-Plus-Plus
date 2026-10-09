@@ -21705,7 +21705,7 @@
 			const del = el$1("button", "ojpp-icon-btn ojpp-test-del");
 			del.innerHTML = ICON_CROSS;
 			del.title = t$1("editor.delete");
-			actions.append(runOne, del);
+			actions.append(del, runOne);
 			headRow.append(name, actions, status);
 			const grid = el$1("div", "ojpp-test-grid");
 			const inputTa = el$1("textarea", "ojpp-test-input");

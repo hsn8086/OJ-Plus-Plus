@@ -182,7 +182,7 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     const del = el('button', 'ojpp-icon-btn ojpp-test-del') as HTMLButtonElement;
     del.innerHTML = ICON_CROSS;
     del.title = t('editor.delete');
-    actions.append(runOne, del);
+    actions.append(del, runOne);
     headRow.append(name, actions, status);
     const grid = el('div', 'ojpp-test-grid');
     const inputTa = el('textarea', 'ojpp-test-input') as HTMLTextAreaElement;
