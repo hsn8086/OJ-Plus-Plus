@@ -21819,7 +21819,10 @@
 			runAllBtn.dataset.state = "busy";
 			runAllBtn.innerHTML = ICON_SPINNER;
 			try {
-				await Promise.all(rows.map((row) => runRow(row)));
+				const queue = [...rows];
+				await Promise.all(Array.from({ length: Math.min(3, queue.length) }, async () => {
+					for (let row = queue.shift(); row; row = queue.shift()) await runRow(row);
+				}));
 			} finally {
 				runningAll = false;
 				runAllBtn.disabled = false;

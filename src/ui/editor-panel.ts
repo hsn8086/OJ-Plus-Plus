@@ -297,8 +297,15 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     runAllBtn.dataset.state = 'busy';
     runAllBtn.innerHTML = ICON_SPINNER;
     try {
-      // CF customtest 支持并发任务（各自独立 job id）——全部并行
-      await Promise.all(rows.map((row) => runRow(row)));
+      // customtest 支持并发（各自独立 job id）——并发池 3 个，别打太多
+      const queue = [...rows];
+      await Promise.all(
+        Array.from({ length: Math.min(3, queue.length) }, async () => {
+          for (let row = queue.shift(); row; row = queue.shift()) {
+            await runRow(row);
+          }
+        })
+      );
     } finally {
       runningAll = false;
       runAllBtn.disabled = false;
