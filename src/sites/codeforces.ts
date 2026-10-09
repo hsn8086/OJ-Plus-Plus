@@ -1896,6 +1896,7 @@ const CF_I18N_ZH: Record<string, string> = {
   'Clone Contest to Mashup': '克隆比赛到 Mashup',
   'You can clone this contest to a mashup.': '你可以把这场比赛克隆为 mashup。',
   'Clone Contest': '克隆比赛',
+  'Last submissions': '最近提交',
   'Choose file:': '选择文件：',
   'Last visit:': '上次访问：',
   'Last visit': '上次访问',

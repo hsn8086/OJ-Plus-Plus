@@ -53888,6 +53888,16 @@ $$` : `${n}$$`;
 						if (!parent || parent.closest(exclude) || parent.dataset.ojppI18n === "skip") continue;
 						const text = n.textContent?.trim();
 						if (!text) continue;
+						const arrow = /^[\u2192\u00bb\u25b8\u2794\u279C>\s]+\s*/.exec(text)?.[0] ?? "";
+						const core = arrow ? text.slice(arrow.length).trim() : text;
+						if (rule.map?.[core]) {
+							hit.push({
+								node: n,
+								from: core,
+								to: rule.map[core]
+							});
+							continue;
+						}
 						if (rule.map?.[text]) {
 							hit.push({
 								node: n,
@@ -53896,8 +53906,9 @@ $$` : `${n}$$`;
 							});
 							continue;
 						}
-						if (prefixEntries) {
-							for (const [from, to] of prefixEntries) if (text === from || text.startsWith(from + " ") || text.startsWith(from + ",")) {
+						if (prefixEntries) for (const [from, to] of prefixEntries) {
+							const target = arrow ? core : text;
+							if (target === from || target.startsWith(from + " ") || target.startsWith(from + ",")) {
 								hit.push({
 									node: n,
 									from,
@@ -55741,6 +55752,7 @@ $$` : `${n}$$`;
 		"Clone Contest to Mashup": "克隆比赛到 Mashup",
 		"You can clone this contest to a mashup.": "你可以把这场比赛克隆为 mashup。",
 		"Clone Contest": "克隆比赛",
+		"Last submissions": "最近提交",
 		"Choose file:": "选择文件：",
 		"Last visit:": "上次访问：",
 		"Last visit": "上次访问",

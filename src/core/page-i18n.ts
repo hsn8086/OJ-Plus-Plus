@@ -43,13 +43,21 @@ export function applyPageI18n(doc: Document, rules: PageI18nRule[]): void {
           if (!parent || parent.closest(exclude) || parent.dataset.ojppI18n === 'skip') continue;
           const text = n.textContent?.trim();
           if (!text) continue;
+          // 剥掉菜单装饰前缀（→、»、&raquo; 渲染出的箭头），保留箭头只翻文本
+          const arrow = /^[\u2192\u00bb\u25b8\u2794\u279C>\s]+\s*/.exec(text)?.[0] ?? '';
+          const core = arrow ? text.slice(arrow.length).trim() : text;
+          if (rule.map?.[core]) {
+            hit.push({ node: n as Text, from: core, to: rule.map[core] });
+            continue;
+          }
           if (rule.map?.[text]) {
             hit.push({ node: n as Text, from: text, to: rule.map[text] });
             continue;
           }
           if (prefixEntries) {
             for (const [from, to] of prefixEntries) {
-              if (text === from || text.startsWith(from + ' ') || text.startsWith(from + ',')) {
+              const target = arrow ? core : text;
+              if (target === from || target.startsWith(from + ' ') || target.startsWith(from + ',')) {
                 hit.push({ node: n as Text, from, to });
                 break;
               }
