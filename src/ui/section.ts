@@ -1,5 +1,6 @@
 import { t } from '../i18n/index.ts';
 import { translateMarkdown } from '../core/translate.ts';
+import { getCachedTranslation, setCachedTranslation, translationCacheKey } from '../core/translate-cache.ts';
 import type { Settings } from '../core/types.ts';
 import type { Platform } from '../platforms/types.ts';
 import type { ContentSection, SiteAdapter } from '../sites/types.ts';
@@ -45,6 +46,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
   let result: ReturnType<typeof createResultPanel> | undefined;
   let source: HTMLElement | undefined;
   let feedbackTimer: ReturnType<typeof setTimeout> | undefined;
+  let translatedOnce = false;
   let disposed = false;
   const originallyHidden = section.content.hidden;
 
@@ -82,15 +84,26 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
     try {
       // 保存设置后，下次点击立即使用新配置；当前请求使用独立快照。
       const snapshot = structuredClone(getSettings());
-      const translated = await translateMarkdown(platform.request, {
-        settings: snapshot,
-        markdown: text,
-        signal,
-        stream: platform.stream,
-        streaming: snapshot.streaming,
-        onStatus: panel.setStatus,
-        onPartial: panel.update,
-      });
+      // 缓存：内容+提供商指纹做键，首次点击命中即秒出；
+      // 本会话里已翻过的区域再点就是强制重翻，留刷新出口。
+      const cacheKey = await translationCacheKey(snapshot, text);
+      const cached = translatedOnce ? undefined : await getCachedTranslation(platform, cacheKey);
+      let translated;
+      if (cached !== undefined && !signal.aborted) {
+        translated = cached;
+      } else {
+        translated = await translateMarkdown(platform.request, {
+          settings: snapshot,
+          markdown: text,
+          signal,
+          stream: platform.stream,
+          streaming: snapshot.streaming,
+          onStatus: panel.setStatus,
+          onPartial: panel.update,
+        });
+        void setCachedTranslation(platform, cacheKey, translated);
+      }
+      translatedOnce = true;
       signal.throwIfAborted();
       panel.finish(translated);
       state('done', ICON_CHECK, t('toolbar.retranslate'));

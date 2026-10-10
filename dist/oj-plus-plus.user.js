@@ -25822,6 +25822,7 @@ function createEditor(host, options) {
 				highlightActiveLine(),
 				drawSelection(),
 				indentOnInput(),
+				indentUnit.of("    "),
 				history(),
 				bracketMatching(),
 				closeBrackets(),
@@ -26867,6 +26868,46 @@ async function translateMarkdown(request, { settings, markdown, signal, onStatus
 		model: cfg?.model ?? "",
 		elapsedMs: Date.now() - started
 	};
+}
+var KEY = "ojpp:transCache";
+var MAX_ENTRIES = 200;
+async function sha256(text) {
+	const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+	return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+/** 缓存键：目标语言 + 提供商指纹 + 原文。换语言/提供商/模型/额外参数自动失效。 */
+async function translationCacheKey(settings, markdown) {
+	const p = settings.providers.find((x) => x.id === settings.activeProviderId);
+	return sha256([
+		settings.targetLang,
+		p?.protocol ?? "",
+		p?.baseUrl ?? "",
+		p?.model ?? "",
+		JSON.stringify(p?.headers ?? {}),
+		JSON.stringify(p?.body ?? {}),
+		markdown
+	].join("\n"));
+}
+async function getCachedTranslation(platform, key) {
+	const hit = (await platform.storage.get(KEY))?.[key];
+	return hit ? {
+		markdown: hit.text,
+		providerName: hit.providerName,
+		model: hit.model,
+		elapsedMs: 0
+	} : void 0;
+}
+async function setCachedTranslation(platform, key, result) {
+	const map = { ...await platform.storage.get(KEY) ?? {} };
+	map[key] = {
+		t: Date.now(),
+		text: result.markdown,
+		providerName: result.providerName,
+		model: result.model
+	};
+	const entries = Object.entries(map).sort((a, b) => b[1].t - a[1].t);
+	entries.length = Math.min(entries.length, MAX_ENTRIES);
+	await platform.storage.set(KEY, Object.fromEntries(entries));
 }
 var decodeCache = {};
 function getDecodeCache(exclude) {
@@ -60670,6 +60711,7 @@ function mountSection(section, options) {
 	let result;
 	let source;
 	let feedbackTimer;
+	let translatedOnce = false;
 	let disposed = false;
 	const originallyHidden = section.content.hidden;
 	const state = (value, icon, title) => {
@@ -60698,15 +60740,23 @@ function mountSection(section, options) {
 		panel.begin();
 		try {
 			const snapshot = structuredClone(getSettings());
-			const translated = await translateMarkdown(platform.request, {
-				settings: snapshot,
-				markdown: text,
-				signal,
-				stream: platform.stream,
-				streaming: snapshot.streaming,
-				onStatus: panel.setStatus,
-				onPartial: panel.update
-			});
+			const cacheKey = await translationCacheKey(snapshot, text);
+			const cached = translatedOnce ? void 0 : await getCachedTranslation(platform, cacheKey);
+			let translated;
+			if (cached !== void 0 && !signal.aborted) translated = cached;
+			else {
+				translated = await translateMarkdown(platform.request, {
+					settings: snapshot,
+					markdown: text,
+					signal,
+					stream: platform.stream,
+					streaming: snapshot.streaming,
+					onStatus: panel.setStatus,
+					onPartial: panel.update
+				});
+				setCachedTranslation(platform, cacheKey, translated);
+			}
+			translatedOnce = true;
 			signal.throwIfAborted();
 			panel.finish(translated);
 			state("done", ICON_CHECK, t$1("toolbar.retranslate"));

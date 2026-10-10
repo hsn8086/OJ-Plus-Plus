@@ -12,6 +12,7 @@ import { searchKeymap } from '@codemirror/search';
 import {
   bracketMatching,
   indentOnInput,
+  indentUnit,
   LanguageSupport,
   syntaxHighlighting,
   HighlightStyle,
@@ -87,6 +88,8 @@ export function createEditor(host: HTMLElement, options: CreateEditorOptions): E
       highlightActiveLine(),
       drawSelection(),
       indentOnInput(),
+      // CM6 默认 indentUnit 是 2 格，Python 和竞赛代码习惯用 4
+      indentUnit.of('    '),
       history(),
       bracketMatching(),
       closeBrackets(),
