@@ -86,6 +86,22 @@ try {
   assert.match(await page.locator('.ojpp-status[data-kind="error"]').textContent(), /authorization cancelled/);
   await page.locator('.ojpp-panel-close').click();
   console.log('✓ missing permission opens a targeted authorization tab; closing it cancels the test');
+
+  // A translate request against an ungranted origin opens the auth tab and surfaces a retry hint.
+  await background.evaluate(url => chrome.storage.local.get('ojpp:settings').then(s => {
+    s['ojpp:settings'].providers[0].baseUrl = url;
+    return chrome.storage.local.set(s);
+  }), unauthorizedUrl + '/v1');
+  await page.goto(url); // reload so the content script reads the updated provider
+  await page.waitForSelector('.ojpp-editor');
+  const authTab2 = context.waitForEvent('page');
+  await page.locator('.lang-en .ojpp-translate-btn').first().click();
+  const auth2 = await authTab2;
+  await auth2.waitForSelector('[data-requested-origin]');
+  await auth2.close();
+  await page.waitForSelector('.ojpp-result-status[data-kind="error"]');
+  assert.match(await page.locator('.ojpp-result-status').first().textContent(), /authorization tab|retry/i);
+  console.log('✓ ungranted provider origin opens authorization on translate and reports retry');
   async function code(text) {
     await page.locator('.ojpp-editor .cm-content').focus();
     await page.keyboard.press('ControlOrMeta+A');

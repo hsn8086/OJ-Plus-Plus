@@ -14,6 +14,14 @@ async function engine() {
   try { await creating; } finally { creating = undefined; }
 }
 
+const authorizing = new Set<string>();
+function openAuthorization(origin: string): void {
+  if (authorizing.has(origin)) return;
+  authorizing.add(origin);
+  void chrome.tabs.create({ url: chrome.runtime.getURL('options.html') + '?authorize=' + encodeURIComponent(origin) })
+    .finally(() => authorizing.delete(origin));
+}
+
 async function authorize(req: HttpRequest, previewOrigins: Set<string>) {
   const { origin, pattern } = providerOrigin(req.url);
   const stored = await chrome.storage.local.get(SETTINGS_KEY);
@@ -21,7 +29,10 @@ async function authorize(req: HttpRequest, previewOrigins: Set<string>) {
   if (!previewOrigins.has(origin) && !settings.providers.some(provider => {
     try { return new URL(provider.baseUrl).origin === origin; } catch { return false; }
   })) throw new Error('Provider origin is not configured. Use Test connection or save the provider first.');
-  if (!await chrome.permissions.contains({ origins: [pattern] })) throw new Error(`Authorize ${origin} from the OJ++ extension options page first.`);
+  if (!await chrome.permissions.contains({ origins: [pattern] })) {
+    openAuthorization(origin);
+    throw new Error(`Authorize ${origin} in the OJ++ authorization tab, then retry.`);
+  }
 }
 
 chrome.runtime.onConnect.addListener(port => {
