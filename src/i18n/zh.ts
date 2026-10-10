@@ -174,6 +174,7 @@ export const zh = {
   'atcoder.verification': '请在下方 AtCoder 提交表单中完成人机验证，再重新提交。',
   'atcoder.notConfirmed': 'AtCoder 未确认提交成功，请检查原生提交表单。',
   'site.pdfText': 'PDF 提取文本（公式与排版请对照原件）',
+  'settings.authorizing': '正在检查服务权限；如打开授权页，请授权后返回…',
   'settings.sites': '站点功能',
   'settings.sitesHint': '独立控制每个站点。自动翻译需要开启翻译工具栏；编辑器还受总开关控制。',
   'settings.siteTranslation': '翻译、Markdown 与复制工具栏',

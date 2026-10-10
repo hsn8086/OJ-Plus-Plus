@@ -1,6 +1,7 @@
 import { SETTINGS_KEY, migrate } from '../core/config.ts';
 import type { HttpRequest } from '../platforms/types.ts';
 import { validateLocalRequest } from '../execution/validate.ts';
+import { prepareProviderPermission, providerOrigin } from './provider-permissions.ts';
 
 let creating: Promise<void> | undefined;
 let activeLocal = 0;
@@ -13,16 +14,14 @@ async function engine() {
   try { await creating; } finally { creating = undefined; }
 }
 
-async function authorize(req: HttpRequest) {
-  const url = new URL(req.url);
-  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) throw new Error('Unsupported provider URL');
+async function authorize(req: HttpRequest, previewOrigins: Set<string>) {
+  const { origin, pattern } = providerOrigin(req.url);
   const stored = await chrome.storage.local.get(SETTINGS_KEY);
   const settings = migrate(stored[SETTINGS_KEY]);
-  if (!settings.providers.some(provider => {
-    try { return new URL(provider.baseUrl).origin === url.origin; } catch { return false; }
-  })) throw new Error('Provider origin is not configured');
-  const origin = `${url.protocol}//${url.hostname}/*`;
-  if (!await chrome.permissions.contains({ origins: [origin] })) throw new Error(`Authorize ${url.origin} from the OJ++ extension options page first.`);
+  if (!previewOrigins.has(origin) && !settings.providers.some(provider => {
+    try { return new URL(provider.baseUrl).origin === origin; } catch { return false; }
+  })) throw new Error('Provider origin is not configured. Use Test connection or save the provider first.');
+  if (!await chrome.permissions.contains({ origins: [pattern] })) throw new Error(`Authorize ${origin} from the OJ++ extension options page first.`);
 }
 
 chrome.runtime.onConnect.addListener(port => {
@@ -30,6 +29,7 @@ chrome.runtime.onConnect.addListener(port => {
   const session = crypto.randomUUID();
   const controllers = new Map<string, AbortController>();
   const localJobs = new Set<string>();
+  const previewOrigins = new Set<string>();
   let disconnected = false;
   const post = (message: unknown) => { if (!disconnected) port.postMessage(message); };
   port.onMessage.addListener(message => {
@@ -42,6 +42,13 @@ chrome.runtime.onConnect.addListener(port => {
     const cancellation = new AbortController();
     controllers.set(id, cancellation);
     void (async () => {
+      if (message.type === 'prepare-provider') {
+        if (typeof message.baseUrl !== 'string' || message.baseUrl.length > 4096) throw new Error('Invalid provider URL');
+        const origin = await prepareProviderPermission(message.baseUrl, cancellation.signal);
+        if (cancellation.signal.aborted || disconnected) throw new Error('Cancelled');
+        previewOrigins.add(origin);
+        return;
+      }
       if (message.type === 'storage-get') {
         if (typeof message.key !== 'string' || !/^(ojpp:|ncb:)/.test(message.key)) throw new Error('Invalid storage key');
         const result = await chrome.storage.local.get(message.key);
@@ -64,7 +71,7 @@ chrome.runtime.onConnect.addListener(port => {
       }
       if (message.type === 'http' || message.type === 'stream') {
         const req = message.request as HttpRequest;
-        await authorize(req);
+        await authorize(req, previewOrigins);
         if (cancellation.signal.aborted || disconnected) throw new Error('Cancelled');
         const signal = AbortSignal.any([cancellation.signal, AbortSignal.timeout(Math.min(300000, Math.max(1000, req.timeoutMs ?? 120000)))]);
         const response = await fetch(req.url, { method: req.method, headers: req.headers, body: req.body, signal, credentials: 'omit' });

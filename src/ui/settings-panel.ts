@@ -17,6 +17,7 @@ import { applyStagger } from './animations.ts';
 export interface SettingsPanelOptions {
   settings: Settings;
   localExecution?: boolean;
+  prepareProvider?(baseUrl: string): Promise<void>;
   onChange(next: Settings | null): Promise<void>;
   request: HttpTransport;
   onClose(): void;
@@ -453,7 +454,14 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
       status.textContent = t('settings.testing');
       status.dataset.kind = '';
       try {
-        const reply = await testConnection(options.request, draft, provider);
+        const candidate = structuredClone(provider);
+        const testSettings = structuredClone(draft);
+        if (options.prepareProvider) {
+          status.textContent = t('settings.authorizing');
+          await options.prepareProvider(candidate.baseUrl);
+        }
+        status.textContent = t('settings.testing');
+        const reply = await testConnection(options.request, testSettings, candidate);
         status.dataset.kind = 'ok';
         status.textContent = t('settings.testOk', { reply: reply.slice(0, 100) });
       } catch (error) {

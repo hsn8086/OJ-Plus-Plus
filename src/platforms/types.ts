@@ -43,4 +43,6 @@ export interface Platform {
   readonly stream?: HttpStreamTransport;
   readonly writeClipboard: WriteClipboard;
   readonly localRunner?: LocalRunner;
+  /** 显式测试连接时，为尚未保存的提供商准备域名权限。 */
+  readonly prepareProvider?: (baseUrl: string) => Promise<void>;
 }

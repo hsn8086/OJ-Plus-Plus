@@ -154,6 +154,7 @@ export const en: Record<MessageKey, string> = {
   'atcoder.verification': 'Complete the verification in the AtCoder submission form below, then submit again.',
   'atcoder.notConfirmed': 'AtCoder did not confirm submission. Check the native submission form.',
   'site.pdfText': 'Extracted PDF text (check formulas and layout against the original)',
+  'settings.authorizing': 'Checking provider access… Grant permission if the authorization tab opens.',
   'settings.sites': 'Site features',
   'settings.sitesHint': 'Configure each site independently. Auto-translation requires the toolbar; editors also follow the global editor setting.',
   'settings.siteTranslation': 'Translation, Markdown and copy toolbar',

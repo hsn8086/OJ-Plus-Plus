@@ -38,6 +38,7 @@ export function createExtensionPlatform(): Platform {
   const wire = (request: HttpRequest & { onChunk?: unknown }) => { const { signal: _signal, onChunk: _onChunk, ...rest } = request; return rest; };
   return {
     id: 'extension',
+    prepareProvider: baseUrl => call<void>('prepare-provider', { baseUrl }),
     storage: { get: key => call('storage-get', { key }), set: (key, value) => call('storage-set', { key, value }) },
     request: request => call<HttpResponse>('http', { request: wire(request) }, request.signal),
     stream: request => {

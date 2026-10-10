@@ -27,6 +27,9 @@ const server = createServer((req, res) => {
 });
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const providerUrl = `http://127.0.0.1:${server.address().port}`;
+const draftServer = createServer(server.listeners('request')[0]);
+await new Promise(resolve => draftServer.listen(0, '127.0.0.1', resolve));
+const draftUrl = `http://127.0.0.1:${draftServer.address().port}`;
 const candidates = [process.env.OJPP_CHROME, `${process.env.HOME}/Library/Caches/ms-playwright/chromium-1234/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing`, chromium.executablePath()].filter(Boolean);
 let context;
 try {
@@ -50,6 +53,39 @@ try {
   await page.waitForFunction(() => document.querySelector('.lang-en .ojpp-translate-btn')?.dataset.state === 'done');
   assert.match(await page.locator('.lang-en').innerText(), /Extension AI bridge works/);
   console.log('✓ extension storage and streaming AI HTTP bridge');
+  await page.locator('.ojpp-settings-btn').click();
+  await page.locator('.ojpp-provider-summary + button').click();
+  await page.locator('.ojpp-provider-edit').first().click();
+  await page.getByPlaceholder('https://api.openai.com/v1').fill(draftUrl + '/v1');
+  await page.getByRole('button', { name: 'Test connection', exact: true }).click();
+  await page.waitForSelector('.ojpp-status[data-kind="ok"]');
+  assert.equal(await background.evaluate(async () => (await chrome.storage.local.get('ojpp:settings'))['ojpp:settings'].providers[0].baseUrl), providerUrl);
+  console.log('✓ unsaved provider draft tests successfully without saving settings');
+
+  const options = await context.newPage();
+  const extensionOrigin = background.url().replace(/\/[^/]*$/, '/');
+  await options.goto(extensionOrigin + 'options.html');
+  const denied = await options.evaluate(url => new Promise(resolve => {
+    const port = chrome.runtime.connect({ name: 'ojpp' });
+    port.onMessage.addListener(message => { resolve(message); port.disconnect(); });
+    port.postMessage({ id: 'unconfigured-origin', type: 'http', request: { method: 'POST', url, body: '{}' } });
+  }), draftUrl + '/v1/chat/completions');
+  assert.equal(denied.kind, 'error');
+  assert.match(denied.error, /not configured/);
+  await options.close();
+
+  const unauthorizedUrl = `http://localhost:${draftServer.address().port}`;
+  await page.getByPlaceholder('https://api.openai.com/v1').fill(unauthorizedUrl + '/v1');
+  const authorizationTab = context.waitForEvent('page');
+  await page.getByRole('button', { name: 'Test connection', exact: true }).click();
+  const authorization = await authorizationTab;
+  await authorization.waitForSelector('[data-requested-origin]');
+  assert.equal(await authorization.locator('[data-requested-origin]').getAttribute('data-requested-origin'), unauthorizedUrl);
+  await authorization.close();
+  await page.waitForSelector('.ojpp-status[data-kind="error"]');
+  assert.match(await page.locator('.ojpp-status[data-kind="error"]').textContent(), /authorization cancelled/);
+  await page.locator('.ojpp-panel-close').click();
+  console.log('✓ missing permission opens a targeted authorization tab; closing it cancels the test');
   async function code(text) {
     await page.locator('.ojpp-editor .cm-content').focus();
     await page.keyboard.press('ControlOrMeta+A');
@@ -143,4 +179,4 @@ try {
     if (statuses.length) console.error(statuses.map(s => s.slice(0,2000)));
   }
   throw error;
-} finally { await context?.close(); await new Promise(resolve => server.close(resolve)); await rm(profile, { recursive: true, force: true }); }
+} finally { await context?.close(); await Promise.all([new Promise(resolve => server.close(resolve)), new Promise(resolve => draftServer.close(resolve))]); await rm(profile, { recursive: true, force: true }); }

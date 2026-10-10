@@ -41,6 +41,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
     closeSettings = openSettingsPanel({
       settings,
       localExecution: !!platform.localRunner,
+      prepareProvider: platform.prepareProvider,
       request: platform.request,
       async onChange(next) {
         const updated = next ?? defaultSettings();
