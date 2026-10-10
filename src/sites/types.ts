@@ -31,6 +31,8 @@ export interface EditorLanguage {
 export interface EditorTestResult {
   /** 程序标准输出。 */
   output: string;
+  /** 程序标准错误（诊断输出本身不代表运行失败）。 */
+  stderr?: string;
   /** 运行信息，如 "46 ms, 0 KB"。 */
   used?: string;
   /** 判题判定（OK / WRONG_ANSWER / TIME_LIMIT_EXCEEDED / COMPILATION_ERROR 等）。 */

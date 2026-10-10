@@ -204,6 +204,7 @@ export const zh = {
   'editor.wrongAnswer': 'Wrong answer',
   'editor.runError': '运行失败',
   'editor.sample': '样例',
+  'editor.stderr': '标准错误（stderr）',
   'editor.expected': '期望输出',
   'editor.customRun': '自定义测试',
   'editor.noSamples': '页面里没找到样例，点「+自定义测试」手动添加',

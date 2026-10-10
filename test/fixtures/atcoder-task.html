@@ -193,7 +193,8 @@
 		</div>
 <form class="form-code-submit" action="/contests/abc350/submit" method="post">
 <input name="data.TaskScreenName" value="abc350_a" type="hidden">
-<select name="data.LanguageId"><option value="6017">C++23 (GCC 15.2.0)</option><option value="6082">Python (CPython 3.13.7)</option></select>
-<div id="editor"></div><textarea id="plain-textarea" name="sourceCode"></textarea>
-<input name="csrf_token" value="fixture-token" type="hidden"><button type="submit">Submit</button>
+<div class="form-group"><label for="select-lang">Language</label><div id="select-lang"><select name="data.LanguageId"><option value="6017">C++23 (GCC 15.2.0)</option><option value="6082">Python (CPython 3.13.7)</option></select></div></div>
+<div class="form-group"><label>Source Code</label><div id="sourceCode"><div id="editor"></div><textarea id="plain-textarea" name="sourceCode"></textarea></div></div>
+<input name="csrf_token" value="fixture-token" type="hidden">
+<div class="form-group"><div class="cf-challenge">Verification widget</div><button type="submit">Submit</button></div>
 </form></main>

@@ -6,6 +6,8 @@ const zh: Record<string, string> = {
   'All Submissions': '全部提交', 'My Submissions': '我的提交', 'Custom Test': '自定义测试', 'Editorial': '题解',
   'Clarifications': '提问', 'Rules': '规则', 'Rating': '积分', 'Rank': '排名', 'Rankings': '排行榜',
   'User': '用户', 'Username': '用户名', 'Task': '题目', 'Language': '语言', 'Score': '分数', 'Status': '状态',
+  'Task:': '题目：', 'Language:': '语言：', 'Status:': '状态：', 'User:': '用户：', 'Username:': '用户名：',
+  '< Prev': '< 上一页', 'Next >': '下一页 >', 'Prev': '上一页', 'Next': '下一页', 'Elapsed': '用时',
   'Code Size': '代码长度', 'Exec Time': '运行时间', 'Memory': '内存', 'Submission Time': '提交时间',
   'Detail': '详情', 'Details': '详情', 'Source Code': '源代码', 'Source code': '源代码', 'Input': '输入',
   'Output': '输出', 'Standard Input': '标准输入', 'Standard Output': '标准输出', 'Standard Error': '标准错误',
@@ -54,7 +56,7 @@ export function localizeAtcoder(doc: Document, locale: string) {
   if (locale !== 'zh') return;
   applyPageI18n(doc, [{
     // Restrict replacements to site chrome and section headings, never statement/editorial prose.
-    scope: '.navbar, .header-inner, .header-sub_nav, .a-title_ttl, .a-btnarea, #contest-nav-tabs, #contest-tabs, #main-container h2, #main-container h3, #main-container h4, #main-container th, #main-container label, #main-container .btn, #main-container .panel-heading, #main-container .nav, #main-container summary, #main-container .label, footer, #footer',
+    scope: '.navbar, .header-inner, .header-sub_nav, .a-title_ttl, .a-btnarea, #contest-nav-tabs, #contest-tabs, #main-container h2, #main-container h3, #main-container h4, #main-container th, #main-container label, #main-container .btn, #main-container .panel-heading, #main-container .nav, #main-container .pager, #main-container summary, #main-container .label, footer, #footer',
     map: zh,
     replaceMap: {
       '^Sample Input\\s+(\\d+)': '样例输入 $1', '^Sample Output\\s+(\\d+)': '样例输出 $1',

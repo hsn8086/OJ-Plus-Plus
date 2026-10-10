@@ -20,6 +20,12 @@ test('AtCoder result parser distinguishes idle, pending, success, and runtime fa
   assert.deepEqual(parseAtcoderResult({ Result: result, Stdout: 'Yes\r\n' }), {
     output: 'Yes\n', verdict: 'OK', used: '10 ms, 8964 KiB',
   });
-  assert.equal(parseAtcoderResult({ Result: { ...result, ExitCode: 1 }, Stderr: 'Traceback' })?.error, 'Traceback');
+  const debug = parseAtcoderResult({ Result: result, Stdout: 'Yes\n', Stderr: 'debug: 1\r\n' });
+  assert.equal(debug?.stderr, 'debug: 1\n');
+  assert.equal(debug?.verdict, 'OK');
+  assert.equal(debug?.error, undefined);
+  const failed = parseAtcoderResult({ Result: { ...result, ExitCode: 1 }, Stderr: 'Traceback' });
+  assert.equal(failed?.stderr, 'Traceback');
+  assert.match(failed?.error ?? '', /Exit code: 1/);
   assert.equal(parseAtcoderResult({ Result: { ...result, Status: 4 }, Stderr: 'compile error' })?.verdict, 'ERROR');
 });

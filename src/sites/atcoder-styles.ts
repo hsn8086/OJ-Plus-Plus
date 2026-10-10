@@ -70,6 +70,23 @@ ${scope} .select2-container .select2-results__option--highlighted[aria-selected]
 ${scope} .table>tbody>tr.success>th, ${scope} .table>tbody>tr>th.success { background: #22392b; }
 ${scope} .table>tbody>tr.danger>th, ${scope} .table>tbody>tr>th.danger { background: #422c30; }
 ${scope} .table>tbody>tr.warning>th, ${scope} .table>tbody>tr>th.warning { background: #3c3424; }
+${scope} .pager>li>a, ${scope} .pager>li>span {
+  background: #22272e; color: #539bf5; border-color: #373e47;
+}
+${scope} .pager>li>a:hover, ${scope} .pager>li>a:focus { background: #2d333b; color: #79b8ff; }
+${scope} .pager>li.disabled>a, ${scope} .pager>li.disabled>a:hover,
+${scope} .pager>li.disabled>a:focus, ${scope} .pager>li.disabled>span {
+  background: #1c2128; color: #909dab; border-color: #373e47;
+}
+${scope} .user-unrated, ${scope} .glyphicon.black { color: #cdd9e5 !important; }
+${scope} .standings-score { color: #79b8ff; }
+${scope} .sort-th { background-image: none !important; position: relative; padding-right: 20px; }
+${scope} .sort-th::after {
+  content: '↕'; position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+  color: #909dab; font-size: 12px; pointer-events: none;
+}
+${scope} .sort-th.sort-asc::after { content: '▴'; color: #79b8ff; }
+${scope} .sort-th.sort-desc::after { content: '▾'; color: #79b8ff; }
 ${scope} .user-gray { color: #a0a0a0 !important; }
 ${scope} .user-brown { color: #b78b66 !important; }
 ${scope} .user-green { color: #57ab5a !important; }

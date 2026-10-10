@@ -216,13 +216,18 @@ export function mountEditorPanel(options: EditorPanelOptions) {
             ? t('editor.accepted')
             : t('editor.wrongAnswer');
         row.statusEl.className = `ojpp-test-status ${accepted ? 'ok' : 'warn'}`;
-        // 只有 Accepted 才折叠成一行；WA/出错保持展开看输出
-        if (accepted) row.row.classList.add('collapsed');
+        // 有诊断输出时保持展开，便于阅读；stderr 不参与答案比较。
+        if (accepted && !res.stderr) row.row.classList.add('collapsed');
       }
       if (res.output && res.output.trim()) {
         const out = el('pre', 'ojpp-test-out');
         out.textContent = res.output;
         row.bodyEl.append(out);
+      }
+      if (res.stderr) {
+        const stderr = el('pre', 'ojpp-test-out ojpp-test-stderr');
+        stderr.textContent = res.stderr;
+        row.bodyEl.append(fieldWrap(t('editor.stderr'), stderr));
       }
       if (res.error) {
         const err = el('pre', 'ojpp-test-out error');
@@ -231,7 +236,7 @@ export function mountEditorPanel(options: EditorPanelOptions) {
       }
       if (res.used) {
         // used 形如 "OK, 46 ms, 0 KB"——折叠态下在标题行尾部显示纯用时
-        const stat = res.used.replace(/^[^,]+,\s*/, '');
+        const stat = res.used.replace(/^(?:OK|[A-Z_]+),\s*/, '');
         const u = el('span', 'ojpp-test-used', stat);
         row.statusEl.after(u);
       }
@@ -269,7 +274,7 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     const body = el('div', 'ojpp-test-body');
     row.append(headRow, grid, body);
     const rec: TestRow = { kind: 'custom', input: '', expected: '', row, statusEl: status, bodyEl: body, customIndex };
-    runOne.onclick = () => void runRow(rec);
+    runOne.onclick = (event) => { event.stopPropagation(); void runRow(rec); };
     del.onclick = () => {
       rows.splice(rows.indexOf(rec), 1);
       row.remove();
@@ -312,7 +317,7 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     const body = el('div', 'ojpp-test-body');
     row.append(headRow, grid, body);
     const rec: TestRow = { kind: 'sample', input: sample.input, expected: sample.output, row, statusEl: status, bodyEl: body };
-    runOne.onclick = () => void runRow(rec);
+    runOne.onclick = (event) => { event.stopPropagation(); void runRow(rec); };
     headRow.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('button')) return;
       row.classList.toggle('collapsed');

@@ -12,6 +12,9 @@ export const atcoder: SiteAdapter = {
     #task-statement .ojpp-toolbar { font-size: 14px; }
     #task-statement .ojpp-result { white-space: normal; }
     .ojpp-editor-page .cm-scroller { min-height: 240px; }
+    /* Keep the form fields and Cloudflare challenge, but remove duplicate task-page controls. */
+    body:has(.ojpp-editor) form.form-code-submit > .form-group:has(#select-lang, #sourceCode),
+    body:has(.ojpp-editor) form.form-code-submit button[type="submit"] { display: none !important; }
     /* On native editor pages CM6 owns editing; retain the actual submission textarea. */
     body:has(.ojpp-editor-page, .ojpp-editor) #editor, body:has(.ojpp-editor-page, .ojpp-editor) #plain-textarea,
     body:has(.ojpp-editor-page, .ojpp-editor) .btn-toggle-editor, body:has(.ojpp-editor-page, .ojpp-editor) #btn-customize,

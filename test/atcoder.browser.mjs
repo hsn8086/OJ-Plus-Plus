@@ -35,6 +35,10 @@ try {
   assert.equal(await page.locator('.lang-en .ojpp-toolbar').count(), 7);
   assert.equal(await page.locator('.lang-ja .ojpp-toolbar').count(), 0);
   assert.equal(await page.locator('.ojpp-test').count(), 3);
+  assert.equal(await page.locator('#select-lang').isVisible(), false);
+  assert.equal(await page.locator('#sourceCode').isVisible(), false);
+  assert.equal(await page.locator('form.form-code-submit button[type="submit"]').isVisible(), false);
+  assert.equal(await page.locator('.cf-challenge').isVisible(), true);
   await page.evaluate(() => document.querySelector('.lang-en .ojpp-toolbar button:nth-child(2)').click());
   const markdown = await page.locator('.ojpp-md-source').first().textContent();
   assert.match(markdown, /\$S\$/);
@@ -60,6 +64,29 @@ try {
   assert.equal(submitted.get('data.LanguageId'), '6082');
   assert.equal(submitted.get('data.TaskScreenName'), 'abc350_a');
   assert.equal(submitted.get('csrf_token'), 'fixture-token');
+  let testId = 10;
+  let exitCode = 0;
+  await page.route('**/contests/abc350/custom_test**', async route => {
+    if (route.request().method() === 'POST') {
+      testId++;
+      await route.fulfill({ body: '' });
+    } else if (route.request().url().includes('/json')) {
+      await route.fulfill({ json: { Result: { Id: testId, Status: 3, ExitCode: exitCode, TimeConsumption: '10 ms', MemoryConsumption: '8964 KiB' }, Stdout: 'Yes\n', Stderr: 'debug <b>1</b>\n' } });
+    } else await route.fulfill({ body: fixture, contentType: 'text/html' });
+  });
+  const firstTest = page.locator('.ojpp-test').first();
+  await firstTest.locator('.ojpp-test-run').click();
+  await page.waitForSelector('.ojpp-test-stderr', { state: 'attached' });
+  assert.equal(await firstTest.locator('.ojpp-test-status').textContent(), 'Accepted');
+  assert.equal(await firstTest.locator('.ojpp-test-stderr').textContent(), 'debug <b>1</b>\n');
+  assert.equal(await firstTest.locator('.ojpp-test-stderr b').count(), 0);
+  assert.equal(await firstTest.locator('.ojpp-test-stderr').isVisible(), true);
+  assert.match(await firstTest.locator('.ojpp-test-used').textContent(), /10 ms/);
+  exitCode = 1;
+  await firstTest.locator('.ojpp-test-run').click();
+  await page.waitForFunction(() => document.querySelector('.ojpp-test-status')?.textContent === 'ERROR');
+  assert.equal(await firstTest.locator('.ojpp-test-stderr').count(), 1);
+  assert.match(await firstTest.locator('.ojpp-test-out.error').textContent(), /Exit code: 1/);
   await page.evaluate(() => {
     document.querySelector('.lang-en').style.display = 'none';
     document.querySelector('.lang-ja').style.display = 'inline';
@@ -70,5 +97,9 @@ try {
   assert.equal(await page.locator('.ojpp-toolbar').count(), 7);
   assert.equal(await page.locator('.ojpp-editor').count(), 1);
   assert.deepEqual(errors, []);
-  console.log('AtCoder browser regression: bilingual sections, samples, formula export, translation, submission fields/errors, language switch, and idempotent mounting passed');
+  assert.equal(await page.evaluate(() => {
+    document.querySelector('.ojpp-editor').remove();
+    return getComputedStyle(document.querySelector('#select-lang').parentElement).display !== 'none';
+  }), true);
+  console.log('AtCoder browser regression: bilingual content, formulas, translation, submission, stderr success/failure, native controls and language switching passed');
 } finally { await browser.close(); }

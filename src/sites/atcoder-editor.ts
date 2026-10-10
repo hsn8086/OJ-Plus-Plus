@@ -51,9 +51,10 @@ export function parseAtcoderResult(data: TestResponse): EditorTestResult | null 
   const r = data.Result;
   if (!r.Id) return null;
   const output = (data.Stdout ?? '').replace(/\r\n/g, '\n');
+  const stderr = (data.Stderr ?? '').replace(/\r\n/g, '\n');
   const failed = Number(r.ExitCode) !== 0 || r.Status !== 3;
-  return { output, used: `${r.TimeConsumption}, ${r.MemoryConsumption}`, verdict: failed ? 'ERROR' : 'OK',
-    ...(failed ? { error: data.Stderr?.trim() || `Exit code: ${r.ExitCode} (status ${r.Status})` } : {}) };
+  return { output, ...(stderr ? { stderr } : {}), used: `${r.TimeConsumption}, ${r.MemoryConsumption}`, verdict: failed ? 'ERROR' : 'OK',
+    ...(failed ? { error: `Exit code: ${r.ExitCode} (status ${r.Status})` } : {}) };
 }
 
 function languages(doc: Document): EditorLanguage[] {

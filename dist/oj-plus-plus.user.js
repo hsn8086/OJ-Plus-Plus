@@ -212,6 +212,7 @@
 		"editor.wrongAnswer": "Wrong answer",
 		"editor.runError": "Run failed",
 		"editor.sample": "Sample",
+		"editor.stderr": "Standard error (stderr)",
 		"editor.expected": "Expected output",
 		"editor.customRun": "Custom test",
 		"editor.noSamples": "No samples found — click \"+ Custom test\" to add one",
@@ -401,6 +402,7 @@
 		"editor.wrongAnswer": "Wrong answer",
 		"editor.runError": "运行失败",
 		"editor.sample": "样例",
+		"editor.stderr": "标准错误（stderr）",
 		"editor.expected": "期望输出",
 		"editor.customRun": "自定义测试",
 		"editor.noSamples": "页面里没找到样例，点「+自定义测试」手动添加",
@@ -21740,12 +21742,17 @@
 					const accepted = ok && (!res.verdict || res.verdict === "OK");
 					row.statusEl.textContent = res.verdict && res.verdict !== "OK" ? res.verdict : ok ? t$1("editor.accepted") : t$1("editor.wrongAnswer");
 					row.statusEl.className = `ojpp-test-status ${accepted ? "ok" : "warn"}`;
-					if (accepted) row.row.classList.add("collapsed");
+					if (accepted && !res.stderr) row.row.classList.add("collapsed");
 				}
 				if (res.output && res.output.trim()) {
 					const out = el$1("pre", "ojpp-test-out");
 					out.textContent = res.output;
 					row.bodyEl.append(out);
+				}
+				if (res.stderr) {
+					const stderr = el$1("pre", "ojpp-test-out ojpp-test-stderr");
+					stderr.textContent = res.stderr;
+					row.bodyEl.append(fieldWrap(t$1("editor.stderr"), stderr));
 				}
 				if (res.error) {
 					const err = el$1("pre", "ojpp-test-out error");
@@ -21753,7 +21760,7 @@
 					row.bodyEl.append(err);
 				}
 				if (res.used) {
-					const u = el$1("span", "ojpp-test-used", res.used.replace(/^[^,]+,\s*/, ""));
+					const u = el$1("span", "ojpp-test-used", res.used.replace(/^(?:OK|[A-Z_]+),\s*/, ""));
 					row.statusEl.after(u);
 				}
 			} catch (e) {
@@ -21800,7 +21807,10 @@
 				bodyEl: body,
 				customIndex
 			};
-			runOne.onclick = () => void runRow(rec);
+			runOne.onclick = (event) => {
+				event.stopPropagation();
+				runRow(rec);
+			};
 			del.onclick = () => {
 				rows.splice(rows.indexOf(rec), 1);
 				row.remove();
@@ -21846,7 +21856,10 @@
 				statusEl: status,
 				bodyEl: body
 			};
-			runOne.onclick = () => void runRow(rec);
+			runOne.onclick = (event) => {
+				event.stopPropagation();
+				runRow(rec);
+			};
 			headRow.addEventListener("click", (e) => {
 				if (e.target.closest("button")) return;
 				row.classList.toggle("collapsed");
@@ -53944,12 +53957,14 @@ $$` : `${n}$$`;
 		const r = data.Result;
 		if (!r.Id) return null;
 		const output = (data.Stdout ?? "").replace(/\r\n/g, "\n");
+		const stderr = (data.Stderr ?? "").replace(/\r\n/g, "\n");
 		const failed = Number(r.ExitCode) !== 0 || r.Status !== 3;
 		return {
 			output,
+			...stderr ? { stderr } : {},
 			used: `${r.TimeConsumption}, ${r.MemoryConsumption}`,
 			verdict: failed ? "ERROR" : "OK",
-			...failed ? { error: data.Stderr?.trim() || `Exit code: ${r.ExitCode} (status ${r.Status})` } : {}
+			...failed ? { error: `Exit code: ${r.ExitCode} (status ${r.Status})` } : {}
 		};
 	}
 	function languages(doc) {
@@ -54201,6 +54216,16 @@ $$` : `${n}$$`;
 		"Language": "语言",
 		"Score": "分数",
 		"Status": "状态",
+		"Task:": "题目：",
+		"Language:": "语言：",
+		"Status:": "状态：",
+		"User:": "用户：",
+		"Username:": "用户名：",
+		"< Prev": "< 上一页",
+		"Next >": "下一页 >",
+		"Prev": "上一页",
+		"Next": "下一页",
+		"Elapsed": "用时",
 		"Code Size": "代码长度",
 		"Exec Time": "运行时间",
 		"Memory": "内存",
@@ -54354,7 +54379,7 @@ $$` : `${n}$$`;
 	function localizeAtcoder(doc, locale) {
 		if (locale !== "zh") return;
 		applyPageI18n(doc, [{
-			scope: ".navbar, .header-inner, .header-sub_nav, .a-title_ttl, .a-btnarea, #contest-nav-tabs, #contest-tabs, #main-container h2, #main-container h3, #main-container h4, #main-container th, #main-container label, #main-container .btn, #main-container .panel-heading, #main-container .nav, #main-container summary, #main-container .label, footer, #footer",
+			scope: ".navbar, .header-inner, .header-sub_nav, .a-title_ttl, .a-btnarea, #contest-nav-tabs, #contest-tabs, #main-container h2, #main-container h3, #main-container h4, #main-container th, #main-container label, #main-container .btn, #main-container .panel-heading, #main-container .nav, #main-container .pager, #main-container summary, #main-container .label, footer, #footer",
 			map: zh,
 			replaceMap: {
 				"^Sample Input\\s+(\\d+)": "样例输入 $1",
@@ -54378,6 +54403,9 @@ $$` : `${n}$$`;
     #task-statement .ojpp-toolbar { font-size: 14px; }
     #task-statement .ojpp-result { white-space: normal; }
     .ojpp-editor-page .cm-scroller { min-height: 240px; }
+    /* Keep the form fields and Cloudflare challenge, but remove duplicate task-page controls. */
+    body:has(.ojpp-editor) form.form-code-submit > .form-group:has(#select-lang, #sourceCode),
+    body:has(.ojpp-editor) form.form-code-submit button[type="submit"] { display: none !important; }
     /* On native editor pages CM6 owns editing; retain the actual submission textarea. */
     body:has(.ojpp-editor-page, .ojpp-editor) #editor, body:has(.ojpp-editor-page, .ojpp-editor) #plain-textarea,
     body:has(.ojpp-editor-page, .ojpp-editor) .btn-toggle-editor, body:has(.ojpp-editor-page, .ojpp-editor) #btn-customize,
@@ -54453,6 +54481,23 @@ ${scope} .select2-container .select2-results__option--highlighted[aria-selected]
 ${scope} .table>tbody>tr.success>th, ${scope} .table>tbody>tr>th.success { background: #22392b; }
 ${scope} .table>tbody>tr.danger>th, ${scope} .table>tbody>tr>th.danger { background: #422c30; }
 ${scope} .table>tbody>tr.warning>th, ${scope} .table>tbody>tr>th.warning { background: #3c3424; }
+${scope} .pager>li>a, ${scope} .pager>li>span {
+  background: #22272e; color: #539bf5; border-color: #373e47;
+}
+${scope} .pager>li>a:hover, ${scope} .pager>li>a:focus { background: #2d333b; color: #79b8ff; }
+${scope} .pager>li.disabled>a, ${scope} .pager>li.disabled>a:hover,
+${scope} .pager>li.disabled>a:focus, ${scope} .pager>li.disabled>span {
+  background: #1c2128; color: #909dab; border-color: #373e47;
+}
+${scope} .user-unrated, ${scope} .glyphicon.black { color: #cdd9e5 !important; }
+${scope} .standings-score { color: #79b8ff; }
+${scope} .sort-th { background-image: none !important; position: relative; padding-right: 20px; }
+${scope} .sort-th::after {
+  content: '↕'; position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+  color: #909dab; font-size: 12px; pointer-events: none;
+}
+${scope} .sort-th.sort-asc::after { content: '▴'; color: #79b8ff; }
+${scope} .sort-th.sort-desc::after { content: '▾'; color: #79b8ff; }
 ${scope} .user-gray { color: #a0a0a0 !important; }
 ${scope} .user-brown { color: #b78b66 !important; }
 ${scope} .user-green { color: #57ab5a !important; }

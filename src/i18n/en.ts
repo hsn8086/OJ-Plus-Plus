@@ -182,6 +182,7 @@ export const en: Record<MessageKey, string> = {
   'editor.wrongAnswer': 'Wrong answer',
   'editor.runError': 'Run failed',
   'editor.sample': 'Sample',
+  'editor.stderr': 'Standard error (stderr)',
   'editor.expected': 'Expected output',
   'editor.customRun': 'Custom test',
   'editor.noSamples': 'No samples found — click "+ Custom test" to add one',
