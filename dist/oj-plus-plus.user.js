@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OJ++
 // @namespace    https://github.com/hsn8086/OJ-Plus-Plus
-// @version      0.7.2
+// @version      0.8.0
 // @author       hsn8086
 // @description  OJ-Plus-Plus：AI 题面翻译、Markdown 视图与一键复制
 // @license      GPL-3.0

@@ -1,6 +1,6 @@
 {
   "name": "oj-plus-plus",
-  "version": "0.7.2",
+  "version": "0.8.0",
   "private": true,
   "type": "module",
   "description": "OJ++：可扩展站点与运行平台的 AI 题面翻译工具",
