@@ -25842,7 +25842,10 @@ function createEditor(host, options) {
 				]),
 				EditorView.theme({
 					"&": { fontSize: `${options.fontSize}px` },
-					".cm-content": { fontFamily: "ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, Consolas, monospace" }
+					".cm-content": {
+						fontFamily: "\"SF Mono\", \"JetBrains Mono\", \"Cascadia Code\", ui-monospace, Menlo, Consolas, monospace",
+						lineHeight: "1.55"
+					}
 				})
 			]
 		}),
@@ -66088,7 +66091,7 @@ var CSS = `
   overflow-x: auto;
 }
 .ojpp-result-body code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: "SF Mono", "JetBrains Mono", "Cascadia Code", ui-monospace, Menlo, Consolas, monospace;
   font-size: 13px;
   background: var(--color-bg-tertiary);
   padding: 2px 5px;
@@ -66125,7 +66128,7 @@ var CSS = `
   border: 1px dashed var(--color-border);
   border-radius: var(--radius-sm);
   padding: 12px;
-  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-family: "SF Mono", "JetBrains Mono", "Cascadia Code", ui-monospace, Menlo, Consolas, monospace;
   font-size: 12px;
   line-height: 1.6;
 }
@@ -66340,7 +66343,7 @@ var CSS = `
   height: auto;
   padding: 8px 10px;
   resize: vertical;
-  font-family: ui-monospace, Menlo, monospace;
+  font-family: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
   font-size: 12px;
   line-height: 1.5;
 }
@@ -66752,32 +66755,84 @@ var CSS = `
 }
 
 .ojpp-editor-head {
-  flex-wrap: wrap;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 9px 14px;
   border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg-primary) 55%, transparent);
 }
 
 .ojpp-editor-title {
   font-weight: 600;
   font-size: 13px;
+  letter-spacing: .01em;
   color: var(--color-text-primary);
 }
 
-.ojpp-editor-runtime { padding: 6px 12px; font-size: 12px; color: #909dab; }
+.ojpp-editor-runtime {
+  padding: 6px 14px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--color-text-tertiary);
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg-primary) 45%, transparent);
+}
+.ojpp-editor-runtime::before {
+  content: 'ⓘ';
+  margin-right: 6px;
+  color: var(--color-accent);
+  font-size: 10px;
+}
 .ojpp-editor-runtime[hidden] { display: none; }
+
 .ojpp-editor-backend, .ojpp-editor-timeout,
 .ojpp-editor-lang {
-  height: 26px;
-  max-width: 220px;
-  padding: 0 6px;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 28px;
+  width: auto;
+  min-width: 60px;
+  max-width: 230px;
+  padding: 0 28px 0 11px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
+  background-color: var(--color-bg-primary);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a94a0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  color: var(--color-text-primary);
+  font: 500 12px/1.4 inherit;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.ojpp-editor-backend:hover,
+.ojpp-editor-timeout:hover,
+.ojpp-editor-lang:hover {
+  border-color: var(--color-border-hover, var(--color-accent));
+}
+.ojpp-editor-backend:focus-visible,
+.ojpp-editor-timeout:focus-visible,
+.ojpp-editor-lang:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+.ojpp-editor-backend:disabled,
+.ojpp-editor-timeout:disabled,
+.ojpp-editor-lang:disabled {
+  opacity: .5;
+  cursor: default;
+}
+.ojpp-editor-backend option,
+.ojpp-editor-timeout option,
+.ojpp-editor-lang option {
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
-  font-size: 12px;
 }
 
 .ojpp-editor-spacer { flex: 1; }
@@ -66794,7 +66849,8 @@ var CSS = `
 .ojpp-editor-cm .cm-scroller {
   max-height: 420px;
   overflow: auto;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-family: "SF Mono", "JetBrains Mono", "Cascadia Code", ui-monospace, Menlo, Consolas, monospace;
+  line-height: 1.55;
 }
 
 
@@ -66851,7 +66907,8 @@ var CSS = `
 .ojpp-editor-page .cm-scroller {
   max-height: 480px;
   overflow: auto;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-family: "SF Mono", "JetBrains Mono", "Cascadia Code", ui-monospace, Menlo, Consolas, monospace;
+  line-height: 1.55;
 }
 
 /* ---------- 测试行 ---------- */
@@ -66931,7 +66988,7 @@ var CSS = `
   border-radius: var(--radius-sm);
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
-  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font: 12px/1.5 "SF Mono", "JetBrains Mono", "Cascadia Code", ui-monospace, Menlo, Consolas, monospace;
   resize: vertical;
   box-sizing: border-box;
 }
@@ -66944,7 +67001,7 @@ var CSS = `
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font: 12px/1.5 "SF Mono", "JetBrains Mono", "Cascadia Code", ui-monospace, Menlo, Consolas, monospace;
   color: var(--color-text-primary);
   white-space: pre-wrap;
   word-break: break-all;
@@ -66965,7 +67022,7 @@ var CSS = `
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font: 12px/1.5 "SF Mono", "JetBrains Mono", "Cascadia Code", ui-monospace, Menlo, Consolas, monospace;
   color: var(--color-text-primary);
   white-space: pre-wrap;
   word-break: break-all;

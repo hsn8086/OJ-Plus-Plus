@@ -107,7 +107,10 @@ export function createEditor(host: HTMLElement, options: CreateEditorOptions): E
       ]),
       EditorView.theme({
         '&': { fontSize: `${options.fontSize}px` },
-        '.cm-content': { fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace' },
+        '.cm-content': {
+          fontFamily: '"SF Mono", "JetBrains Mono", "Cascadia Code", ui-monospace, Menlo, Consolas, monospace',
+          lineHeight: '1.55',
+        },
       }),
     ],
   });
