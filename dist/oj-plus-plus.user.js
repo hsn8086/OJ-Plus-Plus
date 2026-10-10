@@ -63164,8 +63164,10 @@ var codeforces = {
     html[data-ojpp-theme="dark"] .MathJax_SVG svg [stroke="#000000"] {
       stroke: #cdd9e5 !important;
     }
-    /* 老题用 espresso 渲染好的公式 PNG（黑字透明底），反色成白字 */
-    html[data-ojpp-theme="dark"] img.tex-formula { filter: invert(0.92); }
+    /* 老题用 espresso 渲染好的公式 PNG（黑字透明底），反色成白字；
+       译文面板里是 markdown 渲染出的 img，没有 tex-formula 类，按域名一起覆盖 */
+    html[data-ojpp-theme="dark"] img.tex-formula,
+    html[data-ojpp-theme="dark"] img[src*="espresso.codeforces.com"] { filter: invert(0.92); }
 
     /* ---------- 侧边栏信息框 ---------- */
     /* .roundbox 的圆角是四张 png 图片，暗色下会露出白角，直接去掉 */
