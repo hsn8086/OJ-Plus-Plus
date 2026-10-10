@@ -1,0 +1,13 @@
+import { mkdir, readFile, readdir, rm } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
+const root = fileURLToPath(new URL('../', import.meta.url));
+const extension = root + 'dist-extension';
+const manifest = JSON.parse(await readFile(extension + '/manifest.json', 'utf8'));
+const pkg = JSON.parse(await readFile(root + 'package.json', 'utf8'));
+if (manifest.version !== pkg.version) throw new Error('Rebuild the extension before packaging a new version');
+await mkdir(root + 'artifacts', { recursive: true });
+const archive = `${root}artifacts/ojpp-${manifest.version}-chrome.zip`;
+await rm(archive, { force: true });
+execFileSync(process.env.OJPP_7ZIP ?? '7z', ['a', '-tzip', '-mx=7', archive, ...await readdir(extension)], { cwd: extension, stdio: 'inherit' });
+console.log(archive);

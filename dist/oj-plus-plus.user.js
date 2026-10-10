@@ -230,6 +230,13 @@ var en$2 = {
 	"editor.wrongAnswer": "Wrong answer",
 	"editor.runError": "Run failed",
 	"editor.sample": "Sample",
+	"editor.siteRun": "Run on site",
+	"editor.localRun": "Local WASM",
+	"editor.localRuntime": "Local: Clang 8 (C11/C++17, libc++) or CPython 3.11.3. Results may differ from the site judge.",
+	"editor.localTimeout": "Time limit per local test (compilation has a separate limit)",
+	"editor.localUnsupported": "Local execution supports C, C++ and Python. Use site execution for this language.",
+	"editor.localUnavailable": "Local execution requires the OJ++ browser extension.",
+	"editor.cancelled": "Cancelled",
 	"editor.stderr": "Standard error (stderr)",
 	"editor.expected": "Expected output",
 	"editor.customRun": "Custom test",
@@ -434,6 +441,13 @@ var zh$2 = {
 	"editor.wrongAnswer": "Wrong answer",
 	"editor.runError": "运行失败",
 	"editor.sample": "样例",
+	"editor.siteRun": "站点运行",
+	"editor.localRun": "本地 WASM",
+	"editor.localRuntime": "本地使用 Clang 8（C11/C++17、libc++）或 CPython 3.11.3；与站点评测环境可能不同。",
+	"editor.localTimeout": "每条本地测试的超时限制（编译单独计时）",
+	"editor.localUnsupported": "本地运行目前支持 C、C++ 和 Python；此语言请使用站点运行。",
+	"editor.localUnavailable": "当前平台没有本地运行器，请使用 OJ++ 扩展版。",
+	"editor.cancelled": "已取消",
 	"editor.stderr": "标准错误（stderr）",
 	"editor.expected": "期望输出",
 	"editor.customRun": "自定义测试",
@@ -577,6 +591,8 @@ function defaultSettings() {
 		editorFontSize: 13,
 		editorLspUrl: "",
 		editorLanguage: {},
+		editorBackend: {},
+		localTimeoutMs: 3e3,
 		editorCode: {},
 		editorTests: {}
 	};
@@ -609,6 +625,8 @@ function migrate(raw) {
 		...input,
 		autoTranslate: normalizeAutoTranslate(input.autoTranslate),
 		siteFeatures: normalizeSiteFeatures(input.siteFeatures),
+		editorBackend: input.editorBackend && typeof input.editorBackend === "object" ? Object.fromEntries(Object.entries(input.editorBackend).filter(([, v]) => v === "site" || v === "local")) : {},
+		localTimeoutMs: typeof input.localTimeoutMs === "number" && Number.isFinite(input.localTimeoutMs) ? Math.min(3e4, Math.max(100, input.localTimeoutMs)) : base.localTimeoutMs,
 		providers,
 		version: base.version
 	};
@@ -868,6 +886,28 @@ function bindCopy(button, readText, writeClipboard) {
 		}, 1500);
 	});
 }
+function localLanguageFor(language) {
+	if (language.mode === "python") return "python";
+	if (language.mode !== "cpp") return void 0;
+	return /(?:^|\s)C(?:\s|\d|$)/.test(language.name) && !language.name.includes("++") ? "c" : "cpp";
+}
+var LOCAL_LANGUAGES = [
+	{
+		id: "local-cpp17",
+		name: "C++17 (Clang 8 / WASI)",
+		mode: "cpp"
+	},
+	{
+		id: "local-c11",
+		name: "C11 (Clang 8 / WASI)",
+		mode: "cpp"
+	},
+	{
+		id: "local-python311",
+		name: "Python 3.11.3 (CPython / WASI)",
+		mode: "python"
+	}
+];
 var rangeFrom = [];
 var rangeTo = [];
 (() => {
@@ -20281,7 +20321,7 @@ function ifNotIn(nodes, source) {
 		return source(context);
 	};
 }
-var Option = class {
+var Option$1 = class {
 	constructor(completion, source, match, score) {
 		this.completion = completion;
 		this.source = source;
@@ -20805,14 +20845,14 @@ function sortOptions(active, state) {
 	let conf = state.facet(completionConfig);
 	for (let a of active) if (a.hasResult()) {
 		let getMatch = a.result.getMatch;
-		if (a.result.filter === false) for (let option of a.result.options) addOption(new Option(option, a.source, getMatch ? getMatch(option) : [], 1e9 - options.length));
+		if (a.result.filter === false) for (let option of a.result.options) addOption(new Option$1(option, a.source, getMatch ? getMatch(option) : [], 1e9 - options.length));
 		else {
 			let pattern = state.sliceDoc(a.from, a.to), match;
 			let matcher = conf.filterStrict ? new StrictMatcher(pattern) : new FuzzyMatcher(pattern);
 			for (let option of a.result.options) if (match = matcher.match(option.label)) {
 				let matched = !option.displayLabel ? match.matched : getMatch ? getMatch(option, match.matched) : [];
 				let score = match.score + (option.boost || 0);
-				addOption(new Option(option, a.source, matched, score));
+				addOption(new Option$1(option, a.source, matched, score));
 				if (typeof option.section == "object" && option.section.rank === "dynamic") {
 					let { name } = option.section;
 					if (!dynamicSectionScore) dynamicSectionScore = Object.create(null);
@@ -25935,7 +25975,7 @@ function mountEditorPage(opts) {
 	};
 }
 function mountEditorPanel(options) {
-	const { site, support, getSettings, persist, isDark, onDarkChange } = options;
+	const { platform, site, support, getSettings, persist, isDark, onDarkChange } = options;
 	const problemCode = support.problemCode(document);
 	const settings = getSettings();
 	const key = problemCode ? draftKey(site.id, problemCode) : null;
@@ -25952,7 +25992,39 @@ function mountEditorPanel(options) {
 	const defaultLang = support.languages.find((l) => l.id === savedLang) ?? support.languages[0];
 	langSel.value = defaultLang.id;
 	const spacer = el$1("span", "ojpp-editor-spacer");
-	head.append(title, langSel, spacer);
+	const backend = el$1("select", "ojpp-editor-backend");
+	if (support.runCustomTest) backend.add(new Option(t$1("editor.siteRun"), "site"));
+	if (platform.localRunner) backend.add(new Option(t$1("editor.localRun"), "local"));
+	backend.value = platform.localRunner ? settings.editorBackend[site.id] ?? "local" : "site";
+	if (!backend.value) backend.selectedIndex = 0;
+	backend.hidden = !platform.localRunner;
+	const localLimit = el$1("select", "ojpp-editor-timeout");
+	for (const ms of [
+		1e3,
+		3e3,
+		5e3,
+		1e4,
+		3e4
+	]) localLimit.add(new Option(`${ms / 1e3}s`, String(ms)));
+	localLimit.value = String(settings.localTimeoutMs);
+	if (!localLimit.value) localLimit.value = "3000";
+	localLimit.title = t$1("editor.localTimeout");
+	const runtimeHint = el$1("div", "ojpp-editor-runtime");
+	const updateBackend = () => {
+		localLimit.hidden = runtimeHint.hidden = backend.value !== "local";
+		runtimeHint.textContent = t$1("editor.localRuntime");
+	};
+	backend.onchange = () => {
+		getSettings().editorBackend[site.id] = backend.value;
+		updateBackend();
+		persist();
+	};
+	localLimit.onchange = () => {
+		getSettings().localTimeoutMs = Number(localLimit.value);
+		persist();
+	};
+	updateBackend();
+	head.append(title, langSel, backend, localLimit, spacer);
 	const cmHost = el$1("div", "ojpp-editor-cm");
 	const actionsBar = el$1("div", "ojpp-editor-actions");
 	const submitStatus = el$1("span", "ojpp-editor-status");
@@ -25968,9 +26040,10 @@ function mountEditorPanel(options) {
 	submitBtn.innerHTML = ICON_SEND;
 	submitBtn.title = t$1("editor.submit");
 	submitBtn.setAttribute("aria-label", t$1("editor.submit"));
-	actionsBar.append(submitStatus, runAllBtn, addTestBtn, submitBtn);
+	actionsBar.append(submitStatus, runAllBtn, addTestBtn);
+	if (support.submit) actionsBar.append(submitBtn);
 	const tests = el$1("div", "ojpp-editor-tests");
-	root.append(head, cmHost, actionsBar, tests);
+	root.append(head, runtimeHint, cmHost, actionsBar, tests);
 	const initial = key ? settings.editorCode[key]?.code ?? "" : "";
 	const editor = createEditor(cmHost, {
 		doc: initial,
@@ -26004,7 +26077,15 @@ function mountEditorPanel(options) {
 		persist();
 	};
 	const rows = [];
-	const runRow = async (row) => {
+	const activeRuns = /* @__PURE__ */ new Map();
+	const runRow = async (row, snapshot) => {
+		if (activeRuns.has(row)) {
+			activeRuns.get(row).abort();
+			return;
+		}
+		const controller = new AbortController();
+		activeRuns.set(row, controller);
+		const local = backend.value === "local";
 		const input = row.kind === "custom" ? row.row.querySelector(".ojpp-test-input").value : row.input;
 		const expected = row.kind === "custom" ? row.row.querySelector(".ojpp-test-expected").value : row.expected;
 		row.statusEl.textContent = t$1("editor.running");
@@ -26016,9 +26097,25 @@ function mountEditorPanel(options) {
 		if (runBtn) {
 			runBtn.dataset.state = "busy";
 			runBtn.innerHTML = ICON_SPINNER;
+			runBtn.disabled = !local;
+			runBtn.title = local ? t$1("common.cancel") : t$1("editor.running");
 		}
 		try {
-			const res = await support.runCustomTest(editor.getCode(), langSel.value, input);
+			const code = snapshot?.code ?? editor.getCode();
+			const languageId = snapshot?.languageId ?? langSel.value;
+			const localLanguage = localLanguageFor(support.languages.find((item) => item.id === languageId));
+			if (local && !localLanguage) throw new Error(t$1("editor.localUnsupported"));
+			const res = local && platform.localRunner ? await platform.localRunner.run({
+				code,
+				input,
+				language: localLanguage,
+				timeoutMs: Number(localLimit.value),
+				signal: controller.signal
+			}) : support.runCustomTest ? await support.runCustomTest(code, languageId, input) : {
+				output: "",
+				verdict: "ERROR",
+				error: t$1("editor.localUnavailable")
+			};
 			if (res.error) {
 				row.statusEl.textContent = res.verdict ?? t$1("editor.runError");
 				row.statusEl.className = "ojpp-test-status error";
@@ -26049,13 +26146,16 @@ function mountEditorPanel(options) {
 				row.statusEl.after(u);
 			}
 		} catch (e) {
-			row.statusEl.textContent = t$1("editor.runError");
+			row.statusEl.textContent = controller.signal.aborted ? t$1("editor.cancelled") : t$1("editor.runError");
 			row.statusEl.className = "ojpp-test-status error";
 			row.bodyEl.append(el$1("pre", "ojpp-test-out error", e instanceof Error ? e.message : String(e)));
 		} finally {
+			activeRuns.delete(row);
 			if (runBtn) {
 				runBtn.dataset.state = "";
 				runBtn.innerHTML = ICON_PLAY;
+				runBtn.disabled = false;
+				runBtn.title = t$1("editor.runOne");
 			}
 		}
 	};
@@ -26097,6 +26197,7 @@ function mountEditorPanel(options) {
 			runRow(rec);
 		};
 		del.onclick = () => {
+			activeRuns.get(rec)?.abort();
 			rows.splice(rows.indexOf(rec), 1);
 			row.remove();
 			saveCustomTests();
@@ -26184,25 +26285,43 @@ function mountEditorPanel(options) {
 		if (e.target.matches(".ojpp-test-input, .ojpp-test-expected")) saveCustomTests();
 	});
 	let runningAll = false;
+	let allCancelled = false;
 	runAllBtn.onclick = async () => {
-		if (runningAll) return;
+		if (runningAll) {
+			allCancelled = true;
+			for (const run of activeRuns.values()) run.abort();
+			return;
+		}
 		runningAll = true;
-		runAllBtn.disabled = true;
+		allCancelled = false;
+		const local = backend.value === "local";
+		runAllBtn.disabled = !local;
+		backend.disabled = langSel.disabled = localLimit.disabled = true;
 		runAllBtn.dataset.state = "busy";
 		runAllBtn.innerHTML = ICON_SPINNER;
+		runAllBtn.title = local ? t$1("common.cancel") : t$1("editor.running");
+		runAllBtn.setAttribute("aria-label", runAllBtn.title);
 		try {
+			const snapshot = {
+				code: editor.getCode(),
+				languageId: langSel.value
+			};
 			const queue = [...rows];
-			await Promise.all(Array.from({ length: Math.min(3, queue.length) }, async () => {
-				for (let row = queue.shift(); row; row = queue.shift()) await runRow(row);
+			await Promise.all(Array.from({ length: Math.min(local ? 1 : 3, queue.length) }, async () => {
+				for (let row = queue.shift(); row && !allCancelled; row = queue.shift()) await runRow(row, snapshot);
 			}));
 		} finally {
 			runningAll = false;
+			backend.disabled = langSel.disabled = localLimit.disabled = false;
 			runAllBtn.disabled = false;
 			runAllBtn.dataset.state = "";
 			runAllBtn.innerHTML = ICON_PLAY;
+			runAllBtn.title = t$1("editor.runAll");
+			runAllBtn.setAttribute("aria-label", runAllBtn.title);
 		}
 	};
 	submitBtn.onclick = async () => {
+		if (!support.submit) return;
 		if (!problemCode) {
 			submitStatus.textContent = t$1("editor.noProblem");
 			submitStatus.className = "ojpp-editor-status err";
@@ -26239,6 +26358,8 @@ function mountEditorPanel(options) {
 		el: root,
 		editor,
 		dispose() {
+			for (const run of activeRuns.values()) run.abort();
+			allCancelled = true;
 			clearTimeout(persistTimer);
 			persist();
 			stopDark();
@@ -60959,6 +61080,41 @@ var qoj = {
 		if (pdf) sections.push(pdf);
 		return sections;
 	},
+	editor: {
+		localOnly: true,
+		languages: LOCAL_LANGUAGES,
+		editorMountPoint(doc) {
+			const anchor = doc.querySelector("#tab-statement");
+			return anchor ? {
+				anchor,
+				position: "beforeend"
+			} : null;
+		},
+		problemCode(doc) {
+			return /\/problem\/(\d+)/.exec(new URL(doc.URL).pathname)?.[1] ?? null;
+		},
+		getSamples(doc) {
+			const inputs = [], outputs = [];
+			for (const heading of doc.querySelectorAll(".uoj-article h3, .uoj-article h4")) {
+				const label = heading.textContent?.trim() ?? "";
+				const target = /^(Sample Input|样例输入|输入样例)/i.test(label) ? inputs : /^(Sample Output|样例输出|输出样例)/i.test(label) ? outputs : null;
+				if (!target) continue;
+				let next = heading.nextElementSibling;
+				while (next && !/^H[1-4]$/.test(next.tagName)) {
+					const pre = next.matches("pre") ? next : next.querySelector("pre");
+					if (pre) {
+						target.push(pre.textContent ?? "");
+						break;
+					}
+					next = next.nextElementSibling;
+				}
+			}
+			return inputs.slice(0, outputs.length).map((input, i) => ({
+				input,
+				output: outputs[i]
+			}));
+		}
+	},
 	prepareContent: prepareMathContent,
 	mountSettingsButton(button, doc) {
 		mountNavSettings(button, doc, ".navbar-nav, .uoj-header .float-right");
@@ -61090,6 +61246,32 @@ var luogu = {
 	hosts: ["www.luogu.com.cn", "www.luogu.com"],
 	darkStyles: LUOGU_DARK,
 	preserveInlineColors: true,
+	editor: {
+		localOnly: true,
+		languages: LOCAL_LANGUAGES,
+		editorMountPoint(doc) {
+			const anchor = doc.querySelector(".l-card.problem");
+			return anchor ? {
+				anchor,
+				position: "afterend"
+			} : null;
+		},
+		problemCode(doc) {
+			return /\/problem\/([^/?#]+)/.exec(new URL(doc.URL).pathname)?.[1] ?? null;
+		},
+		getSamples(doc) {
+			try {
+				const problem = JSON.parse(doc.querySelector("#lentille-context")?.textContent ?? "{}").data?.problem;
+				if (problem?.pid !== /\/problem\/([^/?#]+)/.exec(new URL(doc.URL).pathname)?.[1]) return [];
+				return Array.isArray(problem.samples) ? problem.samples.filter((s) => Array.isArray(s) && s.length === 2 && s.every((v) => typeof v === "string")).map((s) => ({
+					input: s[0],
+					output: s[1]
+				})) : [];
+			} catch {
+				return [];
+			}
+		}
+	},
 	styles: ".user-nav > .ojpp-settings-btn { margin: 0 8px; } .ojpp-settings-floating { position: fixed; right: 18px; bottom: 18px; z-index: 1000; }",
 	collectSections(doc) {
 		const sections = [];
@@ -61255,7 +61437,10 @@ var atcoderEditor = {
 	syncCode(code, languageId) {
 		const source = document.querySelector("#plain-textarea");
 		const language = document.querySelector("select[name=\"data.LanguageId\"]");
-		if (source) source.value = code;
+		if (source) {
+			source.value = code;
+			source.dispatchEvent(new Event("input", { bubbles: true }));
+		}
 		if (language) language.value = languageId;
 		syncAce(code);
 	},
@@ -65262,7 +65447,7 @@ function openSettingsPanel(options) {
 			}));
 			if (site.i18nPage) features.append(feature("pageI18n", t$1("settings.siteI18n")));
 			if (site.darkStyles) features.append(feature("darkMode", t$1("settings.siteDark")));
-			if (site.editor) features.append(feature("editor", t$1("settings.siteEditor")));
+			if (site.editor && (!site.editor.localOnly || options.localExecution)) features.append(feature("editor", t$1("settings.siteEditor")));
 			details.append(features);
 			siteSection.body.append(details);
 		}
@@ -65742,6 +65927,8 @@ var CSS = `
   color: var(--color-accent); 
   pointer-events: none;
 }
+.ojpp-icon-btn.ojpp-test-run[data-state="busy"]:not(:disabled),
+.ojpp-icon-btn.ojpp-editor-act[data-state="busy"]:not(:disabled) { pointer-events: auto; cursor: pointer; }
 .ojpp-icon-btn[data-state="busy"] svg { 
   animation: ojpp-spin 1s linear infinite; 
 }
@@ -66533,6 +66720,7 @@ var CSS = `
 }
 
 .ojpp-editor-head {
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -66546,6 +66734,9 @@ var CSS = `
   color: var(--color-text-primary);
 }
 
+.ojpp-editor-runtime { padding: 6px 12px; font-size: 12px; color: #909dab; }
+.ojpp-editor-runtime[hidden] { display: none; }
+.ojpp-editor-backend, .ojpp-editor-timeout,
 .ojpp-editor-lang {
   height: 26px;
   max-width: 220px;
@@ -66913,6 +67104,7 @@ async function startApp(platform, site) {
 		if (closeSettings) return;
 		closeSettings = openSettingsPanel({
 			settings,
+			localExecution: !!platform.localRunner,
 			request: platform.request,
 			async onChange(next) {
 				const updated = next ?? defaultSettings();
@@ -66954,7 +67146,7 @@ async function startApp(platform, site) {
 	};
 	const reconcileEditor = () => {
 		const mount = site.editor?.editorMountPoint(document);
-		if (!(settings.editorEnabled && feature("editor") && !!mount && !!site.editor)) {
+		if (!(settings.editorEnabled && feature("editor") && !!mount && !!site.editor && (!site.editor.localOnly || !!platform.localRunner))) {
 			editorPanel?.dispose();
 			editorPanel = void 0;
 			return;
@@ -66962,6 +67154,7 @@ async function startApp(platform, site) {
 		if (editorPanel?.el.isConnected) return;
 		editorPanel?.dispose();
 		editorPanel = mountEditorPanel({
+			platform,
 			site,
 			support: site.editor,
 			getSettings: () => settings,

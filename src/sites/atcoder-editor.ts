@@ -123,7 +123,7 @@ export const atcoderEditor: SiteEditorSupport = {
   syncCode(code, languageId) {
     const source = document.querySelector<HTMLTextAreaElement>('#plain-textarea');
     const language = document.querySelector<HTMLSelectElement>('select[name="data.LanguageId"]');
-    if (source) source.value = code;
+    if (source) { source.value = code; source.dispatchEvent(new Event('input', { bubbles: true })); }
     if (language) language.value = languageId;
     syncAce(code);
   },

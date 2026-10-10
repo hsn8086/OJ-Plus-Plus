@@ -1,3 +1,4 @@
+import { LOCAL_LANGUAGES } from '../execution/languages.ts';
 import { applyPageI18n } from '../core/page-i18n.ts';
 import { mountNavSettings, observeSite, prepareMathContent } from './shared.ts';
 import { LUOGU_DARK } from './luogu-styles.ts';
@@ -40,6 +41,19 @@ const en: Record<string, string> = {
 export const luogu: SiteAdapter = {
   id: 'luogu', name: '洛谷 / Luogu', hosts: ['www.luogu.com.cn', 'www.luogu.com'],
   darkStyles: LUOGU_DARK, preserveInlineColors: true,
+  editor: {
+    localOnly: true, languages: LOCAL_LANGUAGES,
+    editorMountPoint(doc) { const anchor = doc.querySelector<HTMLElement>('.l-card.problem'); return anchor ? { anchor, position: 'afterend' } : null; },
+    problemCode(doc) { return /\/problem\/([^/?#]+)/.exec(new URL(doc.URL).pathname)?.[1] ?? null; },
+    getSamples(doc) {
+      try {
+        const problem = JSON.parse(doc.querySelector('#lentille-context')?.textContent ?? '{}').data?.problem;
+        if (problem?.pid !== /\/problem\/([^/?#]+)/.exec(new URL(doc.URL).pathname)?.[1]) return [];
+        return Array.isArray(problem.samples) ? problem.samples.filter((s: unknown) => Array.isArray(s) && s.length === 2 && s.every(v => typeof v === 'string'))
+          .map((s: string[]) => ({ input: s[0], output: s[1] })) : [];
+      } catch { return []; }
+    },
+  },
   styles: '.user-nav > .ojpp-settings-btn { margin: 0 8px; } .ojpp-settings-floating { position: fixed; right: 18px; bottom: 18px; z-index: 1000; }',
   collectSections(doc) {
     const sections: ContentSection[] = [];

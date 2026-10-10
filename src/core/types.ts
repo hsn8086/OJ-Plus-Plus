@@ -60,6 +60,8 @@ export interface Settings {
   editorLspUrl: string;
   /** 各站点最近选择的提交语言 id */
   editorLanguage: Record<string, string>;
+  editorBackend: Record<string, 'site' | 'local'>;
+  localTimeoutMs: number;
   /** 按「站点:题号」保存的草稿代码 */
   editorCode: Record<string, { code: string; updated: number }>;
   /** 按「站点:题号」保存的自定义测试（输入 + 期望输出） */

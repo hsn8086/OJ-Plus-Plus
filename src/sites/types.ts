@@ -49,6 +49,8 @@ export interface EditorTestResult {
 
 /** 站点为题目页提供代码编辑器能力的接口。 */
 export interface SiteEditorSupport {
+  /** 仅在扩展提供本地运行器时挂载。 */
+  readonly localOnly?: boolean;
   /** 编辑器面板挂载点；不在题目页时返回 null。 */
   editorMountPoint(doc: Document): MountPoint | null;
   /** 提交用的题号（如 1A、242A）。 */
@@ -81,9 +83,9 @@ export interface SiteEditorSupport {
   /** 站点可选语言列表。 */
   readonly languages: readonly EditorLanguage[];
   /** 通过站点的 customtest 运行一次代码。 */
-  runCustomTest(code: string, languageId: string, input: string): Promise<EditorTestResult>;
+  runCustomTest?(code: string, languageId: string, input: string): Promise<EditorTestResult>;
   /** 提交代码；url 为结果页（提交列表）。 */
-  submit(code: string, languageId: string, problemCode: string): Promise<{ ok: boolean; url?: string; error?: string }>;
+  submit?(code: string, languageId: string, problemCode: string): Promise<{ ok: boolean; url?: string; error?: string }>;
 }
 
 export interface SiteAdapter {

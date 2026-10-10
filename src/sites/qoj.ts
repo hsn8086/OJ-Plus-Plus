@@ -1,3 +1,4 @@
+import { LOCAL_LANGUAGES } from '../execution/languages.ts';
 import { t } from '../i18n/index.ts';
 import { applyPageI18n } from '../core/page-i18n.ts';
 import { mountNavSettings, observeSite, prepareMathContent } from './shared.ts';
@@ -75,6 +76,26 @@ export const qoj: SiteAdapter = {
     const pdf = pdfSection(doc);
     if (pdf) sections.push(pdf);
     return sections;
+  },
+  editor: {
+    localOnly: true, languages: LOCAL_LANGUAGES,
+    editorMountPoint(doc) { const anchor = doc.querySelector<HTMLElement>('#tab-statement'); return anchor ? { anchor, position: 'beforeend' } : null; },
+    problemCode(doc) { return /\/problem\/(\d+)/.exec(new URL(doc.URL).pathname)?.[1] ?? null; },
+    getSamples(doc) {
+      const inputs: string[] = [], outputs: string[] = [];
+      for (const heading of doc.querySelectorAll('.uoj-article h3, .uoj-article h4')) {
+        const label = heading.textContent?.trim() ?? '';
+        const target = /^(Sample Input|样例输入|输入样例)/i.test(label) ? inputs : /^(Sample Output|样例输出|输出样例)/i.test(label) ? outputs : null;
+        if (!target) continue;
+        let next = heading.nextElementSibling;
+        while (next && !/^H[1-4]$/.test(next.tagName)) {
+          const pre = next.matches('pre') ? next : next.querySelector('pre');
+          if (pre) { target.push(pre.textContent ?? ''); break; }
+          next = next.nextElementSibling;
+        }
+      }
+      return inputs.slice(0, outputs.length).map((input, i) => ({ input, output: outputs[i] }));
+    },
   },
   prepareContent: prepareMathContent,
   mountSettingsButton(button, doc) { mountNavSettings(button, doc, '.navbar-nav, .uoj-header .float-right'); },

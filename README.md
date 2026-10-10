@@ -4,9 +4,9 @@
 [![license](https://img.shields.io/github/license/hsn8086/OJ-Plus-Plus)](LICENSE)
 [![userscript](https://img.shields.io/badge/userscript-Tampermonkey-0b5)](dist/oj-plus-plus.user.js)
 
-OJ++（OJ-Plus-Plus）是一个可扩展的在线评测站增强工具。它把 AI 题面翻译、Markdown 查看和复制能力做成通用功能，再通过站点适配器连接具体 OJ，通过运行平台适配器连接 Tampermonkey、浏览器调试环境和未来的 Chrome 扩展。
+OJ++（OJ-Plus-Plus）是一个可扩展的在线评测站增强工具。它把 AI 题面翻译、Markdown 查看和复制能力做成通用功能，再通过站点适配器连接具体 OJ，通过运行平台适配器连接 Tampermonkey、Chrome 扩展和浏览器调试环境。
 
-目前内置牛客竞赛、Codeforces、AtCoder、QOJ 和洛谷适配器，正式构建为油猴脚本。
+目前内置牛客竞赛、Codeforces、AtCoder、QOJ 和洛谷适配器，提供油猴构建和 Chrome MV3 扩展构建。
 
 ![翻译题面](docs/images/translate.png)
 
@@ -19,12 +19,15 @@ OJ++（OJ-Plus-Plus）是一个可扩展的在线评测站增强工具。它把 
 - **多提供商**：支持 OpenAI Chat Completions、OpenAI Responses、Anthropic Messages，以及自定义地址、请求头和请求体字段。API Key 可以留空，此时不发送认证头，适配本地推理服务。
 - **长题面分段**：关闭整段翻译后按标题、段落和行切分内容。
 - **代码编辑器**：Codeforces 和 AtCoder 题目页内嵌 CodeMirror 6，支持写码、跑题面样例和自定义测试、一键提交。提交页和自定义测试页的原生 ACE 编辑器也替换为 CodeMirror 6。
+- **本地运行（扩展版）**：使用包内 WASM 运行 C11、C++17 和 Python 3.11.3，读取样例和自定义输入，分别显示 stdout/stderr。支持超时、取消、输出上限和编译缓存，不内置 LSP。
 - **界面本地化**：设置面板与按钮支持简体中文和英文。目标语言设为中文时，Codeforces、AtCoder 的导航、题面标题、表单等界面文本也会中文化；牛客在目标语言为英文时把界面翻成英文。
 - **站点配色**：可选跟随系统、浅色或暗色。五个站点都提供站点暗色适配，脚本界面也随主题切换。
 - **按站点开关**：在设置的「站点功能」里分别控制翻译工具栏、自动翻译、界面本地化、站点暗色，以及已支持站点的代码编辑器。保存后即时生效，设置入口始终保留。
 - **平台解耦**：通用代码只依赖存储、HTTP 请求和剪贴板接口。油猴平台使用 GM API，浏览器平台使用 `localStorage`、`fetch` 和 Clipboard API。
 
 ## 安装
+
+### 油猴版
 
 需要先安装 [Tampermonkey](https://www.tampermonkey.net/) 或 Violentmonkey。
 
@@ -34,6 +37,17 @@ OJ++（OJ-Plus-Plus）是一个可扩展的在线评测站增强工具。它把 
 | 本地开发版 | 构建后安装 `dist/oj-plus-plus.user.js` |
 
 > 项目原名 NowcoderBetter，2026-10 改名为 OJ++。改名后脚本的 `@namespace` 变了，脚本管理器会把它当成新脚本，配置需要重新填写。
+
+### Chrome 扩展版
+
+```sh
+pnpm install
+pnpm build:extension
+```
+
+打开 `chrome://extensions`，开启开发者模式，选择「加载已解压的扩展」，加载 `dist-extension/`。首次构建会下载并校验固定版本的 WASM 工具链；安装后的运行不需要下载运行时代码。扩展与油猴存储独立，换用扩展时需重新配置提供商，并关闭同站点的油猴脚本以免出现重复界面。
+
+在 OJ 页面保存提供商设置后，点击浏览器工具栏里的 OJ++ 图标，为对应服务域名授权。扩展包、使用范围和测试命令见 [扩展版说明](docs/extension.md)。
 
 ## 第一次使用
 
@@ -50,13 +64,13 @@ OJ++（OJ-Plus-Plus）是一个可扩展的在线评测站增强工具。它把 
 
 题面按当前显示的日文或英文版本收集，题目、约束、输入、输出和样例说明可分别翻译，比赛介绍、题解详情页与公告文章也提供工具栏。自动翻译可在设置中按站点开启。
 
-登录后，题目页可用 CM6 编辑代码、运行样例和自定义测试。测试使用当前比赛的官方自定义测试接口，按顺序执行；语言列表来自站点。stderr 单独显示，不参与答案比较；有诊断输出时保留展开状态。启用 OJ++ 编辑器后，隐藏重复的原生提交控件，保留 Cloudflare 验证组件。提交仍使用原生表单字段，出现人机验证时需先完成验证。
+油猴版测试使用当前比赛的官方自定义测试接口，需先登录；扩展版可在「站点运行 / 本地 WASM」之间选择。本地运行按顺序执行，程序用时以浏览器实测为准。stderr 单独显示，不参与答案比较；有诊断输出时保留展开状态。启用 OJ++ 编辑器后，隐藏重复的原生提交控件，保留 Cloudflare 验证组件。提交仍使用原生表单字段，出现人机验证时需先完成验证。
 
 ### QOJ 与洛谷
 
 QOJ 的 HTML 题面可翻译、查看 Markdown 和复制；PDF 题面会先提取文本，保留原 PDF 供对照。PDF 提取不包含 OCR，扫描件以及用图形绘制的数学符号无法可靠还原，公式请对照原件。PDF.js 随 userscript 打包，不额外加载 CDN 代码。
 
-洛谷按背景、描述、输入、输出和提示收集内容，样例保留原样。优先读取页面数据中的原始 Markdown，避免从渲染后的公式反推 LaTeX；切换题目会清理上一题的译文。QOJ 与洛谷本轮保留各自的原生编辑器和提交方式。
+洛谷按背景、描述、输入、输出和提示收集内容，样例保留原样。优先读取页面数据中的原始 Markdown，避免从渲染后的公式反推 LaTeX；切换题目会清理上一题的译文。扩展版为 QOJ、洛谷提供本地运行编辑器，正式提交仍使用原生入口。QOJ 的 PDF 题目可手动添加自定义测试，暂不从 PDF 文本自动识别样例。
 
 关闭「站点界面本地化」会恢复原文；关闭「站点暗色适配」只恢复该站点的配色，OJ++ 设置面板仍按全局主题显示。关闭翻译工具栏也会停用该站点的自动翻译。
 
@@ -114,6 +128,9 @@ src/
     types.ts            存储、HTTP、剪贴板接口
     userscript.ts       Tampermonkey / Violentmonkey 实现
     browser.ts          普通浏览器调试实现
+    extension.ts        MV3 存储、HTTP/流式与本地运行桥
+  extension/            后台、Offscreen 宿主、WASI Worker、权限页与页面桥
+  execution/            本地运行请求、语言与校验
   ui/
     section.ts          区域工具栏和翻译流程
     result-panel.ts     通用译文面板
@@ -188,6 +205,9 @@ pnpm check          # 类型检查、单元测试、构建油猴脚本
 pnpm test:browser   # 牛客与 Codeforces 离线浏览器回归
 pnpm test:atcoder   # AtCoder 双语题面、公式、翻译与语言切换回归
 pnpm test:sites     # QOJ HTML/PDF、洛谷原始 Markdown、各站点开关回归
+pnpm build:extension # 构建 MV3 扩展及包内运行时
+pnpm test:extension  # 实际加载扩展，验证 C/C++/Python、流式请求、取消与限额
+pnpm pack:extension  # 用 7z 打包为可分发的 ZIP
 pnpm screenshots     # 生成 README 截图
 ```
 

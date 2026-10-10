@@ -104,6 +104,8 @@ export function defaultSettings(): Settings {
     editorFontSize: 13,
     editorLspUrl: '',
     editorLanguage: {},
+    editorBackend: {},
+    localTimeoutMs: 3000,
     editorCode: {},
     editorTests: {},
   };
@@ -138,6 +140,10 @@ export function migrate(raw: unknown): Settings {
     ...input,
     autoTranslate: normalizeAutoTranslate(input.autoTranslate),
     siteFeatures: normalizeSiteFeatures(input.siteFeatures),
+    editorBackend: input.editorBackend && typeof input.editorBackend === 'object'
+      ? Object.fromEntries(Object.entries(input.editorBackend).filter(([, v]) => v === 'site' || v === 'local')) : {},
+    localTimeoutMs: typeof input.localTimeoutMs === 'number' && Number.isFinite(input.localTimeoutMs)
+      ? Math.min(30000, Math.max(100, input.localTimeoutMs)) : base.localTimeoutMs,
     providers,
     version: base.version,
   };

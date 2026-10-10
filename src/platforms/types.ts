@@ -1,3 +1,5 @@
+import type { LocalRunner } from '../execution/types.ts';
+
 /** 页面功能只依赖这些能力；具体 API 由入口选择的平台适配器提供。 */
 export interface Storage {
   get<T>(key: string): Promise<T | undefined>;
@@ -40,4 +42,5 @@ export interface Platform {
   /** 不支持流式时为 undefined，此时自动退化为一次性请求 */
   readonly stream?: HttpStreamTransport;
   readonly writeClipboard: WriteClipboard;
+  readonly localRunner?: LocalRunner;
 }

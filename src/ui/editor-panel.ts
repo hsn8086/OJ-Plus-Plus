@@ -1,10 +1,13 @@
 import { t } from '../i18n/index.ts';
+import { localLanguageFor } from '../execution/languages.ts';
+import type { Platform } from '../platforms/types.ts';
 import type { Settings } from '../core/types.ts';
 import type { SiteAdapter, SiteEditorSupport } from '../sites/types.ts';
 import { createEditor, type EditorHandle } from '../editor/cm.ts';
 import { ICON_CROSS, ICON_PLAY, ICON_PLUS, ICON_SEND, ICON_SPINNER } from './icons.ts';
 
 export interface EditorPanelOptions {
+  platform: Platform;
   site: SiteAdapter;
   support: SiteEditorSupport;
   getSettings(): Settings;
@@ -99,7 +102,7 @@ export function mountEditorPage(opts: {
 }
 
 export function mountEditorPanel(options: EditorPanelOptions) {
-  const { site, support, getSettings, persist, isDark, onDarkChange } = options;
+  const { platform, site, support, getSettings, persist, isDark, onDarkChange } = options;
   const problemCode = support.problemCode(document);
   const settings = getSettings();
   const key = problemCode ? draftKey(site.id, problemCode) : null;
@@ -118,7 +121,26 @@ export function mountEditorPanel(options: EditorPanelOptions) {
   langSel.value = defaultLang.id;
 
   const spacer = el('span', 'ojpp-editor-spacer');
-  head.append(title, langSel, spacer);
+  const backend = el('select', 'ojpp-editor-backend') as HTMLSelectElement;
+  if (support.runCustomTest) backend.add(new Option(t('editor.siteRun'), 'site'));
+  if (platform.localRunner) backend.add(new Option(t('editor.localRun'), 'local'));
+  backend.value = platform.localRunner ? (settings.editorBackend[site.id] ?? 'local') : 'site';
+  if (!backend.value) backend.selectedIndex = 0;
+  backend.hidden = !platform.localRunner;
+  const localLimit = el('select', 'ojpp-editor-timeout') as HTMLSelectElement;
+  for (const ms of [1000, 3000, 5000, 10000, 30000]) localLimit.add(new Option(`${ms / 1000}s`, String(ms)));
+  localLimit.value = String(settings.localTimeoutMs);
+  if (!localLimit.value) localLimit.value = '3000';
+  localLimit.title = t('editor.localTimeout');
+  const runtimeHint = el('div', 'ojpp-editor-runtime');
+  const updateBackend = () => {
+    localLimit.hidden = runtimeHint.hidden = backend.value !== 'local';
+    runtimeHint.textContent = t('editor.localRuntime');
+  };
+  backend.onchange = () => { getSettings().editorBackend[site.id] = backend.value as 'site' | 'local'; updateBackend(); persist(); };
+  localLimit.onchange = () => { getSettings().localTimeoutMs = Number(localLimit.value); persist(); };
+  updateBackend();
+  head.append(title, langSel, backend, localLimit, spacer);
 
   const cmHost = el('div', 'ojpp-editor-cm');
 
@@ -137,10 +159,11 @@ export function mountEditorPanel(options: EditorPanelOptions) {
   submitBtn.innerHTML = ICON_SEND;
   submitBtn.title = t('editor.submit');
   submitBtn.setAttribute('aria-label', t('editor.submit'));
-  actionsBar.append(submitStatus, runAllBtn, addTestBtn, submitBtn);
+  actionsBar.append(submitStatus, runAllBtn, addTestBtn);
+  if (support.submit) actionsBar.append(submitBtn);
 
   const tests = el('div', 'ojpp-editor-tests');
-  root.append(head, cmHost, actionsBar, tests);
+  root.append(head, runtimeHint, cmHost, actionsBar, tests);
 
   const initial = key ? (settings.editorCode[key]?.code ?? '') : '';
   const editor: EditorHandle = createEditor(cmHost, {
@@ -187,8 +210,13 @@ export function mountEditorPanel(options: EditorPanelOptions) {
   }
 
   const rows: TestRow[] = [];
+  const activeRuns = new Map<TestRow, AbortController>();
 
-  const runRow = async (row: TestRow) => {
+  const runRow = async (row: TestRow, snapshot?: { code: string; languageId: string }) => {
+    if (activeRuns.has(row)) { activeRuns.get(row)!.abort(); return; }
+    const controller = new AbortController();
+    activeRuns.set(row, controller);
+    const local = backend.value === 'local';
     const input = row.kind === 'custom'
       ? (row.row.querySelector('.ojpp-test-input') as HTMLTextAreaElement).value
       : row.input;
@@ -201,9 +229,17 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     for (const u of row.row.querySelectorAll('.ojpp-test-used')) u.remove();
     row.row.classList.remove('collapsed');
     const runBtn = row.row.querySelector<HTMLButtonElement>('.ojpp-test-run');
-    if (runBtn) { runBtn.dataset.state = 'busy'; runBtn.innerHTML = ICON_SPINNER; }
+    if (runBtn) { runBtn.dataset.state = 'busy'; runBtn.innerHTML = ICON_SPINNER; runBtn.disabled = !local; runBtn.title = local ? t('common.cancel') : t('editor.running'); }
     try {
-      const res = await support.runCustomTest(editor.getCode(), langSel.value, input);
+      const code = snapshot?.code ?? editor.getCode();
+      const languageId = snapshot?.languageId ?? langSel.value;
+      const language = support.languages.find(item => item.id === languageId)!;
+      const localLanguage = localLanguageFor(language);
+      if (local && !localLanguage) throw new Error(t('editor.localUnsupported'));
+      const res = local && platform.localRunner
+        ? await platform.localRunner.run({ code, input, language: localLanguage!, timeoutMs: Number(localLimit.value), signal: controller.signal })
+        : support.runCustomTest ? await support.runCustomTest(code, languageId, input)
+          : { output: '', verdict: 'ERROR', error: t('editor.localUnavailable') };
       if (res.error) {
         row.statusEl.textContent = res.verdict ?? t('editor.runError');
         row.statusEl.className = 'ojpp-test-status error';
@@ -241,11 +277,12 @@ export function mountEditorPanel(options: EditorPanelOptions) {
         row.statusEl.after(u);
       }
     } catch (e) {
-      row.statusEl.textContent = t('editor.runError');
+      row.statusEl.textContent = controller.signal.aborted ? t('editor.cancelled') : t('editor.runError');
       row.statusEl.className = 'ojpp-test-status error';
       row.bodyEl.append(el('pre', 'ojpp-test-out error', e instanceof Error ? e.message : String(e)));
     } finally {
-      if (runBtn) { runBtn.dataset.state = ''; runBtn.innerHTML = ICON_PLAY; }
+      activeRuns.delete(row);
+      if (runBtn) { runBtn.dataset.state = ''; runBtn.innerHTML = ICON_PLAY; runBtn.disabled = false; runBtn.title = t('editor.runOne'); }
     }
   };
 
@@ -276,6 +313,7 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     const rec: TestRow = { kind: 'custom', input: '', expected: '', row, statusEl: status, bodyEl: body, customIndex };
     runOne.onclick = (event) => { event.stopPropagation(); void runRow(rec); };
     del.onclick = () => {
+      activeRuns.get(rec)?.abort();
       rows.splice(rows.indexOf(rec), 1);
       row.remove();
       saveCustomTests();
@@ -369,31 +407,42 @@ export function mountEditorPanel(options: EditorPanelOptions) {
   });
 
   let runningAll = false;
+  let allCancelled = false;
   runAllBtn.onclick = async () => {
-    if (runningAll) return;
+    if (runningAll) { allCancelled = true; for (const run of activeRuns.values()) run.abort(); return; }
     runningAll = true;
-    runAllBtn.disabled = true;
+    allCancelled = false;
+    const local = backend.value === 'local';
+    runAllBtn.disabled = !local;
+    backend.disabled = langSel.disabled = localLimit.disabled = true;
     runAllBtn.dataset.state = 'busy';
     runAllBtn.innerHTML = ICON_SPINNER;
+    runAllBtn.title = local ? t('common.cancel') : t('editor.running');
+    runAllBtn.setAttribute('aria-label', runAllBtn.title);
     try {
       // customtest 支持并发（各自独立 job id）——并发池 3 个，别打太多
+      const snapshot = { code: editor.getCode(), languageId: langSel.value };
       const queue = [...rows];
       await Promise.all(
-        Array.from({ length: Math.min(3, queue.length) }, async () => {
-          for (let row = queue.shift(); row; row = queue.shift()) {
-            await runRow(row);
+        Array.from({ length: Math.min(local ? 1 : 3, queue.length) }, async () => {
+          for (let row = queue.shift(); row && !allCancelled; row = queue.shift()) {
+            await runRow(row, snapshot);
           }
         })
       );
     } finally {
       runningAll = false;
+      backend.disabled = langSel.disabled = localLimit.disabled = false;
       runAllBtn.disabled = false;
       runAllBtn.dataset.state = '';
       runAllBtn.innerHTML = ICON_PLAY;
+      runAllBtn.title = t('editor.runAll');
+      runAllBtn.setAttribute('aria-label', runAllBtn.title);
     }
   };
 
   submitBtn.onclick = async () => {
+    if (!support.submit) return;
     if (!problemCode) {
       submitStatus.textContent = t('editor.noProblem');
       submitStatus.className = 'ojpp-editor-status err';
@@ -432,6 +481,8 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     el: root,
     editor,
     dispose() {
+      for (const run of activeRuns.values()) run.abort();
+      allCancelled = true;
       clearTimeout(persistTimer);
       persist();
       stopDark();

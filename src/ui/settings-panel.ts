@@ -16,6 +16,7 @@ import { applyStagger } from './animations.ts';
 
 export interface SettingsPanelOptions {
   settings: Settings;
+  localExecution?: boolean;
   onChange(next: Settings | null): Promise<void>;
   request: HttpTransport;
   onClose(): void;
@@ -226,7 +227,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
         enabled => { draft.autoTranslate[site.id] = enabled; }));
       if (site.i18nPage) features.append(feature('pageI18n', t('settings.siteI18n')));
       if (site.darkStyles) features.append(feature('darkMode', t('settings.siteDark')));
-      if (site.editor) features.append(feature('editor', t('settings.siteEditor')));
+      if (site.editor && (!site.editor.localOnly || options.localExecution)) features.append(feature('editor', t('settings.siteEditor')));
       details.append(features);
       siteSection.body.append(details);
     }

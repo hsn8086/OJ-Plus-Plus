@@ -115,6 +115,8 @@ export const CSS = `
   color: var(--color-accent); 
   pointer-events: none;
 }
+.ojpp-icon-btn.ojpp-test-run[data-state="busy"]:not(:disabled),
+.ojpp-icon-btn.ojpp-editor-act[data-state="busy"]:not(:disabled) { pointer-events: auto; cursor: pointer; }
 .ojpp-icon-btn[data-state="busy"] svg { 
   animation: ojpp-spin 1s linear infinite; 
 }
@@ -906,6 +908,7 @@ export const CSS = `
 }
 
 .ojpp-editor-head {
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -919,6 +922,9 @@ export const CSS = `
   color: var(--color-text-primary);
 }
 
+.ojpp-editor-runtime { padding: 6px 12px; font-size: 12px; color: #909dab; }
+.ojpp-editor-runtime[hidden] { display: none; }
+.ojpp-editor-backend, .ojpp-editor-timeout,
 .ojpp-editor-lang {
   height: 26px;
   max-width: 220px;

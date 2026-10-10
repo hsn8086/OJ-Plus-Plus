@@ -40,6 +40,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
     if (closeSettings) return;
     closeSettings = openSettingsPanel({
       settings,
+      localExecution: !!platform.localRunner,
       request: platform.request,
       async onChange(next) {
         const updated = next ?? defaultSettings();
@@ -82,7 +83,8 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
   };
   const reconcileEditor = () => {
     const mount = site.editor?.editorMountPoint(document);
-    const want = settings.editorEnabled && feature('editor') && !!mount && !!site.editor;
+    const want = settings.editorEnabled && feature('editor') && !!mount && !!site.editor
+      && (!site.editor.localOnly || !!platform.localRunner);
     if (!want) {
       editorPanel?.dispose();
       editorPanel = undefined;
@@ -91,6 +93,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
     if (editorPanel?.el.isConnected) return;
     editorPanel?.dispose();
     editorPanel = mountEditorPanel({
+      platform,
       site,
       support: site.editor!,
       getSettings: () => settings,
