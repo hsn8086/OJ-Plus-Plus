@@ -263,9 +263,25 @@ export const codeforces: SiteAdapter = {
     html[data-ojpp-theme="dark"] .MathJax,
     html[data-ojpp-theme="dark"] .MathJax_Preview,
     html[data-ojpp-theme="dark"] .MathJax_Display,
+    html[data-ojpp-theme="dark"] .MathJax_SVG,
+    html[data-ojpp-theme="dark"] .MathJax_SVG_Display,
     html[data-ojpp-theme="dark"] .MJXp-math,
-    html[data-ojpp-theme="dark"] .mjx-chtml {
+    html[data-ojpp-theme="dark"] .mjx-chtml,
+    html[data-ojpp-theme="dark"] mjx-container,
+    html[data-ojpp-theme="dark"] .tex-span {
       color: #cdd9e5 !important;
+    }
+    /* MathJax SVG 输出的颜色写在 fill/stroke 属性上，color 管不着；
+       只覆盖显式黑色的节点，保留 fill="none" 的透明区域 */
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [fill="black"],
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [fill="#000"],
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [fill="#000000"] {
+      fill: #cdd9e5 !important;
+    }
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [stroke="black"],
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [stroke="#000"],
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [stroke="#000000"] {
+      stroke: #cdd9e5 !important;
     }
 
     /* ---------- 侧边栏信息框 ---------- */

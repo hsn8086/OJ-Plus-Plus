@@ -196,6 +196,7 @@ var en$2 = {
 	"atcoder.verification": "Complete the verification in the AtCoder submission form below, then submit again.",
 	"atcoder.notConfirmed": "AtCoder did not confirm submission. Check the native submission form.",
 	"site.pdfText": "Extracted PDF text (check formulas and layout against the original)",
+	"settings.authorizing": "Checking provider access… Grant permission if the authorization tab opens.",
 	"settings.sites": "Site features",
 	"settings.sitesHint": "Configure each site independently. Auto-translation requires the toolbar; editors also follow the global editor setting.",
 	"settings.siteTranslation": "Translation, Markdown and copy toolbar",
@@ -407,6 +408,7 @@ var zh$2 = {
 	"atcoder.verification": "请在下方 AtCoder 提交表单中完成人机验证，再重新提交。",
 	"atcoder.notConfirmed": "AtCoder 未确认提交成功，请检查原生提交表单。",
 	"site.pdfText": "PDF 提取文本（公式与排版请对照原件）",
+	"settings.authorizing": "正在检查服务权限；如打开授权页，请授权后返回…",
 	"settings.sites": "站点功能",
 	"settings.sitesHint": "独立控制每个站点。自动翻译需要开启翻译工具栏；编辑器还受总开关控制。",
 	"settings.siteTranslation": "翻译、Markdown 与复制工具栏",
@@ -63142,9 +63144,25 @@ var codeforces = {
     html[data-ojpp-theme="dark"] .MathJax,
     html[data-ojpp-theme="dark"] .MathJax_Preview,
     html[data-ojpp-theme="dark"] .MathJax_Display,
+    html[data-ojpp-theme="dark"] .MathJax_SVG,
+    html[data-ojpp-theme="dark"] .MathJax_SVG_Display,
     html[data-ojpp-theme="dark"] .MJXp-math,
-    html[data-ojpp-theme="dark"] .mjx-chtml {
+    html[data-ojpp-theme="dark"] .mjx-chtml,
+    html[data-ojpp-theme="dark"] mjx-container,
+    html[data-ojpp-theme="dark"] .tex-span {
       color: #cdd9e5 !important;
+    }
+    /* MathJax SVG 输出的颜色写在 fill/stroke 属性上，color 管不着；
+       只覆盖显式黑色的节点，保留 fill="none" 的透明区域 */
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [fill="black"],
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [fill="#000"],
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [fill="#000000"] {
+      fill: #cdd9e5 !important;
+    }
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [stroke="black"],
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [stroke="#000"],
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [stroke="#000000"] {
+      stroke: #cdd9e5 !important;
     }
 
     /* ---------- 侧边栏信息框 ---------- */
@@ -65599,7 +65617,14 @@ function openSettingsPanel(options) {
 			status.textContent = t$1("settings.testing");
 			status.dataset.kind = "";
 			try {
-				const reply = await testConnection(options.request, draft, provider);
+				const candidate = structuredClone(provider);
+				const testSettings = structuredClone(draft);
+				if (options.prepareProvider) {
+					status.textContent = t$1("settings.authorizing");
+					await options.prepareProvider(candidate.baseUrl);
+				}
+				status.textContent = t$1("settings.testing");
+				const reply = await testConnection(options.request, testSettings, candidate);
 				status.dataset.kind = "ok";
 				status.textContent = t$1("settings.testOk", { reply: reply.slice(0, 100) });
 			} catch (error) {
@@ -67105,6 +67130,7 @@ async function startApp(platform, site) {
 		closeSettings = openSettingsPanel({
 			settings,
 			localExecution: !!platform.localRunner,
+			prepareProvider: platform.prepareProvider,
 			request: platform.request,
 			async onChange(next) {
 				const updated = next ?? defaultSettings();
