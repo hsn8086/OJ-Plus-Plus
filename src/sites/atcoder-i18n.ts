@@ -4,6 +4,7 @@ const zh: Record<string, string> = {
   'Home': '首页', 'Top': '首页', 'Contests': '比赛', 'Contest': '比赛', 'Tasks': '题目', 'Submit': '提交',
   'Results': '结果', 'Standings': '排行榜', 'Virtual Standings': '虚拟排行榜', 'Submissions': '提交记录',
   'All Submissions': '全部提交', 'My Submissions': '我的提交', 'Custom Test': '自定义测试', 'Editorial': '题解',
+  'Virtual Participation': '虚拟参赛', 'バーチャル参加': '虚拟参赛', 'My Score': '我的得分',
   'Clarifications': '提问', 'Rules': '规则', 'Rating': '积分', 'Rank': '排名', 'Rankings': '排行榜',
   'User': '用户', 'Username': '用户名', 'Task': '题目', 'Language': '语言', 'Score': '分数', 'Status': '状态',
   'Task:': '题目：', 'Language:': '语言：', 'Status:': '状态：', 'User:': '用户：', 'Username:': '用户名：',
@@ -56,11 +57,31 @@ export function localizeAtcoder(doc: Document, locale: string) {
   if (locale !== 'zh') return;
   applyPageI18n(doc, [{
     // Restrict replacements to site chrome and section headings, never statement/editorial prose.
-    scope: '.navbar, .header-inner, .header-sub_nav, .a-title_ttl, .a-btnarea, #contest-nav-tabs, #contest-tabs, #main-container h2, #main-container h3, #main-container h4, #main-container th, #main-container label, #main-container .btn, #main-container .panel-heading, #main-container .nav, #main-container .pager, #main-container summary, #main-container .label, footer, #footer',
+    scope: '.navbar, .header-inner, .header-sub_nav, .a-title_ttl, .a-btnarea, #contest-nav-tabs, #contest-tabs, #main-container h2, #main-container .h2, #main-container h3, #main-container h4, #main-container th, #main-container label, #main-container .btn, #main-container .panel-heading, #main-container .nav, #main-container .pager, #main-container summary, #main-container .label, footer, #footer',
     map: zh,
     replaceMap: {
       '^Sample Input\\s+(\\d+)': '样例输入 $1', '^Sample Output\\s+(\\d+)': '样例输出 $1',
       '^入力例\\s*(\\d+)': '样例输入 $1', '^出力例\\s*(\\d+)': '样例输出 $1',
     },
   }, { scope: 'input[type="submit"], input[type="button"]', values: zh }]);
+  // This is fixed registration guidance, not arbitrary contest or problem prose.
+  if (/^\/contests\/[^/]+\/virtual\/?$/.test(new URL(doc.URL).pathname)) {
+    applyPageI18n(doc, [{
+      scope: '#main-container .lang-en, #main-container .lang-ja',
+      map: {
+        'Virtual participation does not change rating.': '虚拟参赛不会影响积分。',
+        'The following are prohibited while virtual participation.': '虚拟参赛期间禁止以下行为：',
+        "Submitting someone else's code.": '提交他人的代码。',
+        'Submitting code created before start your virtual participation.': '提交在本次虚拟参赛开始前编写的代码。',
+        '参加条件に制限はありませんが、以下の行為はお控えください。': '参加条件没有限制，但请勿进行以下行为：',
+        '他人の回答をコピーして提出する行為': '复制并提交他人的代码。',
+        '事前に作成した回答ソースコードを提出する行為': '提交在本次虚拟参赛开始前编写的代码。',
+        'バーチャル参加とは、コンテストに仮想的に参加できる機能です。': '虚拟参赛可以模拟参加比赛。',
+        'バーチャル参加を開始すると、': '开始虚拟参赛后，',
+        'バーチャル順位表': '虚拟排行榜',
+        'が経過時間に応じてリアルタイムに更新されていきます。': '会随比赛用时实时更新。',
+        'ただし、本番のコンテストとは異なり、レーティングの変動は起こりません。': '与正式比赛不同，虚拟参赛不会影响积分。',
+      },
+    }]);
+  }
 }

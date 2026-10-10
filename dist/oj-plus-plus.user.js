@@ -185,6 +185,7 @@
 		"atcoder.formUnavailable": "AtCoder submission form is unavailable. Open a task page and sign in.",
 		"atcoder.verification": "Complete the verification in the AtCoder submission form below, then submit again.",
 		"atcoder.notConfirmed": "AtCoder did not confirm submission. Check the native submission form.",
+		"section.contest": "Contest overview",
 		"section.constraints": "Constraints",
 		"section.statement": "Problem statement",
 		"section.input": "Input",
@@ -375,6 +376,7 @@
 		"atcoder.formUnavailable": "找不到 AtCoder 提交表单，请打开题目页并确认已登录。",
 		"atcoder.verification": "请在下方 AtCoder 提交表单中完成人机验证，再重新提交。",
 		"atcoder.notConfirmed": "AtCoder 未确认提交成功，请检查原生提交表单。",
+		"section.contest": "比赛介绍",
 		"section.constraints": "约束条件",
 		"section.statement": "题目描述",
 		"section.input": "输入描述",
@@ -53927,11 +53929,13 @@ $$` : `${n}$$`;
 		if (/^Java\b/.test(name)) return "java";
 		return "text";
 	}
+	function atcoderLanguageContent(root) {
+		const variants = [...root.querySelectorAll(".lang-en, .lang-ja")];
+		return variants.find((e) => root.ownerDocument.defaultView?.getComputedStyle(e).display !== "none") ?? variants[0] ?? root;
+	}
 	function atcoderStatement(doc) {
 		const root = doc.querySelector("#task-statement");
-		if (!root) return null;
-		const variants = [...root.querySelectorAll(".lang-en, .lang-ja")];
-		return variants.find((e) => doc.defaultView?.getComputedStyle(e).display !== "none") ?? variants[0] ?? root;
+		return root ? atcoderLanguageContent(root) : null;
 	}
 	function atcoderSamples(doc) {
 		const root = atcoderStatement(doc);
@@ -54205,6 +54209,9 @@ $$` : `${n}$$`;
 		"My Submissions": "我的提交",
 		"Custom Test": "自定义测试",
 		"Editorial": "题解",
+		"Virtual Participation": "虚拟参赛",
+		"バーチャル参加": "虚拟参赛",
+		"My Score": "我的得分",
 		"Clarifications": "提问",
 		"Rules": "规则",
 		"Rating": "积分",
@@ -54379,7 +54386,7 @@ $$` : `${n}$$`;
 	function localizeAtcoder(doc, locale) {
 		if (locale !== "zh") return;
 		applyPageI18n(doc, [{
-			scope: ".navbar, .header-inner, .header-sub_nav, .a-title_ttl, .a-btnarea, #contest-nav-tabs, #contest-tabs, #main-container h2, #main-container h3, #main-container h4, #main-container th, #main-container label, #main-container .btn, #main-container .panel-heading, #main-container .nav, #main-container .pager, #main-container summary, #main-container .label, footer, #footer",
+			scope: ".navbar, .header-inner, .header-sub_nav, .a-title_ttl, .a-btnarea, #contest-nav-tabs, #contest-tabs, #main-container h2, #main-container .h2, #main-container h3, #main-container h4, #main-container th, #main-container label, #main-container .btn, #main-container .panel-heading, #main-container .nav, #main-container .pager, #main-container summary, #main-container .label, footer, #footer",
 			map: zh,
 			replaceMap: {
 				"^Sample Input\\s+(\\d+)": "样例输入 $1",
@@ -54390,6 +54397,23 @@ $$` : `${n}$$`;
 		}, {
 			scope: "input[type=\"submit\"], input[type=\"button\"]",
 			values: zh
+		}]);
+		if (/^\/contests\/[^/]+\/virtual\/?$/.test(new URL(doc.URL).pathname)) applyPageI18n(doc, [{
+			scope: "#main-container .lang-en, #main-container .lang-ja",
+			map: {
+				"Virtual participation does not change rating.": "虚拟参赛不会影响积分。",
+				"The following are prohibited while virtual participation.": "虚拟参赛期间禁止以下行为：",
+				"Submitting someone else's code.": "提交他人的代码。",
+				"Submitting code created before start your virtual participation.": "提交在本次虚拟参赛开始前编写的代码。",
+				"参加条件に制限はありませんが、以下の行為はお控えください。": "参加条件没有限制，但请勿进行以下行为：",
+				"他人の回答をコピーして提出する行為": "复制并提交他人的代码。",
+				"事前に作成した回答ソースコードを提出する行為": "提交在本次虚拟参赛开始前编写的代码。",
+				"バーチャル参加とは、コンテストに仮想的に参加できる機能です。": "虚拟参赛可以模拟参加比赛。",
+				"バーチャル参加を開始すると、": "开始虚拟参赛后，",
+				"バーチャル順位表": "虚拟排行榜",
+				"が経過時間に応じてリアルタイムに更新されていきます。": "会随比赛用时实时更新。",
+				"ただし、本番のコンテストとは異なり、レーティングの変動は起こりません。": "与正式比赛不同，虚拟参赛不会影响积分。"
+			}
 		}]);
 	}
 	var scope = "html[data-ojpp-theme=\"dark\"]";
@@ -54564,6 +54588,24 @@ ${scope} .user-red { color: #f85149 !important; }
 					},
 					result: {
 						anchor: root,
+						position: "afterend"
+					}
+				});
+			}
+			const contest = doc.querySelector("#contest-statement");
+			if (contest) {
+				const content = atcoderLanguageContent(contest);
+				if (content.textContent?.trim()) sections.push({
+					kind: "article",
+					label: t$1("section.contest"),
+					content,
+					toolbar: {
+						anchor: content,
+						position: "beforebegin",
+						align: "block-right"
+					},
+					result: {
+						anchor: content,
 						position: "afterend"
 					}
 				});

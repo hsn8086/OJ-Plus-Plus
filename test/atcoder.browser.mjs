@@ -101,5 +101,54 @@ try {
     document.querySelector('.ojpp-editor').remove();
     return getComputedStyle(document.querySelector('#select-lang').parentElement).display !== 'none';
   }), true);
-  console.log('AtCoder browser regression: bilingual content, formulas, translation, submission, stderr success/failure, native controls and language switching passed');
+  const contestFixture = await readFile(new URL('./fixtures/atcoder-contest.html', import.meta.url), 'utf8');
+  const contestUrl = 'https://atcoder.jp/contests/abc478';
+  await page.route(contestUrl, route => route.fulfill({ body: contestFixture, contentType: 'text/html' }));
+  const injectContest = async enabled => page.evaluate(({ code, enabled }) => {
+    window.requests = [];
+    window.GM_getValue = (key, fallback) => key === 'ojpp:settings' ? {
+      locale: 'zh', targetLang: '简体中文', autoTranslate: { atcoder: enabled }, stream: false,
+      providers: [{ id: 'test', name: 'Test', protocol: 'openai-chat', baseUrl: 'https://fixture.invalid', model: 'test', apiKey: '' }], activeProviderId: 'test',
+    } : fallback;
+    window.GM_setValue = () => {};
+    window.GM_setClipboard = () => {};
+    window.GM_xmlhttpRequest = opts => {
+      window.requests.push(opts.data);
+      setTimeout(() => opts.onload({ status: 200, responseText: JSON.stringify({ choices: [{ message: { content: '比赛介绍译文' } }] }) }), 0);
+      return { abort() {} };
+    };
+    (0, eval)(code);
+  }, { code: bundle, enabled });
+  await page.goto(contestUrl);
+  await injectContest(true);
+  await page.waitForFunction(() => document.querySelector('.ojpp-translate-btn')?.dataset.state === 'done');
+  assert.equal(await page.locator('.ojpp-toolbar').count(), 1);
+  assert.equal(await page.locator('.insert-participant-box a').textContent(), '虚拟参赛');
+  assert.equal(await page.evaluate(() => window.requests.length), 1);
+  assert.match(await page.evaluate(() => window.requests[0]), /full-feedback/);
+  assert.doesNotMatch(await page.evaluate(() => window.requests[0]), /コンテスト時間/);
+  await page.evaluate(() => { document.querySelector('.lang-en').style.display = 'none'; document.querySelector('.lang-ja').style.display = 'inline'; });
+  await page.waitForFunction(() => window.requests.length === 2);
+  assert.match(await page.evaluate(() => window.requests[1]), /コンテスト時間/);
+  await page.waitForTimeout(400);
+  assert.equal(await page.evaluate(() => window.requests.length), 2);
+  assert.equal(await page.locator('.ojpp-toolbar').count(), 1);
+  await page.goto(contestUrl);
+  await injectContest(false);
+  await page.waitForTimeout(400);
+  assert.equal(await page.locator('.ojpp-toolbar').count(), 1);
+  assert.equal(await page.evaluate(() => window.requests.length), 0);
+  const virtualFixture = await readFile(new URL('./fixtures/atcoder-virtual.html', import.meta.url), 'utf8');
+  await page.route(`${contestUrl}/virtual`, route => route.fulfill({ body: virtualFixture, contentType: 'text/html' }));
+  await page.goto(`${contestUrl}/virtual`);
+  await injectContest(false);
+  assert.match(await page.locator('.h2').textContent(), /虚拟参赛/);
+  assert.match(await page.locator('.lang-en').textContent(), /虚拟参赛不会影响积分/);
+  assert.doesNotMatch(await page.locator('.lang-en').textContent(), /Submitting|Virtual participation/);
+  assert.doesNotMatch(await page.locator('.lang-ja').textContent(), /[ぁ-んァ-ヶ]/);
+  assert.equal(await page.locator('.lang-ja a').getAttribute('href'), '/contests/abc478/standings/virtual');
+  assert.equal(await page.locator('#form-register button').textContent(), '报名');
+  assert.equal(await page.evaluate(() => window.requests.length), 0);
+  assert.deepEqual(errors, []);
+  console.log('AtCoder browser regression: bilingual content, contest auto-translation, formulas, submission, stderr and native controls passed');
 } finally { await browser.close(); }

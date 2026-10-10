@@ -12,11 +12,14 @@ export function atcoderLanguageMode(name: string): EditorLanguage['mode'] {
   return 'text';
 }
 
+export function atcoderLanguageContent(root: HTMLElement): HTMLElement {
+  const variants = [...root.querySelectorAll<HTMLElement>('.lang-en, .lang-ja')];
+  return variants.find(e => root.ownerDocument.defaultView?.getComputedStyle(e).display !== 'none') ?? variants[0] ?? root;
+}
+
 export function atcoderStatement(doc: Document): HTMLElement | null {
   const root = doc.querySelector<HTMLElement>('#task-statement');
-  if (!root) return null;
-  const variants = [...root.querySelectorAll<HTMLElement>('.lang-en, .lang-ja')];
-  return variants.find(e => doc.defaultView?.getComputedStyle(e).display !== 'none') ?? variants[0] ?? root;
+  return root ? atcoderLanguageContent(root) : null;
 }
 
 export function atcoderSamples(doc: Document): { input: string; output: string }[] {

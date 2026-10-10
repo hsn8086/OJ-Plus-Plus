@@ -1,5 +1,5 @@
 import { t } from '../i18n/index.ts';
-import { atcoderEditor, atcoderStatement } from './atcoder-editor.ts';
+import { atcoderEditor, atcoderLanguageContent, atcoderStatement } from './atcoder-editor.ts';
 import { localizeAtcoder } from './atcoder-i18n.ts';
 import { ATCODER_DARK } from './atcoder-styles.ts';
 import type { ContentSection, SiteAdapter } from './types.ts';
@@ -51,6 +51,15 @@ export const atcoder: SiteAdapter = {
       if (!sections.length && !root.querySelector('section')) sections.push({
         kind: 'statement', label: t('section.statement'), content: root,
         toolbar: { anchor: root, position: 'beforebegin', align: 'block-right' }, result: { anchor: root, position: 'afterend' },
+      });
+    }
+    const contest = doc.querySelector<HTMLElement>('#contest-statement');
+    if (contest) {
+      const content = atcoderLanguageContent(contest);
+      if (content.textContent?.trim()) sections.push({
+        kind: 'article', label: t('section.contest'), content,
+        toolbar: { anchor: content, position: 'beforebegin', align: 'block-right' },
+        result: { anchor: content, position: 'afterend' },
       });
     }
     const editorialSelector = /\/editorial\/\d+/.test(new URL(doc.URL).pathname)

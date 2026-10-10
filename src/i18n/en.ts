@@ -153,6 +153,7 @@ export const en: Record<MessageKey, string> = {
   'atcoder.formUnavailable': 'AtCoder submission form is unavailable. Open a task page and sign in.',
   'atcoder.verification': 'Complete the verification in the AtCoder submission form below, then submit again.',
   'atcoder.notConfirmed': 'AtCoder did not confirm submission. Check the native submission form.',
+  'section.contest': 'Contest overview',
   'section.constraints': 'Constraints',
   'section.statement': 'Problem statement',
   'section.input': 'Input',

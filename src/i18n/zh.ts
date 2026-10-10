@@ -173,6 +173,7 @@ export const zh = {
   'atcoder.formUnavailable': '找不到 AtCoder 提交表单，请打开题目页并确认已登录。',
   'atcoder.verification': '请在下方 AtCoder 提交表单中完成人机验证，再重新提交。',
   'atcoder.notConfirmed': 'AtCoder 未确认提交成功，请检查原生提交表单。',
+  'section.contest': '比赛介绍',
   'section.constraints': '约束条件',
   'section.statement': '题目描述',
   'section.input': '输入描述',
