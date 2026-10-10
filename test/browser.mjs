@@ -360,7 +360,9 @@ try {
   assert.match(cfNew.markdown, /\\frac\{p_i\}\{100\}/, '新题应保留 MathJax 源码');
   assert.match(cfNew.markdown, /1\s*\\le\s*n\s*\\le\s*2\\cdot 10\^5/, '新题不等式应保留原始 LaTeX');
   // 不能残留渲染副本或原始 script
-  assert.doesNotMatch(cfNew.markdown, /MathJax|MJXp|mjx-/, '不应残留 MathJax 渲染节点');
+  assert.match(cfNew.markdown, /\$p_1, p_2, \\ldots, p_n\$/, '嵌在 .MathJax 容器里的源码应还原成公式');
+  assert.doesNotMatch(cfNew.markdown, /MathJax|MJXp|mjx-|mrow|nobr/, '不应残留 MathJax 渲染节点');
+  assert.doesNotMatch(cfNew.markdown, /p1, p2, …, pn/, '渲染子树的纯文本不该和公式重复');
   assert.doesNotMatch(cfNew.markdown, /\$\$\$/, '不应残留 $$$ 原文');
   // 公式后的普通文本不该被 Turndown 转义
   assert.doesNotMatch(cfNew.markdown, /\$i\$\\-th/, '公式后的连字符不应被转义');

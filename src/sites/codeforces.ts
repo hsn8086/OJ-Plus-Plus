@@ -1505,15 +1505,19 @@ export const codeforces: SiteAdapter = {
     const doc = root.ownerDocument;
 
     // 新题：MathJax 的渲染副本必须先删，否则同一公式会出现两份。
-    // 源码 script 是唯一可靠的 LaTeX 来源，稍后再统一转换。
+    // MathJax 2 把源码 script 包进 .MathJax 容器，预览是容器的兄弟——
+    // 判断「有源码」不能只看相邻兄弟，要查整段有没有 math/tex script。
+    // 装着源码的容器（.MathJax > script）必须保留，等下一步转换。
+    const hasScripts = !!root.querySelector('script[type^="math/tex"]');
     for (const rendered of root.querySelectorAll(MATHJAX_RENDERED)) {
-      // 只在后面确实跟着源码时才删，避免其他渲染器下把内容删空
-      const next = rendered.nextElementSibling;
-      const prev = rendered.previousElementSibling;
-      const hasSource =
-        next?.matches('script[type^="math/tex"]') ||
-        prev?.matches('script[type^="math/tex"]');
-      if (hasSource) rendered.remove();
+      if (rendered.querySelector('script[type^="math/tex"]')) {
+        // 装着源码的容器（.MathJax > script + 渲染子树）——删渲染子树留 script
+        for (const child of [...rendered.children]) {
+          if (!child.matches('script[type^="math/tex"]') && !child.querySelector('script[type^="math/tex"]')) child.remove();
+        }
+        continue;
+      }
+      if (hasScripts) rendered.remove();
     }
 
     // 新题：把 <script type="math/tex"> 还原成 $...$ / $$...$$。

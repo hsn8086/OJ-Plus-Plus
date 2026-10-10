@@ -64365,10 +64365,13 @@ var codeforces = {
 	},
 	prepareContent(root) {
 		const doc = root.ownerDocument;
+		const hasScripts = !!root.querySelector("script[type^=\"math/tex\"]");
 		for (const rendered of root.querySelectorAll(MATHJAX_RENDERED)) {
-			const next = rendered.nextElementSibling;
-			const prev = rendered.previousElementSibling;
-			if (next?.matches("script[type^=\"math/tex\"]") || prev?.matches("script[type^=\"math/tex\"]")) rendered.remove();
+			if (rendered.querySelector("script[type^=\"math/tex\"]")) {
+				for (const child of [...rendered.children]) if (!child.matches("script[type^=\"math/tex\"]") && !child.querySelector("script[type^=\"math/tex\"]")) child.remove();
+				continue;
+			}
+			if (hasScripts) rendered.remove();
 		}
 		for (const script of root.querySelectorAll("script[type^=\"math/tex\"]")) {
 			const latex = (script.textContent ?? "").trim();
