@@ -15,11 +15,13 @@
 // @match        https://m1.codeforces.com/*
 // @match        https://m2.codeforces.com/*
 // @match        https://codeforces.ml/*
+// @match        https://atcoder.jp/*
 // @connect      *
 // @grant        GM_getValue
 // @grant        GM_setClipboard
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
+// @grant        unsafeWindow
 // @run-at       document-idle
 // ==/UserScript==
 
@@ -177,6 +179,13 @@
 		"error.baseUrlEmpty": "Base URL is empty. Please fill it in the settings.",
 		"site.nowcoder": "Nowcoder",
 		"site.codeforces": "Codeforces",
+		"atcoder.signIn": "Sign in to AtCoder before running tests or submitting code.",
+		"atcoder.testBusy": "An AtCoder custom test is already running. Try again after it finishes.",
+		"atcoder.testTimeout": "Custom test timed out. Check the AtCoder Custom Test page before retrying.",
+		"atcoder.formUnavailable": "AtCoder submission form is unavailable. Open a task page and sign in.",
+		"atcoder.verification": "Complete the verification in the AtCoder submission form below, then submit again.",
+		"atcoder.notConfirmed": "AtCoder did not confirm submission. Check the native submission form.",
+		"section.constraints": "Constraints",
 		"section.statement": "Problem statement",
 		"section.input": "Input",
 		"section.output": "Output",
@@ -218,7 +227,7 @@
 		"editor.lspUrlPlaceholder": "ws://localhost:20876 (empty to disable)",
 		"editor.lspUrlHint": "Connect a local LSP WebSocket bridge (e.g. lsp-ws-proxy) for semantic completion; leave empty for keyword completion only."
 	};
-	var zh = {
+	var zh$1 = {
 		"common.copied": "已复制",
 		"common.copyFailed": "复制失败",
 		"common.close": "关闭",
@@ -359,6 +368,13 @@
 		"error.baseUrlEmpty": "接口地址为空，请在设置里填写",
 		"site.nowcoder": "牛客",
 		"site.codeforces": "Codeforces",
+		"atcoder.signIn": "请先登录 AtCoder，再运行测试或提交代码。",
+		"atcoder.testBusy": "AtCoder 正在运行另一个自定义测试，请等待完成后重试。",
+		"atcoder.testTimeout": "自定义测试超时，请先检查 AtCoder 自定义测试页的状态。",
+		"atcoder.formUnavailable": "找不到 AtCoder 提交表单，请打开题目页并确认已登录。",
+		"atcoder.verification": "请在下方 AtCoder 提交表单中完成人机验证，再重新提交。",
+		"atcoder.notConfirmed": "AtCoder 未确认提交成功，请检查原生提交表单。",
+		"section.constraints": "约束条件",
 		"section.statement": "题目描述",
 		"section.input": "输入描述",
 		"section.output": "输出描述",
@@ -401,7 +417,7 @@
 		"editor.lspUrlHint": "连接本机 LSP WebSocket 桥（如 lsp-ws-proxy）做语义补全；留空只用关键字补全。"
 	};
 	var CATALOGS = {
-		zh,
+		zh: zh$1,
 		en: en$1
 	};
 	function resolveLocale(setting, languages) {
@@ -420,7 +436,7 @@
 		for (const listener of listeners) listener(locale);
 	}
 	function t$1(key, params) {
-		const template = CATALOGS[current][key] ?? zh[key] ?? key;
+		const template = CATALOGS[current][key] ?? zh$1[key] ?? key;
 		if (!params) return template;
 		return template.replace(/\{(\w+)\}/g, (match, name) => name in params ? String(params[name]) : match);
 	}
@@ -21602,8 +21618,13 @@
 			}
 		});
 		const stopDark = opts.onDarkChange((dark) => editor.setDark(dark));
+		let lastLanguage = opts.langSelect?.value ?? "";
 		const onLang = () => {
-			if (opts.langSelect) editor.setMode(opts.langMode(opts.langSelect.value));
+			const next = opts.langSelect?.value ?? "";
+			if (next !== lastLanguage) {
+				lastLanguage = next;
+				editor.setMode(opts.langMode(next));
+			}
 		};
 		opts.langSelect?.addEventListener("change", onLang);
 		const applyToggle = () => {
@@ -21615,6 +21636,7 @@
 		applyToggle();
 		return {
 			el: host,
+			refresh: onLang,
 			dispose() {
 				stopDark();
 				opts.langSelect?.removeEventListener("change", onLang);
@@ -21662,14 +21684,16 @@
 		actionsBar.append(submitStatus, runAllBtn, addTestBtn, submitBtn);
 		const tests = el$1("div", "ojpp-editor-tests");
 		root.append(head, cmHost, actionsBar, tests);
+		const initial = key ? settings.editorCode[key]?.code ?? "" : "";
 		const editor = createEditor(cmHost, {
-			doc: key ? settings.editorCode[key]?.code ?? "" : "",
+			doc: initial,
 			mode: defaultLang.mode,
 			dark: isDark(),
 			fontSize: settings.editorFontSize,
 			tabSize: 4,
 			lspUrl: settings.editorLspUrl,
 			onChange: (code) => {
+				support.syncCode?.(code, langSel.value);
 				if (!key) return;
 				getSettings().editorCode[key] = {
 					code,
@@ -21678,6 +21702,7 @@
 				persistDebounced();
 			}
 		});
+		support.syncCode?.(initial, langSel.value);
 		const stopDark = onDarkChange((dark) => editor.setDark(dark));
 		let persistTimer;
 		function persistDebounced() {
@@ -21687,6 +21712,7 @@
 		langSel.onchange = () => {
 			const lang = support.languages.find((l) => l.id === langSel.value) ?? defaultLang;
 			editor.setMode(lang.mode);
+			support.syncCode?.(editor.getCode(), lang.id);
 			getSettings().editorLanguage[site.id] = lang.id;
 			persist();
 		};
@@ -53879,6 +53905,192 @@ $$` : `${n}$$`;
 			restoreInlineColors();
 		};
 	}
+	function atcoderContest(path) {
+		return /^\/contests\/([\w-]+)(?:\/|$)/.exec(path)?.[1] ?? null;
+	}
+	function atcoderLanguageMode(name) {
+		if (/C\+\+|Clang|\bC\d*\b/.test(name)) return "cpp";
+		if (/Python|PyPy|Codon/i.test(name)) return "python";
+		if (/^Java\b/.test(name)) return "java";
+		return "text";
+	}
+	function atcoderStatement(doc) {
+		const root = doc.querySelector("#task-statement");
+		if (!root) return null;
+		const variants = [...root.querySelectorAll(".lang-en, .lang-ja")];
+		return variants.find((e) => doc.defaultView?.getComputedStyle(e).display !== "none") ?? variants[0] ?? root;
+	}
+	function atcoderSamples(doc) {
+		const root = atcoderStatement(doc);
+		if (!root) return [];
+		const inputs = [];
+		const outputs = [];
+		for (const section of root.querySelectorAll("section")) {
+			const heading = section.querySelector("h3")?.textContent?.trim() ?? "";
+			const pre = section.querySelector("pre");
+			if (!pre) continue;
+			if (/^(Sample Input|入力例|样例输入)\s*\d+/.test(heading)) inputs.push(pre);
+			if (/^(Sample Output|出力例|样例输出)\s*\d+/.test(heading)) outputs.push(pre);
+		}
+		const samples = [];
+		for (let i = 0; i < Math.min(inputs.length, outputs.length); i++) samples.push({
+			input: inputs[i].textContent ?? "",
+			output: outputs[i].textContent ?? ""
+		});
+		return samples;
+	}
+	function parseAtcoderResult(data) {
+		if (!data.Result || data.Interval || [1, 2].includes(data.Result.Status)) return null;
+		const r = data.Result;
+		if (!r.Id) return null;
+		const output = (data.Stdout ?? "").replace(/\r\n/g, "\n");
+		const failed = Number(r.ExitCode) !== 0 || r.Status !== 3;
+		return {
+			output,
+			used: `${r.TimeConsumption}, ${r.MemoryConsumption}`,
+			verdict: failed ? "ERROR" : "OK",
+			...failed ? { error: data.Stderr?.trim() || `Exit code: ${r.ExitCode} (status ${r.Status})` } : {}
+		};
+	}
+	function languages(doc) {
+		return [...doc.querySelectorAll("select[name=\"data.LanguageId\"] option")].filter((o) => o.value).map((o) => ({
+			id: o.value,
+			name: o.text,
+			mode: atcoderLanguageMode(o.text)
+		})).sort((a, b) => Number(/^C\+\+.*GCC/.test(b.name)) - Number(/^C\+\+.*GCC/.test(a.name)));
+	}
+	function syncAce(code) {
+		const ace = (typeof unsafeWindow !== "undefined" ? unsafeWindow : window).ace;
+		if (ace && document.querySelector("#editor")) {
+			const editor = ace.edit("editor");
+			if (editor.getValue() !== code) editor.setValue(code, -1);
+		}
+	}
+	async function fetchChecked(url, init) {
+		const res = await fetch(url, {
+			credentials: "same-origin",
+			signal: AbortSignal.timeout(3e4),
+			...init
+		});
+		if (!res.ok) throw new Error(`AtCoder HTTP ${res.status}`);
+		if (new URL(res.url).pathname === "/login") throw new Error(t$1("atcoder.signIn"));
+		return res;
+	}
+	async function runTest(code, languageId, input) {
+		const contest = atcoderContest(location.pathname);
+		if (!contest) throw new Error("No AtCoder contest.");
+		const base = `/contests/${contest}/custom_test`;
+		const token = new DOMParser().parseFromString(await (await fetchChecked(base)).text(), "text/html").querySelector("input[name=\"csrf_token\"]")?.value;
+		if (!token) throw new Error(t$1("atcoder.signIn"));
+		const before = await (await fetchChecked(`${base}/json?reload=true`)).json();
+		if (before.Interval || [1, 2].includes(before.Result?.Status ?? 0)) throw new Error(t$1("atcoder.testBusy"));
+		const body = new URLSearchParams({
+			"data.LanguageId": languageId,
+			sourceCode: code,
+			input,
+			csrf_token: token
+		});
+		const reply = await (await fetchChecked(`${base}/submit/json`, {
+			method: "POST",
+			body
+		})).text();
+		if (reply.trim() && reply.trim() !== "\"\"") throw new Error(new DOMParser().parseFromString(reply, "text/html").body.textContent?.trim() || "Custom test rejected.");
+		const deadline = Date.now() + 12e4;
+		while (Date.now() < deadline) {
+			await new Promise((resolve) => setTimeout(resolve, 1e3));
+			const data = await (await fetchChecked(`${base}/json?reload=true`)).json();
+			if (data.Result?.Id === before.Result?.Id) continue;
+			const result = parseAtcoderResult(data);
+			if (result) return result;
+		}
+		throw new Error(t$1("atcoder.testTimeout"));
+	}
+	var testQueue = Promise.resolve();
+	var atcoderEditor = {
+		editorMountPoint(doc) {
+			const root = doc.querySelector("#task-statement");
+			return root && languages(doc).length ? {
+				anchor: root,
+				position: "afterend"
+			} : null;
+		},
+		problemCode(doc) {
+			return /\/tasks\/([\w-]+)$/.exec(new URL(doc.URL).pathname)?.[1] ?? null;
+		},
+		get languages() {
+			return languages(document);
+		},
+		getSamples: atcoderSamples,
+		syncCode(code, languageId) {
+			const source = document.querySelector("#plain-textarea");
+			const language = document.querySelector("select[name=\"data.LanguageId\"]");
+			if (source) source.value = code;
+			if (language) language.value = languageId;
+			syncAce(code);
+		},
+		runCustomTest(code, languageId, input) {
+			const run = async () => navigator.locks ? await navigator.locks.request("ojpp-atcoder-custom-test", () => runTest(code, languageId, input)) : await runTest(code, languageId, input);
+			const result = testQueue.then(run);
+			testQueue = result.catch(() => void 0);
+			return result;
+		},
+		async submit(code, languageId, problemCode) {
+			const form = document.querySelector("form.form-code-submit");
+			if (!form || !/\/submit$/.test(new URL(form.action).pathname)) return {
+				ok: false,
+				error: t$1("atcoder.formUnavailable")
+			};
+			const source = form.querySelector("[name=\"sourceCode\"]");
+			const language = form.querySelector("[name=\"data.LanguageId\"]");
+			if (!source || !language) return {
+				ok: false,
+				error: t$1("atcoder.formUnavailable")
+			};
+			source.value = code;
+			language.value = languageId;
+			syncAce(code);
+			const body = new URLSearchParams();
+			for (const [key, value] of new FormData(form)) if (typeof value === "string") body.set(key, value);
+			body.set("data.TaskScreenName", problemCode);
+			body.set("sourceCode", code);
+			body.set("data.LanguageId", languageId);
+			const challenge = form.querySelector("[name=\"cf-turnstile-response\"]");
+			if (challenge && !challenge.value) {
+				form.scrollIntoView({ block: "center" });
+				return {
+					ok: false,
+					error: t$1("atcoder.verification")
+				};
+			}
+			const response = await fetchChecked(form.action, {
+				method: "POST",
+				body
+			});
+			if (/\/submissions(?:\/|$)/.test(new URL(response.url).pathname)) return {
+				ok: true,
+				url: response.url
+			};
+			return {
+				ok: false,
+				error: [...new DOMParser().parseFromString(await response.text(), "text/html").querySelectorAll(".alert-danger, .has-error .help-block")].map((e) => e.textContent?.trim()).filter(Boolean).join("; ") || t$1("atcoder.notConfirmed")
+			};
+		},
+		editorPage(doc) {
+			if (doc.querySelector("#task-statement")) return null;
+			const textarea = doc.querySelector("#plain-textarea");
+			const native = doc.querySelector("#editor");
+			if (!textarea || !native) return null;
+			return {
+				anchor: native,
+				position: "afterend",
+				hide: native,
+				textarea,
+				langSelect: doc.querySelector("select[name=\"data.LanguageId\"]") ?? void 0,
+				langMode: (id) => languages(doc).find((l) => l.id === id)?.mode ?? "text",
+				syncBack: syncAce
+			};
+		}
+	};
 	var DEFAULT_EXCLUDE = "pre, code, textarea, script, style, noscript, option, .cm-editor, .ace_editor, .MathJax, .tex-span, [class*=\"ojpp-\"]";
 	function applyPageI18n(doc, rules) {
 		for (const rule of rules) {
@@ -53938,7 +54150,7 @@ $$` : `${n}$$`;
 						node.textContent = node.textContent?.replace(new RegExp(pattern, "g"), to) ?? node.textContent;
 					} catch {}
 				}
-				if (rule.values) for (const el of scope.querySelectorAll("input, button")) {
+				if (rule.values) for (const el of [...scope.matches("input, button") ? [scope] : [], ...scope.querySelectorAll("input, button")]) {
 					if (el.dataset.ojppI18n || el.closest(exclude)) continue;
 					const v = (el.tagName === "INPUT" ? el.value : el.textContent)?.trim() ?? "";
 					if (v && rule.values[v]) {
@@ -53947,7 +54159,7 @@ $$` : `${n}$$`;
 						el.dataset.ojppI18n = "1";
 					}
 				}
-				if (rule.replaceValues) for (const el of scope.querySelectorAll("input, button")) {
+				if (rule.replaceValues) for (const el of [...scope.matches("input, button") ? [scope] : [], ...scope.querySelectorAll("input, button")]) {
 					if (el.closest(exclude)) continue;
 					const raw = el.tagName === "INPUT" ? el.value : el.textContent;
 					if (!raw) continue;
@@ -53963,6 +54175,433 @@ $$` : `${n}$$`;
 			}
 		}
 	}
+	var zh = {
+		"Home": "首页",
+		"Top": "首页",
+		"Contests": "比赛",
+		"Contest": "比赛",
+		"Tasks": "题目",
+		"Submit": "提交",
+		"Results": "结果",
+		"Standings": "排行榜",
+		"Virtual Standings": "虚拟排行榜",
+		"Submissions": "提交记录",
+		"All Submissions": "全部提交",
+		"My Submissions": "我的提交",
+		"Custom Test": "自定义测试",
+		"Editorial": "题解",
+		"Clarifications": "提问",
+		"Rules": "规则",
+		"Rating": "积分",
+		"Rank": "排名",
+		"Rankings": "排行榜",
+		"User": "用户",
+		"Username": "用户名",
+		"Task": "题目",
+		"Language": "语言",
+		"Score": "分数",
+		"Status": "状态",
+		"Code Size": "代码长度",
+		"Exec Time": "运行时间",
+		"Memory": "内存",
+		"Submission Time": "提交时间",
+		"Detail": "详情",
+		"Details": "详情",
+		"Source Code": "源代码",
+		"Source code": "源代码",
+		"Input": "输入",
+		"Output": "输出",
+		"Standard Input": "标准输入",
+		"Standard Output": "标准输出",
+		"Standard Error": "标准错误",
+		"Exit Code": "退出码",
+		"Problem Statement": "题目描述",
+		"Constraints": "约束条件",
+		"Copy": "复制",
+		"Run": "运行",
+		"Reset": "重置",
+		"Search": "搜索",
+		"Filter": "筛选",
+		"All": "全部",
+		"Duration": "时长",
+		"Start Time": "开始时间",
+		"Contest Duration": "比赛时长",
+		"Contest Type": "比赛类型",
+		"Rated Range": "计分范围",
+		"Upcoming Contests": "即将举行的比赛",
+		"Active Contests": "进行中的比赛",
+		"Recent Contests": "近期比赛",
+		"Permanent Contests": "长期比赛",
+		"Past Contests": "历史比赛",
+		"Contest Archive": "比赛归档",
+		"Sign In": "登录",
+		"Sign Out": "退出登录",
+		"Sign Up": "注册",
+		"Register": "报名",
+		"Unregister": "取消报名",
+		"My Profile": "我的主页",
+		"General Settings": "通用设置",
+		"Change Photo": "更换头像",
+		"Change Password": "修改密码",
+		"Manage Fav": "管理收藏",
+		"Settings": "设置",
+		"Help": "帮助",
+		"Terms of service": "服务条款",
+		"Privacy Policy": "隐私政策",
+		"Company": "公司",
+		"Contact": "联系",
+		"Search in Archive": "搜索历史比赛",
+		"Contest Name": "比赛名称",
+		"Daily Contests": "每日比赛",
+		"Rule": "规则",
+		"Terms of Use": "使用条款",
+		"Information Protection Policy": "信息保护政策",
+		"at most 512 KiB": "最多 512 KiB",
+		"A newline character is also at the end of the input data usually.": "输入数据的末尾通常也有换行符。",
+		"マイプロフィール": "我的主页",
+		"基本設定": "通用设置",
+		"アイコン設定": "头像设置",
+		"パスワードの変更": "修改密码",
+		"お気に入り管理": "管理收藏",
+		"トップ": "首页",
+		"バーチャル順位表": "虚拟排行榜",
+		"ランキング": "排行榜",
+		"コンテスト一覧": "比赛列表",
+		"開催中のコンテスト": "进行中的比赛",
+		"常設中のコンテスト": "长期比赛",
+		"予定されたコンテスト": "即将举行的比赛",
+		"過去のコンテスト": "历史比赛",
+		"開始時刻": "开始时间",
+		"コンテスト名": "比赛名称",
+		"時間": "时长",
+		"レーティング対象": "计分范围",
+		"更新": "更新",
+		"順位": "排名",
+		"ユーザ": "用户",
+		"最高": "最高",
+		"参加回数": "参赛次数",
+		"Highest Rating": "最高积分",
+		"Competitions": "参赛次数",
+		"Matches": "参赛次数",
+		"Country/Region": "国家或地区",
+		"Affiliation": "所属机构",
+		"Birth Year": "出生年份",
+		"Active Users": "活跃用户",
+		"All Users": "全部用户",
+		"Algorithm": "算法",
+		"Heuristic": "启发式",
+		"FAQ": "常见问题",
+		"Glossary": "术语表",
+		"Tutorial": "教程",
+		"About": "关于",
+		"Back to Home": "返回首页",
+		"Discuss": "讨论",
+		"For beginners": "初学者说明",
+		"Time Limit:": "时间限制：",
+		"Memory Limit:": "内存限制：",
+		"Contest Duration:": "比赛时长：",
+		"Editorial by": "题解作者",
+		"Editorials": "题解",
+		"Online Contests": "在线比赛",
+		"Contest has ended.": "比赛已结束。",
+		"Contest is over": "比赛已结束",
+		"Practice": "练习",
+		"Time limit exceeded": "超出时间限制",
+		"Memory limit exceeded": "超出内存限制",
+		"Open File": "打开文件",
+		"Toggle Editor": "切换编辑器",
+		"Auto Height": "自动高度",
+		"Customize": "自定义",
+		"Test Case": "测试点",
+		"Test Set": "测试集",
+		"Time Limit": "时间限制",
+		"Memory Limit": "内存限制",
+		"Official": "官方",
+		"User Editorial": "用户题解",
+		"Overall Editorial": "整体题解",
+		"Write an Editorial": "撰写题解",
+		"問題文": "题目描述",
+		"制約": "约束条件",
+		"入力": "输入",
+		"出力": "输出",
+		"解説": "题解",
+		"問題": "题目",
+		"提出": "提交",
+		"提出結果": "提交记录",
+		"順位表": "排行榜",
+		"質問": "提问",
+		"コードテスト": "自定义测试",
+		"コンテスト": "比赛",
+		"ホーム": "首页",
+		"参加登録": "报名",
+		"ログイン": "登录",
+		"ログアウト": "退出登录",
+		"新規登録": "注册",
+		"すべての提出": "全部提交",
+		"自分の提出": "我的提交",
+		"言語": "语言",
+		"得点": "分数",
+		"実行時間": "运行时间",
+		"メモリ": "内存",
+		"ソースコード": "源代码",
+		"標準入力": "标准输入",
+		"標準出力": "标准输出",
+		"標準エラー出力": "标准错误",
+		"実行": "运行",
+		"詳細": "详情",
+		"配点": "分数"
+	};
+	function localizeAtcoder(doc, locale) {
+		if (locale !== "zh") return;
+		applyPageI18n(doc, [{
+			scope: ".navbar, .header-inner, .header-sub_nav, .a-title_ttl, .a-btnarea, #contest-nav-tabs, #contest-tabs, #main-container h2, #main-container h3, #main-container h4, #main-container th, #main-container label, #main-container .btn, #main-container .panel-heading, #main-container .nav, #main-container summary, #main-container .label, footer, #footer",
+			map: zh,
+			replaceMap: {
+				"^Sample Input\\s+(\\d+)": "样例输入 $1",
+				"^Sample Output\\s+(\\d+)": "样例输出 $1",
+				"^入力例\\s*(\\d+)": "样例输入 $1",
+				"^出力例\\s*(\\d+)": "样例输出 $1"
+			}
+		}, {
+			scope: "input[type=\"submit\"], input[type=\"button\"]",
+			values: zh
+		}]);
+	}
+	var scope = "html[data-ojpp-theme=\"dark\"]";
+	var atcoder = {
+		id: "atcoder",
+		name: "AtCoder",
+		hosts: ["atcoder.jp"],
+		editor: atcoderEditor,
+		styles: `
+    .navbar-right .ojpp-settings-btn { margin: 8px 6px; }
+    #task-statement .ojpp-toolbar { font-size: 14px; }
+    #task-statement .ojpp-result { white-space: normal; }
+    .ojpp-editor-page .cm-scroller { min-height: 240px; }
+    /* On native editor pages CM6 owns editing; retain the actual submission textarea. */
+    body:has(.ojpp-editor-page, .ojpp-editor) #editor, body:has(.ojpp-editor-page, .ojpp-editor) #plain-textarea,
+    body:has(.ojpp-editor-page, .ojpp-editor) .btn-toggle-editor, body:has(.ojpp-editor-page, .ojpp-editor) #btn-customize,
+    body:has(.ojpp-editor-page, .ojpp-editor) #btn-open-file { display: none !important; }
+  `,
+		darkStyles: `
+${scope} { color-scheme: dark; }
+${scope} body, ${scope} #main-container, ${scope} #main-div, ${scope} #main-container .container,
+${scope} #contest-nav-tabs {
+  background: #1c2128; color: #cdd9e5;
+}
+${scope} a:not([class*="user-"]):not(.btn) { color: #539bf5; }
+${scope} a:not([class*="user-"]):hover { color: #79b8ff; }
+${scope} .navbar, ${scope} .navbar-default, ${scope} .navbar-inverse,
+${scope} .panel, ${scope} .panel-default, ${scope} .well, ${scope} .modal-content,
+${scope} .dropdown-menu, ${scope} .popover, ${scope} .list-group-item,
+${scope} .select2-drop, ${scope} .select2-results { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${scope} .panel-heading, ${scope} .panel-footer, ${scope} .modal-header,
+${scope} .modal-footer, ${scope} .popover-title { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${scope} .navbar a, ${scope} .dropdown-menu>li>a { color: #cdd9e5; }
+${scope} .dropdown-menu>li>a:hover, ${scope} .dropdown-menu>li>a:focus,
+${scope} .navbar .open>a, ${scope} .nav>li>a:hover, ${scope} .nav>li>a:focus,
+${scope} .nav-tabs>li.active>a, ${scope} .nav-tabs>li.active>a:hover,
+${scope} .pagination>.active>a { background: #2d333b; color: #79b8ff; border-color: #373e47; }
+${scope} .nav-tabs, ${scope} hr, ${scope} .table>thead>tr>th,
+${scope} .table>tbody>tr>td, ${scope} .table>tbody>tr>th, ${scope} .table-bordered,
+${scope} .table-bordered>thead>tr>th, ${scope} .table-bordered>tbody>tr>td { border-color: #373e47; }
+${scope} .table-striped>tbody>tr:nth-of-type(odd), ${scope} .table-striped>tbody>tr:nth-child(odd)>td,
+${scope} .table-striped>tbody>tr:nth-child(odd)>th { background: #22272e; }
+${scope} .table-hover>tbody>tr:hover>td, ${scope} .table-hover>tbody>tr:hover>th { background: #2d333b; }
+${scope} .table .success, ${scope} .table .success>td { background: #22392b; }
+${scope} .table .warning, ${scope} .table .warning>td { background: #3c3424; }
+${scope} .table .danger, ${scope} .table .danger>td { background: #422c30; }
+${scope} input:not([type=checkbox]):not([type=radio]), ${scope} select, ${scope} textarea,
+${scope} .form-control, ${scope} .select2-container .select2-choice,
+${scope} .select2-container .select2-choice .select2-arrow, ${scope} .select2-search input {
+  background: #1c2128; background-image: none; color: #cdd9e5; border-color: #373e47;
+}
+${scope} .select2-results .select2-highlighted { background: #2d333b; color: #79b8ff; }
+${scope} .btn-default, ${scope} .btn-default:focus, ${scope} .pagination>li>a,
+${scope} .pagination>li>span { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${scope} .btn-default:hover { background: #2d333b; }
+${scope} pre, ${scope} code, ${scope} .source-code-for-copy { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${scope} #task-statement var, ${scope} .katex { color: inherit; background: transparent; }
+${scope} .alert-info { background: #203247; color: #9bc4ef; border-color: #354c66; }
+${scope} .alert-warning { background: #3c3424; color: #e5c07b; border-color: #665537; }
+${scope} .alert-danger { background: #422c30; color: #f3a6ac; border-color: #694047; }
+${scope} .alert-success { background: #22392b; color: #8bc89a; border-color: #365d40; }
+${scope} .text-muted, ${scope} .help-block, ${scope} small { color: #909dab; }
+${scope} blockquote { border-color: #536170; }
+${scope} .close { color: #cdd9e5; text-shadow: none; opacity: .8; }
+${scope} #main-div { box-shadow: none; }
+${scope} #fixed-server-timer { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${scope} .select2-container .select2-selection--single,
+${scope} .select2-dropdown, ${scope} .select2-search__field {
+  background: #1c2128; color: #cdd9e5; border-color: #373e47;
+}
+${scope} .select2-container .select2-selection--single .select2-selection__rendered { color: #cdd9e5; }
+${scope} .select2-container .select2-results__option[aria-selected=true] { background: #2d333b; }
+${scope} .select2-container .select2-results__option--highlighted[aria-selected] { background: #354961; color: #fff; }
+${scope} .table>tbody>tr.success>th, ${scope} .table>tbody>tr>th.success { background: #22392b; }
+${scope} .table>tbody>tr.danger>th, ${scope} .table>tbody>tr>th.danger { background: #422c30; }
+${scope} .table>tbody>tr.warning>th, ${scope} .table>tbody>tr>th.warning { background: #3c3424; }
+${scope} .user-gray { color: #a0a0a0 !important; }
+${scope} .user-brown { color: #b78b66 !important; }
+${scope} .user-green { color: #57ab5a !important; }
+${scope} .user-cyan { color: #56c7c7 !important; }
+${scope} .user-blue { color: #539bf5 !important; }
+${scope} .user-yellow { color: #d8cf55 !important; }
+${scope} .user-orange { color: #f0883e !important; }
+${scope} .user-red { color: #f85149 !important; }
+`,
+		collectSections(doc) {
+			const sections = [];
+			const root = atcoderStatement(doc);
+			if (root) {
+				for (const section of root.querySelectorAll("section")) {
+					const heading = section.querySelector("h3");
+					if (!heading || !section.textContent?.trim()) continue;
+					const label = [...heading.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim();
+					if (section.querySelector("pre[id^=\"pre-sample\"]") || /^(Sample (Input|Output)|入力例|出力例|样例输入|样例输出)\s*\d+/.test(label)) {
+						for (const paragraph of [...section.children].filter((e) => e instanceof HTMLElement && [
+							"P",
+							"UL",
+							"OL"
+						].includes(e.tagName))) sections.push({
+							kind: "output",
+							label: t$1("section.note"),
+							content: paragraph,
+							toolbar: {
+								anchor: paragraph,
+								position: "beforebegin",
+								align: "block-right"
+							},
+							result: {
+								anchor: paragraph,
+								position: "afterend"
+							}
+						});
+						continue;
+					}
+					const kind = /^(Input|入力|输入)$/.test(label) ? "input" : /^(Output|出力|输出)$/.test(label) ? "output" : "statement";
+					const localizedLabel = /^(Constraints|制約|约束条件)$/.test(label) ? t$1("section.constraints") : kind === "input" ? t$1("section.input") : kind === "output" ? t$1("section.output") : /^(Problem Statement|問題文|题目描述)$/.test(label) ? t$1("section.statement") : label;
+					sections.push({
+						kind,
+						label: localizedLabel,
+						content: section,
+						toolbar: {
+							anchor: heading,
+							position: "beforeend",
+							align: "right"
+						},
+						result: {
+							anchor: section,
+							position: "afterend"
+						}
+					});
+				}
+				if (!sections.length && !root.querySelector("section")) sections.push({
+					kind: "statement",
+					label: t$1("section.statement"),
+					content: root,
+					toolbar: {
+						anchor: root,
+						position: "beforebegin",
+						align: "block-right"
+					},
+					result: {
+						anchor: root,
+						position: "afterend"
+					}
+				});
+			}
+			const editorialSelector = /\/editorial\/\d+/.test(new URL(doc.URL).pathname) ? "#main-container h2 + hr + div:not(.clearfix)" : "#main-container .editorial";
+			for (const content of doc.querySelectorAll(editorialSelector)) {
+				if (!content.textContent?.trim()) continue;
+				sections.push({
+					kind: "solution",
+					label: t$1("section.solution"),
+					content,
+					toolbar: {
+						anchor: content,
+						position: "beforebegin",
+						align: "block-right"
+					},
+					result: {
+						anchor: content,
+						position: "afterend"
+					}
+				});
+			}
+			for (const content of doc.querySelectorAll(".blog-post")) {
+				if (!content.textContent?.trim()) continue;
+				const heading = content.parentElement?.querySelector(".post-heading h3");
+				sections.push({
+					kind: "article",
+					label: t$1("section.blog"),
+					content,
+					toolbar: {
+						anchor: heading ?? content,
+						position: heading ? "beforeend" : "beforebegin",
+						align: "right"
+					},
+					result: {
+						anchor: content,
+						position: "afterend"
+					}
+				});
+			}
+			return sections;
+		},
+		prepareContent(root) {
+			root.querySelectorAll(".btn-copy, .div-btn-copy, .ojpp-toolbar, .ojpp-result").forEach((e) => e.remove());
+			for (const math of root.querySelectorAll("var, .katex-display, .katex")) {
+				if (!root.contains(math)) continue;
+				const tex = math.querySelector("annotation[encoding=\"application/x-tex\"]")?.textContent ?? (math.tagName === "VAR" && !math.querySelector(".MathJax") ? math.textContent : null);
+				if (tex === null) continue;
+				const node = root.ownerDocument.createElement("span");
+				const display = math.classList.contains("katex-display");
+				node.setAttribute("data-ojpp-math", display ? "display" : "inline");
+				node.textContent = tex;
+				math.replaceWith(node);
+			}
+			for (const script of root.querySelectorAll("script[type^=\"math/tex\"]")) {
+				const display = script.type.includes("mode=display");
+				const span = root.ownerDocument.createElement("span");
+				span.setAttribute("data-ojpp-math", display ? "display" : "inline");
+				span.textContent = script.textContent;
+				script.replaceWith(span);
+			}
+			root.querySelectorAll(".MathJax, .MathJax_Display, .MathJax_Preview").forEach((e) => e.remove());
+		},
+		mountSettingsButton(button, doc) {
+			const nav = doc.querySelector(".navbar-right");
+			if (nav) {
+				const li = doc.createElement("li");
+				li.className = "ojpp-settings-entry";
+				li.append(button);
+				nav.querySelector(".ojpp-settings-entry")?.remove();
+				nav.insertBefore(li, nav.lastElementChild);
+			} else doc.body.append(button);
+		},
+		observe(doc, onChange) {
+			let timer;
+			const observer = new MutationObserver((records) => {
+				if (!records.some((record) => {
+					return !(record.target instanceof Element ? record.target : record.target.parentElement)?.closest("[class*=\"ojpp-\"], .ace_editor, .katex, .MathJax");
+				})) return;
+				clearTimeout(timer);
+				timer = setTimeout(onChange, 120);
+			});
+			observer.observe(doc.body, {
+				childList: true,
+				subtree: true,
+				attributes: true,
+				attributeFilter: ["style"]
+			});
+			return () => {
+				clearTimeout(timer);
+				observer.disconnect();
+			};
+		},
+		i18nPage: localizeAtcoder
+	};
 	var CF_SUBS_RULES = [
 		{
 			scope: ".datatable",
@@ -57101,7 +57740,11 @@ $$` : `${n}$$`;
 		"保存并提交": "Save & Submit",
 		"重置": "Reset"
 	};
-	var sites = [nowcoder, codeforces];
+	var sites = [
+		nowcoder,
+		codeforces,
+		atcoder
+	];
 	sites.flatMap((site) => site.hosts.map((host) => `https://${host}/*`));
 	function resolveSite(url) {
 		if (url.protocol !== "https:") return void 0;
@@ -58960,7 +59603,10 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
 				editorPageMount = void 0;
 				return;
 			}
-			if (editorPageMount?.el.isConnected) return;
+			if (editorPageMount?.el.isConnected) {
+				editorPageMount.refresh();
+				return;
+			}
 			editorPageMount?.dispose();
 			editorPageMount = mountEditorPage({
 				anchor: ep.anchor,

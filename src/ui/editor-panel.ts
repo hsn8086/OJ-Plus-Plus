@@ -44,7 +44,7 @@ export function mountEditorPage(opts: {
   getSettings(): Settings;
   isDark(): boolean;
   onDarkChange(cb: (dark: boolean) => void): () => void;
-}): { el: HTMLElement; dispose(): void } {
+}): { el: HTMLElement; dispose(): void; refresh(): void } {
   const host = document.createElement('div');
   host.className = 'ojpp-editor-page';
   opts.anchor.insertAdjacentElement(opts.position, host);
@@ -65,8 +65,13 @@ export function mountEditorPage(opts: {
   });
   const stopDark = opts.onDarkChange((dark) => editor.setDark(dark));
 
+  let lastLanguage = opts.langSelect?.value ?? '';
   const onLang = () => {
-    if (opts.langSelect) editor.setMode(opts.langMode(opts.langSelect.value));
+    const next = opts.langSelect?.value ?? '';
+    if (next !== lastLanguage) {
+      lastLanguage = next;
+      editor.setMode(opts.langMode(next));
+    }
   };
   opts.langSelect?.addEventListener('change', onLang);
 
@@ -81,6 +86,7 @@ export function mountEditorPage(opts: {
 
   return {
     el: host,
+    refresh: onLang,
     dispose() {
       stopDark();
       opts.langSelect?.removeEventListener('change', onLang);
@@ -145,11 +151,13 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     tabSize: 4,
     lspUrl: settings.editorLspUrl,
     onChange: (code) => {
+      support.syncCode?.(code, langSel.value);
       if (!key) return;
       getSettings().editorCode[key] = { code, updated: Date.now() };
       persistDebounced();
     },
   });
+  support.syncCode?.(initial, langSel.value);
   const stopDark = onDarkChange((dark) => editor.setDark(dark));
 
   let persistTimer: ReturnType<typeof setTimeout> | undefined;
@@ -161,6 +169,7 @@ export function mountEditorPanel(options: EditorPanelOptions) {
   langSel.onchange = () => {
     const lang = support.languages.find((l) => l.id === langSel.value) ?? defaultLang;
     editor.setMode(lang.mode);
+    support.syncCode?.(editor.getCode(), lang.id);
     getSettings().editorLanguage[site.id] = lang.id;
     persist();
   };

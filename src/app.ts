@@ -87,7 +87,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
     });
     mount!.anchor.insertAdjacentElement(mount!.position, editorPanel.el);
   };
-  let editorPageMount: { el: HTMLElement; dispose(): void } | undefined;
+  let editorPageMount: ReturnType<typeof mountEditorPage> | undefined;
   const reconcileEditorPage = () => {
     const ep = settings.editorEnabled ? site.editor?.editorPage?.(document) : null;
     if (!ep) {
@@ -95,7 +95,10 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
       editorPageMount = undefined;
       return;
     }
-    if (editorPageMount?.el.isConnected) return;
+    if (editorPageMount?.el.isConnected) {
+      editorPageMount.refresh();
+      return;
+    }
     editorPageMount?.dispose();
     editorPageMount = mountEditorPage({
       anchor: ep.anchor,

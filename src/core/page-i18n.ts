@@ -89,7 +89,7 @@ export function applyPageI18n(doc: Document, rules: PageI18nRule[]): void {
         }
       }
       if (rule.values) {
-        for (const el of scope.querySelectorAll<HTMLInputElement | HTMLButtonElement>('input, button')) {
+        for (const el of [ ...(scope.matches('input, button') ? [scope as HTMLInputElement | HTMLButtonElement] : []), ...scope.querySelectorAll<HTMLInputElement | HTMLButtonElement>('input, button') ]) {
           if (el.dataset.ojppI18n || el.closest(exclude)) continue;
           const v = (el.tagName === 'INPUT' ? (el as HTMLInputElement).value : el.textContent)?.trim() ?? '';
           if (v && rule.values[v]) {
@@ -103,7 +103,7 @@ export function applyPageI18n(doc: Document, rules: PageI18nRule[]): void {
         }
       }
       if (rule.replaceValues) {
-        for (const el of scope.querySelectorAll<HTMLInputElement | HTMLButtonElement>('input, button')) {
+        for (const el of [ ...(scope.matches('input, button') ? [scope as HTMLInputElement | HTMLButtonElement] : []), ...scope.querySelectorAll<HTMLInputElement | HTMLButtonElement>('input, button') ]) {
           if (el.closest(exclude)) continue;
           const raw = el.tagName === 'INPUT' ? (el as HTMLInputElement).value : el.textContent;
           if (!raw) continue;

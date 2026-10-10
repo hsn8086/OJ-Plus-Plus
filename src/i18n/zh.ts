@@ -167,6 +167,13 @@ export const zh = {
   // 站点名称与区域
   'site.nowcoder': '牛客',
   'site.codeforces': 'Codeforces',
+  'atcoder.signIn': '请先登录 AtCoder，再运行测试或提交代码。',
+  'atcoder.testBusy': 'AtCoder 正在运行另一个自定义测试，请等待完成后重试。',
+  'atcoder.testTimeout': '自定义测试超时，请先检查 AtCoder 自定义测试页的状态。',
+  'atcoder.formUnavailable': '找不到 AtCoder 提交表单，请打开题目页并确认已登录。',
+  'atcoder.verification': '请在下方 AtCoder 提交表单中完成人机验证，再重新提交。',
+  'atcoder.notConfirmed': 'AtCoder 未确认提交成功，请检查原生提交表单。',
+  'section.constraints': '约束条件',
   'section.statement': '题目描述',
   'section.input': '输入描述',
   'section.output': '输出描述',

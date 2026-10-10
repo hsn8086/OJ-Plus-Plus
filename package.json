@@ -11,6 +11,7 @@
     "test": "node --experimental-strip-types --test test/*.test.ts",
     "check": "pnpm typecheck && pnpm test && pnpm build && pnpm verify-dist",
     "test:browser": "node test/browser.mjs",
+    "test:atcoder": "node test/atcoder.browser.mjs",
     "screenshots": "node test/browser.mjs --screenshots",
     "verify-dist": "node tools/verify-dist.mjs"
   },

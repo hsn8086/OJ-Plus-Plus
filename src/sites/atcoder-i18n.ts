@@ -1,0 +1,64 @@
+import { applyPageI18n } from '../core/page-i18n.ts';
+
+const zh: Record<string, string> = {
+  'Home': '首页', 'Top': '首页', 'Contests': '比赛', 'Contest': '比赛', 'Tasks': '题目', 'Submit': '提交',
+  'Results': '结果', 'Standings': '排行榜', 'Virtual Standings': '虚拟排行榜', 'Submissions': '提交记录',
+  'All Submissions': '全部提交', 'My Submissions': '我的提交', 'Custom Test': '自定义测试', 'Editorial': '题解',
+  'Clarifications': '提问', 'Rules': '规则', 'Rating': '积分', 'Rank': '排名', 'Rankings': '排行榜',
+  'User': '用户', 'Username': '用户名', 'Task': '题目', 'Language': '语言', 'Score': '分数', 'Status': '状态',
+  'Code Size': '代码长度', 'Exec Time': '运行时间', 'Memory': '内存', 'Submission Time': '提交时间',
+  'Detail': '详情', 'Details': '详情', 'Source Code': '源代码', 'Source code': '源代码', 'Input': '输入',
+  'Output': '输出', 'Standard Input': '标准输入', 'Standard Output': '标准输出', 'Standard Error': '标准错误',
+  'Exit Code': '退出码', 'Problem Statement': '题目描述', 'Constraints': '约束条件', 'Copy': '复制',
+  'Run': '运行', 'Reset': '重置', 'Search': '搜索', 'Filter': '筛选', 'All': '全部', 'Duration': '时长',
+  'Start Time': '开始时间', 'Contest Duration': '比赛时长', 'Contest Type': '比赛类型', 'Rated Range': '计分范围',
+  'Upcoming Contests': '即将举行的比赛', 'Active Contests': '进行中的比赛', 'Recent Contests': '近期比赛',
+  'Permanent Contests': '长期比赛', 'Past Contests': '历史比赛', 'Contest Archive': '比赛归档',
+  'Sign In': '登录', 'Sign Out': '退出登录', 'Sign Up': '注册', 'Register': '报名', 'Unregister': '取消报名',
+  'My Profile': '我的主页', 'General Settings': '通用设置', 'Change Photo': '更换头像',
+  'Change Password': '修改密码', 'Manage Fav': '管理收藏', 'Settings': '设置', 'Help': '帮助',
+  'Terms of service': '服务条款', 'Privacy Policy': '隐私政策', 'Company': '公司', 'Contact': '联系',
+  'Search in Archive': '搜索历史比赛', 'Contest Name': '比赛名称', 'Daily Contests': '每日比赛',
+  'Rule': '规则', 'Terms of Use': '使用条款', 'Information Protection Policy': '信息保护政策',
+  'at most 512 KiB': '最多 512 KiB',
+  'A newline character is also at the end of the input data usually.': '输入数据的末尾通常也有换行符。',
+  'マイプロフィール': '我的主页', '基本設定': '通用设置', 'アイコン設定': '头像设置',
+  'パスワードの変更': '修改密码', 'お気に入り管理': '管理收藏', 'トップ': '首页',
+  'バーチャル順位表': '虚拟排行榜', 'ランキング': '排行榜', 'コンテスト一覧': '比赛列表',
+  '開催中のコンテスト': '进行中的比赛', '常設中のコンテスト': '长期比赛',
+  '予定されたコンテスト': '即将举行的比赛', '過去のコンテスト': '历史比赛',
+  '開始時刻': '开始时间', 'コンテスト名': '比赛名称', '時間': '时长', 'レーティング対象': '计分范围',
+  '更新': '更新', '順位': '排名', 'ユーザ': '用户', '最高': '最高', '参加回数': '参赛次数',
+  'Highest Rating': '最高积分', 'Competitions': '参赛次数', 'Matches': '参赛次数',
+  'Country/Region': '国家或地区', 'Affiliation': '所属机构', 'Birth Year': '出生年份',
+  'Active Users': '活跃用户', 'All Users': '全部用户', 'Algorithm': '算法', 'Heuristic': '启发式',
+  'FAQ': '常见问题', 'Glossary': '术语表', 'Tutorial': '教程', 'About': '关于',
+  'Back to Home': '返回首页', 'Discuss': '讨论', 'For beginners': '初学者说明',
+  'Time Limit:': '时间限制：', 'Memory Limit:': '内存限制：', 'Contest Duration:': '比赛时长：',
+  'Editorial by': '题解作者', 'Editorials': '题解', 'Online Contests': '在线比赛',
+  'Contest has ended.': '比赛已结束。', 'Contest is over': '比赛已结束', 'Practice': '练习',
+  'Time limit exceeded': '超出时间限制', 'Memory limit exceeded': '超出内存限制',
+  'Open File': '打开文件', 'Toggle Editor': '切换编辑器', 'Auto Height': '自动高度', 'Customize': '自定义',
+  'Test Case': '测试点', 'Test Set': '测试集', 'Time Limit': '时间限制', 'Memory Limit': '内存限制',
+  'Official': '官方', 'User Editorial': '用户题解', 'Overall Editorial': '整体题解', 'Write an Editorial': '撰写题解',
+  '問題文': '题目描述', '制約': '约束条件', '入力': '输入', '出力': '输出', '解説': '题解',
+  '問題': '题目', '提出': '提交', '提出結果': '提交记录', '順位表': '排行榜', '質問': '提问',
+  'コードテスト': '自定义测试', 'コンテスト': '比赛', 'ホーム': '首页', '参加登録': '报名',
+  'ログイン': '登录', 'ログアウト': '退出登录', '新規登録': '注册', 'すべての提出': '全部提交',
+  '自分の提出': '我的提交', '言語': '语言', '得点': '分数', '実行時間': '运行时间', 'メモリ': '内存',
+  'ソースコード': '源代码', '標準入力': '标准输入', '標準出力': '标准输出', '標準エラー出力': '标准错误',
+  '実行': '运行', '詳細': '详情', '配点': '分数',
+};
+
+export function localizeAtcoder(doc: Document, locale: string) {
+  if (locale !== 'zh') return;
+  applyPageI18n(doc, [{
+    // Restrict replacements to site chrome and section headings, never statement/editorial prose.
+    scope: '.navbar, .header-inner, .header-sub_nav, .a-title_ttl, .a-btnarea, #contest-nav-tabs, #contest-tabs, #main-container h2, #main-container h3, #main-container h4, #main-container th, #main-container label, #main-container .btn, #main-container .panel-heading, #main-container .nav, #main-container summary, #main-container .label, footer, #footer',
+    map: zh,
+    replaceMap: {
+      '^Sample Input\\s+(\\d+)': '样例输入 $1', '^Sample Output\\s+(\\d+)': '样例输出 $1',
+      '^入力例\\s*(\\d+)': '样例输入 $1', '^出力例\\s*(\\d+)': '样例输出 $1',
+    },
+  }, { scope: 'input[type="submit"], input[type="button"]', values: zh }]);
+}

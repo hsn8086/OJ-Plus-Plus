@@ -6,7 +6,7 @@
 
 OJ++（OJ-Plus-Plus）是一个可扩展的在线评测站增强工具。它把 AI 题面翻译、Markdown 查看和复制能力做成通用功能，再通过站点适配器连接具体 OJ，通过运行平台适配器连接 Tampermonkey、浏览器调试环境和未来的 Chrome 扩展。
 
-目前内置牛客竞赛和 Codeforces 适配器，正式构建为油猴脚本。其他 OJ 和 Chrome CRX 还没有作为发布目标提供，但核心接口已经独立出来。
+目前内置牛客竞赛、Codeforces 和 AtCoder 适配器，正式构建为油猴脚本。
 
 ![翻译题面](docs/images/translate.png)
 
@@ -18,9 +18,9 @@ OJ++（OJ-Plus-Plus）是一个可扩展的在线评测站增强工具。它把 
 - **Markdown 查看与复制**：从内容副本生成 Markdown，不替换原页面 DOM，因此页面原有交互可以继续使用。
 - **多提供商**：支持 OpenAI Chat Completions、OpenAI Responses、Anthropic Messages，以及自定义地址、请求头和请求体字段。API Key 可以留空，此时不发送认证头，适配本地推理服务。
 - **长题面分段**：关闭整段翻译后按标题、段落和行切分内容。
-- **代码编辑器**：Codeforces 题目页内嵌 CodeMirror 6，支持写码、跑题面样例和自定义测试、一键提交。提交页和自定义测试页的原生 ACE 编辑器也替换为 CodeMirror 6。
-- **界面本地化**：设置面板与按钮支持简体中文和英文。目标语言设为中文时，Codeforces 的站点界面（导航、题面属性、表单、判定等）也一并中文化；牛客在目标语言为英文时把界面翻成英文。
-- **站点配色**：可选跟随系统、浅色或暗色。Codeforces 自带一套暗色样式；脚本自己的界面也随主题切换。
+- **代码编辑器**：Codeforces 和 AtCoder 题目页内嵌 CodeMirror 6，支持写码、跑题面样例和自定义测试、一键提交。提交页和自定义测试页的原生 ACE 编辑器也替换为 CodeMirror 6。
+- **界面本地化**：设置面板与按钮支持简体中文和英文。目标语言设为中文时，Codeforces、AtCoder 的导航、题面标题、表单等界面文本也会中文化；牛客在目标语言为英文时把界面翻成英文。
+- **站点配色**：可选跟随系统、浅色或暗色。Codeforces、AtCoder 提供站点暗色样式；脚本自己的界面也随主题切换。
 - **平台解耦**：通用代码只依赖存储、HTTP 请求和剪贴板接口。油猴平台使用 GM API，浏览器平台使用 `localStorage`、`fetch` 和 Clipboard API。
 
 ## 安装
@@ -36,7 +36,7 @@ OJ++（OJ-Plus-Plus）是一个可扩展的在线评测站增强工具。它把 
 
 ## 第一次使用
 
-1. 打开受支持的题目页（牛客竞赛、Codeforces），点击页面右上角的齿轮。
+1. 打开受支持的题目页（牛客竞赛、Codeforces、AtCoder），点击页面右上角的齿轮。
 2. 在「提供商」页选择预设，填写 API Key 和模型。
 3. 点击「测试连接」，确认接口返回成功后保存。
 4. 点击题目标题旁边的翻译图标。
@@ -44,6 +44,12 @@ OJ++（OJ-Plus-Plus）是一个可扩展的在线评测站增强工具。它把 
 ![提供商设置](docs/images/settings-provider.png)
 
 默认模型是 `gpt-6-luna`。`temperature`、`top_p`、`max_tokens` 等参数统一写在「额外请求体字段」中，不再单独显示表单字段。
+
+### AtCoder
+
+题面按当前显示的日文或英文版本收集，题目、约束、输入、输出和样例说明可分别翻译，题解详情页与公告文章也提供工具栏。自动翻译可在设置中按站点开启。
+
+登录后，题目页可用 CM6 编辑代码、运行样例和自定义测试。测试使用当前比赛的官方自定义测试接口，按顺序执行；语言列表来自站点。提交时沿用原生表单的验证信息，如页面要求人机验证，完成验证后再提交。源码也会同步到原生表单，可使用站点原有的提交按钮。
 
 ### 协议选择
 
@@ -91,6 +97,10 @@ src/
     index.ts            站点注册和 URL 分派
     nowcoder.ts         牛客选择器、公式和动态 DOM 适配
     codeforces.ts       Codeforces 选择器、老题与新题两套公式还原
+    atcoder.ts          AtCoder 双语题面、题解和公式还原
+    atcoder-editor.ts   AtCoder 语言列表、官方测试、提交与 ACE 同步
+    atcoder-i18n.ts     AtCoder 界面词典
+    atcoder-styles.ts   AtCoder 暗色样式
   platforms/
     types.ts            存储、HTTP、剪贴板接口
     userscript.ts       Tampermonkey / Violentmonkey 实现
@@ -166,7 +176,8 @@ Chrome 扩展可以把 `storage` 映射到 `chrome.storage.local`，把 `request
 ```bash
 pnpm install
 pnpm check          # 类型检查、单元测试、构建油猴脚本
-pnpm test:browser   # 离线浏览器回归，不需要真实 API Key
+pnpm test:browser   # 牛客与 Codeforces 离线浏览器回归
+pnpm test:atcoder   # AtCoder 双语题面、公式、翻译与语言切换回归
 pnpm screenshots     # 生成 README 截图
 ```
 

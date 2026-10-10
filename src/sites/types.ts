@@ -68,6 +68,8 @@ export interface SiteEditorSupport {
   } | null;
   /** 题目页中的样例输入/期望输出对。 */
   getSamples(doc: Document): { input: string; output: string }[];
+  /** 可选：同步题目页原生提交表单，保留站点验证与提交入口。 */
+  syncCode?(code: string, languageId: string): void;
   /** 站点可选语言列表。 */
   readonly languages: readonly EditorLanguage[];
   /** 通过站点的 customtest 运行一次代码。 */
