@@ -1,0 +1,41 @@
+{
+  "browser": "151.0.7922.34",
+  "testedAt": "2026-10-10T09:56:33.726Z",
+  "offscreen": {
+    "documentIsolated": true,
+    "workerIsolated": true,
+    "sharedArrayBuffer": true,
+    "sharedMemory": true,
+    "wasmResult": 42,
+    "pyodide": {
+      "version": "314.0.7",
+      "loadMs": 1095.300000011921,
+      "stdout": [
+        "42"
+      ],
+      "stderr": [
+        "debug-stderr"
+      ]
+    },
+    "clangd": {
+      "serverInfo": {
+        "name": "clangd",
+        "version": "clangd version 18.1.2 (https://github.com/llvm/llvm-project 26a1d6601d727a96f4301d0d8647b5a42760ae0c) unix i386-unknown-linux-gnu; target=wasm32-wasi"
+      },
+      "readyAndCompletionMs": 404.65499997138977,
+      "labels": [
+        " square"
+      ],
+      "hasSquare": true
+    },
+    "terminationMs": 62.59999996423721
+  },
+  "embedded": {
+    "pageIsolated": false,
+    "frame": {
+      "probe": "iframe",
+      "isolated": false,
+      "sharedArrayBuffer": true
+    }
+  }
+}
