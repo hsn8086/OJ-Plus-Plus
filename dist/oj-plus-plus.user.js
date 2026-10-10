@@ -54408,6 +54408,11 @@ ${scope} .table-bordered>thead>tr>th, ${scope} .table-bordered>tbody>tr>td { bor
 ${scope} .table-striped>tbody>tr:nth-of-type(odd), ${scope} .table-striped>tbody>tr:nth-child(odd)>td,
 ${scope} .table-striped>tbody>tr:nth-child(odd)>th { background: #22272e; }
 ${scope} .table-hover>tbody>tr:hover>td, ${scope} .table-hover>tbody>tr:hover>th { background: #2d333b; }
+${scope} .table>thead>tr.active>th, ${scope} .table>thead>tr.active>td,
+${scope} .table>tbody>tr.active>th, ${scope} .table>tbody>tr.active>td,
+${scope} .table>thead>tr>th.active, ${scope} .table>tbody>tr>td.active { background: #22272e; color: #cdd9e5; }
+${scope} .table-hover>tbody>tr.active:hover>th, ${scope} .table-hover>tbody>tr.active:hover>td,
+${scope} .table-hover>tbody>tr:hover>td.active { background: #2d333b; }
 ${scope} .table .success, ${scope} .table .success>td { background: #22392b; }
 ${scope} .table .warning, ${scope} .table .warning>td { background: #3c3424; }
 ${scope} .table .danger, ${scope} .table .danger>td { background: #422c30; }
@@ -54429,7 +54434,14 @@ ${scope} .alert-success { background: #22392b; color: #8bc89a; border-color: #36
 ${scope} .text-muted, ${scope} .help-block, ${scope} small { color: #909dab; }
 ${scope} blockquote { border-color: #536170; }
 ${scope} .close { color: #cdd9e5; text-shadow: none; opacity: .8; }
-${scope} #main-div { box-shadow: none; }
+${scope} #main-div, ${scope} #main-container { box-shadow: none; }
+${scope} .insert-participant-box { background: #22272e; color: #cdd9e5; }
+${scope} .btn-copy.btn-pre {
+  background: #22272e; color: #cdd9e5; border-color: #373e47;
+}
+${scope} .btn-copy.btn-pre:hover, ${scope} .btn-copy.btn-pre:focus {
+  background: #2d333b; color: #79b8ff; border-color: #536170;
+}
 ${scope} #fixed-server-timer { background: #22272e; color: #cdd9e5; border-color: #373e47; }
 ${scope} .select2-container .select2-selection--single,
 ${scope} .select2-dropdown, ${scope} .select2-search__field {
