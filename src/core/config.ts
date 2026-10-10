@@ -1,5 +1,5 @@
 import { t } from '../i18n/index.ts';
-import type { Protocol, ProviderConfig, Settings } from './types.ts';
+import type { Protocol, ProviderConfig, Settings, SiteFeature } from './types.ts';
 
 export const SETTINGS_KEY = 'ojpp:settings';
 
@@ -94,6 +94,7 @@ export function defaultSettings(): Settings {
     extraPrompt: '',
     translateWholeBlock: true,
     autoTranslate: {},
+    siteFeatures: {},
     timeoutMs: 120_000,
     retries: 1,
     streaming: true,
@@ -136,6 +137,7 @@ export function migrate(raw: unknown): Settings {
     ...base,
     ...input,
     autoTranslate: normalizeAutoTranslate(input.autoTranslate),
+    siteFeatures: normalizeSiteFeatures(input.siteFeatures),
     providers,
     version: base.version,
   };
@@ -181,7 +183,27 @@ function normalizeAutoTranslate(raw: unknown): Record<string, boolean> {
   return out;
 }
 
+export function isSiteFeatureEnabled(settings: Settings, siteId: string, feature: SiteFeature): boolean {
+  return settings.siteFeatures?.[siteId]?.[feature] ?? true;
+}
+
+function normalizeSiteFeatures(raw: unknown): Settings['siteFeatures'] {
+  const out: Settings['siteFeatures'] = {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  for (const [site, value] of Object.entries(raw)) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
+    const flags: Partial<Record<SiteFeature, boolean>> = {};
+    for (const key of ['translation', 'pageI18n', 'darkMode', 'editor'] as const) {
+      const enabled = (value as Record<string, unknown>)[key];
+      if (typeof enabled === 'boolean') flags[key] = enabled;
+    }
+    out[site] = flags;
+  }
+  return out;
+}
+
 /** 某站点是否开启自动翻译；siteId 规则优先于 '*'。 */
 export function isAutoTranslateEnabled(settings: Settings, siteId: string): boolean {
-  return settings.autoTranslate[siteId] ?? settings.autoTranslate['*'] ?? false;
+  return isSiteFeatureEnabled(settings, siteId, 'translation') &&
+    (settings.autoTranslate[siteId] ?? settings.autoTranslate['*'] ?? false);
 }

@@ -8,8 +8,8 @@ import {
   createProvider,
   newId,
 } from '../core/config.ts';
-import type { Locale, Protocol, ProviderConfig, Settings, Theme } from '../core/types.ts';
-import { isAutoTranslateEnabled } from '../core/config.ts';
+import type { Locale, Protocol, ProviderConfig, Settings, Theme, SiteFeature } from '../core/types.ts';
+import { isSiteFeatureEnabled } from '../core/config.ts';
 import { sites } from '../sites/index.ts';
 import type { HttpTransport } from '../platforms/types.ts';
 import { applyStagger } from './animations.ts';
@@ -182,17 +182,6 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
     const sec2 = section(t('settings.behavior'));
     sec2.body.append(
       check(t('settings.wholeBlock'), draft.translateWholeBlock, (v) => draft.translateWholeBlock = v),
-      field(t('settings.autoTranslate'), (() => {
-        const group = el('div', 'ojpp-check-group');
-        for (const site of sites) {
-          group.append(
-            check(site.name, isAutoTranslateEnabled(draft, site.id), (v) => {
-              draft.autoTranslate[site.id] = v;
-            })
-          );
-        }
-        return group;
-      })()),
       check(t('settings.streaming'), draft.streaming, (v) => draft.streaming = v),
     );
 
@@ -216,6 +205,32 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
     );
     sec2.body.append(row2);
     container.append(sec2.container);
+
+    const siteSection = section(t('settings.sites'));
+    siteSection.body.append(el('p', 'ojpp-hint', t('settings.sitesHint')));
+    for (const site of sites) {
+      const details = el('details', 'ojpp-site-options') as HTMLDetailsElement;
+      details.dataset.site = site.id;
+      details.open = site.hosts.includes(location.hostname);
+      details.append(el('summary', undefined, site.name));
+      const features = el('div', 'ojpp-check-group');
+      const feature = (key: SiteFeature, label: string) => {
+        const control = check(label, isSiteFeatureEnabled(draft, site.id, key), enabled => {
+          (draft.siteFeatures[site.id] ??= {})[key] = enabled;
+        });
+        control.querySelector('input')!.dataset.feature = key;
+        return control;
+      };
+      features.append(feature('translation', t('settings.siteTranslation')));
+      features.append(check(t('settings.autoTranslate'), draft.autoTranslate[site.id] ?? draft.autoTranslate['*'] ?? false,
+        enabled => { draft.autoTranslate[site.id] = enabled; }));
+      if (site.i18nPage) features.append(feature('pageI18n', t('settings.siteI18n')));
+      if (site.darkStyles) features.append(feature('darkMode', t('settings.siteDark')));
+      if (site.editor) features.append(feature('editor', t('settings.siteEditor')));
+      details.append(features);
+      siteSection.body.append(details);
+    }
+    container.append(siteSection.container);
 
     // 提供商摘要
     const sec3 = section(t('settings.providers'), String(draft.providers.length));

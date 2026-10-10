@@ -26,6 +26,8 @@ export interface ProviderConfig {
   };
 }
 
+export type SiteFeature = 'translation' | 'pageI18n' | 'darkMode' | 'editor';
+
 export interface Settings {
   version: number;
   activeProviderId: string | null;
@@ -38,6 +40,8 @@ export interface Settings {
   translateWholeBlock: boolean;
   /** 各站点是否自动翻译题面；key 为站点 id，'*' 是旧版全局开关迁移来的 */
   autoTranslate: Record<string, boolean>;
+  /** 各站点功能覆盖；未指定时保持原有默认行为。 */
+  siteFeatures: Record<string, Partial<Record<SiteFeature, boolean>>>;
   /** 请求超时（毫秒） */
   timeoutMs: number;
   /** 失败重试次数 */

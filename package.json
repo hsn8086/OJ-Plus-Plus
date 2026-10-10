@@ -12,6 +12,7 @@
     "check": "pnpm typecheck && pnpm test && pnpm build && pnpm verify-dist",
     "test:browser": "node test/browser.mjs",
     "test:atcoder": "node test/atcoder.browser.mjs",
+    "test:sites": "node test/sites.browser.mjs",
     "screenshots": "node test/browser.mjs --screenshots",
     "verify-dist": "node tools/verify-dist.mjs"
   },
@@ -36,6 +37,7 @@
     "@lezer/highlight": "^1.2.5",
     "katex": "^0.16.25",
     "markdown-it": "^14.1.0",
+    "pdfjs-dist": "^6.4.299",
     "remend": "1.4.0",
     "turndown": "^7.2.0"
   }

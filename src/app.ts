@@ -1,5 +1,6 @@
 import { APP_NAME } from './brand.ts';
-import { defaultSettings, isAutoTranslateEnabled } from './core/config.ts';
+import { defaultSettings, isAutoTranslateEnabled, isSiteFeatureEnabled } from './core/config.ts';
+import { restorePageI18n } from './core/page-i18n.ts';
 import { loadSettings, saveSettings } from './core/settings-store.ts';
 import { getLocale, resolveLocale, setLocale, t } from './i18n/index.ts';
 import type { Platform } from './platforms/types.ts';
@@ -10,7 +11,7 @@ import { mountEditorPage, mountEditorPanel } from './ui/editor-panel.ts';
 import { mountSection } from './ui/section.ts';
 import { openSettingsPanel } from './ui/settings-panel.ts';
 import { CSS, DARK_CSS } from './ui/styles.ts';
-import { applyTheme, THEME_ATTR, watchInlineColors, watchSystemTheme } from './ui/theme.ts';
+import { applyTheme, setSiteThemeEnabled, THEME_ATTR, watchInlineColors, watchSystemTheme } from './ui/theme.ts';
 import { toast } from './ui/toast.ts';
 
 /** 组合根：通用功能只接收站点与平台契约，不选择具体适配器。 */
@@ -21,11 +22,15 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
   let settings = await loadSettings(platform.storage);
   // 语言要在任何界面文字生成之前定下来，否则会出现一帧中文再切成英文
   setLocale(resolveLocale(settings.locale));
+  const feature = (key: Parameters<typeof isSiteFeatureEnabled>[2]) => isSiteFeatureEnabled(settings, site.id, key);
+  setSiteThemeEnabled(feature('darkMode') && !!site.darkStyles, !site.preserveInlineColors);
   applyTheme(settings.theme);
   const style = document.createElement('style');
-  // 暗色样式只在站点提供了 darkStyles 时才注入，避免出现半套暗色
-  style.textContent = CSS + (site.styles ?? '') + DARK_CSS + (site.darkStyles ?? '');
-  document.head.append(style);
+  style.textContent = CSS + (site.styles ?? '') + DARK_CSS;
+  const siteDarkStyle = document.createElement('style');
+  siteDarkStyle.dataset.ojppSiteDark = site.id;
+  siteDarkStyle.textContent = feature('darkMode') ? site.darkStyles ?? '' : '';
+  document.head.append(style, siteDarkStyle);
   const stopThemeWatch = watchSystemTheme(() => applyTheme(settings.theme));
   // 站点有些元素把颜色写在内联样式里（还带 !important），只能靠 JS 清掉
   const stopInlineWatch = watchInlineColors();
@@ -41,19 +46,27 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
         await saveSettings(platform.storage, updated);
         // 保存后应用配色，并在语言真的变了时重建工具栏。
         // 面板内的即时预览已经改过 setLocale，所以对比的是实际渲染语言。
-        const editorWas = settings.editorEnabled;
+        const translationChanged = isAutoTranslateEnabled(settings, site.id) !== isAutoTranslateEnabled(updated, site.id)
+          || feature('translation') !== isSiteFeatureEnabled(updated, site.id, 'translation');
+        if (settings.targetLang !== updated.targetLang || feature('pageI18n') !== isSiteFeatureEnabled(updated, site.id, 'pageI18n')) {
+          restorePageI18n(document);
+        }
         settings = updated;
+        const darkCSS = feature('darkMode') ? site.darkStyles ?? '' : '';
+        if (siteDarkStyle.textContent !== darkCSS) siteDarkStyle.textContent = darkCSS;
+        setSiteThemeEnabled(feature('darkMode') && !!site.darkStyles, !site.preserveInlineColors);
         setLocale(resolveLocale(updated.locale));
         applyTheme(settings.theme);
         toast(t('app.settingsSaved'));
-        if (updated.editorEnabled !== editorWas) { reconcileEditor(); reconcileEditorPage(); }
-        if (getLocale() !== renderedLocale) remountAll();
+        if (getLocale() !== renderedLocale || translationChanged) remountAll();
+        else reconcileAll();
       },
       onClose() { closeSettings = undefined; },
     });
   });
 
   const mounted = new Map<HTMLElement, ReturnType<typeof mountSection>>();
+  const identities = new WeakMap<HTMLElement, string | undefined>();
   let editorPanel: ReturnType<typeof mountEditorPanel> | undefined;
   const persist = () => void saveSettings(platform.storage, settings);
   const isDarkNow = () => document.documentElement.getAttribute(THEME_ATTR) === 'dark';
@@ -69,7 +82,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
   };
   const reconcileEditor = () => {
     const mount = site.editor?.editorMountPoint(document);
-    const want = settings.editorEnabled && !!mount && !!site.editor;
+    const want = settings.editorEnabled && feature('editor') && !!mount && !!site.editor;
     if (!want) {
       editorPanel?.dispose();
       editorPanel = undefined;
@@ -89,7 +102,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
   };
   let editorPageMount: ReturnType<typeof mountEditorPage> | undefined;
   const reconcileEditorPage = () => {
-    const ep = settings.editorEnabled ? site.editor?.editorPage?.(document) : null;
+    const ep = settings.editorEnabled && feature('editor') ? site.editor?.editorPage?.(document) : null;
     if (!ep) {
       editorPageMount?.dispose();
       editorPageMount = undefined;
@@ -134,7 +147,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
     reconcileAll();
   };
   const reconcile = () => {
-    const sections = site.collectSections(document);
+    const sections = feature('translation') ? site.collectSections(document) : [];
     // 设置入口与题面区域是两回事：首页、状态页、日历页没有题面，
     // 但仍然要能打开设置，所以这里不再因为 sections 为空就摘掉按钮。
     if (!settingsButton.isConnected) site.mountSettingsButton(settingsButton, document);
@@ -151,7 +164,9 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
       }
     }
     for (const section of sections) {
-      if (mounted.has(section.content)) continue;
+      if (mounted.has(section.content) && identities.get(section.content) === section.identity) continue;
+      mounted.get(section.content)?.dispose();
+      identities.set(section.content, section.identity);
       const handle = mountSection(section, {
         platform,
         getSettings: () => settings,
@@ -171,7 +186,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
     reconcileEditorPage();
     // 站点界面 i18n 跟「目标语言」走：目标是中文才把站点英文换中文
     const targetZh = /中文|简体|繁体|汉语|zh|chinese/i.test(settings.targetLang);
-    site.i18nPage?.(document, targetZh ? 'zh' : 'en');
+    if (feature('pageI18n')) site.i18nPage?.(document, targetZh ? 'zh' : 'en');
   };
   reconcileAll();
   const stopObserving = site.observe(document, reconcileAll);
@@ -186,6 +201,8 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
     for (const handle of mounted.values()) handle.dispose();
     mounted.clear();
     settingsButton.remove();
+    restorePageI18n(document);
     style.remove();
+    siteDarkStyle.remove();
   };
 }

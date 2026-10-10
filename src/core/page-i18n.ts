@@ -28,12 +28,56 @@ export interface PageI18nRule {
 const DEFAULT_EXCLUDE =
   'pre, code, textarea, script, style, noscript, option, .cm-editor, .ace_editor, .MathJax, .tex-span, [class*="ojpp-"]';
 
+interface OriginalText {
+  before: string;
+  after: string;
+  value: boolean;
+  children?: Node[];
+}
+const originals = new WeakMap<Document, Map<Node, OriginalText>>();
+
+function translated(node: Node, next: string, value = false): void {
+  const doc = node.ownerDocument!;
+  let records = originals.get(doc);
+  if (!records) originals.set(doc, records = new Map());
+  const current = value ? (node as HTMLInputElement).value : node.textContent ?? '';
+  if (current === next) return;
+  let original = records.get(node);
+  // A live site can reuse the same node for a different label.
+  if (!original || current !== original.after) {
+    original = { before: current, after: next, value,
+      ...(node.nodeType === 1 && !value ? { children: [...node.childNodes] } : {}) };
+    records.set(node, original);
+  }
+  original.after = next;
+  if (value) (node as HTMLInputElement).value = next;
+  else node.textContent = next;
+}
+
+/** 恢复仍由本地化逻辑持有的文本，不覆盖站点在此后更新的内容。 */
+export function restorePageI18n(doc: Document): void {
+  const records = originals.get(doc);
+  if (!records) return;
+  for (const [node, saved] of records) {
+    const current = saved.value ? (node as HTMLInputElement).value : node.textContent;
+    if (node.isConnected && current === saved.after) {
+      if (saved.value) (node as HTMLInputElement).value = saved.before;
+      else if (saved.children) (node as Element).replaceChildren(...saved.children);
+      else node.textContent = saved.before;
+    }
+    if (node.nodeType === 1) (node as HTMLElement).removeAttribute('data-ojpp-i18n');
+  }
+  records.clear();
+}
+
 /**
  * 把 rules 应用到 doc。
  * 文本按单个文本节点匹配——一个元素里「Input + [Copy 钮]」这类
  * 文本和子元素混排的，只替换文本部分，不动子元素。
  */
 export function applyPageI18n(doc: Document, rules: PageI18nRule[]): void {
+  const records = originals.get(doc);
+  if (records) for (const node of records.keys()) if (!node.isConnected) records.delete(node);
   for (const rule of rules) {
     const exclude = rule.exclude ?? DEFAULT_EXCLUDE;
     const prefixEntries = rule.prefixMap ? Object.entries(rule.prefixMap) : null;
@@ -80,11 +124,11 @@ export function applyPageI18n(doc: Document, rules: PageI18nRule[]): void {
           }
         }
         for (const { node, from, to } of hit) {
-          node.textContent = node.textContent?.replace(from, to) ?? node.textContent;
+          translated(node, (node.textContent ?? '').replace(from, to));
         }
         for (const { node, pattern, to } of regexHit) {
           try {
-            node.textContent = node.textContent?.replace(new RegExp(pattern, 'g'), to) ?? node.textContent;
+            translated(node, (node.textContent ?? '').replace(new RegExp(pattern, 'g'), to));
           } catch { /* 非法正则跳过 */ }
         }
       }
@@ -94,9 +138,9 @@ export function applyPageI18n(doc: Document, rules: PageI18nRule[]): void {
           const v = (el.tagName === 'INPUT' ? (el as HTMLInputElement).value : el.textContent)?.trim() ?? '';
           if (v && rule.values[v]) {
             if (el.tagName === 'INPUT' && (el as HTMLInputElement).value) {
-              (el as HTMLInputElement).value = rule.values[v];
+              translated(el, rule.values[v], true);
             } else {
-              el.textContent = rule.values[v];
+              translated(el, rule.values[v]);
             }
             el.dataset.ojppI18n = '1';
           }
@@ -115,9 +159,9 @@ export function applyPageI18n(doc: Document, rules: PageI18nRule[]): void {
           }
           if (v !== raw) {
             if (el.tagName === 'INPUT' && (el as HTMLInputElement).value) {
-              (el as HTMLInputElement).value = v;
+              translated(el, v, true);
             } else {
-              el.textContent = v;
+              translated(el, v);
             }
           }
         }

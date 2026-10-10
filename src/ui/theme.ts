@@ -2,6 +2,16 @@ import type { Theme } from '../core/types.ts';
 
 /** 脚本在 <html> 上打的标记，站点暗色样式都挂在它下面。 */
 export const THEME_ATTR = 'data-ojpp-theme';
+let siteThemeEnabled = true;
+let cleanInlineColors = true;
+let originalColorScheme: string | undefined;
+
+/** 脚本 UI 的配色与站点暗色开关分开控制。 */
+export function setSiteThemeEnabled(enabled: boolean, cleanInline = true): void {
+  siteThemeEnabled = enabled;
+  cleanInlineColors = cleanInline;
+  if (!enabled || !cleanInline) restoreInlineColors();
+}
 
 /** 解析实际主题；auto 跟随系统。 */
 export function resolveTheme(setting: Theme): 'light' | 'dark' {
@@ -24,10 +34,11 @@ export function applyTheme(setting: Theme): void {
   const previous = root.getAttribute(THEME_ATTR);
   root.setAttribute(THEME_ATTR, theme);
   // 让浏览器把滚动条、表单控件也切成对应配色
-  root.style.colorScheme = theme;
+  originalColorScheme ??= root.style.colorScheme;
+  root.style.colorScheme = siteThemeEnabled ? theme : originalColorScheme;
   // 从暗色切回浅色时，把之前清掉的内联颜色还回去
   if (previous === 'dark' && theme !== 'dark') restoreInlineColors();
-  if (theme === 'dark') stripInlineColors(document);
+  if (theme === 'dark' && siteThemeEnabled && cleanInlineColors) stripInlineColors(document);
 }
 
 /** 系统配色变化时通知调用方；返回取消订阅函数。 */
@@ -83,7 +94,7 @@ function restoreInlineColors(): void {
  */
 export function watchInlineColors(): () => void {
   const run = () => {
-    if (document.documentElement.getAttribute(THEME_ATTR) === 'dark') stripInlineColors(document);
+    if (siteThemeEnabled && cleanInlineColors && document.documentElement.getAttribute(THEME_ATTR) === 'dark') stripInlineColors(document);
   };
   run();
   const observer = new MutationObserver(() => run());

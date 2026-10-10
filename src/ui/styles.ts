@@ -551,6 +551,9 @@ export const CSS = `
 }
 
 /* 同一项设置下的多个复选框（如按站点开关自动翻译） */
+.ojpp-site-options { border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent); padding: 10px 0; }
+.ojpp-site-options > summary { cursor: pointer; font-weight: 600; }
+.ojpp-site-options > .ojpp-check-group { padding: 10px 0 0 12px; }
 .ojpp-check-group {
   display: flex;
   flex-wrap: wrap;

@@ -26,7 +26,7 @@ export default defineConfig({
         grant: ['GM_xmlhttpRequest', 'GM_getValue', 'GM_setValue', 'GM_setClipboard', 'unsafeWindow'],
         'run-at': 'document-idle',
       },
-      build: { fileName: 'oj-plus-plus.user.js', autoGrant: false },
+      build: { fileName: 'oj-plus-plus.user.js', autoGrant: false, systemjs: 'inline' },
     }),
   ],
 });

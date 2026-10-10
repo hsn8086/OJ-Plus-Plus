@@ -39,7 +39,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
     section.toolbar.anchor.insertAdjacentElement(section.toolbar.position, toolbar);
   }
 
-  const readMarkdown = () => htmlToMarkdown(section.content, prepareContent);
+  const readMarkdown = () => section.markdown?.() ?? htmlToMarkdown(section.content, prepareContent);
   bindCopy(copy, readMarkdown, platform.writeClipboard);
   let controller: AbortController | undefined;
   let result: ReturnType<typeof createResultPanel> | undefined;
@@ -139,6 +139,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
       result?.remove();
       source?.remove();
       section.content.hidden = originallyHidden;
+      if (section.ownedContent) section.content.remove();
     },
   };
 }

@@ -14,6 +14,12 @@ export interface ContentSection {
   kind: 'statement' | 'input' | 'output' | 'solution' | 'article' | 'comment';
   label: string;
   content: HTMLElement;
+  /** 站点保留原始 Markdown 时优先使用，避免从渲染后的公式反推源码。 */
+  markdown?: () => string | undefined;
+  /** SPA 复用正文节点时，用身份变化清理上一页译文。 */
+  identity?: string;
+  /** PDF 等派生文本属于脚本，关闭功能时一并移除。 */
+  ownedContent?: boolean;
   toolbar: MountPoint;
   result: MountPoint;
 }
@@ -91,6 +97,8 @@ export interface SiteAdapter {
    * 选择器统一挂在 html[data-ojpp-theme="dark"] 下，避免污染站点自身样式。
    */
   readonly darkStyles?: string;
+  /** 保留等级、标签与编辑器等内联语义颜色，仅用样式表适配。 */
+  readonly preserveInlineColors?: boolean;
   /** 题目页代码编辑器能力；不提供则不显示编辑器面板。 */
   readonly editor?: SiteEditorSupport;
   collectSections(doc: Document): ContentSection[];

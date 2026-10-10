@@ -1,5 +1,6 @@
 import { t } from '../i18n/index.ts';
 import { applyPageI18n } from '../core/page-i18n.ts';
+import { NOWCODER_DARK } from './nowcoder-styles.ts';
 import type { ContentSection, SiteAdapter } from './types.ts';
 
 function equationFromImg(img: HTMLImageElement): string | null {
@@ -34,6 +35,8 @@ export const nowcoder: SiteAdapter = {
   id: 'nowcoder',
   get name() { return t('site.nowcoder'); },
   hosts: ['ac.nowcoder.com', 'www.nowcoder.com'],
+  darkStyles: NOWCODER_DARK,
+  preserveInlineColors: true,
   styles: `
     .ojpp-nowcoder-settings {
       display: inline-flex; align-items: center; margin-left: 8px;
