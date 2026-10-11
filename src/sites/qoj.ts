@@ -44,11 +44,9 @@ function pdfSection(doc: Document): ContentSection | null {
     frame.after(content);
   }
   const text = job.text;
-  // 提取文本的 \n 是软换行，markdown 渲染会坍成空格——行尾补硬换行 \
-  const md = text.replace(/\n/g, ' \\\n');
   const samples = job.samples;
   return { kind: 'statement', label: t('section.statement'), content, ownedContent: true,
-    identity: frame.src, markdown: () => md, pdf: true, pdfSamples: samples,
+    identity: frame.src, markdown: () => text, pdf: true, pdfSamples: samples,
     images: () => import('./pdf-text.ts').then(m => m.renderPDFImages(frame.src)),
     toolbar: { anchor: content, position: 'beforebegin', align: 'block-right' },
     result: { anchor: content, position: 'afterend' } };

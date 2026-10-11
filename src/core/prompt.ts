@@ -29,7 +29,7 @@ export function buildPdfSystemPrompt(settings: Settings): string {
     '原文来自 PDF 题面提取：',
     '- 数学公式可能缺失或残缺；遇到缺失处请按上下文用 KaTeX（$...$ / $$...$$）合理还原，不要照抄残缺文本。',
     '- 输出必须是规范的 Markdown + KaTeX：标题、列表、表格、代码块（样例用 ``` 包裹）、公式用 $...$。',
-    '- 行尾反斜杠（\\）是硬换行标记，代表 PDF 里的换行位置；样例与表格务必保留换行结构。',
+    '- 原文按行提取；样例与表格务必保留换行结构（可用表格、代码块或 <br>）。',
     '- 随文附带的图片（如有）是原始 PDF 页面，请以图片内容为准确依据。',
   ];
   const custom = settings.pdfPrompt?.trim();

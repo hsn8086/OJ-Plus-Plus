@@ -26880,7 +26880,7 @@ function buildPdfSystemPrompt(settings) {
 		"原文来自 PDF 题面提取：",
 		"- 数学公式可能缺失或残缺；遇到缺失处请按上下文用 KaTeX（$...$ / $$...$$）合理还原，不要照抄残缺文本。",
 		"- 输出必须是规范的 Markdown + KaTeX：标题、列表、表格、代码块（样例用 ``` 包裹）、公式用 $...$。",
-		"- 行尾反斜杠（\\）是硬换行标记，代表 PDF 里的换行位置；样例与表格务必保留换行结构。",
+		"- 原文按行提取；样例与表格务必保留换行结构（可用表格、代码块或 <br>）。",
 		"- 随文附带的图片（如有）是原始 PDF 页面，请以图片内容为准确依据。"
 	];
 	const custom = settings.pdfPrompt?.trim();
@@ -61163,7 +61163,7 @@ function pdfSection(doc) {
 		content.append(summary, pre);
 		frame.after(content);
 	}
-	const md = job.text.replace(/\n/g, " \\\n");
+	const text = job.text;
 	const samples = job.samples;
 	return {
 		kind: "statement",
@@ -61171,7 +61171,7 @@ function pdfSection(doc) {
 		content,
 		ownedContent: true,
 		identity: frame.src,
-		markdown: () => md,
+		markdown: () => text,
 		pdf: true,
 		pdfSamples: samples,
 		images: () => module.import('./pdf-text-Cv319Zf9-JL3os_2r.js').then((m) => m.renderPDFImages(frame.src)),
@@ -67979,7 +67979,7 @@ async function startApp(platform, site) {
 	const extractPdfSamples = async (section) => {
 		if (!section.pdfSamples) return;
 		try {
-			const { extractSamples } = await module.import('./samples-BHQizjOC-cJ30xdwQ.js');
+			const { extractSamples } = await module.import('./samples-DjJ2Vj5H-cJ30xdwQ.js');
 			const images = settings.pdfAsImages && section.images ? await section.images() : void 0;
 			const samples = await extractSamples(platform.request, settings, section.pdfSamples, { images });
 			if (!samples.length) {
@@ -171224,7 +171224,7 @@ async function renderPDFImages(url, { maxPages = 6, maxDim = 1600 } = {}) {
 		await task.destroy();
 	}
 }})}}));
-System.register("./samples-BHQizjOC-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
+System.register("./samples-DjJ2Vj5H-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
 	"你是竞赛题样例的结构化提取器。用户给出从 PDF 提取的样例区文本（可能含两栏交错、残缺格式）。",
 	"请把每组样例整理为 JSON：{\"samples\":[{\"input\":\"...\",\"output\":\"...\",\"note\":\"可选注释\"}]}",
 	"硬性要求：",
