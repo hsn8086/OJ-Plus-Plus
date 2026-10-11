@@ -275,6 +275,20 @@ function escapeHtml(text: string): string {
 const md = new MarkdownIt({ html: false, linkify: true, breaks: false });
 md.use(mathPlugin);
 
+// 只放行 <br>：模型常在表格/样例里写 <br>，html:false 会把它原样漏出来。
+// 其他 HTML 仍然禁用（防注入）。
+md.inline.ruler.push('br_tag', (state, silent) => {
+  const rest = state.src.slice(state.pos);
+  const m = /^<br\s*\/?>/i.exec(rest);
+  if (!m) return false;
+  if (!silent) {
+    const token = state.push('hardbreak', 'br', 0);
+    token.markup = m[0];
+  }
+  state.pos += m[0].length;
+  return true;
+});
+
 /** markdown → 安全 HTML（公式走 KaTeX） */
 export function renderMarkdown(source: string): string {
   return md.render(source);

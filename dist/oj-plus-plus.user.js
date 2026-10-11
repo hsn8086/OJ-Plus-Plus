@@ -60630,6 +60630,17 @@ var md = new MarkdownIt({
 	breaks: false
 });
 md.use(mathPlugin);
+md.inline.ruler.push("br_tag", (state, silent) => {
+	const rest = state.src.slice(state.pos);
+	const m = /^<br\s*\/?>/i.exec(rest);
+	if (!m) return false;
+	if (!silent) {
+		const token = state.push("hardbreak", "br", 0);
+		token.markup = m[0];
+	}
+	state.pos += m[0].length;
+	return true;
+});
 /** markdown → 安全 HTML（公式走 KaTeX） */
 function renderMarkdown(source) {
 	return md.render(source);
