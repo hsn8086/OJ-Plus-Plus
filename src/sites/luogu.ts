@@ -178,9 +178,13 @@ export const luogu: SiteAdapter = {
       }
       return luoguIdeResult(`Ide:U${uid}`, json.data.rid);
     },
-    /** 正式提交：/fe/api/problem/submit/{pid} → 评测记录页。验证码拦截时把洛谷的信息透出来。 */
+    /** 正式提交：/fe/api/problem/submit/{pid} → 评测记录页；比赛页要带 ?contestId=。验证码拦截时把洛谷的信息透出来。 */
     async submit(code, languageId, problemCode) {
-      const res = await fetch(`/fe/api/problem/submit/${encodeURIComponent(problemCode)}`, {
+      const contestId = luoguContext(document).data?.contest?.id
+        ?? new URLSearchParams(location.search).get('contestId');
+      const path = `/fe/api/problem/submit/${encodeURIComponent(problemCode)}`
+        + (contestId ? `?contestId=${encodeURIComponent(String(contestId))}` : '');
+      const res = await fetch(path, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-csrf-token': luoguCsrf(document) },
         body: JSON.stringify({ lang: Number(languageId), code, enableO2: 1 }),
@@ -193,7 +197,9 @@ export const luogu: SiteAdapter = {
       return { ok: false, error: String(message) };
     },
   },
-  styles: '.user-nav > .ojpp-settings-btn { margin: 0 8px; } .ojpp-settings-floating { position: fixed; right: 18px; bottom: 18px; z-index: 1000; }',
+  styles: '.user-nav > .ojpp-settings-btn { margin: 0 8px; } .ojpp-settings-floating { position: fixed; right: 18px; bottom: 18px; z-index: 1000; } '
+    // h2 里 float:right 的工具栏会压住 overflow:hidden 的 BFC 正文——clear 推下去
+    + '.l-card.problem .lfe-marked-wrap, .l-card.problem .io-sample { clear: both; }',
   collectSections(doc) {
     const sections: ContentSection[] = [];
     for (const heading of doc.querySelectorAll<HTMLElement>('.l-card.problem > h2, .problem-content > h2')) {

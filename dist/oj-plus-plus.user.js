@@ -61565,9 +61565,11 @@ var luogu = {
 			if (json?.status !== 200 || !json?.data?.rid) throw new Error(typeof json?.errorMessage === "string" ? json.errorMessage : `洛谷评测失败 (${json?.status ?? res.status})`);
 			return luoguIdeResult(`Ide:U${uid}`, json.data.rid);
 		},
-		/** 正式提交：/fe/api/problem/submit/{pid} → 评测记录页。验证码拦截时把洛谷的信息透出来。 */
+		/** 正式提交：/fe/api/problem/submit/{pid} → 评测记录页；比赛页要带 ?contestId=。验证码拦截时把洛谷的信息透出来。 */
 		async submit(code, languageId, problemCode) {
-			const res = await fetch(`/fe/api/problem/submit/${encodeURIComponent(problemCode)}`, {
+			const contestId = luoguContext(document).data?.contest?.id ?? new URLSearchParams(location.search).get("contestId");
+			const path = `/fe/api/problem/submit/${encodeURIComponent(problemCode)}` + (contestId ? `?contestId=${encodeURIComponent(String(contestId))}` : "");
+			const res = await fetch(path, {
 				method: "POST",
 				headers: {
 					"content-type": "application/json",
@@ -61592,7 +61594,7 @@ var luogu = {
 			};
 		}
 	},
-	styles: ".user-nav > .ojpp-settings-btn { margin: 0 8px; } .ojpp-settings-floating { position: fixed; right: 18px; bottom: 18px; z-index: 1000; }",
+	styles: ".user-nav > .ojpp-settings-btn { margin: 0 8px; } .ojpp-settings-floating { position: fixed; right: 18px; bottom: 18px; z-index: 1000; } .l-card.problem .lfe-marked-wrap, .l-card.problem .io-sample { clear: both; }",
 	collectSections(doc) {
 		const sections = [];
 		for (const heading of doc.querySelectorAll(".l-card.problem > h2, .problem-content > h2")) {
@@ -64906,17 +64908,24 @@ var codeforces = {
 			};
 		},
 		async submit(code, languageId, problemCode) {
-			const doc = await postFormToIframe("/problemset/submit", {
-				csrf_token: csrfToken(),
+			const csrf = csrfToken();
+			const contestMatch = /^\/(contest|gym)\/(\d+)\/problem\/([A-Z]\w*)/.exec(document.location.pathname);
+			const fields = {
+				csrf_token: csrf,
 				action: "submitSolutionFormSubmitted",
-				submittedProblemCode: problemCode,
 				programTypeId: languageId,
 				source: code,
 				tabSize: "4",
 				ftaa: ftaaValue(),
 				bfaa: bfaaValue(),
 				_tta: ttaValue()
-			});
+			};
+			let pageUrl = "/problemset/submit";
+			if (contestMatch) {
+				pageUrl = `/${contestMatch[1]}/${contestMatch[2]}/submit`;
+				fields.submittedProblemIndex = contestMatch[3];
+			} else fields.submittedProblemCode = problemCode;
+			const doc = await postFormToIframe(pageUrl, fields);
 			const url = doc.URL;
 			const errors = [...doc.querySelectorAll(".error, .forbidden")].map((e) => e.textContent?.trim()).filter((t) => !!t);
 			const errorText = errors.length ? errors.join("; ") : void 0;

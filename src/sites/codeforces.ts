@@ -1773,17 +1773,26 @@ export const codeforces: SiteAdapter = {
 
     async submit(code, languageId, problemCode) {
       const csrf = csrfToken();
-      const doc = await postFormToIframe('/problemset/submit', {
+      // contest/gym 页提交要投到对应 contest 下，否则只会算成题库提交
+      const contestMatch = /^\/(contest|gym)\/(\d+)\/problem\/([A-Z]\w*)/.exec(document.location.pathname);
+      const fields: Record<string, string> = {
         csrf_token: csrf,
         action: 'submitSolutionFormSubmitted',
-        submittedProblemCode: problemCode,
         programTypeId: languageId,
         source: code,
         tabSize: '4',
         ftaa: ftaaValue(),
         bfaa: bfaaValue(),
         _tta: ttaValue(),
-      });
+      };
+      let pageUrl = '/problemset/submit';
+      if (contestMatch) {
+        pageUrl = `/${contestMatch[1]}/${contestMatch[2]}/submit`;
+        fields.submittedProblemIndex = contestMatch[3];
+      } else {
+        fields.submittedProblemCode = problemCode;
+      }
+      const doc = await postFormToIframe(pageUrl, fields);
       const url = doc.URL;
       // 所有 .error.* 元素的错误文本（重复代码、空源码、未知题号等）
       const errors = [...doc.querySelectorAll('.error, .forbidden')]
