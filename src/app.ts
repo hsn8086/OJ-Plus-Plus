@@ -200,7 +200,9 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
     if (!section.pdfSamples) return;
     try {
       const { extractSamples } = await import('./core/samples.ts');
-      const samples = await extractSamples(platform.request, settings, section.pdfSamples);
+      // 图片模式开了就把页面图一起给——AI 看真实版式比看提取文本准得多
+      const images = settings.pdfAsImages && section.images ? await section.images() : undefined;
+      const samples = await extractSamples(platform.request, settings, section.pdfSamples, { images });
       if (!samples.length) { toast(t('editor.noSamplesExtracted'), 'error'); return; }
       editorPanel?.addSamples(samples.map(s => ({ input: s.input, output: s.output })));
       toast(t('editor.samplesExtracted', { count: samples.length }), 'success');

@@ -67979,8 +67979,9 @@ async function startApp(platform, site) {
 	const extractPdfSamples = async (section) => {
 		if (!section.pdfSamples) return;
 		try {
-			const { extractSamples } = await module.import('./samples-mIHm21Su-sc6MMRTw.js');
-			const samples = await extractSamples(platform.request, settings, section.pdfSamples);
+			const { extractSamples } = await module.import('./samples-BKGOOctQ-163sro-c.js');
+			const images = settings.pdfAsImages && section.images ? await section.images() : void 0;
+			const samples = await extractSamples(platform.request, settings, section.pdfSamples, { images });
 			if (!samples.length) {
 				toast(t$1("editor.noSamplesExtracted"), "error");
 				return;
@@ -171222,7 +171223,7 @@ async function renderPDFImages(url, { maxPages = 6, maxDim = 1600 } = {}) {
 		await task.destroy();
 	}
 }})}}));
-System.register("./samples-mIHm21Su-sc6MMRTw.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
+System.register("./samples-BKGOOctQ-163sro-c.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
 	"你是竞赛题样例的结构化提取器。用户给出从 PDF 提取的样例区文本（可能含两栏交错、残缺格式）。",
 	"请把每组样例整理为 JSON：{\"samples\":[{\"input\":\"...\",\"output\":\"...\",\"note\":\"可选注释\"}]}",
 	"硬性要求：",
@@ -171235,8 +171236,12 @@ System.register("./samples-mIHm21Su-sc6MMRTw.js", ['./___monkey.entry.js'],(func
 * 把 PDF 样例区文本提取为结构化样例列表。
 * 模型只负责把散文本整理成 JSON——比让它翻译样例可靠得多。
 */
-async function extractSamples(request, settings, text, signal) {
-	const out = await ask(request, settings, text, SAMPLE_SYSTEM, { signal });
+async function extractSamples(request, settings, text, { signal, images } = {}) {
+	const system = images?.length ? SAMPLE_SYSTEM + "\n- 随文附带的图片是原始 PDF 页面，以图片内容为准。" : SAMPLE_SYSTEM;
+	const out = await ask(request, settings, text, system, {
+		signal,
+		images
+	});
 	const match = /\{[\s\S]*\}/.exec(out);
 	if (!match) return [];
 	try {

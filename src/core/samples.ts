@@ -22,9 +22,10 @@ export async function extractSamples(
   request: HttpTransport,
   settings: Settings,
   text: string,
-  signal?: AbortSignal,
+  { signal, images }: { signal?: AbortSignal; images?: string[] } = {},
 ): Promise<ExtractedSample[]> {
-  const out = await ask(request, settings, text, SAMPLE_SYSTEM, { signal });
+  const system = images?.length ? SAMPLE_SYSTEM + '\n- 随文附带的图片是原始 PDF 页面，以图片内容为准。' : SAMPLE_SYSTEM;
+  const out = await ask(request, settings, text, system, { signal, images });
   const match = /\{[\s\S]*\}/.exec(out);
   if (!match) return [];
   try {
