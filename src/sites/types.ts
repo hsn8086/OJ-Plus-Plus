@@ -26,6 +26,8 @@ export interface ContentSection {
   pdf?: boolean;
   /** PDF 样例区原始文本：走结构化提取渲染，不随题面翻译。 */
   pdfSamples?: string;
+  /** 占位符（![图N]）到图片 URL/dataURL 的映射——译文里的占位符按它还原。 */
+  imageRefs?: Record<string, string>;
   toolbar: MountPoint;
   result: MountPoint;
 }

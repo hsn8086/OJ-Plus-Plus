@@ -47,7 +47,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
     section.toolbar.anchor.insertAdjacentElement(section.toolbar.position, toolbar);
   }
 
-  const imageRefs = new Map<string, string>();
+  const imageRefs = new Map<string, string>(Object.entries(section.imageRefs ?? {}));
   const readMarkdown = () => {
     const raw = section.markdown?.() ?? htmlToMarkdown(section.content, prepareContent);
     // 图片换成可引用占位符：模型写“![图1]”，译文回来替换回真实 URL，

@@ -60811,7 +60811,7 @@ function mountSection(section, options) {
 		toolbar.classList.add("ojpp-toolbar-block");
 		section.toolbar.anchor.insertAdjacentElement(section.toolbar.position, toolbar);
 	} else section.toolbar.anchor.insertAdjacentElement(section.toolbar.position, toolbar);
-	const imageRefs = /* @__PURE__ */ new Map();
+	const imageRefs = new Map(Object.entries(section.imageRefs ?? {}));
 	const readMarkdown = () => {
 		const raw = section.markdown?.() ?? htmlToMarkdown(section.content, prepareContent);
 		let n = 0;
@@ -61173,11 +61173,12 @@ function pdfSection(doc) {
 		job = {};
 		jobs.set(frame.src, job);
 		const pending = job;
-		module.import('./pdf-text-Cv319Zf9-JL3os_2r.js').then(async (module) => {
-			const text = await module.extractPDFText(frame.src);
+		module.import('./pdf-text-DTzkcjZJ-DKIhPxIK.js').then(async (module) => {
+			const { text, images } = await module.extractPDFText(frame.src);
 			const { statement, samples } = module.splitPdfSamples(text);
 			pending.text = statement;
 			pending.samples = samples;
+			pending.images = images;
 			notify.get(doc)?.();
 		}).catch((error) => {
 			pending.error = String(error);
@@ -61203,6 +61204,7 @@ function pdfSection(doc) {
 	}
 	const text = job.text;
 	const samples = job.samples;
+	const images = job.images;
 	return {
 		kind: "statement",
 		label: t$1("section.statement"),
@@ -61212,7 +61214,8 @@ function pdfSection(doc) {
 		markdown: () => text,
 		pdf: true,
 		pdfSamples: samples,
-		images: () => module.import('./pdf-text-Cv319Zf9-JL3os_2r.js').then((m) => m.renderPDFImages(frame.src)),
+		imageRefs: images,
+		images: () => module.import('./pdf-text-DTzkcjZJ-DKIhPxIK.js').then((m) => m.renderPDFImages(frame.src)),
 		toolbar: {
 			anchor: content,
 			position: "beforebegin",
@@ -68017,7 +68020,7 @@ async function startApp(platform, site) {
 	const extractPdfSamples = async (section) => {
 		if (!section.pdfSamples) return;
 		try {
-			const { extractSamples } = await module.import('./samples-BCarmXPF-cJ30xdwQ.js');
+			const { extractSamples } = await module.import('./samples-5ocbPqEj-cJ30xdwQ.js');
 			const images = settings.pdfAsImages && section.images ? await section.images() : void 0;
 			const samples = await extractSamples(platform.request, settings, section.pdfSamples, { images });
 			if (!samples.length) {
@@ -68233,7 +68236,7 @@ if (site) try {
 	console.error("[OJ++]", error);
 	alert(error instanceof Error ? error.message : String(error));
 }})}}));
-System.register("./pdf-text-Cv319Zf9-JL3os_2r.js", [],(function(exports,module){'use strict';return{execute:(function(){exports({extractPDFText:extractPDFText,renderPDFImages:renderPDFImages,splitPdfSamples:splitPdfSamples});var isNodeJS$1 = typeof process === "object" && process + "" === "[object process]" && !process.versions.nw && !(process.versions.electron && process.type && process.type !== "browser");
+System.register("./pdf-text-DTzkcjZJ-DKIhPxIK.js", [],(function(exports,module){'use strict';return{execute:(function(){exports({extractPDFText:extractPDFText,renderPDFImages:renderPDFImages,splitPdfSamples:splitPdfSamples});var isNodeJS$1 = typeof process === "object" && process + "" === "[object process]" && !process.versions.nw && !(process.versions.electron && process.type && process.type !== "browser");
 var BBOX_INIT$1 = [
 	Infinity,
 	Infinity,
@@ -171134,7 +171137,7 @@ globalThis.pdfjsWorker = { WorkerMessageHandler };
 * 行间按 x 空档补空格——LaTeX 生成的 PDF 不打 hasEOL，
 * 直接用 item.str 拼会把整页糊成一行。
 */
-function pageText(items) {
+function pageText(items, images, keyFor) {
 	const runs = [];
 	for (const item of items) {
 		const it = item;
@@ -171155,33 +171158,167 @@ function pageText(items) {
 			h: it.height ?? 0
 		});
 	}
-	if (!runs.length) return "";
-	return columnText(runs);
+	const lines = buildLines(runs);
+	const out = [];
+	const imgs = {};
+	const pending = [...images].sort((a, b) => b.y - a.y);
+	for (const line of lines) {
+		while (pending.length && pending[0].y >= line.y) {
+			const img = pending.shift();
+			const key = keyFor(Object.keys(imgs).length);
+			imgs[key] = img.dataUrl;
+			out.push(key);
+		}
+		const t = lineText(line);
+		if (t.trim()) out.push(t);
+	}
+	for (const img of pending) {
+		const key = keyFor(Object.keys(imgs).length);
+		imgs[key] = img.dataUrl;
+		out.push(key);
+	}
+	return {
+		text: out.join("\n"),
+		images: imgs
+	};
 }
-function columnText(runs) {
+function buildLines(runs) {
 	const sorted = [...runs].sort((a, b) => Math.abs(a.y - b.y) > .5 ? b.y - a.y : a.x - b.x);
 	const lines = [];
 	for (const run of sorted) {
 		const tol = Math.max(1.6, run.h * .35);
-		const line = lines.find((l) => Math.abs(l[0].y - run.y) <= tol);
-		if (line) line.push(run);
-		else lines.push([run]);
+		const line = lines.find((l) => Math.abs(l.y - run.y) <= tol);
+		if (line) line.items.push(run);
+		else lines.push({
+			y: run.y,
+			items: [run]
+		});
+	}
+	return lines;
+}
+function lineText(line) {
+	const items = [...line.items].sort((a, b) => a.x - b.x);
+	let text = "";
+	let prevEnd = -Infinity;
+	let prevH = 0;
+	for (const item of items) {
+		if (item.x - prevEnd > Math.max(.5, prevH * .28)) text += " ";
+		text += item.str;
+		prevEnd = item.x + item.w;
+		prevH = item.h || prevH;
+	}
+	return text.trimEnd();
+}
+/** 从 PDF 原始字节里挖 image XObject 流——pdf.js 对象解析在主线程不稳，
+*  DCT(JPEG) 原样打包；FlateDecode 用 DecompressionStream 解开再转 PNG。 */
+async function rawStreamImages(buf) {
+	const head = new TextDecoder("latin1").decode(buf);
+	const out = [];
+	let pos = 0;
+	while (true) {
+		const idx = head.indexOf("/Subtype", pos);
+		if (idx < 0) break;
+		pos = idx + 8;
+		if (!/^\/Subtype\s*\/Image/.test(head.slice(idx, idx + 40))) continue;
+		const streamPos = head.indexOf("stream", idx);
+		if (streamPos < 0) break;
+		const dict = head.slice(idx, streamPos);
+		const w = Number(/\/Width\s+(\d+)/.exec(dict)?.[1] ?? 0);
+		const h = Number(/\/Height\s+(\d+)/.exec(dict)?.[1] ?? 0);
+		const bpc = Number(/\/BitsPerComponent\s+(\d+)/.exec(dict)?.[1] ?? 8);
+		const cs = /\/ColorSpace\s*\/(\w+)/.exec(dict)?.[1] ?? "DeviceRGB";
+		const filt = /\/Filter\s*\/(\w+)/.exec(dict)?.[1] ?? "";
+		const len = Number(/\/Length\s+(\d+)/.exec(dict)?.[1] ?? 0);
+		if (!w || !h || !len) {
+			pos = streamPos + 6;
+			continue;
+		}
+		let dataStart = streamPos + 6;
+		if (buf[dataStart] === 13 && buf[dataStart + 1] === 10) dataStart += 2;
+		else if (buf[dataStart] === 10 || buf[dataStart] === 13) dataStart++;
+		const data = buf.subarray(dataStart, dataStart + len);
+		pos = dataStart + len;
+		try {
+			const url = await streamToDataUrl({
+				w,
+				h,
+				bpc,
+				cs,
+				filt,
+				data
+			});
+			if (url) out.push(url);
+		} catch {}
+	}
+	return out;
+}
+async function streamToDataUrl({ w, h, bpc, cs, filt, data }) {
+	if (filt === "DCTDecode") return `data:image/jpeg;base64,${u8ToB64(data)}`;
+	if (filt === "JPXDecode") return `data:image/jp2;base64,${u8ToB64(data)}`;
+	if (filt !== "FlateDecode" || bpc !== 8) return null;
+	const raw = await inflate(data);
+	const bpp = cs === "DeviceRGB" ? 3 : cs === "DeviceGray" ? 1 : cs === "DeviceCMYK" ? 4 : 0;
+	if (!bpp || raw.length < w * h * bpp) return null;
+	const canvas = document.createElement("canvas");
+	canvas.width = w;
+	canvas.height = h;
+	const ctx = canvas.getContext("2d");
+	const pix = new Uint8ClampedArray(w * h * 4);
+	for (let i = 0; i < w * h; i++) {
+		const s = i * bpp, t = i * 4;
+		pix[t] = raw[s];
+		pix[t + 1] = bpp >= 3 ? raw[s + 1] : raw[s];
+		pix[t + 2] = bpp >= 3 ? raw[s + 2] : raw[s];
+		pix[t + 3] = 255;
+	}
+	ctx.putImageData(new ImageData(pix, w, h), 0, 0);
+	return canvas.toDataURL("image/png");
+}
+function u8ToB64(u8) {
+	let s = "";
+	for (let i = 0; i < u8.length; i += 8192) s += String.fromCharCode.apply(null, [...u8.subarray(i, i + 8192)]);
+	return btoa(s);
+}
+async function inflate(data) {
+	const ds = new DecompressionStream("deflate");
+	const stream = new Blob([data]).stream().pipeThrough(ds);
+	return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+/** 一页里的图片位置：paintImageXObject op 的变换矩阵给 y，
+*  数据从 imageQueue（rawStreamImages 解出来的 dataURL）按序取。 */
+async function pageImages(page, imageQueue) {
+	let ops;
+	try {
+		ops = await Promise.race([page.getOperatorList(), new Promise((_, rej) => setTimeout(() => rej(/* @__PURE__ */ new Error("ops timeout")), 3e4))]);
+	} catch {
+		return [];
 	}
 	const out = [];
-	for (const line of lines) {
-		line.sort((a, b) => a.x - b.x);
-		let text = "";
-		let prevEnd = -Infinity;
-		let prevH = 0;
-		for (const item of line) {
-			if (item.x - prevEnd > Math.max(.5, prevH * .28)) text += " ";
-			text += item.str;
-			prevEnd = item.x + item.w;
-			prevH = item.h || prevH;
+	let ctm = [
+		1,
+		0,
+		0,
+		1,
+		0,
+		0
+	];
+	const stack = [];
+	for (let i = 0; i < ops.fnArray.length; i++) {
+		const fn = ops.fnArray[i];
+		const args = ops.argsArray[i];
+		if (fn === OPS$1.save) stack.push([...ctm]);
+		else if (fn === OPS$1.restore) ctm = stack.pop() ?? ctm;
+		else if (fn === OPS$1.transform) ctm = args;
+		else if (fn === OPS$1.paintImageXObject || fn === OPS$1.paintInlineImageXObject) {
+			const dataUrl = imageQueue.shift();
+			if (dataUrl) out.push({
+				key: "",
+				dataUrl,
+				y: ctm[5] ?? 0
+			});
 		}
-		if (text.trim()) out.push(text.trimEnd());
 	}
-	return out.join("\n");
+	return out;
 }
 async function openPDF(url) {
 	const global = globalThis;
@@ -171191,12 +171328,16 @@ async function openPDF(url) {
 		signal: AbortSignal.timeout(45e3)
 	});
 	if (!response.ok) throw new Error(`PDF HTTP ${response.status}`);
-	return getDocument({
-		data: new Uint8Array(await response.arrayBuffer()),
-		useSystemFonts: true,
-		disableFontFace: true,
-		useWorkerFetch: false
-	});
+	const bytes = new Uint8Array(await response.arrayBuffer());
+	return {
+		bytes,
+		task: getDocument({
+			data: bytes.slice(),
+			useSystemFonts: true,
+			disableFontFace: true,
+			useWorkerFetch: false
+		})
+	};
 }
 /** 样例区域标题：起点 Example/Sample，终点下一个正文章节标题。 */
 var SAMPLE_HEAD = /^[ \t]*(examples?|samples?|sample tests?|测试样例|样例)[ \t]*$/im;
@@ -171211,33 +171352,48 @@ function splitPdfSamples(text) {
 	const rest = text.slice(head.index + head[0].length);
 	const tail = SECTION_HEAD.exec(rest);
 	const samples = tail ? rest.slice(0, tail.index).trim() : rest.trim();
+	let statement = (text.slice(0, head.index) + (tail ? rest.slice(tail.index) : "")).trim();
+	const markers = rest.match(/!\[图\d+\]/g)?.filter((m) => !statement.includes(m));
+	if (markers?.length) statement += "\n\n" + markers.join("\n");
+	const cleanSamples = samples.replace(/!\[图\d+\]/g, "").trim();
 	return {
-		statement: (text.slice(0, head.index) + (tail ? rest.slice(tail.index) : "")).trim(),
-		samples: samples || void 0
+		statement,
+		samples: cleanSamples || void 0
 	};
 }
 /** Single-file userscripts cannot deploy a separate worker asset. */
 async function extractPDFText(url) {
-	const task = await openPDF(url);
+	const { task, bytes } = await openPDF(url);
 	try {
 		const pdf = await task.promise;
 		const pages = [];
+		const images = {};
+		let imageCount = 0;
+		const imageQueue = await rawStreamImages(bytes).catch(() => []);
 		for (let n = 1; n <= pdf.numPages; n++) {
 			const page = await pdf.getPage(n);
 			const content = await page.getTextContent();
-			pages.push(pageText(content.items).trim());
+			const pageImgs = await pageImages(page, imageQueue);
+			const startCount = imageCount;
+			const { text, images: pageImageMap } = pageText(content.items, pageImgs, (i) => `![图${startCount + i + 1}]`);
+			imageCount += Object.keys(pageImageMap).length;
+			Object.assign(images, pageImageMap);
+			pages.push(text.trim());
 			page.cleanup();
 		}
 		const text = pages.join("\n\n");
 		if (!text.trim()) throw new Error("PDF contains no extractable text.");
-		return text;
+		return {
+			text,
+			images
+		};
 	} finally {
 		await task.destroy();
 	}
 }
 /** 页面渲染成 PNG data URL——字体无 ToUnicode 时（公式/扫描件）图片是唯一完整来源。 */
 async function renderPDFImages(url, { maxPages = 6, maxDim = 1600 } = {}) {
-	const task = await openPDF(url);
+	const { task } = await openPDF(url);
 	try {
 		const pdf = await task.promise;
 		const images = [];
@@ -171262,7 +171418,7 @@ async function renderPDFImages(url, { maxPages = 6, maxDim = 1600 } = {}) {
 		await task.destroy();
 	}
 }})}}));
-System.register("./samples-BCarmXPF-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
+System.register("./samples-5ocbPqEj-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
 	"你是竞赛题样例的结构化提取器。用户给出从 PDF 提取的样例区文本（可能含两栏交错、残缺格式）。",
 	"请把每组样例整理为 JSON：{\"samples\":[{\"input\":\"...\",\"output\":\"...\",\"note\":\"可选注释\"}]}",
 	"硬性要求：",

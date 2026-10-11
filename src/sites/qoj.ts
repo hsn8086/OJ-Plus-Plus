@@ -5,7 +5,7 @@ import { mountNavSettings, observeSite, prepareMathContent } from './shared.ts';
 import { QOJ_DARK } from './qoj-styles.ts';
 import type { ContentSection, SiteAdapter } from './types.ts';
 
-const pdfJobs = new WeakMap<Document, Map<string, { text?: string; samples?: string; error?: string }>>();
+const pdfJobs = new WeakMap<Document, Map<string, { text?: string; samples?: string; images?: Record<string, string>; error?: string }>>();
 const notify = new WeakMap<Document, () => void>();
 
 function pdfSection(doc: Document): ContentSection | null {
@@ -19,10 +19,11 @@ function pdfSection(doc: Document): ContentSection | null {
     jobs.set(frame.src, job);
     const pending = job;
     void import('./pdf-text.ts').then(async module => {
-      const text = await module.extractPDFText(frame.src);
+      const { text, images } = await module.extractPDFText(frame.src);
       const { statement, samples } = module.splitPdfSamples(text);
       pending.text = statement;
       pending.samples = samples;
+      pending.images = images;
       notify.get(doc)?.();
     }).catch(error => {
       pending.error = String(error);
@@ -45,8 +46,9 @@ function pdfSection(doc: Document): ContentSection | null {
   }
   const text = job.text;
   const samples = job.samples;
+  const images = job.images;
   return { kind: 'statement', label: t('section.statement'), content, ownedContent: true,
-    identity: frame.src, markdown: () => text, pdf: true, pdfSamples: samples,
+    identity: frame.src, markdown: () => text, pdf: true, pdfSamples: samples, imageRefs: images,
     images: () => import('./pdf-text.ts').then(m => m.renderPDFImages(frame.src)),
     toolbar: { anchor: content, position: 'beforebegin', align: 'block-right' },
     result: { anchor: content, position: 'afterend' } };
