@@ -52,6 +52,8 @@ export interface Settings {
   streaming: boolean;
   /** PDF 题面随文再发页面截图（需视觉模型） */
   pdfAsImages?: boolean;
+  /** PDF 题面自动结构化提取样例进编辑器 */
+  autoExtractSamples?: boolean;
   /** 界面语言；auto 跟随浏览器 */
   locale: Locale;
   /** 站点配色；auto 跟随系统 */

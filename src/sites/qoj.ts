@@ -5,7 +5,7 @@ import { mountNavSettings, observeSite, prepareMathContent } from './shared.ts';
 import { QOJ_DARK } from './qoj-styles.ts';
 import type { ContentSection, SiteAdapter } from './types.ts';
 
-const pdfJobs = new WeakMap<Document, Map<string, { text?: string; error?: string }>>();
+const pdfJobs = new WeakMap<Document, Map<string, { text?: string; samples?: string; error?: string }>>();
 const notify = new WeakMap<Document, () => void>();
 
 function pdfSection(doc: Document): ContentSection | null {
@@ -18,8 +18,11 @@ function pdfSection(doc: Document): ContentSection | null {
     job = {};
     jobs.set(frame.src, job);
     const pending = job;
-    void import('./pdf-text.ts').then(module => module.extractPDFText(frame.src)).then(text => {
-      pending.text = text;
+    void import('./pdf-text.ts').then(async module => {
+      const text = await module.extractPDFText(frame.src);
+      const { statement, samples } = module.splitPdfSamples(text);
+      pending.text = statement;
+      pending.samples = samples;
       notify.get(doc)?.();
     }).catch(error => {
       pending.error = String(error);
@@ -43,8 +46,9 @@ function pdfSection(doc: Document): ContentSection | null {
   const text = job.text;
   // 提取文本的 \n 是软换行，markdown 渲染会坍成空格——行尾补硬换行 \
   const md = text.replace(/\n/g, ' \\\n');
+  const samples = job.samples;
   return { kind: 'statement', label: t('section.statement'), content, ownedContent: true,
-    identity: frame.src, markdown: () => md, pdf: true,
+    identity: frame.src, markdown: () => md, pdf: true, pdfSamples: samples,
     images: () => import('./pdf-text.ts').then(m => m.renderPDFImages(frame.src)),
     toolbar: { anchor: content, position: 'beforebegin', align: 'block-right' },
     result: { anchor: content, position: 'afterend' } };

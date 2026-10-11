@@ -480,6 +480,12 @@ export function mountEditorPanel(options: EditorPanelOptions) {
   return {
     el: root,
     editor,
+    /** 外部注入的样例（如 PDF 提取）——追加到样例行末尾。 */
+    addSamples(items: { input: string; output: string }[]) {
+      tests.querySelector('.ojpp-editor-empty')?.remove();
+      const offset = rows.filter((r) => r.kind === 'sample').length;
+      items.forEach((s, i) => addSampleRow(s, offset + i));
+    },
     dispose() {
       for (const run of activeRuns.values()) run.abort();
       allCancelled = true;

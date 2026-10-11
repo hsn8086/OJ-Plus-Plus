@@ -85,6 +85,21 @@ async function openPDF(url: string) {
     disableFontFace: true, useWorkerFetch: false });
 }
 
+/** 样例区域标题：起点 Example/Sample，终点下一个正文章节标题。 */
+const SAMPLE_HEAD = /^(examples?|samples?|sample tests?|测试样例|样例)\s*$/im;
+const SECTION_HEAD = /^(note|notes|scoring|subtasks?|constraints?|limits?|提示|说明|数据范围|分数|计分|评分|附录|hack|evaluation|explanation)\b/im;
+
+/** 把提取文本切成「正文」和「样例区」——样例单独走结构化提取，不参与题面翻译。 */
+export function splitPdfSamples(text: string): { statement: string; samples: string | undefined } {
+  const head = SAMPLE_HEAD.exec(text);
+  if (!head) return { statement: text, samples: undefined };
+  const rest = text.slice(head.index + head[0].length);
+  const tail = SECTION_HEAD.exec(rest);
+  const samples = tail ? rest.slice(0, tail.index).trim() : rest.trim();
+  const statement = (text.slice(0, head.index) + (tail ? rest.slice(tail.index) : '')).trim();
+  return { statement, samples: samples || undefined };
+}
+
 /** Single-file userscripts cannot deploy a separate worker asset. */
 export async function extractPDFText(url: string): Promise<string> {
   const task = await openPDF(url);

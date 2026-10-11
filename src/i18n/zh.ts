@@ -76,6 +76,7 @@ export const zh = {
   'settings.autoTranslateHint': '按站点分别开关；打开题目页后自动翻译题目描述区域。',
   'settings.streaming': '流式显示',
   'settings.pdfAsImages': 'PDF 题面转图片发送',
+  'settings.autoExtractSamples': 'PDF 题面自动提取样例',
   'settings.pdfPrompt': 'PDF 翻译附加提示词',
   'settings.pdfPromptPlaceholder': '追加在 PDF 专用提示词后面的自定义要求；留空用内置',
   'settings.streamingHint': '边生成边渲染，首屏更快。关闭后等整段译完再一次性显示；服务商或脚本管理器不支持时会自动回退。',
@@ -153,6 +154,10 @@ export const zh = {
   // 翻译流程
   'translate.status': '正在翻译…',
   'translate.statusChunk': '正在翻译第 {index}/{total} 段…',
+  'translate.statusSamples': '正在整理样例…',
+  'toolbar.extractSamples': '提取样例',
+  'editor.samplesExtracted': '已提取 {count} 组样例进编辑器',
+  'editor.noSamplesExtracted': '没提取到样例',
   'translate.unknownProvider': '未配置',
 
   // 错误
@@ -187,6 +192,7 @@ export const zh = {
   'section.contest': '比赛介绍',
   'section.constraints': '约束条件',
   'section.statement': '题目描述',
+  'section.samples': '样例',
   'section.input': '输入描述',
   'section.output': '输出描述',
   'section.note': '提示',

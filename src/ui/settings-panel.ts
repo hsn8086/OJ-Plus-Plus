@@ -186,6 +186,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
       check(t('settings.wholeBlock'), draft.translateWholeBlock, (v) => draft.translateWholeBlock = v),
       check(t('settings.streaming'), draft.streaming, (v) => draft.streaming = v),
       check(t('settings.pdfAsImages'), draft.pdfAsImages ?? false, (v) => draft.pdfAsImages = v),
+      check(t('settings.autoExtractSamples'), draft.autoExtractSamples ?? false, (v) => draft.autoExtractSamples = v),
     );
 
     // 高级项：PDF 提示词（不常用，折叠藏深）

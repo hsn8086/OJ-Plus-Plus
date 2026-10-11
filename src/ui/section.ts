@@ -5,7 +5,7 @@ import type { Settings } from '../core/types.ts';
 import type { Platform } from '../platforms/types.ts';
 import type { ContentSection, SiteAdapter } from '../sites/types.ts';
 import { bindCopy, iconButton, setIcon } from './buttons.ts';
-import { ICON_CHECK, ICON_COPY, ICON_CROSS, ICON_MARKDOWN, ICON_SPINNER, ICON_TRANSLATE } from './icons.ts';
+import { ICON_CHECK, ICON_COPY, ICON_CROSS, ICON_LIST, ICON_MARKDOWN, ICON_SPINNER, ICON_TRANSLATE } from './icons.ts';
 import { htmlToMarkdown } from './markdown.ts';
 import { createResultPanel } from './result-panel.ts';
 
@@ -13,6 +13,8 @@ interface SectionOptions {
   platform: Platform;
   getSettings(): Settings;
   prepareContent: SiteAdapter['prepareContent'];
+  /** PDF 区可提取样例：按下后把结构化样例塞进编辑器测试列表。 */
+  extractSamples?: () => void;
 }
 
 /** 每个区域持有自己的视图与请求状态，随区域卸载一并清理。 */
@@ -26,6 +28,11 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
   const markdown = iconButton(ICON_MARKDOWN, t('toolbar.markdown'), 'ojpp-md-btn');
   const copy = iconButton(ICON_COPY, t('toolbar.copyOriginal'), 'ojpp-copy-btn');
   toolbar.append(translate, markdown, copy);
+  if (options.extractSamples) {
+    const extract = iconButton(ICON_LIST, t('toolbar.extractSamples'), 'ojpp-samples-btn');
+    toolbar.append(extract);
+    extract.addEventListener('click', () => options.extractSamples?.());
+  }
   if (section.toolbar.align === 'right') {
     // 靠右对齐：追加到标题元素内部并向右浮动，
     // 这样工具栏和标题同一行，且不会改变站点自己的 DOM 结构。

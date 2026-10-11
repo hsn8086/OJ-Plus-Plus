@@ -4,7 +4,7 @@ import { restorePageI18n } from './core/page-i18n.ts';
 import { loadSettings, saveSettings } from './core/settings-store.ts';
 import { getLocale, resolveLocale, setLocale, t } from './i18n/index.ts';
 import type { Platform } from './platforms/types.ts';
-import type { SiteAdapter } from './sites/types.ts';
+import type { ContentSection, SiteAdapter } from './sites/types.ts';
 import { iconButton } from './ui/buttons.ts';
 import { ICON_SETTINGS } from './ui/icons.ts';
 import { mountEditorPage, mountEditorPanel } from './ui/editor-panel.ts';
@@ -175,6 +175,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
         platform,
         getSettings: () => settings,
         prepareContent: (root) => site.prepareContent(root),
+        extractSamples: section.pdfSamples ? () => void extractPdfSamples(section) : undefined,
       });
       mounted.set(section.content, handle);
       // 站点开关开着就把收集到的每个区都自动翻——不只是题面正文，
@@ -183,11 +184,37 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
         void handle.translate();
       }
     }
+    // 自动提取样例：PDF 题面拿到样例原文后自动跑结构化提取
+    if (settings.autoExtractSamples) {
+      for (const section of sections) {
+        if (section.pdfSamples && !pdfExtracted.has(section.content)) {
+          pdfExtracted.add(section.content);
+          void extractPdfSamples(section);
+        }
+      }
+    }
   };
+  /** PDF 样例：结构化提取（JSON）→ 塞进编辑器样例列表。 */
+  const pdfExtracted = new Set<HTMLElement>();
+  const extractPdfSamples = async (section: ContentSection) => {
+    if (!section.pdfSamples) return;
+    try {
+      const { extractSamples } = await import('./core/samples.ts');
+      const samples = await extractSamples(platform.request, settings, section.pdfSamples);
+      if (!samples.length) { toast(t('editor.noSamplesExtracted'), 'error'); return; }
+      editorPanel?.addSamples(samples.map(s => ({ input: s.input, output: s.output })));
+      toast(t('editor.samplesExtracted', { count: samples.length }), 'success');
+    } catch (error) {
+      toast(error instanceof Error ? error.message : String(error), 'error');
+    }
+  };
+
   const reconcileAll = () => {
     reconcile();
     reconcileEditor();
     reconcileEditorPage();
+    // 自动提取样例：PDF 题面拿到样例原文后自动跑结构化提取
+
     // 站点界面 i18n 跟「目标语言」走：目标是中文才把站点英文换中文
     const targetZh = /中文|简体|繁体|汉语|zh|chinese/i.test(settings.targetLang);
     if (feature('pageI18n')) site.i18nPage?.(document, targetZh ? 'zh' : 'en');

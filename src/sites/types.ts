@@ -24,6 +24,8 @@ export interface ContentSection {
   images?: () => Promise<string[]>;
   /** PDF 提取的题面：用 PDF 专用提示词翻译。 */
   pdf?: boolean;
+  /** PDF 样例区原始文本：走结构化提取渲染，不随题面翻译。 */
+  pdfSamples?: string;
   toolbar: MountPoint;
   result: MountPoint;
 }

@@ -19,6 +19,16 @@ export const ICON_MARKDOWN = svg(
     '<path d="M12 15l2 2 2-2"/>',
 );
 
+/** 样例列表 */
+export const ICON_LIST = svg(
+  '<line x1="8" y1="6" x2="21" y2="6"/>' +
+    '<line x1="8" y1="12" x2="21" y2="12"/>' +
+    '<line x1="8" y1="18" x2="21" y2="18"/>' +
+    '<line x1="3" y1="6" x2="3.01" y2="6"/>' +
+    '<line x1="3" y1="12" x2="3.01" y2="12"/>' +
+    '<line x1="3" y1="18" x2="3.01" y2="18"/>',
+);
+
 /** 复制：剪贴板 */
 export const ICON_COPY = svg(
   '<rect x="9" y="9" width="12" height="12" rx="2"/>' +
