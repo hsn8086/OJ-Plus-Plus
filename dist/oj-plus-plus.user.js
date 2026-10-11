@@ -61554,7 +61554,7 @@ ${d$1} .sidebar .nav-pills li a, ${d$1} .sidebar .nav-link,
 ${d$1} .am-list li, ${d$1} .am-list li a { background: #22272e; color: #cdd9e5; border-color: #373e47; }
 /* 新版 .lside 图标条：链接不叠底块，保持透明靠 hover/active 指示 */
 ${d$1} .sidebar.lside a { background: transparent; border-color: transparent; }
-${d$1} .sidebar .nav-pills li a:hover, ${d$1} .sidebar a:hover, ${d$1} .am-list li a:hover { background: #30363d; color: #79b8ff; }
+${d$1} .sidebar .nav-pills li a:hover, ${d$1} .am-list li a:hover { background: #30363d; color: #79b8ff; }
 ${d$1} .am-comment .am-comment-avatar, ${d$1} .am-comment img { background: transparent; }
 ${d$1} .am-panel > .am-panel-bd, ${d$1} .am-panel > .am-panel-hd { border-color: #373e47; }
 ${d$1} .lg-article hr, ${d$1} .lg-index-content hr, ${d$1} .am-list li { border-color: #373e47; }
@@ -61653,10 +61653,25 @@ ${d$1} .title-row, ${d$1} .row.space-between { border-color: #373e47; }
 ${d$1} .list-wrap, ${d$1} .list, ${d$1} .list-scroll { border-color: #373e47; }
 ${d$1} .header { border-color: #373e47 !important; }
 
-/* ---------- 侧边栏 hover ---------- */
-${d$1} .sidebar.lside a:hover, ${d$1} .sidebar.lside li:hover a,
-${d$1} .lside li:hover > a, ${d$1} .lside .item:hover { background: #30363d; color: #79b8ff; }
-${d$1} .sidebar.lside a.selected, ${d$1} .sidebar.lside .active > a { color: #539bf5; }
+/* ---------- 侧边栏：仅父级 li 提供悬停背景，链接不叠底块/下划线 ---------- */
+${d$1} .sidebar.lside .nav-group > ul > li {
+  background: transparent !important; border-bottom: 0 !important;
+}
+${d$1} .sidebar.lside .nav-group > ul > li:hover,
+${d$1} .sidebar.lside .nav-group > ul > li:focus-within { background: #30363d !important; }
+${d$1} .sidebar.lside .nav-group > ul > li > a {
+  background: transparent !important; background-image: none !important;
+  border-bottom: 0 !important; box-shadow: none !important;
+  text-decoration: none !important; filter: none !important; transition: none !important;
+  color: #cdd9e5 !important;
+}
+${d$1} .sidebar.lside .nav-group > ul > li > a::before,
+${d$1} .sidebar.lside .nav-group > ul > li > a::after { content: none !important; }
+${d$1} .sidebar.lside .nav-group > ul > li > a:hover,
+${d$1} .sidebar.lside .nav-group > ul > li > a:focus-visible,
+${d$1} .sidebar.lside .nav-group > ul > li > a.router-link-exact-active { color: #79b8ff !important; }
+${d$1} .sidebar.lside .nav-group > ul > li > a:focus-visible { outline: 2px solid #539bf5; outline-offset: -2px; }
+${d$1} .sidebar.lside .nav-group > ul > li > a > .title { color: inherit !important; }
 
 /* ---------- 陶片放逐/动态 author 卡 ---------- */
 ${d$1} .author, ${d$1} .author.author { background: #22272e !important; color: #cdd9e5; }
@@ -61667,18 +61682,34 @@ ${d$1} .author a, ${d$1} .author .name { color: #79b8ff; }
 ${d$1} .row.title a, ${d$1} .row .title a, ${d$1} a[href*="/article/"] { color: #79b8ff !important; }
 ${d$1} a[href*="/article/"]:hover { color: #539bf5 !important; }
 /* 分类标签（算法·理论/休闲·娱乐 这类无类的 .name span） */
-${d$1} .wrap .name, ${d$1} .article-card .name, ${d$1} .row .name { background: #30363d; color: #cdd9e5; }
+${d$1} .wrap .name, ${d$1} .article-card .name { background: #30363d; color: #cdd9e5; }
 ${d$1} .article-card, ${d$1} .card { background: #22272e; border-color: #373e47; }
 
-/* ---------- Highcharts（主页打卡统计图） ---------- */
-${d$1} .highcharts-root text, ${d$1} .highcharts-root tspan, ${d$1} .highcharts-container text { fill: #cdd9e5; color: #cdd9e5; }
-${d$1} .highcharts-grid-line, ${d$1} .highcharts-axis-line, ${d$1} .highcharts-tick { stroke: #373e47; }
-${d$1} .highcharts-label-box rect, ${d$1} .highcharts-button-box rect { fill: #22272e; stroke: #373e47; }
+/* ---------- Highcharts（主页通过数统计图，SVG 属性与行内 fill 均需覆盖） ---------- */
+${d$1} #app-old .highcharts-root text,
+${d$1} #app-old .highcharts-root tspan { fill: #cdd9e5 !important; color: #cdd9e5 !important; }
+${d$1} #app-old .highcharts-grid-line,
+${d$1} #app-old .highcharts-axis-line,
+${d$1} #app-old .highcharts-tick { stroke: #373e47; }
+${d$1} #app-old .highcharts-tooltip-box:not(.highcharts-shadow) { fill: #22272e; stroke: #768390; }
+${d$1} #app-old .highcharts-tooltip .highcharts-shadow { display: none; }
+${d$1} #app-old .highcharts-column-series .highcharts-point { fill: #56b6c2; stroke: #56b6c2; }
+${d$1} #app-old .highcharts-column-series .highcharts-point-hover { fill: #8cdae3; stroke: #8cdae3; }
+${d$1} #app-old .highcharts-area { fill: rgba(83,155,245,.2); }
+${d$1} #app-old .highcharts-tooltip tspan[style*="fill:#7cb5ec"] { fill: #79b8ff !important; }
+${d$1} #app-old .highcharts-tooltip tspan[style*="fill:#434348"] { fill: #56b6c2 !important; }
 
-/* ---------- 老主页打卡卡 ---------- */
-${d$1} .lg-punch, ${d$1} .am-u-md-4.lg-punch { background: #22272e; color: #cdd9e5; }
-${d$1} .lg-punch a, ${d$1} .lg-punch .am-g a { background: #539bf5; color: #fff; }
-${d$1} .lg-punch a:hover { background: #79b8ff; }
+/* ---------- 老主页打卡卡：只给打卡按钮上底色，保留用户名链接 ---------- */
+${d$1} .lg-punch { background: #22272e; color: #cdd9e5; }
+${d$1} #app-old .lg-punch h2 a { background: transparent !important; color: #79b8ff !important; }
+${d$1} #app-old .lg-punch a[name="punch"] {
+  background: #245f99 !important; color: #fff !important; border-color: #539bf5 !important;
+}
+${d$1} #app-old .lg-punch a[name="punch"]:hover,
+${d$1} #app-old .lg-punch a[name="punch"]:focus-visible { background: #2c70b1 !important; color: #fff !important; }
+${d$1} #home-center-nav > .feed-selector > a { background: transparent; color: #cdd9e5 !important; }
+${d$1} #home-center-nav > .feed-selector > a:hover { background: #30363d; }
+${d$1} #home-center-nav > .feed-selector.am-active > a { background: #245f99 !important; color: #fff !important; }
 
 /* ---------- 文章页侧栏动作/彩色链接 ---------- */
 ${d$1} .side .actions a { color: #cdd9e5; }
@@ -61686,17 +61717,20 @@ ${d$1} .side .actions a:hover { color: #79b8ff; }
 ${d$1} .colored-link-selector a span, ${d$1} .l-card.collections a span,
 ${d$1} .colored-link-selector span { background: transparent !important; color: #cdd9e5; }
 
-/* ---------- 导航 hover 别叠闪（站点自己带下划线指示） ---------- */
-${d$1} .lside li a:hover, ${d$1} nav ul li a:hover { background: transparent; color: #79b8ff; }
-
 /* ---------- 筛选卡/搜索框 ---------- */
 ${d$1} .filter-card { background: #22272e; border-color: #373e47; }
-${d$1} .filter-label { color: #cdd9e5; }
+${d$1} .filter-card .filter-label, ${d$1} .filter-card .filter-result-count { color: #cdd9e5 !important; }
 ${d$1} .refined-input, ${d$1} .refined-input.keyword { background: #1c2128 !important; color: #cdd9e5; border-color: #373e47 !important; }
-${d$1} .refined-input input { background: transparent; color: #cdd9e5; }
+${d$1} .refined-input > input { background: transparent !important; color: #cdd9e5; }
+${d$1} .refined-input > .east, ${d$1} .refined-input > .west,
+${d$1} .refined-input .search-icon { background: transparent !important; color: #909dab !important; }
+${d$1} .refined-input > input::placeholder { color: #909dab; opacity: 1; }
+${d$1} .block-item.category { background: transparent; }
+${d$1} .block-item.category > ul.rmj { background: #22272e !important; }
+${d$1} .block-item.category > ul.rmj > li:not(.selected):hover { background: #30363d; }
 
-/* ---------- 比赛名链接去底 ---------- */
-${d$1} .title-row a, ${d$1} a.name, ${d$1} .contest-card a { background: transparent; }
+/* ---------- 比赛名链接去底，避免文章分类的 .wrap .name 误伤 ---------- */
+${d$1} .contest-card .title-row a.name { background: transparent !important; }
 
 /* ---------- 通用按钮/链接对比 ---------- */
 ${d$1} .lfe-button--primary, ${d$1} .l-button--primary, ${d$1} button.primary { color: #fff; }
@@ -68158,7 +68192,7 @@ async function startApp(platform, site) {
 	const extractPdfSamples = async (section) => {
 		if (!section.pdfSamples) return;
 		try {
-			const { extractSamples } = await module.import('./samples-Co365FQf-cJ30xdwQ.js');
+			const { extractSamples } = await module.import('./samples-LSzs5N0n-cJ30xdwQ.js');
 			const images = settings.pdfAsImages && section.images ? await section.images() : void 0;
 			const samples = await extractSamples(platform.request, settings, section.pdfSamples, { images });
 			if (!samples.length) {
@@ -171556,7 +171590,7 @@ async function renderPDFImages(url, { maxPages = 6, maxDim = 1600 } = {}) {
 		await task.destroy();
 	}
 }})}}));
-System.register("./samples-Co365FQf-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
+System.register("./samples-LSzs5N0n-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
 	"你是竞赛题样例的结构化提取器。用户给出从 PDF 提取的样例区文本（可能含两栏交错、残缺格式）。",
 	"请把每组样例整理为 JSON：{\"samples\":[{\"input\":\"...\",\"output\":\"...\",\"note\":\"可选注释\"}]}",
 	"硬性要求：",

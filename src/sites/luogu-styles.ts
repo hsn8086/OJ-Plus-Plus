@@ -161,7 +161,7 @@ ${d} .sidebar .nav-pills li a, ${d} .sidebar .nav-link,
 ${d} .am-list li, ${d} .am-list li a { background: #22272e; color: #cdd9e5; border-color: #373e47; }
 /* 新版 .lside 图标条：链接不叠底块，保持透明靠 hover/active 指示 */
 ${d} .sidebar.lside a { background: transparent; border-color: transparent; }
-${d} .sidebar .nav-pills li a:hover, ${d} .sidebar a:hover, ${d} .am-list li a:hover { background: #30363d; color: #79b8ff; }
+${d} .sidebar .nav-pills li a:hover, ${d} .am-list li a:hover { background: #30363d; color: #79b8ff; }
 ${d} .am-comment .am-comment-avatar, ${d} .am-comment img { background: transparent; }
 ${d} .am-panel > .am-panel-bd, ${d} .am-panel > .am-panel-hd { border-color: #373e47; }
 ${d} .lg-article hr, ${d} .lg-index-content hr, ${d} .am-list li { border-color: #373e47; }
@@ -260,10 +260,25 @@ ${d} .title-row, ${d} .row.space-between { border-color: #373e47; }
 ${d} .list-wrap, ${d} .list, ${d} .list-scroll { border-color: #373e47; }
 ${d} .header { border-color: #373e47 !important; }
 
-/* ---------- 侧边栏 hover ---------- */
-${d} .sidebar.lside a:hover, ${d} .sidebar.lside li:hover a,
-${d} .lside li:hover > a, ${d} .lside .item:hover { background: #30363d; color: #79b8ff; }
-${d} .sidebar.lside a.selected, ${d} .sidebar.lside .active > a { color: #539bf5; }
+/* ---------- 侧边栏：仅父级 li 提供悬停背景，链接不叠底块/下划线 ---------- */
+${d} .sidebar.lside .nav-group > ul > li {
+  background: transparent !important; border-bottom: 0 !important;
+}
+${d} .sidebar.lside .nav-group > ul > li:hover,
+${d} .sidebar.lside .nav-group > ul > li:focus-within { background: #30363d !important; }
+${d} .sidebar.lside .nav-group > ul > li > a {
+  background: transparent !important; background-image: none !important;
+  border-bottom: 0 !important; box-shadow: none !important;
+  text-decoration: none !important; filter: none !important; transition: none !important;
+  color: #cdd9e5 !important;
+}
+${d} .sidebar.lside .nav-group > ul > li > a::before,
+${d} .sidebar.lside .nav-group > ul > li > a::after { content: none !important; }
+${d} .sidebar.lside .nav-group > ul > li > a:hover,
+${d} .sidebar.lside .nav-group > ul > li > a:focus-visible,
+${d} .sidebar.lside .nav-group > ul > li > a.router-link-exact-active { color: #79b8ff !important; }
+${d} .sidebar.lside .nav-group > ul > li > a:focus-visible { outline: 2px solid #539bf5; outline-offset: -2px; }
+${d} .sidebar.lside .nav-group > ul > li > a > .title { color: inherit !important; }
 
 /* ---------- 陶片放逐/动态 author 卡 ---------- */
 ${d} .author, ${d} .author.author { background: #22272e !important; color: #cdd9e5; }
@@ -274,18 +289,34 @@ ${d} .author a, ${d} .author .name { color: #79b8ff; }
 ${d} .row.title a, ${d} .row .title a, ${d} a[href*="/article/"] { color: #79b8ff !important; }
 ${d} a[href*="/article/"]:hover { color: #539bf5 !important; }
 /* 分类标签（算法·理论/休闲·娱乐 这类无类的 .name span） */
-${d} .wrap .name, ${d} .article-card .name, ${d} .row .name { background: #30363d; color: #cdd9e5; }
+${d} .wrap .name, ${d} .article-card .name { background: #30363d; color: #cdd9e5; }
 ${d} .article-card, ${d} .card { background: #22272e; border-color: #373e47; }
 
-/* ---------- Highcharts（主页打卡统计图） ---------- */
-${d} .highcharts-root text, ${d} .highcharts-root tspan, ${d} .highcharts-container text { fill: #cdd9e5; color: #cdd9e5; }
-${d} .highcharts-grid-line, ${d} .highcharts-axis-line, ${d} .highcharts-tick { stroke: #373e47; }
-${d} .highcharts-label-box rect, ${d} .highcharts-button-box rect { fill: #22272e; stroke: #373e47; }
+/* ---------- Highcharts（主页通过数统计图，SVG 属性与行内 fill 均需覆盖） ---------- */
+${d} #app-old .highcharts-root text,
+${d} #app-old .highcharts-root tspan { fill: #cdd9e5 !important; color: #cdd9e5 !important; }
+${d} #app-old .highcharts-grid-line,
+${d} #app-old .highcharts-axis-line,
+${d} #app-old .highcharts-tick { stroke: #373e47; }
+${d} #app-old .highcharts-tooltip-box:not(.highcharts-shadow) { fill: #22272e; stroke: #768390; }
+${d} #app-old .highcharts-tooltip .highcharts-shadow { display: none; }
+${d} #app-old .highcharts-column-series .highcharts-point { fill: #56b6c2; stroke: #56b6c2; }
+${d} #app-old .highcharts-column-series .highcharts-point-hover { fill: #8cdae3; stroke: #8cdae3; }
+${d} #app-old .highcharts-area { fill: rgba(83,155,245,.2); }
+${d} #app-old .highcharts-tooltip tspan[style*="fill:#7cb5ec"] { fill: #79b8ff !important; }
+${d} #app-old .highcharts-tooltip tspan[style*="fill:#434348"] { fill: #56b6c2 !important; }
 
-/* ---------- 老主页打卡卡 ---------- */
-${d} .lg-punch, ${d} .am-u-md-4.lg-punch { background: #22272e; color: #cdd9e5; }
-${d} .lg-punch a, ${d} .lg-punch .am-g a { background: #539bf5; color: #fff; }
-${d} .lg-punch a:hover { background: #79b8ff; }
+/* ---------- 老主页打卡卡：只给打卡按钮上底色，保留用户名链接 ---------- */
+${d} .lg-punch { background: #22272e; color: #cdd9e5; }
+${d} #app-old .lg-punch h2 a { background: transparent !important; color: #79b8ff !important; }
+${d} #app-old .lg-punch a[name="punch"] {
+  background: #245f99 !important; color: #fff !important; border-color: #539bf5 !important;
+}
+${d} #app-old .lg-punch a[name="punch"]:hover,
+${d} #app-old .lg-punch a[name="punch"]:focus-visible { background: #2c70b1 !important; color: #fff !important; }
+${d} #home-center-nav > .feed-selector > a { background: transparent; color: #cdd9e5 !important; }
+${d} #home-center-nav > .feed-selector > a:hover { background: #30363d; }
+${d} #home-center-nav > .feed-selector.am-active > a { background: #245f99 !important; color: #fff !important; }
 
 /* ---------- 文章页侧栏动作/彩色链接 ---------- */
 ${d} .side .actions a { color: #cdd9e5; }
@@ -293,17 +324,20 @@ ${d} .side .actions a:hover { color: #79b8ff; }
 ${d} .colored-link-selector a span, ${d} .l-card.collections a span,
 ${d} .colored-link-selector span { background: transparent !important; color: #cdd9e5; }
 
-/* ---------- 导航 hover 别叠闪（站点自己带下划线指示） ---------- */
-${d} .lside li a:hover, ${d} nav ul li a:hover { background: transparent; color: #79b8ff; }
-
 /* ---------- 筛选卡/搜索框 ---------- */
 ${d} .filter-card { background: #22272e; border-color: #373e47; }
-${d} .filter-label { color: #cdd9e5; }
+${d} .filter-card .filter-label, ${d} .filter-card .filter-result-count { color: #cdd9e5 !important; }
 ${d} .refined-input, ${d} .refined-input.keyword { background: #1c2128 !important; color: #cdd9e5; border-color: #373e47 !important; }
-${d} .refined-input input { background: transparent; color: #cdd9e5; }
+${d} .refined-input > input { background: transparent !important; color: #cdd9e5; }
+${d} .refined-input > .east, ${d} .refined-input > .west,
+${d} .refined-input .search-icon { background: transparent !important; color: #909dab !important; }
+${d} .refined-input > input::placeholder { color: #909dab; opacity: 1; }
+${d} .block-item.category { background: transparent; }
+${d} .block-item.category > ul.rmj { background: #22272e !important; }
+${d} .block-item.category > ul.rmj > li:not(.selected):hover { background: #30363d; }
 
-/* ---------- 比赛名链接去底 ---------- */
-${d} .title-row a, ${d} a.name, ${d} .contest-card a { background: transparent; }
+/* ---------- 比赛名链接去底，避免文章分类的 .wrap .name 误伤 ---------- */
+${d} .contest-card .title-row a.name { background: transparent !important; }
 
 /* ---------- 通用按钮/链接对比 ---------- */
 ${d} .lfe-button--primary, ${d} .l-button--primary, ${d} button.primary { color: #fff; }
