@@ -61224,6 +61224,84 @@ ${d$1} table, ${d$1} th, ${d$1} td, ${d$1} hr, ${d$1} .l-card { border-color: #3
 ${d$1} th, ${d$1} tr:nth-child(even) { background: #22272e; }
 ${d$1} .katex { color: inherit; }
 ${d$1} .lcolor--grey-3, ${d$1} .lcolor--grey-4, ${d$1} .lcolor--grey-5 { color: #909dab; }
+
+/* ---------- 自定义组件补漏 ---------- */
+/* 列表/表格分割线 #e8e8e8 太亮 */
+${d$1} .list-wrap.border .row:not(:last-child),
+${d$1} .list-wrap.border .header-wrap,
+${d$1} .row:not(:last-child),
+${d$1} .page-bar.border { border-color: #373e47 !important; }
+
+/* 「共计 N 条结果」等黑字半透明 */
+${d$1} .result .count, ${d$1} .result .number, ${d$1} .count .number { color: #cdd9e5; }
+${d$1} .result .count { color: #909dab; }
+
+/* 分页按钮白底白字 */
+${d$1} .page-bar button, ${d$1} .page-bar .page-item, ${d$1} .pagination button {
+  background: #1c2128; color: #cdd9e5; border-color: #373e47;
+}
+${d$1} .page-bar button:hover { background: #22272e; border-color: #539bf5; }
+${d$1} .page-bar button.selected, ${d$1} .page-bar button.active {
+  background: #539bf5; color: #fff; border-color: #539bf5;
+}
+
+/* 评测记录代码框（lfe-code 组件）与工具条 */
+${d$1} lfe-code, ${d$1} .code-container, ${d$1} .code-toolbar,
+${d$1} .code-toolbar button, ${d$1} .code-toolbar a, ${d$1} .code-toolbar span {
+  background: #161b22; color: #cdd9e5; border-color: #373e47;
+}
+${d$1} .code-container:hover > .copy-button:hover { background: #30363d; }
+/* one-light 语法色 → 深色友好 */
+${d$1} .token.comment, ${d$1} .token.prolog { color: #8b949e; }
+${d$1} .token.keyword, ${d$1} .token.tag, ${d$1} .token.selector { color: #ff7b72; }
+${d$1} .token.string, ${d$1} .token.char, ${d$1} .token.builtin, ${d$1} .token.inserted,
+${d$1} .token.regex, ${d$1} .token.attr-value, ${d$1} .code-snippet { color: #a5d6ff; }
+${d$1} .token.number, ${d$1} .token.atrule, ${d$1} .token.property { color: #79c0ff; }
+${d$1} .token.function, ${d$1} .token.class-name, ${d$1} .token.attr-name { color: #d2a8ff; }
+${d$1} .token.operator, ${d$1} .token.punctuation, ${d$1} .token.entity, ${d$1} .token.url { color: #ff9e64; }
+${d$1} .token.boolean, ${d$1} .token.constant, ${d$1} .token.unit { color: #79c0ff; }
+${d$1} .token.deleted { color: #ffa198; }
+${d$1} .token.important, ${d$1} .token.bold { color: #ff7b72; }
+${d$1} .token.italic { color: #cdd9e5; }
+
+/* 自定义下拉面板全是白底（dropdown 元素 / 各弹层） */
+${d$1} .l-dropdown, ${d$1} .select-dropdown, ${d$1} .setting-dropdown,
+${d$1} .date-picker-dropdown, ${d$1} .time-picker-dropdown,
+${d$1} dropdown-operations, ${d$1} dropdown,
+${d$1} .dropdown > ul, ${d$1} .options, ${d$1} .option-list {
+  background: #22272e !important; color: #cdd9e5; border-color: #373e47 !important;
+}
+${d$1} .dropdown > ul > li:hover, ${d$1} .dropdown-operations > ul li:hover,
+${d$1} dropdown-operations > ul li:hover, ${d$1} .setting-dropdown li:hover,
+${d$1} .option:hover { background: #30363d !important; }
+${d$1} .option, ${d$1} .dropdown li, ${d$1} .date-picker-dropdown *, ${d$1} .time-picker-dropdown * { color: #cdd9e5; }
+${d$1} .option.active { background: #539bf5 !important; color: #fff !important; border-color: #539bf5 !important; }
+${d$1} .calendar-days .day, ${d$1} .calendar-years .year, ${d$1} .time-item { color: #cdd9e5 !important; }
+${d$1} .calendar-days .day.other-month, ${d$1} .calendar-days .day.disabled,
+${d$1} .column-header, ${d$1} .clear-btn, ${d$1} .time-column .column-header { color: #6e7681 !important; }
+${d$1} .calendar-footer, ${d$1} .time-footer, ${d$1} .column-header { border-color: #373e47 !important; }
+${d$1} .calendar-days .day.selected, ${d$1} .calendar-years .year.selected,
+${d$1} .time-column .time-item.selected { background: #539bf5 !important; color: #fff !important; }
+${d$1} .calendar-days .day:hover:not(.selected),
+${d$1} .calendar-years .year:hover:not(.selected),
+${d$1} .time-column .time-item:hover { background: #30363d !important; color: #79b8ff !important; }
+${d$1} .calendar-days .day.today:not(.selected) { border-color: #539bf5 !important; color: #539bf5 !important; }
+
+/* 比赛题切换：选中态是全亮蓝底 */
+${d$1} .contest-problem { border-color: #373e47; }
+${d$1} .contest-problem.current {
+  background: #1f5fa3 !important; border-color: #539bf5; color: #fff;
+}
+${d$1} .contest-problem.current .contest-problem-no, ${d$1} .contest-problem.current * { color: #fff; }
+${d$1} .contest-problem:not(.current):hover { background: #30363d; border-color: #539bf5; }
+
+/* 筛选/块项控件统一深色 */
+${d$1} .block-item, ${d$1} .lform-input, ${d$1} .l-select, ${d$1} .lfe-select {
+  background: #1c2128; color: #cdd9e5; border-color: #373e47;
+}
+${d$1} .block-item button, ${d$1} .lform-input button { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
+${d$1} .combo-wrapper .text, ${d$1} .block-item .text, ${d$1} .combo .text,
+${d$1} .lfe-select .text, ${d$1} .l-select .text { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
 `;
 var fields = {
 	"题目背景": "background",
