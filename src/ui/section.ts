@@ -48,6 +48,28 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
   }
 
   const readMarkdown = () => section.markdown?.() ?? htmlToMarkdown(section.content, prepareContent);
+
+  /** 收集章节里的插图（data URL），随文发给视觉模型。 */
+  const collectSectionImages = async (): Promise<string[]> => {
+    const imgs = [...section.content.querySelectorAll('img')]
+      .map(img => img.src).filter(src => src && !src.startsWith('data:'));
+    const urls = [...new Set(imgs)].slice(0, 6);
+    const out: string[] = [];
+    for (const url of urls) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const blob = await res.blob();
+        out.push(await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        }));
+      } catch { /* 跨域/加载失败就跳过这张 */ }
+    }
+    return out;
+  };
   bindCopy(copy, readMarkdown, platform.writeClipboard);
   let controller: AbortController | undefined;
   let result: ReturnType<typeof createResultPanel> | undefined;
@@ -107,7 +129,9 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
           streaming: snapshot.streaming,
           onStatus: panel.setStatus,
           onPartial: panel.update,
-          images: snapshot.pdfAsImages && section.images ? await section.images() : undefined,
+          images: snapshot.pdfAsImages
+            ? (section.images ? await section.images() : await collectSectionImages())
+            : undefined,
           pdf: !!section.pdf,
         });
         void setCachedTranslation(platform, cacheKey, translated);

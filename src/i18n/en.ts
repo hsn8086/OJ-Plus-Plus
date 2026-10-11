@@ -66,7 +66,7 @@ export const en: Record<MessageKey, string> = {
   'settings.autoTranslate': 'Auto-translate problem statement',
   'settings.autoTranslateHint': 'Per-site toggle; automatically translate the problem statement area when a problem page opens.',
   'settings.streaming': 'Streaming',
-  'settings.pdfAsImages': 'Send PDF pages as images',
+  'settings.pdfAsImages': 'Send statement images to vision models',
   'settings.autoExtractSamples': 'Auto-extract samples from PDF statements',
   'settings.pdfPrompt': 'Extra prompt for PDF statements',
   'settings.pdfPromptPlaceholder': 'Custom requirements appended after the built-in PDF prompt; leave empty to use the default',

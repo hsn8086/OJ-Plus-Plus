@@ -43,7 +43,10 @@ export async function translateMarkdown(
       ? t('translate.status')
       : t('translate.statusChunk', { index: index + 1, total: chunks.length }));
     const done = out.length;
-    const translated = await ask(request, settings, chunk, system, {
+    const withImages = index === 0 && images?.length;
+    const translated = await ask(request, settings, withImages
+      ? `${chunk}\n\n（随文附带的图片是题面中的插图，请以图片内容为准确依据。）`
+      : chunk, system, {
       signal,
       stream,
       images: index === 0 ? images : undefined,

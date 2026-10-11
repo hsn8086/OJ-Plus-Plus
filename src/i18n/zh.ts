@@ -75,7 +75,7 @@ export const zh = {
   'settings.autoTranslate': '自动翻译题面',
   'settings.autoTranslateHint': '按站点分别开关；打开题目页后自动翻译题目描述区域。',
   'settings.streaming': '流式显示',
-  'settings.pdfAsImages': 'PDF 题面转图片发送',
+  'settings.pdfAsImages': '题面图片发给视觉模型',
   'settings.autoExtractSamples': 'PDF 题面自动提取样例',
   'settings.pdfPrompt': 'PDF 翻译附加提示词',
   'settings.pdfPromptPlaceholder': '追加在 PDF 专用提示词后面的自定义要求；留空用内置',

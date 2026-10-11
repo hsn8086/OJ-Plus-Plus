@@ -108,7 +108,7 @@ var en$2 = {
 	"settings.autoTranslate": "Auto-translate problem statement",
 	"settings.autoTranslateHint": "Per-site toggle; automatically translate the problem statement area when a problem page opens.",
 	"settings.streaming": "Streaming",
-	"settings.pdfAsImages": "Send PDF pages as images",
+	"settings.pdfAsImages": "Send statement images to vision models",
 	"settings.autoExtractSamples": "Auto-extract samples from PDF statements",
 	"settings.pdfPrompt": "Extra prompt for PDF statements",
 	"settings.pdfPromptPlaceholder": "Custom requirements appended after the built-in PDF prompt; leave empty to use the default",
@@ -329,7 +329,7 @@ var zh$2 = {
 	"settings.autoTranslate": "自动翻译题面",
 	"settings.autoTranslateHint": "按站点分别开关；打开题目页后自动翻译题目描述区域。",
 	"settings.streaming": "流式显示",
-	"settings.pdfAsImages": "PDF 题面转图片发送",
+	"settings.pdfAsImages": "题面图片发给视觉模型",
 	"settings.autoExtractSamples": "PDF 题面自动提取样例",
 	"settings.pdfPrompt": "PDF 翻译附加提示词",
 	"settings.pdfPromptPlaceholder": "追加在 PDF 专用提示词后面的自定义要求；留空用内置",
@@ -26943,7 +26943,7 @@ async function translateMarkdown(request, { settings, markdown, signal, onStatus
 			total: chunks.length
 		}));
 		const done = out.length;
-		const translated = await ask(request, settings, chunk, system, {
+		const translated = await ask(request, settings, index === 0 && images?.length ? `${chunk}\n\n（随文附带的图片是题面中的插图，请以图片内容为准确依据。）` : chunk, system, {
 			signal,
 			stream,
 			images: index === 0 ? images : void 0,
@@ -60812,6 +60812,24 @@ function mountSection(section, options) {
 		section.toolbar.anchor.insertAdjacentElement(section.toolbar.position, toolbar);
 	} else section.toolbar.anchor.insertAdjacentElement(section.toolbar.position, toolbar);
 	const readMarkdown = () => section.markdown?.() ?? htmlToMarkdown(section.content, prepareContent);
+	/** 收集章节里的插图（data URL），随文发给视觉模型。 */
+	const collectSectionImages = async () => {
+		const imgs = [...section.content.querySelectorAll("img")].map((img) => img.src).filter((src) => src && !src.startsWith("data:"));
+		const urls = [...new Set(imgs)].slice(0, 6);
+		const out = [];
+		for (const url of urls) try {
+			const res = await fetch(url);
+			if (!res.ok) continue;
+			const blob = await res.blob();
+			out.push(await new Promise((resolve, reject) => {
+				const reader = new FileReader();
+				reader.onload = () => resolve(String(reader.result));
+				reader.onerror = reject;
+				reader.readAsDataURL(blob);
+			}));
+		} catch {}
+		return out;
+	};
 	bindCopy(copy, readMarkdown, platform.writeClipboard);
 	let controller;
 	let result;
@@ -60859,7 +60877,7 @@ function mountSection(section, options) {
 					streaming: snapshot.streaming,
 					onStatus: panel.setStatus,
 					onPartial: panel.update,
-					images: snapshot.pdfAsImages && section.images ? await section.images() : void 0,
+					images: snapshot.pdfAsImages ? section.images ? await section.images() : await collectSectionImages() : void 0,
 					pdf: !!section.pdf
 				});
 				setCachedTranslation(platform, cacheKey, translated);
@@ -67981,7 +67999,7 @@ async function startApp(platform, site) {
 	const extractPdfSamples = async (section) => {
 		if (!section.pdfSamples) return;
 		try {
-			const { extractSamples } = await module.import('./samples-d3IgjX8c-cJ30xdwQ.js');
+			const { extractSamples } = await module.import('./samples-UXkCYKUT-cJ30xdwQ.js');
 			const images = settings.pdfAsImages && section.images ? await section.images() : void 0;
 			const samples = await extractSamples(platform.request, settings, section.pdfSamples, { images });
 			if (!samples.length) {
@@ -171226,7 +171244,7 @@ async function renderPDFImages(url, { maxPages = 6, maxDim = 1600 } = {}) {
 		await task.destroy();
 	}
 }})}}));
-System.register("./samples-d3IgjX8c-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
+System.register("./samples-UXkCYKUT-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
 	"你是竞赛题样例的结构化提取器。用户给出从 PDF 提取的样例区文本（可能含两栏交错、残缺格式）。",
 	"请把每组样例整理为 JSON：{\"samples\":[{\"input\":\"...\",\"output\":\"...\",\"note\":\"可选注释\"}]}",
 	"硬性要求：",
