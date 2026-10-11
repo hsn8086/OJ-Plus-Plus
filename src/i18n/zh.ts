@@ -76,6 +76,8 @@ export const zh = {
   'settings.autoTranslateHint': '按站点分别开关；打开题目页后自动翻译题目描述区域。',
   'settings.streaming': '流式显示',
   'settings.pdfAsImages': 'PDF 题面转图片发送',
+  'settings.pdfPrompt': 'PDF 翻译附加提示词',
+  'settings.pdfPromptPlaceholder': '追加在 PDF 专用提示词后面的自定义要求；留空用内置',
   'settings.streamingHint': '边生成边渲染，首屏更快。关闭后等整段译完再一次性显示；服务商或脚本管理器不支持时会自动回退。',
   'settings.theme': '站点配色',
   'settings.themeHint': '只影响脚本为站点补的样式；站点自身有暗色模式时选「跟随系统」即可。',

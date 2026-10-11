@@ -1,7 +1,7 @@
 import { t } from '../i18n/index.ts';
 import type { HttpStreamTransport, HttpTransport } from '../platforms/types.ts';
 import { ask } from './ai.ts';
-import { buildSystemPrompt, chunkMarkdown } from './prompt.ts';
+import { buildPdfSystemPrompt, buildSystemPrompt, chunkMarkdown } from './prompt.ts';
 import type { Settings } from './types.ts';
 
 export interface TranslationResult {
@@ -15,6 +15,8 @@ export interface TranslateOptions {
   settings: Settings;
   /** data URL 图片，随原文一起发给视觉模型 */
   images?: string[];
+  /** PDF 题面：换用 PDF 专用提示词 */
+  pdf?: boolean;
   markdown: string;
   signal?: AbortSignal;
   onStatus?: (text: string) => void;
@@ -27,10 +29,10 @@ export interface TranslateOptions {
 
 export async function translateMarkdown(
   request: HttpTransport,
-  { settings, markdown, signal, onStatus, onPartial, stream, streaming, images }: TranslateOptions,
+  { settings, markdown, signal, onStatus, onPartial, stream, streaming, images, pdf }: TranslateOptions,
 ): Promise<TranslationResult> {
   const cfg = settings.providers.find((p) => p.id === settings.activeProviderId);
-  const system = buildSystemPrompt(settings);
+  const system = pdf ? buildPdfSystemPrompt(settings) : buildSystemPrompt(settings);
   const chunks = settings.translateWholeBlock ? [markdown] : chunkMarkdown(markdown);
   const started = Date.now();
   const out: string[] = [];

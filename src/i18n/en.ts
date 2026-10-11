@@ -67,6 +67,8 @@ export const en: Record<MessageKey, string> = {
   'settings.autoTranslateHint': 'Per-site toggle; automatically translate the problem statement area when a problem page opens.',
   'settings.streaming': 'Streaming',
   'settings.pdfAsImages': 'Send PDF pages as images',
+  'settings.pdfPrompt': 'Extra prompt for PDF statements',
+  'settings.pdfPromptPlaceholder': 'Custom requirements appended after the built-in PDF prompt; leave empty to use the default',
   'settings.streamingHint': 'Render as it generates for a faster first paint. When off, the full translation appears at once. Falls back automatically if the Provider or script manager doesn\'t support it.',
   'settings.theme': 'Site theme',
   'settings.themeHint': 'Only affects styles the script adds for the site. If the site has its own dark mode, keep “Follow system”.',

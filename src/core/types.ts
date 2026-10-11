@@ -36,6 +36,8 @@ export interface Settings {
   targetLang: string;
   /** 追加到系统提示词末尾的自定义要求 */
   extraPrompt: string;
+  /** PDF 题面附加提示词（高级项，默认空用内置） */
+  pdfPrompt?: string;
   /** 关闭时按段落切分后逐段翻译，适合超长题面 */
   translateWholeBlock: boolean;
   /** 各站点是否自动翻译题面；key 为站点 id，'*' 是旧版全局开关迁移来的 */

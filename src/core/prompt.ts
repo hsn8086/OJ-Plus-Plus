@@ -23,6 +23,20 @@ export function buildSystemPrompt(settings: Settings): string {
   return lines.join('\n');
 }
 
+/** PDF 题面专用提示：提取文本缺公式/丢结构，要求模型按 md+KaTeX 还原。 */
+export function buildPdfSystemPrompt(settings: Settings): string {
+  const lines = [
+    '原文来自 PDF 题面提取：',
+    '- 数学公式可能缺失或残缺；遇到缺失处请按上下文用 KaTeX（$...$ / $$...$$）合理还原，不要照抄残缺文本。',
+    '- 输出必须是规范的 Markdown + KaTeX：标题、列表、表格、代码块（样例用 ``` 包裹）、公式用 $...$。',
+    '- 行尾反斜杠（\\）是硬换行标记，代表 PDF 里的换行位置；样例与表格务必保留换行结构。',
+    '- 随文附带的图片（如有）是原始 PDF 页面，请以图片内容为准确依据。',
+  ];
+  const custom = settings.pdfPrompt?.trim();
+  if (custom) lines.push('- 附加要求：', custom);
+  return buildSystemPrompt(settings) + '\n\n' + lines.join('\n');
+}
+
 /**
  * 把 markdown 切成若干块，避免超长文本被截断或超出上下文窗口。
  * 优先按标题切，其次按空行切，保证每块不超过 maxChars。

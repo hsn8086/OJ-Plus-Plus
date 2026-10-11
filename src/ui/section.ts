@@ -101,6 +101,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
           onStatus: panel.setStatus,
           onPartial: panel.update,
           images: snapshot.pdfAsImages && section.images ? await section.images() : undefined,
+          pdf: !!section.pdf,
         });
         void setCachedTranslation(platform, cacheKey, translated);
       }

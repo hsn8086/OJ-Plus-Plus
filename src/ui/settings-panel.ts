@@ -188,6 +188,17 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
       check(t('settings.pdfAsImages'), draft.pdfAsImages ?? false, (v) => draft.pdfAsImages = v),
     );
 
+    // 高级项：PDF 提示词（不常用，折叠藏深）
+    const adv = el('details', 'ojpp-site-options') as HTMLDetailsElement;
+    const advSummary = el('summary', undefined, t('settings.advancedOptions'));
+    const pdfPromptArea = el('textarea') as HTMLTextAreaElement;
+    pdfPromptArea.value = draft.pdfPrompt ?? '';
+    pdfPromptArea.placeholder = t('settings.pdfPromptPlaceholder');
+    pdfPromptArea.style.minHeight = '60px';
+    pdfPromptArea.oninput = () => draft.pdfPrompt = pdfPromptArea.value;
+    adv.append(advSummary, field(t('settings.pdfPrompt'), pdfPromptArea));
+    sec2.body.append(adv);
+
     // 超时和重试
     const row2 = el('div', 'ojpp-row');
     const timeoutInput = input(String(draft.timeoutMs), '120000');

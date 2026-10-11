@@ -22,6 +22,8 @@ export interface ContentSection {
   ownedContent?: boolean;
   /** 有视觉模型时随译文一起发的图片（data URL）。 */
   images?: () => Promise<string[]>;
+  /** PDF 提取的题面：用 PDF 专用提示词翻译。 */
+  pdf?: boolean;
   toolbar: MountPoint;
   result: MountPoint;
 }

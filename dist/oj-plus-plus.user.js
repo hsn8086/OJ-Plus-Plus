@@ -109,6 +109,8 @@ var en$2 = {
 	"settings.autoTranslateHint": "Per-site toggle; automatically translate the problem statement area when a problem page opens.",
 	"settings.streaming": "Streaming",
 	"settings.pdfAsImages": "Send PDF pages as images",
+	"settings.pdfPrompt": "Extra prompt for PDF statements",
+	"settings.pdfPromptPlaceholder": "Custom requirements appended after the built-in PDF prompt; leave empty to use the default",
 	"settings.streamingHint": "Render as it generates for a faster first paint. When off, the full translation appears at once. Falls back automatically if the Provider or script manager doesn't support it.",
 	"settings.theme": "Site theme",
 	"settings.themeHint": "Only affects styles the script adds for the site. If the site has its own dark mode, keep “Follow system”.",
@@ -322,6 +324,8 @@ var zh$2 = {
 	"settings.autoTranslateHint": "按站点分别开关；打开题目页后自动翻译题目描述区域。",
 	"settings.streaming": "流式显示",
 	"settings.pdfAsImages": "PDF 题面转图片发送",
+	"settings.pdfPrompt": "PDF 翻译附加提示词",
+	"settings.pdfPromptPlaceholder": "追加在 PDF 专用提示词后面的自定义要求；留空用内置",
 	"settings.streamingHint": "边生成边渲染，首屏更快。关闭后等整段译完再一次性显示；服务商或脚本管理器不支持时会自动回退。",
 	"settings.theme": "站点配色",
 	"settings.themeHint": "只影响脚本为站点补的样式；站点自身有暗色模式时选「跟随系统」即可。",
@@ -26850,6 +26854,19 @@ function buildSystemPrompt(settings) {
 	if (settings.extraPrompt.trim()) lines.push("", "额外要求：", settings.extraPrompt.trim());
 	return lines.join("\n");
 }
+/** PDF 题面专用提示：提取文本缺公式/丢结构，要求模型按 md+KaTeX 还原。 */
+function buildPdfSystemPrompt(settings) {
+	const lines = [
+		"原文来自 PDF 题面提取：",
+		"- 数学公式可能缺失或残缺；遇到缺失处请按上下文用 KaTeX（$...$ / $$...$$）合理还原，不要照抄残缺文本。",
+		"- 输出必须是规范的 Markdown + KaTeX：标题、列表、表格、代码块（样例用 ``` 包裹）、公式用 $...$。",
+		"- 行尾反斜杠（\\）是硬换行标记，代表 PDF 里的换行位置；样例与表格务必保留换行结构。",
+		"- 随文附带的图片（如有）是原始 PDF 页面，请以图片内容为准确依据。"
+	];
+	const custom = settings.pdfPrompt?.trim();
+	if (custom) lines.push("- 附加要求：", custom);
+	return buildSystemPrompt(settings) + "\n\n" + lines.join("\n");
+}
 /**
 * 把 markdown 切成若干块，避免超长文本被截断或超出上下文窗口。
 * 优先按标题切，其次按空行切，保证每块不超过 maxChars。
@@ -26890,9 +26907,9 @@ function chunkMarkdown(source, maxChars = 3e3) {
 	}
 	return chunks.filter((c) => c.trim());
 }
-async function translateMarkdown(request, { settings, markdown, signal, onStatus, onPartial, stream, streaming, images }) {
+async function translateMarkdown(request, { settings, markdown, signal, onStatus, onPartial, stream, streaming, images, pdf }) {
 	const cfg = settings.providers.find((p) => p.id === settings.activeProviderId);
-	const system = buildSystemPrompt(settings);
+	const system = pdf ? buildPdfSystemPrompt(settings) : buildSystemPrompt(settings);
 	const chunks = settings.translateWholeBlock ? [markdown] : chunkMarkdown(markdown);
 	const started = Date.now();
 	const out = [];
@@ -60804,7 +60821,8 @@ function mountSection(section, options) {
 					streaming: snapshot.streaming,
 					onStatus: panel.setStatus,
 					onPartial: panel.update,
-					images: snapshot.pdfAsImages && section.images ? await section.images() : void 0
+					images: snapshot.pdfAsImages && section.images ? await section.images() : void 0,
+					pdf: !!section.pdf
 				});
 				setCachedTranslation(platform, cacheKey, translated);
 			}
@@ -61081,7 +61099,7 @@ function pdfSection(doc) {
 		job = {};
 		jobs.set(frame.src, job);
 		const pending = job;
-		module.import('./pdf-text-DEj9jKxS-KQ0mbNzx.js').then((module) => module.extractPDFText(frame.src)).then((text) => {
+		module.import('./pdf-text-5EP-opzP-mWyTt2WZ.js').then((module) => module.extractPDFText(frame.src)).then((text) => {
 			pending.text = text;
 			notify.get(doc)?.();
 		}).catch((error) => {
@@ -61114,7 +61132,8 @@ function pdfSection(doc) {
 		ownedContent: true,
 		identity: frame.src,
 		markdown: () => md,
-		images: () => module.import('./pdf-text-DEj9jKxS-KQ0mbNzx.js').then((m) => m.renderPDFImages(frame.src)),
+		pdf: true,
+		images: () => module.import('./pdf-text-5EP-opzP-mWyTt2WZ.js').then((m) => m.renderPDFImages(frame.src)),
 		toolbar: {
 			anchor: content,
 			position: "beforebegin",
@@ -66010,6 +66029,15 @@ function openSettingsPanel(options) {
 		container.append(secEditor.container);
 		const sec2 = section(t$1("settings.behavior"));
 		sec2.body.append(check(t$1("settings.wholeBlock"), draft.translateWholeBlock, (v) => draft.translateWholeBlock = v), check(t$1("settings.streaming"), draft.streaming, (v) => draft.streaming = v), check(t$1("settings.pdfAsImages"), draft.pdfAsImages ?? false, (v) => draft.pdfAsImages = v));
+		const adv = el("details", "ojpp-site-options");
+		const advSummary = el("summary", void 0, t$1("settings.advancedOptions"));
+		const pdfPromptArea = el("textarea");
+		pdfPromptArea.value = draft.pdfPrompt ?? "";
+		pdfPromptArea.placeholder = t$1("settings.pdfPromptPlaceholder");
+		pdfPromptArea.style.minHeight = "60px";
+		pdfPromptArea.oninput = () => draft.pdfPrompt = pdfPromptArea.value;
+		adv.append(advSummary, field(t$1("settings.pdfPrompt"), pdfPromptArea));
+		sec2.body.append(adv);
 		const row2 = el("div", "ojpp-row");
 		const timeoutInput = input(String(draft.timeoutMs), "120000");
 		timeoutInput.type = "number";
@@ -68097,7 +68125,7 @@ if (site) try {
 	console.error("[OJ++]", error);
 	alert(error instanceof Error ? error.message : String(error));
 }})}}));
-System.register("./pdf-text-DEj9jKxS-KQ0mbNzx.js", [],(function(exports,module){'use strict';return{execute:(function(){exports({extractPDFText:extractPDFText,renderPDFImages:renderPDFImages});var isNodeJS$1 = typeof process === "object" && process + "" === "[object process]" && !process.versions.nw && !(process.versions.electron && process.type && process.type !== "browser");
+System.register("./pdf-text-5EP-opzP-mWyTt2WZ.js", [],(function(exports,module){'use strict';return{execute:(function(){exports({extractPDFText:extractPDFText,renderPDFImages:renderPDFImages});var isNodeJS$1 = typeof process === "object" && process + "" === "[object process]" && !process.versions.nw && !(process.versions.electron && process.type && process.type !== "browser");
 var BBOX_INIT$1 = [
 	Infinity,
 	Infinity,
@@ -171020,6 +171048,32 @@ function pageText(items) {
 		});
 	}
 	if (!runs.length) return "";
+	return splitColumns(runs).map((col) => columnText(col)).filter(Boolean).join("\n\n");
+}
+/** 双栏/多栏检测：找一条横贯中部的纵向空带，把文本切成栏。样例表就靠它分开输入/输出。 */
+function splitColumns(runs) {
+	const xs = runs.map((r) => r.x).sort((a, b) => a - b);
+	const pageRight = Math.max(...runs.map((r) => r.x + r.w));
+	let best = {
+		x: -1,
+		gap: 0
+	};
+	for (let i = 1; i < xs.length; i++) {
+		const gap = xs[i] - xs[i - 1];
+		const cx = (xs[i] + xs[i - 1]) / 2;
+		if (gap > best.gap && cx > pageRight * .15 && cx < pageRight * .85) best = {
+			x: cx,
+			gap
+		};
+	}
+	if (best.gap < Math.max(20, pageRight * .08)) return [runs];
+	const left = runs.filter((r) => r.x + r.w <= best.x + .5);
+	const right = runs.filter((r) => r.x >= best.x - .5);
+	if (!left.length || !right.length) return [runs];
+	if (runs.length - left.length - right.length > runs.length * .35) return [runs];
+	return [left, right];
+}
+function columnText(runs) {
 	const sorted = [...runs].sort((a, b) => Math.abs(a.y - b.y) > .5 ? b.y - a.y : a.x - b.x);
 	const lines = [];
 	for (const run of sorted) {

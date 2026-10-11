@@ -23,7 +23,32 @@ function pageText(items: unknown[]): string {
     runs.push({ str: it.str, x: tr[4] ?? 0, y: tr[5] ?? 0, w: it.width ?? 0, h: it.height ?? 0 });
   }
   if (!runs.length) return '';
-  // 先按行聚合（y 接近归一行），再按 x 排序
+  // 多栏版式：先切栏（栏缝 = 贯穿大半页高的空档），再逐栏按行排
+  const columns = splitColumns(runs);
+  return columns.map(col => columnText(col)).filter(Boolean).join('\n\n');
+}
+
+/** 双栏/多栏检测：找一条横贯中部的纵向空带，把文本切成栏。样例表就靠它分开输入/输出。 */
+function splitColumns(runs: TextItem[]): TextItem[][] {
+  const xs = runs.map(r => r.x).sort((a, b) => a - b);
+  const pageRight = Math.max(...runs.map(r => r.x + r.w));
+  let best = { x: -1, gap: 0 };
+  for (let i = 1; i < xs.length; i++) {
+    const gap = xs[i]! - xs[i - 1]!;
+    const cx = (xs[i]! + xs[i - 1]!) / 2;
+    // 缝必须在内容区中部（15%~85%），且宽于 20pt 或页宽 8%
+    if (gap > best.gap && cx > pageRight * 0.15 && cx < pageRight * 0.85) best = { x: cx, gap };
+  }
+  if (best.gap < Math.max(20, pageRight * 0.08)) return [runs];
+  const left = runs.filter(r => r.x + r.w <= best.x + 0.5);
+  const right = runs.filter(r => r.x >= best.x - 0.5);
+  if (!left.length || !right.length) return [runs];
+  // 跨缝文本太多就不是真双栏（可能只是稀疏排版）
+  if (runs.length - left.length - right.length > runs.length * 0.35) return [runs];
+  return [left, right];
+}
+
+function columnText(runs: TextItem[]): string {
   const sorted = [...runs].sort((a, b) => Math.abs(a.y - b.y) > 0.5 ? b.y - a.y : a.x - b.x);
   const lines: TextItem[][] = [];
   for (const run of sorted) {
