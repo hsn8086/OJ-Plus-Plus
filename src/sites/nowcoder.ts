@@ -1,6 +1,7 @@
 import { t } from '../i18n/index.ts';
 import { applyPageI18n } from '../core/page-i18n.ts';
 import { NOWCODER_DARK } from './nowcoder-styles.ts';
+import { nowcoderEditor } from './nowcoder-editor.ts';
 import type { ContentSection, SiteAdapter } from './types.ts';
 
 function equationFromImg(img: HTMLImageElement): string | null {
@@ -36,8 +37,26 @@ export const nowcoder: SiteAdapter = {
   get name() { return t('site.nowcoder'); },
   hosts: ['ac.nowcoder.com', 'www.nowcoder.com'],
   darkStyles: NOWCODER_DARK,
+  editor: nowcoderEditor,
   preserveInlineColors: true,
   styles: `
+    .code-editor-box .code-font:has(> .ojpp-editor) { height: 100%; }
+    .code-editor-box .code-font:has(> .ojpp-editor) > .CodeMirror { display: none !important; }
+    body:has(.code-editor-box .ojpp-editor) .el-popover:has(.mode-tips-container) { display: none !important; }
+    .code-editor-box:has(.ojpp-editor) > .code-editor-header { display: none !important; }
+    .code-editor-box .code-font > .ojpp-editor { height: 100%; margin: 0; display: flex; flex-direction: column; border-radius: 0; }
+    .code-editor-box .code-font > .ojpp-editor .ojpp-editor-cm { flex: 1; min-height: 180px; overflow: hidden; }
+    .code-editor-box .code-font > .ojpp-editor .cm-editor { height: 100%; max-height: none; }
+    .code-editor-box .code-font > .ojpp-editor .cm-scroller { max-height: none; }
+    .code-editor-box .code-font > .ojpp-editor .ojpp-editor-tests { max-height: 32vh; overflow: auto; }
+    @media (max-width: 1099px) {
+      .content-board:has(.ojpp-editor) { display: block; height: auto !important; width: 100% !important; }
+      .content-board:has(.ojpp-editor) > .question-module { width: 100% !important; height: 60dvh; overflow: auto; }
+      .content-board:has(.ojpp-editor) > .answer-module { width: 100% !important; height: 70dvh; }
+      .content-board:has(.ojpp-editor) > .separator.vertical { display: none; }
+      .answer-module:has(.ojpp-editor) .editor-box { min-height: 0; }
+      .code-editor-box:has(.ojpp-editor) { width: 100% !important; height: 100% !important; }
+    }
     .ojpp-nowcoder-settings {
       display: inline-flex; align-items: center; margin-left: 8px;
     }

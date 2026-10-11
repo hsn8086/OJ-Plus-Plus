@@ -116,7 +116,7 @@ export const atcoder: SiteAdapter = {
     const observer = new MutationObserver(records => {
       const relevant = records.some(record => {
         const el = record.target instanceof Element ? record.target : record.target.parentElement;
-        return !el?.closest('[class*="ojpp-"], .ace_editor, .katex, .MathJax');
+        return !el?.closest('[class*="ojpp-"]:not([data-ojpp-site-content]), .ace_editor, .katex, .MathJax');
       });
       if (!relevant) return;
       clearTimeout(timer);

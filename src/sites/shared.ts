@@ -1,5 +1,5 @@
 export function prepareMathContent(root: HTMLElement): void {
-  root.querySelectorAll('[class*="ojpp-"], .btn-copy, .copy-btn').forEach(e => e.remove());
+  root.querySelectorAll('[class*="ojpp-"]:not([data-ojpp-site-content]), .btn-copy, .copy-btn').forEach(e => e.remove());
   const math = (tex: string, display: boolean) => {
     const span = root.ownerDocument.createElement('span');
     span.dataset.ojppMath = display ? 'display' : 'inline';
@@ -46,7 +46,7 @@ export function observeSite(doc: Document, onChange: () => void): () => void {
   const observer = new MutationObserver(records => {
     if (records.some(r => {
       const el = r.target instanceof Element ? r.target : r.target.parentElement;
-      return !el?.closest('[class*="ojpp-"], .CodeMirror, .cm-editor, .ace_editor, .monaco-editor, .katex, .MathJax, .MathJax_SVG');
+      return !el?.closest('[class*="ojpp-"]:not([data-ojpp-site-content]), .CodeMirror, .cm-editor, .ace_editor, .monaco-editor, .katex, .MathJax, .MathJax_SVG');
     })) schedule();
   });
   observer.observe(doc.body, { subtree: true, childList: true, characterData: true });

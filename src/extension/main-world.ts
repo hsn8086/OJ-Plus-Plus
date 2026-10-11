@@ -1,3 +1,6 @@
+import { installNativeEditorBridge } from '../sites/native-editor-bridge.ts';
+installNativeEditorBridge(window);
+
 // Narrow page-world bridge for sites whose native form reads ACE instead of the textarea.
 // This bridge never handles extension messages, permissions, storage, or HTTP requests.
 window.addEventListener('input', event => {

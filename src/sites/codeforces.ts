@@ -1639,6 +1639,7 @@ export const codeforces: SiteAdapter = {
   /* ---------- 代码编辑器（CM6 + customtest + submit） ---------- */
   editor: {
     languages: CF_LANGUAGES,
+    layoutStatement(doc) { return doc.querySelector<HTMLElement>('.problem-statement'); },
 
     editorMountPoint(doc) {
       // 题目页：挂在 .problem-statement 之后

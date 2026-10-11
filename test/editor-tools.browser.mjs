@@ -1,0 +1,113 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { chromium } from 'playwright';
+
+const bundle = await readFile('dist/oj-plus-plus.user.js', 'utf8');
+const cf = await readFile('test/fixtures/codeforces-old.html', 'utf8');
+const executablePath = [process.env.OJPP_CHROME,
+  `${process.env.HOME}/Library/Caches/ms-playwright/chromium-1234/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing`,
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', chromium.executablePath(),
+].filter(Boolean).find(path => existsSync(path));
+const browser = await chromium.launch({ headless: true, executablePath });
+try {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.addInitScript({ content: `window.unsafeWindow=window;window.GM_getValue=(k,d)=>{const s=localStorage.getItem(k);return s?JSON.parse(s):k==='ojpp:settings'?{locale:'en',theme:'dark',editorLanguage:{codeforces:'__auto__'}}:d};window.GM_setValue=(k,v)=>localStorage.setItem(k,JSON.stringify(v));window.GM_setClipboard=()=>{};window.GM_xmlhttpRequest=()=>({abort(){}});\n${bundle}` });
+  await page.route('https://codeforces.com/problemset/problem/1/A', route => route.fulfill({ contentType: 'text/html', body: cf }));
+  await page.goto('https://codeforces.com/problemset/problem/1/A');
+  await page.waitForSelector('.ojpp-workspace[data-layout="split"]');
+  assert.match(await page.locator('.ojpp-editor-lang').evaluate(e => e.selectedOptions[0].textContent), /^auto\(.+\)$/);
+  await page.evaluate(() => { window.originalStatement = document.querySelector('.problem-statement'); });
+  await page.locator('.ojpp-layout-toggle').click();
+  assert.equal(await page.locator('.ojpp-workspace').getAttribute('data-layout'), 'stacked');
+  assert.equal(await page.evaluate(() => window.originalStatement === document.querySelector('.problem-statement')), true);
+  await page.locator('.ojpp-layout-toggle').click();
+  await page.evaluate(() => {
+    window.oldPanel = document.querySelector('.ojpp-editor');
+    const old = document.querySelector('.problem-statement');
+    const next = old.cloneNode(true);
+    next.querySelectorAll('[class*="ojpp-"]').forEach(node => node.remove());
+    old.replaceWith(next); window.replacementStatement = next;
+  });
+  await page.waitForFunction(() => document.querySelector('.ojpp-editor') !== window.oldPanel);
+  assert.equal(await page.evaluate(() => document.querySelector('.problem-statement') === window.replacementStatement && window.replacementStatement.isConnected), true);
+  assert.equal(await page.locator('.ojpp-editor').count(), 1);
+  const setCode = async code => {
+    await page.locator('.ojpp-editor .cm-content').focus();
+    await page.keyboard.press('ControlOrMeta+A');
+    await page.keyboard.insertText(code);
+  };
+  await setCode('print(input())');
+  await page.waitForFunction(() => /auto\(.*(?:Python|PyPy)/i.test(document.querySelector('.ojpp-editor-lang').selectedOptions[0].textContent));
+  assert.equal(errors.length, 0, errors.join('\n'));
+  await page.getByRole('button', { name: 'Templates', exact: true }).click();
+  await page.locator('.ojpp-library-code').fill('print("template")\n');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('button', { name: 'Replace current code with this template' }).click();
+  assert.match(await page.locator('.ojpp-editor .cm-content').innerText(), /print\("template"\)/);
+  const cppId = await page.locator('.ojpp-editor-lang option').evaluateAll(options => options.find(o => /G\+\+|C\+\+/.test(o.textContent) && o.value !== '__auto__').value);
+  await setCode('print("keep my draft")');
+  await page.locator('.ojpp-editor-lang').selectOption(cppId);
+  assert.match(await page.locator('.ojpp-editor .cm-content').innerText(), /keep my draft/);
+  await page.locator('.ojpp-editor-lang').selectOption('__auto__');
+  await setCode('print(input())');
+  await page.getByRole('button', { name: 'Snippets', exact: true }).click();
+  await page.getByLabel('Name', { exact: true }).fill('Read list');
+  await page.getByLabel('Completion prefix').fill('readints');
+  await page.locator('.ojpp-library-code').fill('${1:values} = list(map(int, input().split()))\nprint(${2:values})');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await setCode('readints');
+  await page.keyboard.press('Control+Space');
+  await page.waitForSelector('.cm-tooltip-autocomplete');
+  assert.match(await page.locator('.cm-tooltip-autocomplete').innerText(), /readints/);
+  // CodeMirror deliberately ignores selection keys during the popup's initial 75 ms.
+  await page.waitForTimeout(100);
+  await page.keyboard.press('Enter');
+  assert.match(await page.locator('.ojpp-editor .cm-content').innerText(), /list\(map\(int/);
+  await page.keyboard.insertText('numbers');
+  await page.keyboard.press('Tab');
+  await page.keyboard.insertText('numbers');
+  assert.match(await page.locator('.ojpp-editor .cm-content').innerText(), /print\(numbers\)/);
+  await page.waitForTimeout(700);
+  await page.reload();
+  await page.waitForSelector('.ojpp-editor');
+  assert.match(await page.locator('.ojpp-editor .cm-content').innerText(), /print\(numbers\)/);
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('ojpp:settings')));
+  assert.equal(stored.editorSnippets.length, 1);
+  assert.equal(stored.editorTemplates.python, 'print("template")\n');
+  await page.setViewportSize({ width: 800, height: 900 });
+  assert.equal(await page.locator('.ojpp-workspace').evaluate(e => getComputedStyle(e).display), 'block');
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+
+  const native = await readFile('test/fixtures/nowcoder-editor.html', 'utf8');
+  await page.route('https://ac.nowcoder.com/acm/problem/322138', route => route.fulfill({ contentType: 'text/html', body: native }));
+  await page.goto('https://ac.nowcoder.com/acm/problem/322138');
+  await page.waitForSelector('.ojpp-editor');
+  assert.equal(await page.locator('.CodeMirror').isVisible(), false);
+  assert.equal(await page.locator('#native-submit').isVisible(), true);
+  assert.match(await page.locator('.ojpp-editor .cm-content').innerText(), /print\(123\)/);
+  await page.getByRole('button', { name: 'Templates', exact: true }).click();
+  await page.getByLabel('Language', { exact: true }).selectOption('cpp');
+  await page.locator('.ojpp-library-code').fill('#include <iostream>\nint main() { std::cout << 42; }');
+  await page.getByRole('button', { name: 'Replace current code with this template' }).click();
+  await page.waitForFunction(() => window.nativeState.language === '38' && window.nativeState.code.includes('<< 42'));
+  await page.locator('.ojpp-editor-lang').selectOption('__auto__');
+  await setCode('#include <iostream>\nint main() { std::cout << 1; }');
+  await page.waitForFunction(() => window.nativeState.language === '38' && window.nativeState.code.includes('std::cout'));
+  assert.equal(errors.length, 0, errors.join('\n'));
+  const luogu = '<meta charset="utf-8"><style>.ide-container{display:flex;height:720px}.panel{width:50%}.panel-divider{background:white;width:8px}</style><div class="user-nav"></div><div class="ide-container panel-layout layout-horizontal"><div class="panel panel-a"><div class="problem"><h2 class="lfe-h2">题目描述</h2><div class="lfe-marked-wrap">A+B</div></div></div><div class="panel-divider with-icon"></div><div class="panel panel-b"><div class="panel-layout layout-vertical"><div class="ide-toolbar">原生工具栏</div><div class="v-codemirror"><div class="cm-editor"><div class="cm-content"><div class="cm-line">Only the visible line</div></div></div></div></div></div></div><script>localStorage.setItem("ide-language","4");window.nativeCode="#include <iostream>\\nint main() { std::cout << 1; }";document.querySelector(".v-codemirror .cm-content").cmTile={view:{state:{doc:{toString:()=>nativeCode}}}};<\/script>';
+  await page.route('https://www.luogu.com.cn/problem/P1001', route => route.fulfill({ contentType: 'text/html', body: luogu }));
+  await page.goto('https://www.luogu.com.cn/problem/P1001#ide');
+  await page.waitForSelector('.ide-container > .panel-b > .ojpp-editor');
+  assert.equal(await page.locator('.v-codemirror').isVisible(), false);
+  assert.match(await page.locator('.ojpp-editor .cm-content').innerText(), /std::cout/);
+  assert.equal(await page.locator('.ojpp-editor-lang').inputValue(), '4');
+  const colors = await page.locator('.ojpp-editor .cm-content span').evaluateAll(nodes => [...new Set(nodes.map(node => getComputedStyle(node).color))]);
+  assert.ok(colors.length >= 3, `Luogu must preserve CM6 token colors: ${colors}`);
+  assert.equal(await page.locator('.panel-divider').evaluate(e => getComputedStyle(e).backgroundColor), 'rgb(55, 62, 71)');
+  assert.equal(await page.locator('.problem .ojpp-toolbar').count(), 1);
+  console.log('✓ editor tools: auto highlighter updates, draft-safe templates, persistent snippets/completions/Tab fields, reversible responsive split layout, Nowcoder native sync, Luogu IDE takeover/native draft/token colors');
+} finally { await browser.close(); }

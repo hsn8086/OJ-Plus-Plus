@@ -1,3 +1,6 @@
+import type { CodeLanguage } from '../editor/language-detection.ts';
+import type { CodeSnippet } from '../editor/code-library.ts';
+
 export type Protocol = 'openai-chat' | 'openai-responses' | 'anthropic';
 
 /** 界面语言设置；auto 表示跟随浏览器 */
@@ -66,6 +69,10 @@ export interface Settings {
   editorLspUrl: string;
   /** 各站点最近选择的提交语言 id */
   editorLanguage: Record<string, string>;
+  /** Shared by all sites; only used for new/untouched documents. */
+  editorTemplates: Partial<Record<CodeLanguage, string>>;
+  editorSnippets: CodeSnippet[];
+  editorLayout: Record<string, 'split' | 'stacked'>;
   editorBackend: Record<string, 'site' | 'local'>;
   localTimeoutMs: number;
   /** 按「站点:题号」保存的草稿代码 */

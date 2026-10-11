@@ -113,6 +113,7 @@ async function runTest(code: string, languageId: string, input: string): Promise
 let testQueue: Promise<unknown> = Promise.resolve();
 
 export const atcoderEditor: SiteEditorSupport = {
+  layoutStatement(doc) { return doc.querySelector<HTMLElement>('#task-statement'); },
   editorMountPoint(doc) {
     const root = doc.querySelector<HTMLElement>('#task-statement');
     return root && languages(doc).length ? { anchor: root, position: 'afterend' } : null;
@@ -120,6 +121,8 @@ export const atcoderEditor: SiteEditorSupport = {
   problemCode(doc) { return /\/tasks\/([\w-]+)$/.exec(new URL(doc.URL).pathname)?.[1] ?? null; },
   get languages() { return languages(document); },
   getSamples: atcoderSamples,
+  initialCode(doc) { return doc.querySelector<HTMLTextAreaElement>('#plain-textarea')?.value; },
+  initialLanguage(doc) { return doc.querySelector<HTMLSelectElement>('select[name="data.LanguageId"]')?.value; },
   syncCode(code, languageId) {
     const source = document.querySelector<HTMLTextAreaElement>('#plain-textarea');
     const language = document.querySelector<HTMLSelectElement>('select[name="data.LanguageId"]');

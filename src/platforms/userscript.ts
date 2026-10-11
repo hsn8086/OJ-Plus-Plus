@@ -3,7 +3,9 @@ import {
   GM_setClipboard,
   GM_setValue,
   GM_xmlhttpRequest,
+  unsafeWindow,
 } from 'vite-plugin-monkey/dist/client';
+import { installNativeEditorBridge } from '../sites/native-editor-bridge.ts';
 import { t } from '../i18n/index.ts';
 import type { HttpStreamTransport, HttpTransport, Platform } from './types.ts';
 
@@ -172,6 +174,7 @@ const stream: HttpStreamTransport = (req) => new Promise((resolve, reject) => {
 });
 
 export function createUserscriptPlatform(): Platform {
+  installNativeEditorBridge(unsafeWindow ?? window);
   // GM API 在脚本沙箱作用域内，不一定挂在 globalThis 上。
   if ([GM_getValue, GM_setValue, GM_xmlhttpRequest, GM_setClipboard]
     .some((api) => typeof api !== 'function')) {

@@ -230,7 +230,7 @@ ${d} .cm-cursor { border-color: #cdd9e5; }
 /* 原生光标是 border 绘制的，避免被通用深灰边框规则覆盖。 */
 ${d} .v-codemirror .cm-cursor,
 ${d} .CodeMirror .CodeMirror-cursor { border-left-color: #cdd9e5 !important; }
-${d} .cm-line, ${d} .cm-line * { color: #cdd9e5; }
+${d} .cm-line { color: #cdd9e5; }
 ${d} .cm-selected, ${d} .CodeMirror-focused .cm-selected { background: rgba(83,155,245,.25); }
 ${d} .cm-m-luogu .cm-comment, ${d} .cm-comment { color: #8b949e; }
 ${d} .cm-keyword, ${d} .cm-tag, ${d} .cm-property { color: #ff7b72; }
@@ -249,8 +249,21 @@ ${d} .main *, ${d} .l-card * { border-color: #373e47; }
 /* 提交卡/常用浅黑字 */
 ${d} .light-black, ${d} .l-card .header, ${d} .combo-wrapper .text,
 ${d} .l-radio, ${d} .l-check, ${d} .lfe-radio, ${d} .l-checkbox,
-${d} [id^="LRadio"], ${d} [id^="LCheck"], ${d} .l-card.burger *,
+${d} [id^="LRadio"], ${d} [id^="LCheck"], ${d} .l-card.burger :not(.ojpp-editor, .ojpp-editor *, .cm-editor, .cm-editor *),
 ${d} .combo-wrapper .arrow, ${d} .combo-wrapper svg, ${d} .combo-wrapper path { color: #cdd9e5 !important; }
+
+/* IDE uses its own panel layout instead of l-card. */
+${d} .ide-container, ${d} .ide-container .panel-layout,
+${d} .ide-container .panel, ${d} .ide-container .problem { background: #1c2128; color: #cdd9e5; }
+${d} .ide-container .ide-toolbar { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${d} .ide-container .ide-toolbar .title,
+${d} .ide-container .ide-toolbar .text { color: #cdd9e5; }
+${d} .ide-container .panel-divider { background: #373e47 !important; color: #909dab; }
+${d} .ide-container .panel-divider:hover { background: #539bf5 !important; }
+${d} .ide-container .divider, ${d} .ide-container .splitter,
+${d} .ide-container .resize-bar { background: #373e47; }
+${d} .ide-container .lfe-h1, ${d} .ide-container .lfe-h2 { color: #cdd9e5; }
+${d} .ide-container .lfe-marked-wrap, ${d} .ide-container .io-sample { clear: both; }
 
 /* ---------- 题库 tab 条（洛谷/主题库/…） ---------- */
 ${d} ul.luogu.luogu { background: #22272e !important; }

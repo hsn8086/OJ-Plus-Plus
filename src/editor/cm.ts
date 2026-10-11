@@ -17,7 +17,8 @@ import {
   syntaxHighlighting,
   HighlightStyle,
 } from '@codemirror/language';
-import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap, type CompletionSource } from '@codemirror/autocomplete';
+import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap, snippet, snippetCompletion, type CompletionSource } from '@codemirror/autocomplete';
+import type { CodeSnippet } from './code-library.ts';
 import { tags } from '@lezer/highlight';
 import { cpp } from '@codemirror/lang-cpp';
 import { java } from '@codemirror/lang-java';
@@ -31,6 +32,7 @@ export interface EditorHandle {
   readonly view: EditorView;
   getCode(): string;
   setCode(code: string): void;
+  insertSnippet(code: string): void;
   setMode(mode: EditorMode): void;
   setDark(dark: boolean): void;
   destroy(): void;
@@ -73,6 +75,7 @@ export interface CreateEditorOptions {
   /** LSP WebSocket 地址；空串关闭 */
   lspUrl: string;
   onChange?: (code: string) => void;
+  snippets?: () => CodeSnippet[];
 }
 
 export function createEditor(host: HTMLElement, options: CreateEditorOptions): EditorHandle {
@@ -80,6 +83,8 @@ export function createEditor(host: HTMLElement, options: CreateEditorOptions): E
   const theme = new Compartment();
   const completion = new Compartment();
 
+  let currentMode = options.mode;
+  let currentDark = options.dark;
   const state = EditorState.create({
     doc: options.doc,
     extensions: [
@@ -95,17 +100,17 @@ export function createEditor(host: HTMLElement, options: CreateEditorOptions): E
       closeBrackets(),
       lang.of(langFor(options.mode)),
       theme.of([editorTheme(options.dark), syntaxHighlighting(options.dark ? darkHighlight : lightHighlight)]),
-      completion.of(completionExtensions(options.mode, options.lspUrl)),
+      completion.of(completionExtensions(options.mode, options.lspUrl, options.snippets)),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) options.onChange?.(update.state.doc.toString());
       }),
       EditorState.tabSize.of(options.tabSize),
       keymap.of([
         ...closeBracketsKeymap,
+        ...completionKeymap,
         ...defaultKeymap,
         ...historyKeymap,
         ...searchKeymap,
-        ...completionKeymap,
         indentWithTab,
       ]),
       EditorView.theme({
@@ -125,11 +130,19 @@ export function createEditor(host: HTMLElement, options: CreateEditorOptions): E
     setCode(code) {
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: code } });
     },
+    insertSnippet(code) {
+      const selection = view.state.selection.main;
+      snippet(code)(view, { label: 'snippet' }, selection.from, selection.to);
+      view.focus();
+    },
     setMode(mode) {
-      view.dispatch({ effects: lang.reconfigure(langFor(mode)) });
-      view.dispatch({ effects: completion.reconfigure(completionExtensions(mode, options.lspUrl)) });
+      if (currentMode === mode) return;
+      currentMode = mode;
+      view.dispatch({ effects: [lang.reconfigure(langFor(mode)), completion.reconfigure(completionExtensions(mode, options.lspUrl, options.snippets))] });
     },
     setDark(dark) {
+      if (currentDark === dark) return;
+      currentDark = dark;
       view.dispatch({ effects: theme.reconfigure([editorTheme(dark), syntaxHighlighting(dark ? darkHighlight : lightHighlight)]) });
     },
     destroy() {
@@ -138,8 +151,15 @@ export function createEditor(host: HTMLElement, options: CreateEditorOptions): E
   };
 }
 
-function completionExtensions(mode: EditorMode, lspUrl: string) {
+function completionExtensions(mode: EditorMode, lspUrl: string, snippets?: () => CodeSnippet[]) {
   const sources: CompletionSource[] = [keywordCompletionFor(mode)];
+  if (snippets) sources.unshift(context => {
+    const word = context.matchBefore(/[\w-]*/);
+    if (!word || (!word.text && !context.explicit)) return null;
+    return { from: word.from, options: snippets().map(item => snippetCompletion(item.code, {
+      label: item.prefix || item.name, detail: item.name, type: 'snippet', boost: 20,
+    })), validFor: /^[\w-]*$/ };
+  });
   const lsp = lspUrl ? lspCompletion(lspUrl, mode) : null;
   if (lsp) sources.push(lsp);
   return autocompletion({ override: sources });

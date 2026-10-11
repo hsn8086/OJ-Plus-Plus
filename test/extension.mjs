@@ -180,10 +180,27 @@ try {
   await page.route(luoguUrl, route => route.fulfill({ body: luoguFixture, contentType: 'text/html' }));
   await page.goto(luoguUrl);
   await page.waitForSelector('.ojpp-editor');
-  await page.locator('.ojpp-editor-lang').selectOption('local-python311');
+  await page.locator('.ojpp-editor-lang').selectOption({ label: 'Python 3' });
+  assert.equal(await page.locator('.ojpp-editor-backend').inputValue(), 'local');
   await code('print(sum(map(int,input().split())))');
   await runOne('Accepted');
-  console.log('✓ Luogu extension-only local editor and samples');
+  console.log('✓ Luogu site-language selection routes to local Python/WASI and samples');
+
+  const nowcoderUrl = 'https://ac.nowcoder.com/acm/problem/322138';
+  const nowcoderFixture = await readFile(new URL('./fixtures/nowcoder-editor.html', import.meta.url), 'utf8');
+  await page.route(nowcoderUrl, route => route.fulfill({ body: nowcoderFixture, contentType: 'text/html' }));
+  await page.goto(nowcoderUrl);
+  await page.waitForSelector('.ojpp-editor');
+  assert.equal(await page.locator('.CodeMirror').isVisible(), false);
+  assert.equal(await page.locator('#native-submit').isVisible(), true);
+  assert.equal(await page.locator('.ojpp-editor-lang').inputValue(), '11');
+  await page.locator('.ojpp-editor-lang').selectOption('__auto__');
+  await code('#include <iostream>\nint main(){std::cout << 1;}');
+  await page.waitForFunction(() => window.nativeState.language === '38' && window.nativeState.code.includes('std::cout'));
+  await code('print(sum(map(int,input().split())))');
+  await page.waitForFunction(() => window.nativeState.language === '11' && window.nativeState.code.startsWith('print'));
+  await runOne('Accepted');
+  console.log('✓ Nowcoder MAIN-world bridge, native draft/language sync and local sample execution');
 
   const manifest = JSON.parse(await readFile(join(extension, 'manifest.json'), 'utf8'));
   assert.ok(!JSON.stringify(manifest).includes('clangd'));

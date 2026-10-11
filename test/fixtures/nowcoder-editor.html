@@ -1,0 +1,32 @@
+<!doctype html><meta charset="utf-8">
+<!-- ACM workbench hierarchy and Vue editor API captured from /acm/problem/322138. -->
+<style>
+body{margin:0}.content-board{display:flex;height:760px}.question-module,.answer-module{width:50%}
+.answer-module{display:flex;flex-direction:column}.editor-box{flex:1;min-height:0}.code-editor-box{height:100%}
+</style>
+<div class="nk-container nk-acm-container"><div class="header-right"></div>
+<div class="content-board nc-el-container"><div class="js-left question-module">
+<div class="subject-item-title">题目描述</div><div class="subject-question">Read two integers and print their sum.</div>
+<div class="question-oi-mod"><textarea>2 3</textarea></div><div class="question-oi-mod"><textarea>5</textarea></div>
+</div><div class="separator vertical"></div><div class="workbench answer-module code-body-hidden">
+<div class="editor-box maximize"><div class="code-editor-box nc-el-container subject-eidt-box code-editor">
+<div class="code-editor-header">Native language</div><div class="code-font fs-14"><div class="CodeMirror">Original editor</div></div>
+</div></div><div class="panel-footer"><button id="native-submit">Native submit</button></div>
+</div></div></div>
+<script>
+window.nativeState = {code: 'print(123)', language: '11'};
+const editor = {
+  langList: [{text:'C++(g++ 13)',value:'38',disabled:false},{text:'Python2',value:'5',disabled:false},{text:'Python3',value:'11',disabled:false}],
+  valCode(value) { if(arguments.length) nativeState.code=value; return nativeState.code; },
+  valLangue(value) {
+    if(arguments.length && nativeState.language!==value) {
+      nativeState.language=value;
+      // fixLang restores the site's per-language draft as Vue flushes watchers.
+      queueMicrotask(()=>{nativeState.code='// native cached draft';});
+    }
+    return nativeState.language;
+  },
+  $nextTick(fn) { Promise.resolve().then(()=>{}).then(fn); }
+};
+document.querySelector('.code-editor-box').__vue__ = {$parent:{editor}};
+</script>

@@ -76,6 +76,8 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
   const mounted = new Map<HTMLElement, ReturnType<typeof mountSection>>();
   const identities = new WeakMap<HTMLElement, string | undefined>();
   let editorPanel: ReturnType<typeof mountEditorPanel> | undefined;
+  let editorAnchor: HTMLElement | undefined;
+  let editorProblem: string | null | undefined;
   const persist = () => void saveSettings(platform.storage, settings);
   const isDarkNow = () => document.documentElement.getAttribute(THEME_ATTR) === 'dark';
   const darkWatchers = new Set<(dark: boolean) => void>();
@@ -97,8 +99,14 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
       editorPanel = undefined;
       return;
     }
-    if (editorPanel?.el.isConnected) return;
+    const problem = site.editor!.problemCode(document);
+    if (editorPanel?.el.isConnected && editorAnchor === mount!.anchor && editorProblem === problem) {
+      editorPanel.refreshLayout();
+      return;
+    }
     editorPanel?.dispose();
+    editorAnchor = mount!.anchor;
+    editorProblem = problem;
     editorPanel = mountEditorPanel({
       platform,
       site,
@@ -109,6 +117,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
       onDarkChange,
     });
     mount!.anchor.insertAdjacentElement(mount!.position, editorPanel.el);
+    editorPanel.refreshLayout();
   };
   let editorPageMount: ReturnType<typeof mountEditorPage> | undefined;
   const reconcileEditorPage = () => {
@@ -133,6 +142,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
       offToggle: ep.offToggle,
       syncBack: ep.syncBack,
       getSettings: () => settings,
+      persist,
       isDark: isDarkNow,
       onDarkChange,
     });

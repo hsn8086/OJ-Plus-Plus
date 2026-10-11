@@ -4,6 +4,10 @@ import type { Platform } from '../platforms/types.ts';
 import type { Settings } from '../core/types.ts';
 import type { SiteAdapter, SiteEditorSupport, EditorLanguage } from '../sites/types.ts';
 import { createEditor, type EditorHandle } from '../editor/cm.ts';
+import { languageFamily, resolveAutoLanguage } from '../editor/language-detection.ts';
+import { codeTemplate } from '../editor/code-library.ts';
+import { mountWorkspace } from './workspace.ts';
+import { createCodeLibrary } from './code-library.ts';
 import { ICON_CROSS, ICON_PLAY, ICON_PLUS, ICON_SEND, ICON_SPINNER } from './icons.ts';
 
 export interface EditorPanelOptions {
@@ -45,6 +49,7 @@ export function mountEditorPage(opts: {
   offToggle?: HTMLInputElement;
   syncBack?(code: string): void;
   getSettings(): Settings;
+  persist(): void;
   isDark(): boolean;
   onDarkChange(cb: (dark: boolean) => void): () => void;
 }): { el: HTMLElement; dispose(): void; refresh(): void } {
@@ -54,6 +59,8 @@ export function mountEditorPage(opts: {
   if (opts.hide) opts.hide.style.display = 'none';
 
   const settings = opts.getSettings();
+  const currentFamily = () => languageFamily({ id: opts.langSelect?.value ?? '',
+    name: opts.langSelect?.selectedOptions[0]?.textContent ?? '', mode: opts.langMode(opts.langSelect?.value ?? '') });
   const editor = createEditor(host, {
     doc: opts.textarea.value,
     mode: opts.langMode(opts.langSelect?.value ?? ''),
@@ -61,12 +68,21 @@ export function mountEditorPage(opts: {
     fontSize: settings.editorFontSize,
     tabSize: 4,
     lspUrl: settings.editorLspUrl,
+    snippets: () => opts.getSettings().editorSnippets.filter(item => item.language === 'all' || item.language === currentFamily()),
     onChange: (code) => {
       opts.textarea.value = code;
       opts.syncBack?.(code);
     },
   });
   const stopDark = opts.onDarkChange((dark) => editor.setDark(dark));
+  const library = createCodeLibrary({ editor, getSettings: opts.getSettings, persist: opts.persist, language: currentFamily,
+    useTemplate(code, family) {
+      const option = [...opts.langSelect?.options ?? []].find(item => languageFamily({ id: item.value, name: item.textContent ?? '', mode: opts.langMode(item.value) }) === family);
+      if (option && opts.langSelect) { opts.langSelect.value = option.value; opts.langSelect.dispatchEvent(new Event('change', { bubbles: true })); }
+      editor.setCode(code);
+    },
+  });
+  host.prepend(library.el);
 
   let lastLanguage = opts.langSelect?.value ?? '';
   const onLang = () => {
@@ -91,6 +107,7 @@ export function mountEditorPage(opts: {
     el: host,
     refresh: onLang,
     dispose() {
+      library.dispose();
       stopDark();
       opts.langSelect?.removeEventListener('change', onLang);
       opts.offToggle?.removeEventListener('change', applyToggle);
@@ -103,6 +120,7 @@ export function mountEditorPage(opts: {
 
 export function mountEditorPanel(options: EditorPanelOptions) {
   const { platform, site, support, getSettings, persist, isDark, onDarkChange } = options;
+  const languages = support.languages;
   const problemCode = support.problemCode(document);
   const settings = getSettings();
   const key = problemCode ? draftKey(site.id, problemCode) : null;
@@ -114,13 +132,13 @@ export function mountEditorPanel(options: EditorPanelOptions) {
   const AUTO_ID = '__auto__';
   const autoOpt = new Option('auto', AUTO_ID);
   langSel.add(autoOpt);
-  for (const lang of support.languages) {
+  for (const lang of languages) {
     const opt = el('option', undefined, lang.name) as HTMLOptionElement;
     opt.value = lang.id;
     langSel.append(opt);
   }
-  const savedLang = settings.editorLanguage[site.id];
-  const defaultLang = support.languages.find((l) => l.id === savedLang) ?? support.languages[0];
+  const savedLang = settings.editorLanguage[site.id] ?? support.initialLanguage?.(document);
+  const defaultLang = languages.find((l) => l.id === savedLang) ?? languages[0];
   langSel.value = savedLang === AUTO_ID ? AUTO_ID : defaultLang.id;
 
   const spacer = el('span', 'ojpp-editor-spacer');
@@ -166,19 +184,42 @@ export function mountEditorPanel(options: EditorPanelOptions) {
   if (support.submit) actionsBar.append(submitBtn);
 
   const tests = el('div', 'ojpp-editor-tests');
+  const canRun = !!support.runCustomTest || !!platform.localRunner;
+  runAllBtn.hidden = addTestBtn.hidden = tests.hidden = !canRun;
+  actionsBar.hidden = !canRun && !support.submit;
   root.append(head, runtimeHint, cmHost, actionsBar, tests);
 
-  const initial = key ? (settings.editorCode[key]?.code ?? '') : '';
+  const initial = key && settings.editorCode[key] !== undefined ? settings.editorCode[key]!.code
+    : support.initialCode?.(document) || codeTemplate(settings.editorTemplates, languageFamily(defaultLang));
+  let currentLang = defaultLang;
+  let disposed = false;
+  let syncQueued = false;
+  let latestCode = initial;
+  const highlightMode = (language: EditorLanguage) => {
+    const family = languageFamily(language);
+    return family === 'java' || family === 'python' ? family : family === 'c' || family === 'cpp' ? 'cpp' : language.mode;
+  };
   const editor: EditorHandle = createEditor(cmHost, {
     doc: initial,
-    mode: defaultLang.mode,
+    mode: highlightMode(defaultLang),
     dark: isDark(),
     fontSize: settings.editorFontSize,
     tabSize: 4,
     lspUrl: settings.editorLspUrl,
+    snippets: () => getSettings().editorSnippets.filter(s => s.language === 'all' || s.language === languageFamily(currentLang)),
     onChange: (code) => {
-      const picked = resolveLang();
-      support.syncCode?.(code, picked.id);
+      latestCode = code;
+      // CodeMirror cannot dispatch a reconfiguration from inside its update listener.
+      // One microtask coalesces a paste/transaction burst without adding debounce latency.
+      if (!syncQueued) {
+        syncQueued = true;
+        queueMicrotask(() => {
+          syncQueued = false;
+          if (disposed) return;
+          const picked = resolveLang(latestCode);
+          support.syncCode?.(latestCode, picked.id);
+        });
+      }
       if (!key) return;
       getSettings().editorCode[key] = { code, updated: Date.now() };
       persistDebounced();
@@ -186,40 +227,16 @@ export function mountEditorPanel(options: EditorPanelOptions) {
   });
   const stopDark = onDarkChange((dark) => editor.setDark(dark));
 
-  /* ---------- auto 语言：按代码内容猜，映射到站点语言 ---------- */
-  const detectMode = (code: string): EditorLanguage['mode'] => {
-    if (/\bdef\s+\w+\s*\(|__main__|^\s*elif\b|print\s*\(|input\s*\(/m.test(code) && !/#\s*include|public\s+class|fn\s+main/.test(code)) return 'python';
-    if (/public\s+(?:static\s+)?(?:final\s+)?class\b|System\.out\.|import\s+java\./m.test(code)) return 'java';
-    if (/#\s*include|std::|using\s+namespace|cin\s*>>|cout\s*<<|\bint\s+main\s*\(|\bprintf\s*\(|\bscanf\s*\(/.test(code)) return 'cpp';
-    return 'text';
-  };
-  const pickForMode = (mode: EditorLanguage['mode']): EditorLanguage => {
-    // 优先用户保存的偏好（同 mode）；其次列表里第一个同 mode 的
-    const saved = support.languages.find((l) => l.id === getSettings().editorLanguage[site.id]);
-    if (saved && saved.id !== AUTO_ID && saved.mode === mode) return saved;
-    return support.languages.find((l) => l.mode === mode)
-      ?? support.languages.find((l) => l.mode === 'cpp')
-      ?? support.languages[0];
-  };
-  let lastPicked: EditorLanguage | undefined;
-  const resolveLang = (): EditorLanguage => {
-    if (langSel.value !== AUTO_ID) {
-      lastPicked = undefined;
-      return support.languages.find((l) => l.id === langSel.value) ?? defaultLang;
-    }
-    const mode = detectMode(editor.getCode());
-    const picked = mode === 'text' ? pickForMode('cpp') : pickForMode(mode);
-    if (picked !== lastPicked) {
-      lastPicked = picked;
-      autoOpt.textContent = `auto(${picked.name})`;
-      editor.setMode(picked.mode);
-    }
-    return picked;
+  const resolveLang = (code = editor.getCode()): EditorLanguage => {
+    currentLang = langSel.value === AUTO_ID ? resolveAutoLanguage(code, languages, currentLang)
+      : languages.find(language => language.id === langSel.value) ?? defaultLang;
+    autoOpt.textContent = `auto(${currentLang.name})`;
+    editor.setMode(highlightMode(currentLang));
+    return currentLang;
   };
   const resolvedLangId = () => resolveLang().id;
-  // 初始同步一次（auto 模式下顺带解出高亮与标签）
-  resolveLang();
-  support.syncCode?.(initial, resolvedLangId());
+  const initialLang = resolveLang(initial);
+  support.syncCode?.(initial, initialLang.id);
 
   let persistTimer: ReturnType<typeof setTimeout> | undefined;
   function persistDebounced() {
@@ -228,12 +245,22 @@ export function mountEditorPanel(options: EditorPanelOptions) {
   }
 
   langSel.onchange = () => {
+    const oldCode = editor.getCode();
+    const wasStarter = !oldCode || oldCode === codeTemplate(getSettings().editorTemplates, languageFamily(currentLang));
     const lang = resolveLang();
-    if (langSel.value !== AUTO_ID) editor.setMode(lang.mode);
+    if (wasStarter && langSel.value !== AUTO_ID) editor.setCode(codeTemplate(getSettings().editorTemplates, languageFamily(lang)));
     support.syncCode?.(editor.getCode(), lang.id);
     getSettings().editorLanguage[site.id] = langSel.value;
     persist();
   };
+  const library = createCodeLibrary({ editor, getSettings, persist, language: () => languageFamily(currentLang),
+    useTemplate(code, family) {
+      const language = languages.find(item => languageFamily(item) === family);
+      if (language) { langSel.value = language.id; langSel.dispatchEvent(new Event('change')); }
+      editor.setCode(code);
+    },
+  });
+  head.insertBefore(library.el, spacer);
 
   /* ---------- 测试行 ---------- */
 
@@ -270,8 +297,8 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     if (runBtn) { runBtn.dataset.state = 'busy'; runBtn.innerHTML = ICON_SPINNER; runBtn.disabled = !local; runBtn.title = local ? t('common.cancel') : t('editor.running'); }
     try {
       const code = snapshot?.code ?? editor.getCode();
-      const languageId = snapshot?.languageId ?? langSel.value;
-      const language = support.languages.find(item => item.id === languageId)!;
+      const languageId = snapshot?.languageId ?? resolvedLangId();
+      const language = languages.find(item => item.id === languageId)!;
       const localLanguage = localLanguageFor(language);
       if (local && !localLanguage) throw new Error(t('editor.localUnsupported'));
       const res = local && platform.localRunner
@@ -515,8 +542,15 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     }
   };
 
+  let workspace: ReturnType<typeof mountWorkspace> | undefined;
   return {
     el: root,
+    refreshLayout() {
+      const statement = support.layoutStatement?.(document);
+      if (!workspace && statement && root.isConnected && !statement.contains(root)) {
+        workspace = mountWorkspace(root, statement, site, getSettings, persist, () => editor.view.requestMeasure());
+      }
+    },
     editor,
     /** 外部注入的样例（如 PDF 提取）——追加到样例行末尾。 */
     addSamples(items: { input: string; output: string }[]) {
@@ -525,6 +559,9 @@ export function mountEditorPanel(options: EditorPanelOptions) {
       items.forEach((s, i) => addSampleRow(s, offset + i));
     },
     dispose() {
+      disposed = true;
+      workspace?.dispose();
+      library.dispose();
       for (const run of activeRuns.values()) run.abort();
       allCancelled = true;
       clearTimeout(persistTimer);

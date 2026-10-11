@@ -51,6 +51,8 @@ try {
   assert.ok(await page.evaluate(() => JSON.stringify(window.requestBody).includes('You are given a string')));
   await page.locator('.ojpp-editor-lang').selectOption('6082');
   await page.locator('.ojpp-editor .cm-content').focus();
+  assert.match(await page.locator('.ojpp-editor .cm-content').innerText(), /def solve/);
+  await page.keyboard.press('ControlOrMeta+A');
   await page.keyboard.insertText('print(input())');
   assert.equal(await page.locator('#plain-textarea').inputValue(), 'print(input())');
   let submitted;
@@ -66,8 +68,10 @@ try {
   assert.equal(submitted.get('csrf_token'), 'fixture-token');
   let testId = 10;
   let exitCode = 0;
+  let customTestLanguage;
   await page.route('**/contests/abc350/custom_test**', async route => {
     if (route.request().method() === 'POST') {
+      customTestLanguage = new URLSearchParams(route.request().postData()).get('data.LanguageId');
       testId++;
       await route.fulfill({ body: '' });
     } else if (route.request().url().includes('/json')) {
@@ -75,8 +79,10 @@ try {
     } else await route.fulfill({ body: fixture, contentType: 'text/html' });
   });
   const firstTest = page.locator('.ojpp-test').first();
+  await page.locator('.ojpp-editor-lang').selectOption('__auto__');
   await firstTest.locator('.ojpp-test-run').click();
   await page.waitForSelector('.ojpp-test-stderr', { state: 'attached' });
+  assert.equal(customTestLanguage, '6082');
   assert.equal(await firstTest.locator('.ojpp-test-status').textContent(), 'Accepted');
   assert.equal(await firstTest.locator('.ojpp-test-stderr').textContent(), 'debug <b>1</b>\n');
   assert.equal(await firstTest.locator('.ojpp-test-stderr b').count(), 0);

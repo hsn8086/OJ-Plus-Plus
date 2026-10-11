@@ -57,4 +57,17 @@ ${d} .el-popper[x-placement^=bottom] .popper__arrow::after { border-bottom-color
 ${d} .el-popper[x-placement^=top] .popper__arrow::after { border-top-color: #22272e; }
 ${d} .gray, ${d} .color-gray, ${d} .text-muted, ${d} .subject-limit { color: #909dab; }
 ${d} .katex { color: inherit; }
+/* ACM 页面中的文本 span、自测按钮和分隔栏。 */
+${d} .subject-question .md-plain, ${d} .subject-describe > h2,
+${d} .mode-tips-container .title { color: #cdd9e5 !important; }
+${d} .btn-mode-tips.theme-default { background: #2d333b; color: #adbac7 !important; }
+${d} .separator { background: #373e47; border-color: #373e47; }
+${d} .separator .btn-toggle { background: #2d333b; color: #cdd9e5; border-color: #373e47; }
+${d} .btn-test { background: #203a33 !important; color: #7ed9b7 !important; border-color: #3d866f !important; }
+${d} .code-editor-header { border-bottom-color: #373e47; }
+${d} .code-editor-header a.ncicon, ${d} .panel-header .ncicon,
+${d} .header-bar .ncicon, ${d} .separator .ncicon { color: #adbac7 !important; }
+${d} .code-editor-header a.ncicon:hover, ${d} .header-bar .ncicon:hover { color: #79b8ff !important; }
+${d} .ncicon > svg { fill: currentColor; vertical-align: -.15em; }
+${d} .el-tooltip__popper.is-light, ${d} .el-tooltip__popper.is-dark { background: #2d333b; color: #cdd9e5; border-color: #373e47; }
 `;

@@ -1,3 +1,4 @@
+import { CODE_LANGUAGES, type CodeLanguage } from '../editor/language-detection.ts';
 import { t } from '../i18n/index.ts';
 import type { Protocol, ProviderConfig, Settings, SiteFeature } from './types.ts';
 
@@ -104,6 +105,9 @@ export function defaultSettings(): Settings {
     editorFontSize: 13,
     editorLspUrl: '',
     editorLanguage: {},
+    editorTemplates: {},
+    editorSnippets: [],
+    editorLayout: {},
     editorBackend: {},
     localTimeoutMs: 3000,
     editorCode: {},
@@ -140,6 +144,14 @@ export function migrate(raw: unknown): Settings {
     ...input,
     autoTranslate: normalizeAutoTranslate(input.autoTranslate),
     siteFeatures: normalizeSiteFeatures(input.siteFeatures),
+    editorTemplates: Object.fromEntries(Object.entries(input.editorTemplates ?? {}).filter(([key, value]) =>
+      CODE_LANGUAGES.includes(key as CodeLanguage) && typeof value === 'string').map(([key, value]) => [key, String(value).slice(0, 200_000)])),
+    editorSnippets: Array.isArray(input.editorSnippets) ? input.editorSnippets.filter(s =>
+      s && typeof s.id === 'string' && typeof s.name === 'string' && typeof s.prefix === 'string' && typeof s.code === 'string'
+      && (s.language === 'all' || CODE_LANGUAGES.includes(s.language))).slice(0, 100).map(s => ({
+        id: s.id.slice(0, 100), name: s.name.slice(0, 100), prefix: s.prefix.slice(0, 50), language: s.language, code: s.code.slice(0, 100_000),
+      })) : [],
+    editorLayout: Object.fromEntries(Object.entries(input.editorLayout ?? {}).filter(([, value]) => value === 'split' || value === 'stacked')),
     editorBackend: input.editorBackend && typeof input.editorBackend === 'object'
       ? Object.fromEntries(Object.entries(input.editorBackend).filter(([, v]) => v === 'site' || v === 'local')) : {},
     localTimeoutMs: typeof input.localTimeoutMs === 'number' && Number.isFinite(input.localTimeoutMs)

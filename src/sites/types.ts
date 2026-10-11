@@ -63,6 +63,11 @@ export interface SiteEditorSupport {
   editorMountPoint(doc: Document): MountPoint | null;
   /** 提交用的题号（如 1A、242A）。 */
   problemCode(doc: Document): string | null;
+  /** Seed the replacement from the native editor without overwriting a saved OJ++ draft. */
+  initialCode?(doc: Document): string | undefined;
+  initialLanguage?(doc: Document): string | undefined;
+  /** Statement node for optional side-by-side workspace layout. */
+  layoutStatement?(doc: Document): HTMLElement | null;
   /**
    * 站点自带的代码提交页（customtest/submit）：接管它的编辑器。
    * 返回 null 表示当前页不需要接管。

@@ -26,7 +26,7 @@ export interface PageI18nRule {
 
 /** 默认不翻译的祖先选择器：代码块、编辑器、我们脚本注入的 UI */
 const DEFAULT_EXCLUDE =
-  'pre, code, textarea, script, style, noscript, option, .cm-editor, .ace_editor, .MathJax, .tex-span, [class*="ojpp-"]';
+  'pre, code, textarea, script, style, noscript, option, .cm-editor, .ace_editor, .MathJax, .tex-span, [class*="ojpp-"]:not([data-ojpp-site-content])';
 
 interface OriginalText {
   before: string;

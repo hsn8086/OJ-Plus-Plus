@@ -1,6 +1,7 @@
 import { applyPageI18n } from '../core/page-i18n.ts';
 import { mountNavSettings, observeSite, prepareMathContent } from './shared.ts';
 import { LUOGU_DARK } from './luogu-styles.ts';
+import { requestNativeEditor } from './native-editor-bridge.ts';
 import type { ContentSection, EditorLanguage, EditorTestResult, SiteAdapter } from './types.ts';
 
 const fields: Record<string, string> = {
@@ -35,8 +36,8 @@ const LUOGU_LANGUAGES: readonly EditorLanguage[] = [
   { id: '2', name: 'C', mode: 'cpp' },
   { id: '7', name: 'Python 3', mode: 'python' },
   { id: '25', name: 'PyPy 3', mode: 'python' },
-  { id: '8', name: 'Java 8', mode: 'text' },
-  { id: '33', name: 'Java 21', mode: 'text' },
+  { id: '8', name: 'Java 8', mode: 'java' },
+  { id: '33', name: 'Java 21', mode: 'java' },
   { id: '15', name: 'Rust', mode: 'text' },
   { id: '14', name: 'Go', mode: 'text' },
   { id: '19', name: 'Haskell', mode: 'text' },
@@ -153,9 +154,13 @@ export const luogu: SiteAdapter = {
   darkStyles: LUOGU_DARK, preserveInlineColors: true,
   editor: {
     languages: LUOGU_LANGUAGES,
+    initialCode(doc) { return requestNativeEditor(doc, { type: 'read' })?.code; },
+    initialLanguage(doc) { return requestNativeEditor(doc, { type: 'read' })?.language; },
     editorMountPoint(doc) {
       // Creation/editing forms belong to Luogu; only problem-view pages may mount the solution editor.
       if (!/^\/problem\/(?!new(?:\/|$))[^/]+\/?$/.test(new URL(doc.URL).pathname)) return null;
+      const ide = doc.querySelector<HTMLElement>('.ide-container > .panel-b');
+      if (ide) return ide.querySelector('.v-codemirror .cm-content') ? { anchor: ide, position: 'beforeend' } : null;
       // 优先接管提交卡（隐藏原生 CM6，我们的面板放进去）；没登录/没有就挂题目卡后面
       const submitBody = doc.querySelector<HTMLElement>('.l-card.burger .body');
       if (submitBody?.querySelector('.v-codemirror')) return { anchor: submitBody, position: 'beforeend' as const };
@@ -210,10 +215,11 @@ export const luogu: SiteAdapter = {
     + '.l-card.problem .lfe-marked-wrap, .l-card.problem .io-sample { clear: both; } '
     // 启用我们编辑器时，把提交卡 code 模式的原生 CM6 藏起来（文件模式没有 v-codemirror 自动露出）
     + '.l-card.burger .body:has(> .ojpp-editor):has(.v-codemirror) > *:not(.ojpp-editor) { display: none !important; } '
+    + '.ide-container > .panel-b:has(> .ojpp-editor) > *:not(.ojpp-editor) { display: none !important; } '
     + '.l-card.burger .body:has(.v-codemirror) { padding-bottom: .3em; }',
   collectSections(doc) {
     const sections: ContentSection[] = [];
-    for (const heading of doc.querySelectorAll<HTMLElement>('.l-card.problem > h2, .problem-content > h2')) {
+    for (const heading of doc.querySelectorAll<HTMLElement>('.l-card.problem > h2, .problem-content > h2, .ide-container .problem > h2')) {
       const label = [...heading.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
       const key = fields[label];
       if (!key) continue;

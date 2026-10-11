@@ -87,6 +87,16 @@ export const qoj: SiteAdapter = {
   editor: {
     localOnly: true, languages: LOCAL_LANGUAGES,
     editorMountPoint(doc) { const anchor = doc.querySelector<HTMLElement>('#tab-statement'); return anchor ? { anchor, position: 'beforeend' } : null; },
+    layoutStatement(doc) {
+      const tab = doc.querySelector<HTMLElement>('#tab-statement');
+      if (!tab) return null;
+      const existing = tab.querySelector<HTMLElement>('[data-ojpp-layout-group]');
+      if (existing) return existing;
+      const reader = doc.createElement('div'); reader.dataset.ojppLayoutGroup = '1';
+      reader.append(...[...tab.childNodes].filter(node => !(node instanceof HTMLElement && node.classList.contains('ojpp-editor'))));
+      tab.prepend(reader);
+      return reader;
+    },
     problemCode(doc) { return /\/problem\/(\d+)/.exec(new URL(doc.URL).pathname)?.[1] ?? null; },
     getSamples(doc) {
       const inputs: string[] = [], outputs: string[] = [];

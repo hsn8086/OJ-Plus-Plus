@@ -30,6 +30,28 @@ ${d} .uoj-username-red { color: #f85149; }
 ${d} .uoj-username-purple { color: #b392f0; }
 ${d} .unrated, ${d} .uoj-username-grey { color: #cdd9e5; }
 ${d} .alert-success { background: #1e2f24; color: #a5d6a7; border-color: #2d4a33; }
+${d} .alert-primary, ${d} .list-group-item-primary { background: #203247; color: #b6d5f5; border-color: #354c66; }
+${d} .alert-secondary, ${d} .well { background: #2d333b; color: #cdd9e5; border-color: #373e47; }
+${d} .page-header, ${d} .modal-header, ${d} .modal-footer,
+${d} .dropdown-divider, ${d} .dropdown-menu .divider { border-color: #373e47; }
+${d} .nav-tabs > li > a, ${d} .nav-tabs .nav-link { border-color: transparent; }
+${d} .nav-tabs > li.active > a, ${d} .nav-tabs > li.active > a:hover,
+${d} .nav-tabs .nav-link.active { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${d} .pagination > li > a, ${d} .pagination > li > span { background: #22272e; color: #79b8ff; border-color: #373e47; }
+${d} .pagination > .active > a, ${d} .page-item.active .page-link { background: #245f99; color: #fff; border-color: #539bf5; }
+${d} .dropdown-item.active, ${d} .dropdown-item:active { background: #245f99; color: #fff; }
+${d} .dropdown-item.disabled { color: #768390; }
+${d} .dropdown-menu > li > a { color: #cdd9e5; }
+${d} .dropdown-menu > li > a:hover, ${d} .dropdown-menu > li > a:focus { background: #30363d; color: #79b8ff; }
+${d} .btn-default, ${d} .btn-light { background-image: none; box-shadow: none; text-shadow: none; }
+${d} .btn-default:hover, ${d} .btn-light:hover { background: #30363d; color: #cdd9e5; }
+${d} .tooltip-inner, ${d} .popover, ${d} .popover-content,
+${d} .popover-body, ${d} .popover-header { background: #2d333b; color: #cdd9e5; border-color: #373e47; }
+${d} .progress, ${d} .input-group-text, ${d} .input-group-addon { background: #2d333b; color: #cdd9e5; border-color: #373e47; }
+${d} .table-bordered, ${d} .table-bordered td, ${d} .table-bordered th { border-color: #373e47; }
+${d} #statements-pdf { border-color: #373e47; }
+${d} .nav-tabs, ${d} .uoj-article, ${d} footer { color: #cdd9e5; }
+${d} .badge-light { background: #373e47; color: #cdd9e5; }
 
 /* shjs 语法高亮（提交代码视图）：亮色系配色换深色 */
 ${d} .sh_keyword, ${d} .sh_type, ${d} .sh_preproc, ${d} .sh_tag, ${d} .sh_link,

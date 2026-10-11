@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OJ++
 // @namespace    https://github.com/hsn8086/OJ-Plus-Plus
-// @version      0.8.0
+// @version      0.9.0
 // @author       hsn8086
 // @description  OJ-Plus-Plus：AI 题面翻译、Markdown 视图与一键复制
 // @license      GPL-3.0
@@ -60,15 +60,80 @@ html[data-ojpp-theme-pending] body { visibility: hidden; animation: ojpp-theme-r
 `);
 whenDocumentElement().then(async () => {
 	const [{ startApp }, { createUserscriptPlatform }, { resolveSite }, { toast }] = await Promise.all([
-		module.import('./app-C_HpTwtD-lny1pYHg.js').then((n) => n.t),
-		module.import('./userscript-Nyzl0XHx-pRFNYaLy.js'),
-		module.import('./sites-CY7Yd7fg-cuM8H27q.js').then((n) => n.n),
+		module.import('./app-QbhLDNm4-BKvJq3F2.js').then((n) => n.t),
+		module.import('./userscript-BzAWPPnT-DdZdHJ1b.js'),
+		module.import('./sites-DXiGmQvl-DoCkQRu2.js').then((n) => n.n),
 		module.import('./toast-C52sDx5c-BTYeArBY.js')
 	]);
 	const site = resolveSite(new URL(location.href));
 	if (site) await startApp(createUserscriptPlatform(), site).catch((error) => toast(String(error), "error"));
 }).catch((error) => console.error("[OJ++]", error));})}}));
-System.register("./app-C_HpTwtD-lny1pYHg.js", ['./sites-CY7Yd7fg-cuM8H27q.js','./___monkey.entry.js','./i18n-D1L63o1m-DRxdwpYd.js','./toast-C52sDx5c-BTYeArBY.js'],(function(exports,module){'use strict';var __exportAll,__toESM,__commonJSMin,restorePageI18n,sites,localLanguageFor,whenDocumentElement,cacheThemePreference,EARLY_THEME_CSS,setLocale,resolveLocale,t$1,getLocale,toast;return{setters:[function(module){__exportAll=module.o;__toESM=module.s;__commonJSMin=module.a;restorePageI18n=module.i;sites=module.t;localLanguageFor=module.r;},function(module){whenDocumentElement=module.w;cacheThemePreference=module.c;EARLY_THEME_CSS=module.E;},function(module){setLocale=module.s;resolveLocale=module.r;t$1=module.t;getLocale=module.g;},function(module){toast=module.toast;}],execute:(function(){exports({n:ask,startApp:startApp});var APP_NAME = "OJ++";
+System.register("./app-QbhLDNm4-BKvJq3F2.js", ['./sites-DXiGmQvl-DoCkQRu2.js','./___monkey.entry.js','./native-editor-bridge-DOpF4wmy-B4AddMQx.js','./toast-C52sDx5c-BTYeArBY.js'],(function(exports,module){'use strict';var __exportAll,__toESM,__commonJSMin,restorePageI18n,sites,localLanguageFor,whenDocumentElement,cacheThemePreference,EARLY_THEME_CSS,setLocale,resolveLocale,t$1,getLocale,toast;return{setters:[function(module){__exportAll=module.o;__toESM=module.s;__commonJSMin=module.a;restorePageI18n=module.i;sites=module.t;localLanguageFor=module.r;},function(module){whenDocumentElement=module.w;cacheThemePreference=module.c;EARLY_THEME_CSS=module.E;},function(module){setLocale=module.s;resolveLocale=module.r;t$1=module.t;getLocale=module.g;},function(module){toast=module.toast;}],execute:(function(){exports({n:ask,startApp:startApp});var APP_NAME = "OJ++";
+var CODE_LANGUAGES = [
+	"cpp",
+	"c",
+	"python",
+	"java",
+	"javascript",
+	"rust",
+	"go",
+	"csharp",
+	"kotlin",
+	"pascal",
+	"ruby",
+	"php",
+	"haskell",
+	"lua",
+	"ocaml",
+	"julia",
+	"scala",
+	"perl",
+	"text"
+];
+function languageFamily(language) {
+	const name = language.name.toLowerCase();
+	if (/c\+\+|g\+\+|clang\+\+/.test(name)) return "cpp";
+	if (/c#|csharp/.test(name)) return "csharp";
+	if (/javascript|node\.js/.test(name)) return "javascript";
+	if (/python|pypy/.test(name)) return "python";
+	for (const key of [
+		"kotlin",
+		"java",
+		"rust",
+		"go",
+		"pascal",
+		"ruby",
+		"php",
+		"haskell",
+		"lua",
+		"ocaml",
+		"julia",
+		"scala",
+		"perl"
+	]) if (new RegExp(`\\b${key}\\b`).test(name)) return key;
+	if (/\bc(?:\d{2})?\b/.test(name)) return "c";
+	return language.mode === "text" ? "text" : language.mode;
+}
+/** Bounded scan; unknown/incomplete code retains the last resolved language. */
+function detectCodeLanguage(code) {
+	const text = (code.length > 20480 ? code.slice(0, 16384) + "\n" + code.slice(-4096) : code).replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, " ");
+	if (/\bfn\s+main\s*\(|\buse\s+std::/.test(text)) return "rust";
+	if (/\bpackage\s+main\b|\bfunc\s+main\s*\(/.test(text)) return "go";
+	if (/\bfun\s+main\s*\(/.test(text)) return "kotlin";
+	if (/using\s+System\b|Console\.(?:Write|Read)/.test(text)) return "csharp";
+	if (/System\.(?:out|in)\b|import\s+java\.|public\s+(?:final\s+)?class\s+|\b(?:public\s+)?class\s+\w+[\s\S]*\bstatic\s+void\s+main\b/.test(text)) return "java";
+	if (/std::|using\s+namespace|\b(?:cin|cout|cerr)\s*(?:>>|<<)|#\s*include\s*<(?:iostream|bits\/[^>]+|vector|string)>/.test(text)) return "cpp";
+	if (/#\s*include|\b(?:int|signed|void)\s+main\s*\(|\b(?:printf|scanf)\s*\(/.test(text)) return "c";
+	if (/^\s*(?:def|class)\s+\w+.*:|^\s*(?:from\s+\w+\s+import|import\s+(?:sys|math|collections)|elif\b)|\b(?:print|input)\s*\(/m.test(text)) return "python";
+	if (/console\.log|require\s*\(|\b(?:const|let)\s+\w+\s*=|\bfunction\s+\w+\s*\(/.test(text)) return "javascript";
+	if (/\bprogram\s+\w+\s*;|\bbegin\b[\s\S]*\bend\./i.test(text)) return "pascal";
+}
+function resolveAutoLanguage(code, languages, previous) {
+	const family = detectCodeLanguage(code);
+	if (!family || languageFamily(previous) === family) return previous;
+	const candidates = languages.filter((language) => languageFamily(language) === family);
+	return (family === "python" ? candidates.find((language) => /(?:python|pypy)\s*3/i.test(language.name)) : void 0) ?? candidates[0] ?? (family === "c" ? languages.find((language) => languageFamily(language) === "cpp") : void 0) ?? previous;
+}
 var SETTINGS_KEY = "ojpp:settings";
 var DEFAULT_TARGET_LANG = "简体中文";
 var DEFAULT_MODEL = "gpt-6-luna";
@@ -162,6 +227,9 @@ function defaultSettings() {
 		editorFontSize: 13,
 		editorLspUrl: "",
 		editorLanguage: {},
+		editorTemplates: {},
+		editorSnippets: [],
+		editorLayout: {},
 		editorBackend: {},
 		localTimeoutMs: 3e3,
 		editorCode: {},
@@ -196,6 +264,15 @@ function migrate(raw) {
 		...input,
 		autoTranslate: normalizeAutoTranslate(input.autoTranslate),
 		siteFeatures: normalizeSiteFeatures(input.siteFeatures),
+		editorTemplates: Object.fromEntries(Object.entries(input.editorTemplates ?? {}).filter(([key, value]) => CODE_LANGUAGES.includes(key) && typeof value === "string").map(([key, value]) => [key, String(value).slice(0, 2e5)])),
+		editorSnippets: Array.isArray(input.editorSnippets) ? input.editorSnippets.filter((s) => s && typeof s.id === "string" && typeof s.name === "string" && typeof s.prefix === "string" && typeof s.code === "string" && (s.language === "all" || CODE_LANGUAGES.includes(s.language))).slice(0, 100).map((s) => ({
+			id: s.id.slice(0, 100),
+			name: s.name.slice(0, 100),
+			prefix: s.prefix.slice(0, 50),
+			language: s.language,
+			code: s.code.slice(0, 1e5)
+		})) : [],
+		editorLayout: Object.fromEntries(Object.entries(input.editorLayout ?? {}).filter(([, value]) => value === "split" || value === "stacked")),
 		editorBackend: input.editorBackend && typeof input.editorBackend === "object" ? Object.fromEntries(Object.entries(input.editorBackend).filter(([, v]) => v === "site" || v === "local")) : {},
 		localTimeoutMs: typeof input.localTimeoutMs === "number" && Number.isFinite(input.localTimeoutMs) ? Math.min(3e4, Math.max(100, input.localTimeoutMs)) : base.localTimeoutMs,
 		providers,
@@ -25232,6 +25309,8 @@ function createEditor(host, options) {
 	const lang = new Compartment();
 	const theme = new Compartment();
 	const completion = new Compartment();
+	let currentMode = options.mode;
+	let currentDark = options.dark;
 	const view = new EditorView({
 		state: EditorState.create({
 			doc: options.doc,
@@ -25247,17 +25326,17 @@ function createEditor(host, options) {
 				closeBrackets(),
 				lang.of(langFor(options.mode)),
 				theme.of([editorTheme(options.dark), syntaxHighlighting(options.dark ? darkHighlight : lightHighlight)]),
-				completion.of(completionExtensions(options.mode, options.lspUrl)),
+				completion.of(completionExtensions(options.mode, options.lspUrl, options.snippets)),
 				EditorView.updateListener.of((update) => {
 					if (update.docChanged) options.onChange?.(update.state.doc.toString());
 				}),
 				EditorState.tabSize.of(options.tabSize),
 				keymap.of([
 					...closeBracketsKeymap,
+					...completionKeymap,
 					...defaultKeymap,
 					...historyKeymap,
 					...searchKeymap,
-					...completionKeymap,
 					indentWithTab
 				]),
 				EditorView.theme({
@@ -25281,11 +25360,19 @@ function createEditor(host, options) {
 				insert: code
 			} });
 		},
+		insertSnippet(code) {
+			const selection = view.state.selection.main;
+			snippet(code)(view, { label: "snippet" }, selection.from, selection.to);
+			view.focus();
+		},
 		setMode(mode) {
-			view.dispatch({ effects: lang.reconfigure(langFor(mode)) });
-			view.dispatch({ effects: completion.reconfigure(completionExtensions(mode, options.lspUrl)) });
+			if (currentMode === mode) return;
+			currentMode = mode;
+			view.dispatch({ effects: [lang.reconfigure(langFor(mode)), completion.reconfigure(completionExtensions(mode, options.lspUrl, options.snippets))] });
 		},
 		setDark(dark) {
+			if (currentDark === dark) return;
+			currentDark = dark;
 			view.dispatch({ effects: theme.reconfigure([editorTheme(dark), syntaxHighlighting(dark ? darkHighlight : lightHighlight)]) });
 		},
 		destroy() {
@@ -25293,8 +25380,22 @@ function createEditor(host, options) {
 		}
 	};
 }
-function completionExtensions(mode, lspUrl) {
+function completionExtensions(mode, lspUrl, snippets) {
 	const sources = [keywordCompletionFor(mode)];
+	if (snippets) sources.unshift((context) => {
+		const word = context.matchBefore(/[\w-]*/);
+		if (!word || !word.text && !context.explicit) return null;
+		return {
+			from: word.from,
+			options: snippets().map((item) => snippetCompletion(item.code, {
+				label: item.prefix || item.name,
+				detail: item.name,
+				type: "snippet",
+				boost: 20
+			})),
+			validFor: /^[\w-]*$/
+		};
+	});
 	const lsp = lspUrl ? lspCompletion(lspUrl, mode) : null;
 	if (lsp) sources.push(lsp);
 	return autocompletion({ override: sources });
@@ -25339,6 +25440,231 @@ function editorTheme(dark) {
 		".cm-searchMatch-selected": { backgroundColor: dark ? "rgba(240,136,62,0.6)" : "rgba(255,180,84,0.8)" }
 	}, { dark });
 }
+var DEFAULT_TEMPLATES = {
+	cpp: "#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n\n    return 0;\n}\n",
+	c: "#include <stdio.h>\n\nint main(void) {\n\n    return 0;\n}\n",
+	python: "import sys\n\ndef solve():\n    pass\n\nif __name__ == \"__main__\":\n    solve()\n",
+	java: "import java.io.*;\nimport java.util.*;\n\npublic class Main {\n    public static void main(String[] args) throws Exception {\n\n    }\n}\n",
+	javascript: "function solve() {\n\n}\n\nsolve();\n",
+	rust: "use std::io::{self, Read};\n\nfn main() {\n    let mut input = String::new();\n    io::stdin().read_to_string(&mut input).unwrap();\n\n}\n",
+	go: "package main\n\nimport (\n    \"bufio\"\n    \"fmt\"\n    \"os\"\n)\n\nfunc main() {\n    in := bufio.NewReader(os.Stdin)\n    out := bufio.NewWriter(os.Stdout)\n    defer out.Flush()\n    _, _ = in, fmt.Fprint\n\n}\n",
+	csharp: "using System;\n\nclass Program {\n    static void Main() {\n\n    }\n}\n",
+	kotlin: "fun main() {\n\n}\n",
+	pascal: "program Main;\nbegin\n\nend.\n",
+	ruby: "input = STDIN.read\n\n",
+	php: "<?php\n$input = file_get_contents(\"php://stdin\");\n\n",
+	haskell: "main :: IO ()\nmain = do\n    input <- getContents\n    putStr input\n",
+	lua: "local input = io.read(\"*a\")\n\n",
+	ocaml: "let () =\n  ()\n",
+	julia: "function solve()\n\nend\n\nsolve()\n",
+	scala: "object Main {\n  def main(args: Array[String]): Unit = {\n\n  }\n}\n",
+	perl: "use strict;\nuse warnings;\n\n",
+	text: ""
+};
+function codeTemplate(templates, language) {
+	return templates[language] ?? DEFAULT_TEMPLATES[language];
+}
+function mountWorkspace(editor, statement, site, settings, persist, measure) {
+	const placeholder = document.createComment("ojpp-statement-position");
+	const editorPosition = document.createComment("ojpp-editor-position");
+	statement.before(placeholder);
+	editor.before(editorPosition);
+	const workspace = document.createElement("div");
+	workspace.className = "ojpp-workspace";
+	workspace.dataset.site = site.id;
+	workspace.dataset.ojppSiteContent = "1";
+	placeholder.after(workspace);
+	const reader = document.createElement("div");
+	reader.className = "ojpp-workspace-statement";
+	reader.dataset.ojppSiteContent = "1";
+	reader.append(statement);
+	workspace.append(reader, editor);
+	const button = document.createElement("button");
+	button.type = "button";
+	button.className = "ojpp-layout-toggle";
+	const apply = () => {
+		const split = (settings().editorLayout[site.id] ?? "split") === "split";
+		workspace.dataset.layout = split ? "split" : "stacked";
+		button.textContent = t$1(split ? "editor.layoutStacked" : "editor.layoutSplit");
+		button.setAttribute("aria-pressed", String(split));
+		measure();
+	};
+	button.onclick = () => {
+		settings().editorLayout[site.id] = workspace.dataset.layout === "split" ? "stacked" : "split";
+		persist();
+		apply();
+	};
+	editor.querySelector(".ojpp-editor-head")?.append(button);
+	apply();
+	return {
+		refresh: apply,
+		dispose() {
+			const currentContents = [...reader.childNodes];
+			if (placeholder.isConnected) placeholder.replaceWith(...currentContents);
+			for (const node of currentContents) if (node instanceof HTMLElement && node.isConnected && node.dataset.ojppLayoutGroup) node.replaceWith(...node.childNodes);
+			if (editorPosition.isConnected) editorPosition.replaceWith(editor);
+			button.remove();
+			workspace.remove();
+		}
+	};
+}
+function createCodeLibrary(options) {
+	const controls = document.createElement("span");
+	controls.className = "ojpp-library-controls";
+	let dialog;
+	const button = (label, action, parent) => {
+		const b = document.createElement("button");
+		b.type = "button";
+		b.textContent = label;
+		b.onclick = action;
+		parent.append(b);
+		return b;
+	};
+	const open = (mode) => {
+		dialog?.remove();
+		dialog = document.createElement("dialog");
+		dialog.className = "ojpp-library";
+		const heading = document.createElement("h2");
+		heading.id = "ojpp-library-title";
+		heading.textContent = t$1(mode === "template" ? "editor.templates" : "editor.snippets");
+		dialog.setAttribute("aria-labelledby", heading.id);
+		const top = document.createElement("header");
+		top.append(heading);
+		button(t$1("editor.libraryClose"), () => dialog?.close(), top);
+		dialog.append(top);
+		const row = document.createElement("div");
+		row.className = "ojpp-library-fields";
+		dialog.append(row);
+		const field = (label, input) => {
+			const node = document.createElement("label");
+			const text = document.createElement("span");
+			text.textContent = label;
+			input.setAttribute("aria-label", label);
+			node.append(text, input);
+			row.append(node);
+			return input;
+		};
+		const language = field(t$1("editor.libraryLanguage"), document.createElement("select"));
+		if (mode === "snippets") language.add(new Option(t$1("editor.libraryAll"), "all"));
+		for (const key of CODE_LANGUAGES) language.add(new Option(key === "cpp" ? "C++" : key === "csharp" ? "C#" : key, key));
+		language.value = options.language();
+		const source = document.createElement("textarea");
+		source.className = "ojpp-library-code";
+		source.rows = 15;
+		source.spellcheck = false;
+		source.setAttribute("aria-label", t$1("editor.libraryCode"));
+		const hint = document.createElement("p");
+		hint.className = "ojpp-library-hint";
+		hint.textContent = t$1(mode === "template" ? "editor.templateHint" : "editor.snippetHint");
+		const status = document.createElement("p");
+		status.className = "ojpp-library-status";
+		status.setAttribute("role", "status");
+		const actions = document.createElement("footer");
+		const close = () => {
+			dialog?.close();
+			options.editor.view.focus();
+		};
+		if (mode === "template") {
+			const load = () => {
+				source.value = codeTemplate(options.getSettings().editorTemplates, language.value);
+				status.textContent = "";
+			};
+			language.onchange = load;
+			load();
+			button(t$1("editor.librarySave"), () => {
+				options.getSettings().editorTemplates[language.value] = source.value;
+				options.persist();
+				status.textContent = t$1("editor.librarySaved");
+			}, actions);
+			button(t$1("editor.templateReset"), () => {
+				delete options.getSettings().editorTemplates[language.value];
+				source.value = DEFAULT_TEMPLATES[language.value];
+				options.persist();
+				status.textContent = t$1("editor.librarySaved");
+			}, actions);
+			button(t$1("editor.templateUse"), () => {
+				options.useTemplate(source.value, language.value);
+				close();
+			}, actions);
+		} else {
+			const list = field(t$1("editor.snippetSelect"), document.createElement("select"));
+			const name = field(t$1("editor.snippetName"), document.createElement("input"));
+			const prefix = field(t$1("editor.snippetPrefix"), document.createElement("input"));
+			name.maxLength = 100;
+			prefix.maxLength = 50;
+			let currentId = "";
+			const refresh = (id = "") => {
+				list.replaceChildren(new Option(t$1("editor.snippetNew"), ""));
+				for (const item of options.getSettings().editorSnippets) list.add(new Option(`${item.name} · ${item.language}`, item.id));
+				list.value = id;
+			};
+			const load = () => {
+				currentId = list.value;
+				const item = options.getSettings().editorSnippets.find((s) => s.id === currentId);
+				name.value = item?.name ?? "";
+				prefix.value = item?.prefix ?? "";
+				source.value = item?.code ?? "";
+				language.value = item?.language ?? options.language();
+				status.textContent = "";
+			};
+			list.onchange = load;
+			refresh();
+			load();
+			button(t$1("editor.librarySave"), () => {
+				if (!name.value.trim() || !source.value.trim()) {
+					status.textContent = t$1("editor.snippetRequired");
+					return;
+				}
+				const items = options.getSettings().editorSnippets;
+				if (!currentId && items.length >= 100) {
+					status.textContent = t$1("editor.snippetLimit");
+					return;
+				}
+				const item = {
+					id: currentId || crypto.randomUUID(),
+					name: name.value.trim(),
+					prefix: prefix.value.trim(),
+					language: language.value,
+					code: source.value
+				};
+				const index = items.findIndex((s) => s.id === item.id);
+				if (index >= 0) items[index] = item;
+				else items.push(item);
+				currentId = item.id;
+				options.persist();
+				refresh(item.id);
+				status.textContent = t$1("editor.librarySaved");
+			}, actions);
+			button(t$1("editor.snippetDelete"), () => {
+				options.getSettings().editorSnippets = options.getSettings().editorSnippets.filter((s) => s.id !== currentId);
+				options.persist();
+				refresh();
+				load();
+			}, actions);
+			button(t$1("editor.snippetInsert"), () => {
+				options.editor.insertSnippet(source.value);
+				close();
+			}, actions);
+		}
+		dialog.append(hint, source, status, actions);
+		dialog.addEventListener("close", () => {
+			dialog?.remove();
+			dialog = void 0;
+		}, { once: true });
+		document.body.append(dialog);
+		dialog.showModal();
+	};
+	button(t$1("editor.templates"), () => open("template"), controls);
+	button(t$1("editor.snippets"), () => open("snippets"), controls);
+	return {
+		el: controls,
+		dispose() {
+			dialog?.remove();
+			dialog = void 0;
+			controls.remove();
+		}
+	};
+}
 function el$1(tag, className, text) {
 	const node = document.createElement(tag);
 	if (className) node.className = className;
@@ -25357,6 +25683,11 @@ function mountEditorPage(opts) {
 	opts.anchor.insertAdjacentElement(opts.position, host);
 	if (opts.hide) opts.hide.style.display = "none";
 	const settings = opts.getSettings();
+	const currentFamily = () => languageFamily({
+		id: opts.langSelect?.value ?? "",
+		name: opts.langSelect?.selectedOptions[0]?.textContent ?? "",
+		mode: opts.langMode(opts.langSelect?.value ?? "")
+	});
 	const editor = createEditor(host, {
 		doc: opts.textarea.value,
 		mode: opts.langMode(opts.langSelect?.value ?? ""),
@@ -25364,12 +25695,32 @@ function mountEditorPage(opts) {
 		fontSize: settings.editorFontSize,
 		tabSize: 4,
 		lspUrl: settings.editorLspUrl,
+		snippets: () => opts.getSettings().editorSnippets.filter((item) => item.language === "all" || item.language === currentFamily()),
 		onChange: (code) => {
 			opts.textarea.value = code;
 			opts.syncBack?.(code);
 		}
 	});
 	const stopDark = opts.onDarkChange((dark) => editor.setDark(dark));
+	const library = createCodeLibrary({
+		editor,
+		getSettings: opts.getSettings,
+		persist: opts.persist,
+		language: currentFamily,
+		useTemplate(code, family) {
+			const option = [...opts.langSelect?.options ?? []].find((item) => languageFamily({
+				id: item.value,
+				name: item.textContent ?? "",
+				mode: opts.langMode(item.value)
+			}) === family);
+			if (option && opts.langSelect) {
+				opts.langSelect.value = option.value;
+				opts.langSelect.dispatchEvent(new Event("change", { bubbles: true }));
+			}
+			editor.setCode(code);
+		}
+	});
+	host.prepend(library.el);
 	let lastLanguage = opts.langSelect?.value ?? "";
 	const onLang = () => {
 		const next = opts.langSelect?.value ?? "";
@@ -25390,6 +25741,7 @@ function mountEditorPage(opts) {
 		el: host,
 		refresh: onLang,
 		dispose() {
+			library.dispose();
 			stopDark();
 			opts.langSelect?.removeEventListener("change", onLang);
 			opts.offToggle?.removeEventListener("change", applyToggle);
@@ -25401,6 +25753,7 @@ function mountEditorPage(opts) {
 }
 function mountEditorPanel(options) {
 	const { platform, site, support, getSettings, persist, isDark, onDarkChange } = options;
+	const languages = support.languages;
 	const problemCode = support.problemCode(document);
 	const settings = getSettings();
 	const key = problemCode ? draftKey(site.id, problemCode) : null;
@@ -25411,13 +25764,13 @@ function mountEditorPanel(options) {
 	const AUTO_ID = "__auto__";
 	const autoOpt = new Option("auto", AUTO_ID);
 	langSel.add(autoOpt);
-	for (const lang of support.languages) {
+	for (const lang of languages) {
 		const opt = el$1("option", void 0, lang.name);
 		opt.value = lang.id;
 		langSel.append(opt);
 	}
-	const savedLang = settings.editorLanguage[site.id];
-	const defaultLang = support.languages.find((l) => l.id === savedLang) ?? support.languages[0];
+	const savedLang = settings.editorLanguage[site.id] ?? support.initialLanguage?.(document);
+	const defaultLang = languages.find((l) => l.id === savedLang) ?? languages[0];
 	langSel.value = savedLang === AUTO_ID ? AUTO_ID : defaultLang.id;
 	const spacer = el$1("span", "ojpp-editor-spacer");
 	const backend = el$1("select", "ojpp-editor-backend");
@@ -25471,18 +25824,38 @@ function mountEditorPanel(options) {
 	actionsBar.append(submitStatus, runAllBtn, addTestBtn);
 	if (support.submit) actionsBar.append(submitBtn);
 	const tests = el$1("div", "ojpp-editor-tests");
+	const canRun = !!support.runCustomTest || !!platform.localRunner;
+	runAllBtn.hidden = addTestBtn.hidden = tests.hidden = !canRun;
+	actionsBar.hidden = !canRun && !support.submit;
 	root.append(head, runtimeHint, cmHost, actionsBar, tests);
-	const initial = key ? settings.editorCode[key]?.code ?? "" : "";
+	const initial = key && settings.editorCode[key] !== void 0 ? settings.editorCode[key].code : support.initialCode?.(document) || codeTemplate(settings.editorTemplates, languageFamily(defaultLang));
+	let currentLang = defaultLang;
+	let disposed = false;
+	let syncQueued = false;
+	let latestCode = initial;
+	const highlightMode = (language) => {
+		const family = languageFamily(language);
+		return family === "java" || family === "python" ? family : family === "c" || family === "cpp" ? "cpp" : language.mode;
+	};
 	const editor = createEditor(cmHost, {
 		doc: initial,
-		mode: defaultLang.mode,
+		mode: highlightMode(defaultLang),
 		dark: isDark(),
 		fontSize: settings.editorFontSize,
 		tabSize: 4,
 		lspUrl: settings.editorLspUrl,
+		snippets: () => getSettings().editorSnippets.filter((s) => s.language === "all" || s.language === languageFamily(currentLang)),
 		onChange: (code) => {
-			const picked = resolveLang();
-			support.syncCode?.(code, picked.id);
+			latestCode = code;
+			if (!syncQueued) {
+				syncQueued = true;
+				queueMicrotask(() => {
+					syncQueued = false;
+					if (disposed) return;
+					const picked = resolveLang(latestCode);
+					support.syncCode?.(latestCode, picked.id);
+				});
+			}
 			if (!key) return;
 			getSettings().editorCode[key] = {
 				code,
@@ -25492,47 +25865,44 @@ function mountEditorPanel(options) {
 		}
 	});
 	const stopDark = onDarkChange((dark) => editor.setDark(dark));
-	const detectMode = (code) => {
-		if (/\bdef\s+\w+\s*\(|__main__|^\s*elif\b|print\s*\(|input\s*\(/m.test(code) && !/#\s*include|public\s+class|fn\s+main/.test(code)) return "python";
-		if (/public\s+(?:static\s+)?(?:final\s+)?class\b|System\.out\.|import\s+java\./m.test(code)) return "java";
-		if (/#\s*include|std::|using\s+namespace|cin\s*>>|cout\s*<<|\bint\s+main\s*\(|\bprintf\s*\(|\bscanf\s*\(/.test(code)) return "cpp";
-		return "text";
-	};
-	const pickForMode = (mode) => {
-		const saved = support.languages.find((l) => l.id === getSettings().editorLanguage[site.id]);
-		if (saved && saved.id !== AUTO_ID && saved.mode === mode) return saved;
-		return support.languages.find((l) => l.mode === mode) ?? support.languages.find((l) => l.mode === "cpp") ?? support.languages[0];
-	};
-	let lastPicked;
-	const resolveLang = () => {
-		if (langSel.value !== AUTO_ID) {
-			lastPicked = void 0;
-			return support.languages.find((l) => l.id === langSel.value) ?? defaultLang;
-		}
-		const mode = detectMode(editor.getCode());
-		const picked = mode === "text" ? pickForMode("cpp") : pickForMode(mode);
-		if (picked !== lastPicked) {
-			lastPicked = picked;
-			autoOpt.textContent = `auto(${picked.name})`;
-			editor.setMode(picked.mode);
-		}
-		return picked;
+	const resolveLang = (code = editor.getCode()) => {
+		currentLang = langSel.value === AUTO_ID ? resolveAutoLanguage(code, languages, currentLang) : languages.find((language) => language.id === langSel.value) ?? defaultLang;
+		autoOpt.textContent = `auto(${currentLang.name})`;
+		editor.setMode(highlightMode(currentLang));
+		return currentLang;
 	};
 	const resolvedLangId = () => resolveLang().id;
-	resolveLang();
-	support.syncCode?.(initial, resolvedLangId());
+	const initialLang = resolveLang(initial);
+	support.syncCode?.(initial, initialLang.id);
 	let persistTimer;
 	function persistDebounced() {
 		clearTimeout(persistTimer);
 		persistTimer = setTimeout(() => persist(), 600);
 	}
 	langSel.onchange = () => {
+		const oldCode = editor.getCode();
+		const wasStarter = !oldCode || oldCode === codeTemplate(getSettings().editorTemplates, languageFamily(currentLang));
 		const lang = resolveLang();
-		if (langSel.value !== AUTO_ID) editor.setMode(lang.mode);
+		if (wasStarter && langSel.value !== AUTO_ID) editor.setCode(codeTemplate(getSettings().editorTemplates, languageFamily(lang)));
 		support.syncCode?.(editor.getCode(), lang.id);
 		getSettings().editorLanguage[site.id] = langSel.value;
 		persist();
 	};
+	const library = createCodeLibrary({
+		editor,
+		getSettings,
+		persist,
+		language: () => languageFamily(currentLang),
+		useTemplate(code, family) {
+			const language = languages.find((item) => languageFamily(item) === family);
+			if (language) {
+				langSel.value = language.id;
+				langSel.dispatchEvent(new Event("change"));
+			}
+			editor.setCode(code);
+		}
+	});
+	head.insertBefore(library.el, spacer);
 	const rows = [];
 	const activeRuns = /* @__PURE__ */ new Map();
 	const runRow = async (row, snapshot) => {
@@ -25559,8 +25929,8 @@ function mountEditorPanel(options) {
 		}
 		try {
 			const code = snapshot?.code ?? editor.getCode();
-			const languageId = snapshot?.languageId ?? langSel.value;
-			const language = support.languages.find((item) => item.id === languageId);
+			const languageId = snapshot?.languageId ?? resolvedLangId();
+			const language = languages.find((item) => item.id === languageId);
 			const localLanguage = localLanguageFor(language);
 			if (local && !localLanguage) throw new Error(t$1("editor.localUnsupported"));
 			const res = local && platform.localRunner ? await platform.localRunner.run({
@@ -25812,8 +26182,13 @@ function mountEditorPanel(options) {
 			submitBtn.innerHTML = ICON_SEND;
 		}
 	};
+	let workspace;
 	return {
 		el: root,
+		refreshLayout() {
+			const statement = support.layoutStatement?.(document);
+			if (!workspace && statement && root.isConnected && !statement.contains(root)) workspace = mountWorkspace(root, statement, site, getSettings, persist, () => editor.view.requestMeasure());
+		},
 		editor,
 		/** 外部注入的样例（如 PDF 提取）——追加到样例行末尾。 */
 		addSamples(items) {
@@ -25822,6 +26197,9 @@ function mountEditorPanel(options) {
 			items.forEach((s, i) => addSampleRow(s, offset + i));
 		},
 		dispose() {
+			disposed = true;
+			workspace?.dispose();
+			library.dispose();
 			for (const run of activeRuns.values()) run.abort();
 			allCancelled = true;
 			clearTimeout(persistTimer);
@@ -69158,6 +69536,68 @@ html[data-ojpp-theme="dark"] .ojpp-result {
   font-size: 13px;
 }
 
+.ojpp-editor { box-sizing: border-box; }
+.ojpp-editor [hidden] { display: none !important; }
+.ojpp-library-controls { display: inline-flex; gap: 4px; }
+.ojpp-library-controls button, .ojpp-layout-toggle {
+  border: 1px solid var(--color-border); border-radius: 5px; padding: 4px 8px;
+  background: var(--color-bg-primary); color: var(--color-text-primary); font: inherit; cursor: pointer;
+}
+.ojpp-library-controls button:hover, .ojpp-layout-toggle:hover { border-color: var(--color-accent); }
+.ojpp-library {
+  width: min(760px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow: auto;
+  padding: 20px; border: 1px solid var(--color-border); border-radius: 12px;
+  background: var(--color-bg-primary); color: var(--color-text-primary);
+  box-shadow: 0 18px 60px #0005; font: 14px/1.5 system-ui, sans-serif;
+}
+.ojpp-library::backdrop { background: #0008; }
+.ojpp-library header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.ojpp-library h2 { margin: 0; font-size: 18px; color: inherit; }
+.ojpp-library-fields { display: flex; flex-wrap: wrap; gap: 10px; }
+.ojpp-library label { display: flex; flex: 1 1 140px; flex-direction: column; gap: 4px; }
+.ojpp-library input, .ojpp-library select, .ojpp-library textarea {
+  box-sizing: border-box; border: 1px solid var(--color-border); border-radius: 6px;
+  background: var(--color-bg-secondary); color: var(--color-text-primary); padding: 7px 9px; font: inherit;
+}
+.ojpp-library textarea { width: 100%; resize: vertical; font: 13px/1.55 ui-monospace, monospace; tab-size: 4; }
+.ojpp-library-hint, .ojpp-library-status { color: var(--color-text-secondary); margin: 10px 0; }
+.ojpp-library footer { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.ojpp-library button { border: 1px solid var(--color-border); border-radius: 6px; padding: 6px 10px; background: var(--color-bg-secondary); color: var(--color-text-primary); cursor: pointer; }
+.ojpp-library button:hover { border-color: var(--color-accent); }
+.ojpp-library :focus-visible, .ojpp-layout-toggle:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.ojpp-workspace { min-width: 0; }
+.ojpp-workspace-statement { min-width: 0; }
+@media (min-width: 1100px) {
+  .ojpp-workspace[data-layout="split"] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr); gap: 20px; align-items: start; }
+  .ojpp-workspace[data-layout="split"] > .ojpp-editor { position: sticky; top: 16px; margin: 0; min-width: 0; max-height: calc(100dvh - 32px); overflow: auto; }
+  .ojpp-workspace[data-layout="split"] .ojpp-editor-cm .cm-editor,
+  .ojpp-workspace[data-layout="split"] .ojpp-editor-cm .cm-scroller { max-height: 58dvh; }
+  body:has(.ojpp-workspace[data-site="codeforces"][data-layout="split"]) #sidebar { display: none; }
+  body:has(.ojpp-workspace[data-site="codeforces"][data-layout="split"]) #pageContent.content-with-sidebar { width: auto !important; margin-right: 0 !important; }
+  body:has(.ojpp-workspace[data-site="codeforces"][data-layout="split"]) #body { width: calc(100% - 32px); max-width: 1800px; min-width: 0; }
+  body:has(.ojpp-workspace[data-site="atcoder"][data-layout="split"]) #main-container { width: auto; max-width: 1800px; }
+  .container:has(.ojpp-workspace[data-site="qoj"][data-layout="split"]) { width: calc(100% - 32px); max-width: 1800px; }
+}
+@media (max-width: 1099px) {
+  .ojpp-layout-toggle { display: none; }
+  body:has(.ojpp-workspace[data-site="codeforces"]) #sidebar { display: none; }
+  body:has(.ojpp-workspace[data-site="codeforces"]) #pageContent.content-with-sidebar { width: auto !important; margin-right: 0 !important; }
+  body:has(.ojpp-workspace[data-site="codeforces"]) #body { min-width: 0; width: auto; margin: 0 8px; }
+  body:has(.ojpp-workspace[data-site="codeforces"]) .menu-box { max-width: 100%; overflow-x: auto; }
+}
+.ide-container > .panel-b > .ojpp-editor { display: flex; flex-direction: column; height: 100%; margin: 0; border-radius: 0; min-height: 0; }
+.ide-container > .panel-b > .ojpp-editor > .ojpp-editor-cm { flex: 1; min-height: 160px; overflow: hidden; }
+.ide-container > .panel-b > .ojpp-editor .cm-editor { height: 100%; max-height: none; }
+.ide-container > .panel-b > .ojpp-editor .cm-scroller { max-height: none; }
+.ide-container > .panel-b > .ojpp-editor .ojpp-editor-tests { max-height: 35dvh; overflow: auto; }
+@media (max-width: 1099px) {
+  .ide-container:has(.ojpp-editor) { display: block; height: auto !important; }
+  .ide-container:has(.ojpp-editor) > .panel { width: 100% !important; flex: none !important; }
+  .ide-container:has(.ojpp-editor) > .panel-a { height: 60dvh !important; overflow: auto; }
+  .ide-container:has(.ojpp-editor) > .panel-b { height: 70dvh !important; }
+  .ide-container:has(.ojpp-editor) > .panel-divider { display: none; }
+}
+
 .ojpp-editor-head {
   display: flex;
   align-items: center;
@@ -69603,6 +70043,8 @@ async function startApp(platform, site) {
 	const mounted = /* @__PURE__ */ new Map();
 	const identities = /* @__PURE__ */ new WeakMap();
 	let editorPanel;
+	let editorAnchor;
+	let editorProblem;
 	const persist = () => void saveSettings(platform.storage, settings);
 	const isDarkNow = () => document.documentElement.getAttribute(THEME_ATTR) === "dark";
 	const darkWatchers = /* @__PURE__ */ new Set();
@@ -69625,8 +70067,14 @@ async function startApp(platform, site) {
 			editorPanel = void 0;
 			return;
 		}
-		if (editorPanel?.el.isConnected) return;
+		const problem = site.editor.problemCode(document);
+		if (editorPanel?.el.isConnected && editorAnchor === mount.anchor && editorProblem === problem) {
+			editorPanel.refreshLayout();
+			return;
+		}
 		editorPanel?.dispose();
+		editorAnchor = mount.anchor;
+		editorProblem = problem;
 		editorPanel = mountEditorPanel({
 			platform,
 			site,
@@ -69637,6 +70085,7 @@ async function startApp(platform, site) {
 			onDarkChange
 		});
 		mount.anchor.insertAdjacentElement(mount.position, editorPanel.el);
+		editorPanel.refreshLayout();
 	};
 	let editorPageMount;
 	const reconcileEditorPage = () => {
@@ -69661,6 +70110,7 @@ async function startApp(platform, site) {
 			offToggle: ep.offToggle,
 			syncBack: ep.syncBack,
 			getSettings: () => settings,
+			persist,
 			isDark: isDarkNow,
 			onDarkChange
 		});
@@ -69722,7 +70172,7 @@ async function startApp(platform, site) {
 	const extractPdfSamples = async (section) => {
 		if (!section.pdfSamples) return;
 		try {
-			const { extractSamples } = await module.import('./samples-Dcbmw-u9-BPAZcNRQ.js');
+			const { extractSamples } = await module.import('./samples-BUqsWGlw-BBLmJB8I.js');
 			const images = settings.pdfAsImages && section.images ? await section.images() : void 0;
 			const samples = await extractSamples(platform.request, settings, section.pdfSamples, { images });
 			if (!samples.length) {
@@ -69764,10 +70214,11 @@ async function startApp(platform, site) {
 		siteDarkStyle.remove();
 	};
 }})}}));
-System.register("./userscript-Nyzl0XHx-pRFNYaLy.js", ['./i18n-D1L63o1m-DRxdwpYd.js'],(function(exports){'use strict';var t;return{setters:[function(module){t=module.t;}],execute:(function(){exports("createUserscriptPlatform",createUserscriptPlatform);var _GM_getValue = /* @__PURE__ */ (() => typeof GM_getValue != "undefined" ? GM_getValue : void 0)();
+System.register("./userscript-BzAWPPnT-DdZdHJ1b.js", ['./native-editor-bridge-DOpF4wmy-B4AddMQx.js'],(function(exports){'use strict';var installNativeEditorBridge,t;return{setters:[function(module){installNativeEditorBridge=module.i;t=module.t;}],execute:(function(){exports("createUserscriptPlatform",createUserscriptPlatform);var _GM_getValue = /* @__PURE__ */ (() => typeof GM_getValue != "undefined" ? GM_getValue : void 0)();
 var _GM_setClipboard = /* @__PURE__ */ (() => typeof GM_setClipboard != "undefined" ? GM_setClipboard : void 0)();
 var _GM_setValue = /* @__PURE__ */ (() => typeof GM_setValue != "undefined" ? GM_setValue : void 0)();
 var _GM_xmlhttpRequest = /* @__PURE__ */ (() => typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : void 0)();
+var _unsafeWindow = /* @__PURE__ */ (() => typeof unsafeWindow != "undefined" ? unsafeWindow : void 0)();
 var request = (req) => new Promise((resolve, reject) => {
 	if (req.signal?.aborted) {
 		reject(new DOMException("Aborted", "AbortError"));
@@ -69908,6 +70359,7 @@ var stream = (req) => new Promise((resolve, reject) => {
 	req.signal?.addEventListener("abort", onAbort, { once: true });
 });
 function createUserscriptPlatform() {
+	installNativeEditorBridge(_unsafeWindow ?? window);
 	if ([
 		_GM_getValue,
 		_GM_setValue,
@@ -69931,7 +70383,7 @@ function createUserscriptPlatform() {
 		}
 	};
 }})}}));
-System.register("./sites-CY7Yd7fg-cuM8H27q.js", ['./i18n-D1L63o1m-DRxdwpYd.js'],(function(exports,module){'use strict';var t;return{setters:[function(module){t=module.t;}],execute:(function(){exports({i:restorePageI18n,r:localLanguageFor});var __create = Object.create;
+System.register("./sites-DXiGmQvl-DoCkQRu2.js", ['./native-editor-bridge-DOpF4wmy-B4AddMQx.js'],(function(exports,module){'use strict';var t,requestNativeEditor;return{setters:[function(module){t=module.t;requestNativeEditor=module.a;}],execute:(function(){exports({i:restorePageI18n,r:localLanguageFor});var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
@@ -69962,7 +70414,7 @@ var __toESM = exports("s",(mod, isNodeMode, target) => (target = mod != null ? _
 	enumerable: true
 }) : target, mod)));
 /** 默认不翻译的祖先选择器：代码块、编辑器、我们脚本注入的 UI */
-var DEFAULT_EXCLUDE = "pre, code, textarea, script, style, noscript, option, .cm-editor, .ace_editor, .MathJax, .tex-span, [class*=\"ojpp-\"]";
+var DEFAULT_EXCLUDE = "pre, code, textarea, script, style, noscript, option, .cm-editor, .ace_editor, .MathJax, .tex-span, [class*=\"ojpp-\"]:not([data-ojpp-site-content])";
 var originals = /* @__PURE__ */ new WeakMap();
 function translated(node, next, value = false) {
 	const doc = node.ownerDocument;
@@ -70114,7 +70566,7 @@ var LOCAL_LANGUAGES = [
 	}
 ];
 function prepareMathContent(root) {
-	root.querySelectorAll("[class*=\"ojpp-\"], .btn-copy, .copy-btn").forEach((e) => e.remove());
+	root.querySelectorAll("[class*=\"ojpp-\"]:not([data-ojpp-site-content]), .btn-copy, .copy-btn").forEach((e) => e.remove());
 	const math = (tex, display) => {
 		const span = root.ownerDocument.createElement("span");
 		span.dataset.ojppMath = display ? "display" : "inline";
@@ -70156,7 +70608,7 @@ function observeSite(doc, onChange) {
 	};
 	const observer = new MutationObserver((records) => {
 		if (records.some((r) => {
-			return !(r.target instanceof Element ? r.target : r.target.parentElement)?.closest("[class*=\"ojpp-\"], .CodeMirror, .cm-editor, .ace_editor, .monaco-editor, .katex, .MathJax, .MathJax_SVG");
+			return !(r.target instanceof Element ? r.target : r.target.parentElement)?.closest("[class*=\"ojpp-\"]:not([data-ojpp-site-content]), .CodeMirror, .cm-editor, .ace_editor, .monaco-editor, .katex, .MathJax, .MathJax_SVG");
 		})) schedule();
 	});
 	observer.observe(doc.body, {
@@ -70222,6 +70674,28 @@ ${d$2} .uoj-username-red { color: #f85149; }
 ${d$2} .uoj-username-purple { color: #b392f0; }
 ${d$2} .unrated, ${d$2} .uoj-username-grey { color: #cdd9e5; }
 ${d$2} .alert-success { background: #1e2f24; color: #a5d6a7; border-color: #2d4a33; }
+${d$2} .alert-primary, ${d$2} .list-group-item-primary { background: #203247; color: #b6d5f5; border-color: #354c66; }
+${d$2} .alert-secondary, ${d$2} .well { background: #2d333b; color: #cdd9e5; border-color: #373e47; }
+${d$2} .page-header, ${d$2} .modal-header, ${d$2} .modal-footer,
+${d$2} .dropdown-divider, ${d$2} .dropdown-menu .divider { border-color: #373e47; }
+${d$2} .nav-tabs > li > a, ${d$2} .nav-tabs .nav-link { border-color: transparent; }
+${d$2} .nav-tabs > li.active > a, ${d$2} .nav-tabs > li.active > a:hover,
+${d$2} .nav-tabs .nav-link.active { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${d$2} .pagination > li > a, ${d$2} .pagination > li > span { background: #22272e; color: #79b8ff; border-color: #373e47; }
+${d$2} .pagination > .active > a, ${d$2} .page-item.active .page-link { background: #245f99; color: #fff; border-color: #539bf5; }
+${d$2} .dropdown-item.active, ${d$2} .dropdown-item:active { background: #245f99; color: #fff; }
+${d$2} .dropdown-item.disabled { color: #768390; }
+${d$2} .dropdown-menu > li > a { color: #cdd9e5; }
+${d$2} .dropdown-menu > li > a:hover, ${d$2} .dropdown-menu > li > a:focus { background: #30363d; color: #79b8ff; }
+${d$2} .btn-default, ${d$2} .btn-light { background-image: none; box-shadow: none; text-shadow: none; }
+${d$2} .btn-default:hover, ${d$2} .btn-light:hover { background: #30363d; color: #cdd9e5; }
+${d$2} .tooltip-inner, ${d$2} .popover, ${d$2} .popover-content,
+${d$2} .popover-body, ${d$2} .popover-header { background: #2d333b; color: #cdd9e5; border-color: #373e47; }
+${d$2} .progress, ${d$2} .input-group-text, ${d$2} .input-group-addon { background: #2d333b; color: #cdd9e5; border-color: #373e47; }
+${d$2} .table-bordered, ${d$2} .table-bordered td, ${d$2} .table-bordered th { border-color: #373e47; }
+${d$2} #statements-pdf { border-color: #373e47; }
+${d$2} .nav-tabs, ${d$2} .uoj-article, ${d$2} footer { color: #cdd9e5; }
+${d$2} .badge-light { background: #373e47; color: #cdd9e5; }
 
 /* shjs 语法高亮（提交代码视图）：亮色系配色换深色 */
 ${d$2} .sh_keyword, ${d$2} .sh_type, ${d$2} .sh_preproc, ${d$2} .sh_tag, ${d$2} .sh_link,
@@ -70388,6 +70862,17 @@ var qoj = {
 				anchor,
 				position: "beforeend"
 			} : null;
+		},
+		layoutStatement(doc) {
+			const tab = doc.querySelector("#tab-statement");
+			if (!tab) return null;
+			const existing = tab.querySelector("[data-ojpp-layout-group]");
+			if (existing) return existing;
+			const reader = doc.createElement("div");
+			reader.dataset.ojppLayoutGroup = "1";
+			reader.append(...[...tab.childNodes].filter((node) => !(node instanceof HTMLElement && node.classList.contains("ojpp-editor"))));
+			tab.prepend(reader);
+			return reader;
 		},
 		problemCode(doc) {
 			return /\/problem\/(\d+)/.exec(new URL(doc.URL).pathname)?.[1] ?? null;
@@ -70666,7 +71151,7 @@ ${d$1} .cm-cursor { border-color: #cdd9e5; }
 /* 原生光标是 border 绘制的，避免被通用深灰边框规则覆盖。 */
 ${d$1} .v-codemirror .cm-cursor,
 ${d$1} .CodeMirror .CodeMirror-cursor { border-left-color: #cdd9e5 !important; }
-${d$1} .cm-line, ${d$1} .cm-line * { color: #cdd9e5; }
+${d$1} .cm-line { color: #cdd9e5; }
 ${d$1} .cm-selected, ${d$1} .CodeMirror-focused .cm-selected { background: rgba(83,155,245,.25); }
 ${d$1} .cm-m-luogu .cm-comment, ${d$1} .cm-comment { color: #8b949e; }
 ${d$1} .cm-keyword, ${d$1} .cm-tag, ${d$1} .cm-property { color: #ff7b72; }
@@ -70685,8 +71170,21 @@ ${d$1} .main *, ${d$1} .l-card * { border-color: #373e47; }
 /* 提交卡/常用浅黑字 */
 ${d$1} .light-black, ${d$1} .l-card .header, ${d$1} .combo-wrapper .text,
 ${d$1} .l-radio, ${d$1} .l-check, ${d$1} .lfe-radio, ${d$1} .l-checkbox,
-${d$1} [id^="LRadio"], ${d$1} [id^="LCheck"], ${d$1} .l-card.burger *,
+${d$1} [id^="LRadio"], ${d$1} [id^="LCheck"], ${d$1} .l-card.burger :not(.ojpp-editor, .ojpp-editor *, .cm-editor, .cm-editor *),
 ${d$1} .combo-wrapper .arrow, ${d$1} .combo-wrapper svg, ${d$1} .combo-wrapper path { color: #cdd9e5 !important; }
+
+/* IDE uses its own panel layout instead of l-card. */
+${d$1} .ide-container, ${d$1} .ide-container .panel-layout,
+${d$1} .ide-container .panel, ${d$1} .ide-container .problem { background: #1c2128; color: #cdd9e5; }
+${d$1} .ide-container .ide-toolbar { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${d$1} .ide-container .ide-toolbar .title,
+${d$1} .ide-container .ide-toolbar .text { color: #cdd9e5; }
+${d$1} .ide-container .panel-divider { background: #373e47 !important; color: #909dab; }
+${d$1} .ide-container .panel-divider:hover { background: #539bf5 !important; }
+${d$1} .ide-container .divider, ${d$1} .ide-container .splitter,
+${d$1} .ide-container .resize-bar { background: #373e47; }
+${d$1} .ide-container .lfe-h1, ${d$1} .ide-container .lfe-h2 { color: #cdd9e5; }
+${d$1} .ide-container .lfe-marked-wrap, ${d$1} .ide-container .io-sample { clear: both; }
 
 /* ---------- 题库 tab 条（洛谷/主题库/…） ---------- */
 ${d$1} ul.luogu.luogu { background: #22272e !important; }
@@ -70914,12 +71412,12 @@ var LUOGU_LANGUAGES = [
 	{
 		id: "8",
 		name: "Java 8",
-		mode: "text"
+		mode: "java"
 	},
 	{
 		id: "33",
 		name: "Java 21",
-		mode: "text"
+		mode: "java"
 	},
 	{
 		id: "15",
@@ -71129,8 +71627,19 @@ var luogu = {
 	preserveInlineColors: true,
 	editor: {
 		languages: LUOGU_LANGUAGES,
+		initialCode(doc) {
+			return requestNativeEditor(doc, { type: "read" })?.code;
+		},
+		initialLanguage(doc) {
+			return requestNativeEditor(doc, { type: "read" })?.language;
+		},
 		editorMountPoint(doc) {
 			if (!/^\/problem\/(?!new(?:\/|$))[^/]+\/?$/.test(new URL(doc.URL).pathname)) return null;
+			const ide = doc.querySelector(".ide-container > .panel-b");
+			if (ide) return ide.querySelector(".v-codemirror .cm-content") ? {
+				anchor: ide,
+				position: "beforeend"
+			} : null;
 			const submitBody = doc.querySelector(".l-card.burger .body");
 			if (submitBody?.querySelector(".v-codemirror")) return {
 				anchor: submitBody,
@@ -71207,10 +71716,10 @@ var luogu = {
 			};
 		}
 	},
-	styles: ".user-nav > .ojpp-settings-btn { margin: 0 8px; } .ojpp-settings-floating { position: fixed; right: 18px; bottom: 18px; z-index: 1000; } .l-card.problem .lfe-marked-wrap, .l-card.problem .io-sample { clear: both; } .l-card.burger .body:has(> .ojpp-editor):has(.v-codemirror) > *:not(.ojpp-editor) { display: none !important; } .l-card.burger .body:has(.v-codemirror) { padding-bottom: .3em; }",
+	styles: ".user-nav > .ojpp-settings-btn { margin: 0 8px; } .ojpp-settings-floating { position: fixed; right: 18px; bottom: 18px; z-index: 1000; } .l-card.problem .lfe-marked-wrap, .l-card.problem .io-sample { clear: both; } .l-card.burger .body:has(> .ojpp-editor):has(.v-codemirror) > *:not(.ojpp-editor) { display: none !important; } .ide-container > .panel-b:has(> .ojpp-editor) > *:not(.ojpp-editor) { display: none !important; } .l-card.burger .body:has(.v-codemirror) { padding-bottom: .3em; }",
 	collectSections(doc) {
 		const sections = [];
-		for (const heading of doc.querySelectorAll(".l-card.problem > h2, .problem-content > h2")) {
+		for (const heading of doc.querySelectorAll(".l-card.problem > h2, .problem-content > h2, .ide-container .problem > h2")) {
 			const label = [...heading.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim();
 			const key = fields[label];
 			if (!key) continue;
@@ -71355,6 +71864,9 @@ async function runTest(code, languageId, input) {
 }
 var testQueue = Promise.resolve();
 var atcoderEditor = {
+	layoutStatement(doc) {
+		return doc.querySelector("#task-statement");
+	},
 	editorMountPoint(doc) {
 		const root = doc.querySelector("#task-statement");
 		return root && languages(doc).length ? {
@@ -71369,6 +71881,12 @@ var atcoderEditor = {
 		return languages(document);
 	},
 	getSamples: atcoderSamples,
+	initialCode(doc) {
+		return doc.querySelector("#plain-textarea")?.value;
+	},
+	initialLanguage(doc) {
+		return doc.querySelector("select[name=\"data.LanguageId\"]")?.value;
+	},
 	syncCode(code, languageId) {
 		const source = document.querySelector("#plain-textarea");
 		const language = document.querySelector("select[name=\"data.LanguageId\"]");
@@ -71931,7 +72449,7 @@ ${scope} .user-red { color: #f85149 !important; }
 		let timer;
 		const observer = new MutationObserver((records) => {
 			if (!records.some((record) => {
-				return !(record.target instanceof Element ? record.target : record.target.parentElement)?.closest("[class*=\"ojpp-\"], .ace_editor, .katex, .MathJax");
+				return !(record.target instanceof Element ? record.target : record.target.parentElement)?.closest("[class*=\"ojpp-\"]:not([data-ojpp-site-content]), .ace_editor, .katex, .MathJax");
 			})) return;
 			clearTimeout(timer);
 			timer = setTimeout(onChange, 120);
@@ -74415,6 +74933,9 @@ var codeforces = {
 	},
 	editor: {
 		languages: CF_LANGUAGES,
+		layoutStatement(doc) {
+			return doc.querySelector(".problem-statement");
+		},
 		editorMountPoint(doc) {
 			const statement = doc.querySelector(".problem-statement");
 			if (!statement) return null;
@@ -74943,7 +75464,100 @@ ${d} .el-popper[x-placement^=bottom] .popper__arrow::after { border-bottom-color
 ${d} .el-popper[x-placement^=top] .popper__arrow::after { border-top-color: #22272e; }
 ${d} .gray, ${d} .color-gray, ${d} .text-muted, ${d} .subject-limit { color: #909dab; }
 ${d} .katex { color: inherit; }
+/* ACM 页面中的文本 span、自测按钮和分隔栏。 */
+${d} .subject-question .md-plain, ${d} .subject-describe > h2,
+${d} .mode-tips-container .title { color: #cdd9e5 !important; }
+${d} .btn-mode-tips.theme-default { background: #2d333b; color: #adbac7 !important; }
+${d} .separator { background: #373e47; border-color: #373e47; }
+${d} .separator .btn-toggle { background: #2d333b; color: #cdd9e5; border-color: #373e47; }
+${d} .btn-test { background: #203a33 !important; color: #7ed9b7 !important; border-color: #3d866f !important; }
+${d} .code-editor-header { border-bottom-color: #373e47; }
+${d} .code-editor-header a.ncicon, ${d} .panel-header .ncicon,
+${d} .header-bar .ncicon, ${d} .separator .ncicon { color: #adbac7 !important; }
+${d} .code-editor-header a.ncicon:hover, ${d} .header-bar .ncicon:hover { color: #79b8ff !important; }
+${d} .ncicon > svg { fill: currentColor; vertical-align: -.15em; }
+${d} .el-tooltip__popper.is-light, ${d} .el-tooltip__popper.is-dark { background: #2d333b; color: #cdd9e5; border-color: #373e47; }
 `;
+function mode(name) {
+	if (/python|pypy/i.test(name)) return "python";
+	if (/java(?!script)/i.test(name)) return "java";
+	if (/c\+\+|^c(?:\(|$)/i.test(name)) return "cpp";
+	return "text";
+}
+var fallback = [
+	{
+		id: "2",
+		name: "C++（clang++18）",
+		mode: "cpp"
+	},
+	{
+		id: "38",
+		name: "C++(g++ 13)",
+		mode: "cpp"
+	},
+	{
+		id: "39",
+		name: "C(gcc 10)",
+		mode: "cpp"
+	},
+	{
+		id: "11",
+		name: "Python3",
+		mode: "python"
+	},
+	{
+		id: "25",
+		name: "pypy3",
+		mode: "python"
+	},
+	{
+		id: "4",
+		name: "Java",
+		mode: "java"
+	}
+];
+var nowcoderEditor = {
+	get languages() {
+		return requestNativeEditor(document, { type: "read" })?.languages.map((language) => ({
+			...language,
+			mode: mode(language.name)
+		})) ?? fallback;
+	},
+	editorMountPoint(doc) {
+		if (!/^\/acm\/(?:problem\/\d+|contest\/\d+\/[^/]+)\/?$/.test(new URL(doc.URL).pathname)) return null;
+		const anchor = doc.querySelector(".code-editor-box .code-font");
+		return anchor && requestNativeEditor(doc, { type: "read" }) ? {
+			anchor,
+			position: "beforeend"
+		} : null;
+	},
+	problemCode(doc) {
+		const path = new URL(doc.URL).pathname;
+		return /\/acm\/problem\/(\d+)/.exec(path)?.[1] ?? /\/acm\/contest\/(\d+\/[^/]+)/.exec(path)?.[1] ?? null;
+	},
+	initialCode(doc) {
+		return requestNativeEditor(doc, { type: "read" })?.code;
+	},
+	initialLanguage(doc) {
+		return requestNativeEditor(doc, { type: "read" })?.language;
+	},
+	syncCode(code, language) {
+		requestNativeEditor(document, {
+			type: "sync",
+			code,
+			language
+		});
+	},
+	getSamples(doc) {
+		const values = [...doc.querySelectorAll(".question-oi-mod textarea")].map((node) => node.value);
+		const samples = [];
+		for (let i = 0; i + 1 < values.length; i += 2) samples.push({
+			input: values[i],
+			output: values[i + 1]
+		});
+		return samples;
+	}
+};
 function equationFromImg(img) {
 	const src = img.getAttribute("src") ?? "";
 	const alt = img.getAttribute("alt")?.trim();
@@ -74974,8 +75588,26 @@ var nowcoder = {
 	},
 	hosts: ["ac.nowcoder.com", "www.nowcoder.com"],
 	darkStyles: NOWCODER_DARK,
+	editor: nowcoderEditor,
 	preserveInlineColors: true,
 	styles: `
+    .code-editor-box .code-font:has(> .ojpp-editor) { height: 100%; }
+    .code-editor-box .code-font:has(> .ojpp-editor) > .CodeMirror { display: none !important; }
+    body:has(.code-editor-box .ojpp-editor) .el-popover:has(.mode-tips-container) { display: none !important; }
+    .code-editor-box:has(.ojpp-editor) > .code-editor-header { display: none !important; }
+    .code-editor-box .code-font > .ojpp-editor { height: 100%; margin: 0; display: flex; flex-direction: column; border-radius: 0; }
+    .code-editor-box .code-font > .ojpp-editor .ojpp-editor-cm { flex: 1; min-height: 180px; overflow: hidden; }
+    .code-editor-box .code-font > .ojpp-editor .cm-editor { height: 100%; max-height: none; }
+    .code-editor-box .code-font > .ojpp-editor .cm-scroller { max-height: none; }
+    .code-editor-box .code-font > .ojpp-editor .ojpp-editor-tests { max-height: 32vh; overflow: auto; }
+    @media (max-width: 1099px) {
+      .content-board:has(.ojpp-editor) { display: block; height: auto !important; width: 100% !important; }
+      .content-board:has(.ojpp-editor) > .question-module { width: 100% !important; height: 60dvh; overflow: auto; }
+      .content-board:has(.ojpp-editor) > .answer-module { width: 100% !important; height: 70dvh; }
+      .content-board:has(.ojpp-editor) > .separator.vertical { display: none; }
+      .answer-module:has(.ojpp-editor) .editor-box { min-height: 0; }
+      .code-editor-box:has(.ojpp-editor) { width: 100% !important; height: 100% !important; }
+    }
     .ojpp-nowcoder-settings {
       display: inline-flex; align-items: center; margin-left: 8px;
     }
@@ -75243,7 +75875,7 @@ function resolveSite(url) {
 	if (url.protocol !== "https:") return void 0;
 	return sites.find((site) => site.hosts.includes(url.hostname));
 }})}}));
-System.register("./i18n-D1L63o1m-DRxdwpYd.js", [],(function(exports){'use strict';return{execute:(function(){exports({g:getLocale,r:resolveLocale,s:setLocale,t:t});/**
+System.register("./native-editor-bridge-DOpF4wmy-B4AddMQx.js", [],(function(exports){'use strict';return{execute:(function(){exports({a:requestNativeEditor,g:getLocale,i:installNativeEditorBridge,r:resolveLocale,s:setLocale,t:t});/**
 * 英文文案。由 AI 生成初稿后人工校对，键与 zh.ts 一一对应。
 *
 * 键集合必须与 zh.ts 完全一致：缺键会在界面漏出中文，
@@ -75425,6 +76057,28 @@ var en = {
 	"section.talk": "Message",
 	"preset.customOpenAI": "Custom (OpenAI Chat compatible)",
 	"editor.title": "Code",
+	"editor.templates": "Templates",
+	"editor.snippets": "Snippets",
+	"editor.libraryClose": "Close",
+	"editor.libraryLanguage": "Language",
+	"editor.libraryAll": "All languages",
+	"editor.libraryCode": "Code",
+	"editor.librarySave": "Save",
+	"editor.librarySaved": "Saved for all sites.",
+	"editor.templateHint": "New problems and untouched starter code use the language template. Existing drafts are preserved.",
+	"editor.templateReset": "Restore default template",
+	"editor.templateUse": "Replace current code with this template",
+	"editor.snippetHint": "Insert at the cursor, or type the prefix and select a completion. Use ${1:name} placeholders and Tab to move between them.",
+	"editor.snippetSelect": "Select snippet",
+	"editor.snippetNew": "New snippet",
+	"editor.snippetName": "Name",
+	"editor.snippetPrefix": "Completion prefix",
+	"editor.snippetRequired": "Enter a name and code.",
+	"editor.snippetLimit": "You can save up to 100 snippets.",
+	"editor.snippetDelete": "Delete snippet",
+	"editor.snippetInsert": "Insert at cursor",
+	"editor.layoutSplit": "Two columns",
+	"editor.layoutStacked": "Single column",
 	"editor.run": "Test samples",
 	"editor.custom": "Custom test",
 	"editor.customPlaceholder": "Input data (stdin)",
@@ -75646,6 +76300,28 @@ var zh = {
 	"section.talk": "私信",
 	"preset.customOpenAI": "自定义（兼容 OpenAI Chat）",
 	"editor.title": "代码",
+	"editor.templates": "模板",
+	"editor.snippets": "代码片段",
+	"editor.libraryClose": "关闭",
+	"editor.libraryLanguage": "语言",
+	"editor.libraryAll": "所有语言",
+	"editor.libraryCode": "代码内容",
+	"editor.librarySave": "保存",
+	"editor.librarySaved": "已保存，所有站点共用。",
+	"editor.templateHint": "新题或未修改的默认代码会使用对应语言模板；已有草稿不会被覆盖。",
+	"editor.templateReset": "恢复默认模板",
+	"editor.templateUse": "用此模板替换当前代码",
+	"editor.snippetHint": "在光标处插入，或输入前缀后从补全列表选择。支持 ${1:name} 占位符，按 Tab 跳到下一处。",
+	"editor.snippetSelect": "选择片段",
+	"editor.snippetNew": "新建片段",
+	"editor.snippetName": "名称",
+	"editor.snippetPrefix": "补全前缀",
+	"editor.snippetRequired": "请填写名称和代码内容。",
+	"editor.snippetLimit": "最多保存 100 个片段。",
+	"editor.snippetDelete": "删除片段",
+	"editor.snippetInsert": "插入到光标处",
+	"editor.layoutSplit": "双列布局",
+	"editor.layoutStacked": "单列布局",
 	"editor.run": "测试样例",
 	"editor.custom": "自定义测试",
 	"editor.customPlaceholder": "输入数据（stdin）",
@@ -75718,6 +76394,77 @@ function t(key, params) {
 	const template = CATALOGS[current][key] ?? zh[key] ?? key;
 	if (!params) return template;
 	return template.replace(/\{(\w+)\}/g, (match, name) => name in params ? String(params[name]) : match);
+}
+function requestNativeEditor(doc, request) {
+	if (!doc.body) return void 0;
+	let field = doc.querySelector("#ojpp-native-bridge");
+	if (!field) {
+		field = doc.createElement("textarea");
+		field.id = "ojpp-native-bridge";
+		field.className = "ojpp-native-bridge";
+		field.hidden = true;
+		doc.body.append(field);
+	}
+	field.value = JSON.stringify(request);
+	try {
+		field.dispatchEvent(new CustomEvent("ojpp-native-editor", { bubbles: true }));
+		const result = JSON.parse(field.value);
+		return Array.isArray(result.languages) ? result : void 0;
+	} catch {
+		return;
+	} finally {
+		field.value = "";
+	}
+}
+/** Page-world bridge restricted to reading/synchronizing native editor state. */
+function installNativeEditorBridge(win) {
+	const mark = "__ojppNativeEditorBridge";
+	const state = win;
+	if (state[mark]) return;
+	state[mark] = true;
+	const revisions = /* @__PURE__ */ new WeakMap();
+	win.addEventListener("ojpp-native-editor", (event) => {
+		const field = event.target;
+		if (field?.tagName !== "TEXTAREA" || field.className !== "ojpp-native-bridge") return;
+		try {
+			const request = JSON.parse(field.value);
+			if (request.type === "read" && /(^|\.)luogu\.com(?:\.cn)?$/.test(win.location.hostname)) {
+				const content = win.document.querySelector(".ide-container .v-codemirror .cm-content, .l-card.burger .v-codemirror .cm-content");
+				const view = content?.cmTile?.view ?? content?.cmView?.view;
+				if (view?.state?.doc) field.value = JSON.stringify({
+					code: view.state.doc.toString(),
+					language: win.localStorage.getItem("ide-language") ?? "",
+					languages: []
+				});
+				return;
+			}
+			const node = win.document.querySelector(".code-editor-box");
+			const editor = node?.__vue__?.$parent?.editor;
+			if (!editor || typeof editor.valCode !== "function") return;
+			if (request.type === "read") field.value = JSON.stringify({
+				code: editor.valCode(),
+				language: String(editor.valLangue()),
+				languages: editor.langList.filter((item) => !item.disabled).map((item) => ({
+					id: String(item.value),
+					name: String(item.text)
+				}))
+			});
+			else if (request.type === "sync" && typeof request.code === "string" && request.code.length <= 2e6) {
+				const id = String(request.language);
+				if (!editor.langList.some((item) => String(item.value) === id && !item.disabled)) return;
+				const revision = (revisions.get(editor) ?? 0) + 1;
+				revisions.set(editor, revision);
+				if (String(editor.valLangue()) !== id) editor.valLangue(id, true);
+				editor.$nextTick(() => {
+					if (!node.isConnected || revisions.get(editor) !== revision) return;
+					try {
+						if (editor.valCode() !== request.code) editor.valCode(request.code);
+					} catch {}
+				});
+				field.value = JSON.stringify({ ok: true });
+			}
+		} catch {}
+	});
 }})}}));
 System.register("./toast-C52sDx5c-BTYeArBY.js", [],(function(exports){'use strict';return{execute:(function(){exports("toast",toast);var timer;
 var currentToast;
@@ -75750,7 +76497,7 @@ function toast(message, kind = "info") {
 		}
 	}, kind === "error" ? 6e3 : 3e3);
 }})}}));
-System.register("./samples-Dcbmw-u9-BPAZcNRQ.js", ['./app-C_HpTwtD-lny1pYHg.js','./sites-CY7Yd7fg-cuM8H27q.js','./i18n-D1L63o1m-DRxdwpYd.js','./___monkey.entry.js','./toast-C52sDx5c-BTYeArBY.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.n;},null,null,null,null],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
+System.register("./samples-BUqsWGlw-BBLmJB8I.js", ['./app-QbhLDNm4-BKvJq3F2.js','./sites-DXiGmQvl-DoCkQRu2.js','./native-editor-bridge-DOpF4wmy-B4AddMQx.js','./___monkey.entry.js','./toast-C52sDx5c-BTYeArBY.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.n;},null,null,null,null],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
 	"你是竞赛题样例的结构化提取器。用户给出从 PDF 提取的样例区文本（可能含两栏交错、残缺格式）。",
 	"请把每组样例整理为 JSON：{\"samples\":[{\"input\":\"...\",\"output\":\"...\",\"note\":\"可选注释\"}]}",
 	"硬性要求：",
