@@ -40,11 +40,22 @@ function splitColumns(runs: TextItem[]): TextItem[][] {
     if (gap > best.gap && cx > pageRight * 0.15 && cx < pageRight * 0.85) best = { x: cx, gap };
   }
   if (best.gap < Math.max(20, pageRight * 0.08)) return [runs];
+  // 栏缝必须贯穿大部分行带：有文字的 y 带里这条缝空着的占多数才算双栏——
+  // 局部小表格的窄缝会被普通段落文本跨过，贯穿度很低
+  const bands = new Map<number, { has: boolean; empty: boolean }>();
+  for (const r of runs) {
+    const key = Math.round(r.y / 4);
+    const band = bands.get(key) ?? { has: false, empty: true };
+    band.has = true;
+    if (r.x < best.x + 2 && r.x + r.w > best.x - 2) band.empty = false;
+    bands.set(key, band);
+  }
+  const occupied = [...bands.values()].filter(b => b.has);
+  const emptyCount = occupied.filter(b => b.empty).length;
+  if (occupied.length < 4 || emptyCount / occupied.length < 0.55) return [runs];
   const left = runs.filter(r => r.x + r.w <= best.x + 0.5);
   const right = runs.filter(r => r.x >= best.x - 0.5);
   if (!left.length || !right.length) return [runs];
-  // 跨缝文本太多就不是真双栏（可能只是稀疏排版）
-  if (runs.length - left.length - right.length > runs.length * 0.35) return [runs];
   return [left, right];
 }
 
@@ -86,8 +97,8 @@ async function openPDF(url: string) {
 }
 
 /** 样例区域标题：起点 Example/Sample，终点下一个正文章节标题。 */
-const SAMPLE_HEAD = /^(examples?|samples?|sample tests?|测试样例|样例)\s*$/im;
-const SECTION_HEAD = /^(note|notes|scoring|subtasks?|constraints?|limits?|提示|说明|数据范围|分数|计分|评分|附录|hack|evaluation|explanation)\b/im;
+const SAMPLE_HEAD = /^[ \t]*(examples?|samples?|sample tests?|测试样例|样例)[ \t]*$/im;
+const SECTION_HEAD = /^[ \t]*(note|notes|scoring|subtasks?|constraints?|limits?|提示|说明|数据范围|分数|计分|评分|附录|hack|evaluation|explanation)\b/im;
 
 /** 把提取文本切成「正文」和「样例区」——样例单独走结构化提取，不参与题面翻译。 */
 export function splitPdfSamples(text: string): { statement: string; samples: string | undefined } {
