@@ -277,6 +277,34 @@ ${d} a[href*="/article/"]:hover { color: #539bf5 !important; }
 ${d} .wrap .name, ${d} .article-card .name, ${d} .row .name { background: #30363d; color: #cdd9e5; }
 ${d} .article-card, ${d} .card { background: #22272e; border-color: #373e47; }
 
+/* ---------- Highcharts（主页打卡统计图） ---------- */
+${d} .highcharts-root text, ${d} .highcharts-root tspan, ${d} .highcharts-container text { fill: #cdd9e5; color: #cdd9e5; }
+${d} .highcharts-grid-line, ${d} .highcharts-axis-line, ${d} .highcharts-tick { stroke: #373e47; }
+${d} .highcharts-label-box rect, ${d} .highcharts-button-box rect { fill: #22272e; stroke: #373e47; }
+
+/* ---------- 老主页打卡卡 ---------- */
+${d} .lg-punch, ${d} .am-u-md-4.lg-punch { background: #22272e; color: #cdd9e5; }
+${d} .lg-punch a, ${d} .lg-punch .am-g a { background: #539bf5; color: #fff; }
+${d} .lg-punch a:hover { background: #79b8ff; }
+
+/* ---------- 文章页侧栏动作/彩色链接 ---------- */
+${d} .side .actions a { color: #cdd9e5; }
+${d} .side .actions a:hover { color: #79b8ff; }
+${d} .colored-link-selector a span, ${d} .l-card.collections a span,
+${d} .colored-link-selector span { background: transparent !important; color: #cdd9e5; }
+
+/* ---------- 导航 hover 别叠闪（站点自己带下划线指示） ---------- */
+${d} .lside li a:hover, ${d} nav ul li a:hover { background: transparent; color: #79b8ff; }
+
+/* ---------- 筛选卡/搜索框 ---------- */
+${d} .filter-card { background: #22272e; border-color: #373e47; }
+${d} .filter-label { color: #cdd9e5; }
+${d} .refined-input, ${d} .refined-input.keyword { background: #1c2128 !important; color: #cdd9e5; border-color: #373e47 !important; }
+${d} .refined-input input { background: transparent; color: #cdd9e5; }
+
+/* ---------- 比赛名链接去底 ---------- */
+${d} .title-row a, ${d} a.name, ${d} .contest-card a { background: transparent; }
+
 /* ---------- 通用按钮/链接对比 ---------- */
 ${d} .lfe-button--primary, ${d} .l-button--primary, ${d} button.primary { color: #fff; }
 ${d} .punch, ${d} .checkin, ${d} [class*="check"][class*="btn"], ${d} [class*="punch"] { color: #cdd9e5; }

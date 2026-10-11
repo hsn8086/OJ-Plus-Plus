@@ -61670,6 +61670,34 @@ ${d$1} a[href*="/article/"]:hover { color: #539bf5 !important; }
 ${d$1} .wrap .name, ${d$1} .article-card .name, ${d$1} .row .name { background: #30363d; color: #cdd9e5; }
 ${d$1} .article-card, ${d$1} .card { background: #22272e; border-color: #373e47; }
 
+/* ---------- Highcharts（主页打卡统计图） ---------- */
+${d$1} .highcharts-root text, ${d$1} .highcharts-root tspan, ${d$1} .highcharts-container text { fill: #cdd9e5; color: #cdd9e5; }
+${d$1} .highcharts-grid-line, ${d$1} .highcharts-axis-line, ${d$1} .highcharts-tick { stroke: #373e47; }
+${d$1} .highcharts-label-box rect, ${d$1} .highcharts-button-box rect { fill: #22272e; stroke: #373e47; }
+
+/* ---------- 老主页打卡卡 ---------- */
+${d$1} .lg-punch, ${d$1} .am-u-md-4.lg-punch { background: #22272e; color: #cdd9e5; }
+${d$1} .lg-punch a, ${d$1} .lg-punch .am-g a { background: #539bf5; color: #fff; }
+${d$1} .lg-punch a:hover { background: #79b8ff; }
+
+/* ---------- 文章页侧栏动作/彩色链接 ---------- */
+${d$1} .side .actions a { color: #cdd9e5; }
+${d$1} .side .actions a:hover { color: #79b8ff; }
+${d$1} .colored-link-selector a span, ${d$1} .l-card.collections a span,
+${d$1} .colored-link-selector span { background: transparent !important; color: #cdd9e5; }
+
+/* ---------- 导航 hover 别叠闪（站点自己带下划线指示） ---------- */
+${d$1} .lside li a:hover, ${d$1} nav ul li a:hover { background: transparent; color: #79b8ff; }
+
+/* ---------- 筛选卡/搜索框 ---------- */
+${d$1} .filter-card { background: #22272e; border-color: #373e47; }
+${d$1} .filter-label { color: #cdd9e5; }
+${d$1} .refined-input, ${d$1} .refined-input.keyword { background: #1c2128 !important; color: #cdd9e5; border-color: #373e47 !important; }
+${d$1} .refined-input input { background: transparent; color: #cdd9e5; }
+
+/* ---------- 比赛名链接去底 ---------- */
+${d$1} .title-row a, ${d$1} a.name, ${d$1} .contest-card a { background: transparent; }
+
 /* ---------- 通用按钮/链接对比 ---------- */
 ${d$1} .lfe-button--primary, ${d$1} .l-button--primary, ${d$1} button.primary { color: #fff; }
 ${d$1} .punch, ${d$1} .checkin, ${d$1} [class*="check"][class*="btn"], ${d$1} [class*="punch"] { color: #cdd9e5; }
@@ -68130,7 +68158,7 @@ async function startApp(platform, site) {
 	const extractPdfSamples = async (section) => {
 		if (!section.pdfSamples) return;
 		try {
-			const { extractSamples } = await module.import('./samples-BaMM5IVl-cJ30xdwQ.js');
+			const { extractSamples } = await module.import('./samples-Co365FQf-cJ30xdwQ.js');
 			const images = settings.pdfAsImages && section.images ? await section.images() : void 0;
 			const samples = await extractSamples(platform.request, settings, section.pdfSamples, { images });
 			if (!samples.length) {
@@ -171528,7 +171556,7 @@ async function renderPDFImages(url, { maxPages = 6, maxDim = 1600 } = {}) {
 		await task.destroy();
 	}
 }})}}));
-System.register("./samples-BaMM5IVl-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
+System.register("./samples-Co365FQf-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
 	"你是竞赛题样例的结构化提取器。用户给出从 PDF 提取的样例区文本（可能含两栏交错、残缺格式）。",
 	"请把每组样例整理为 JSON：{\"samples\":[{\"input\":\"...\",\"output\":\"...\",\"note\":\"可选注释\"}]}",
 	"硬性要求：",
