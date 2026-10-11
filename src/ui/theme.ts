@@ -30,7 +30,8 @@ export function resolveTheme(setting: Theme): 'light' | 'dark' {
  */
 export function applyTheme(setting: Theme): void {
   const root = document.documentElement;
-  const theme = resolveTheme(setting);
+  // 站点暗色被关（功能开关或站点无暗色样式）时，脚本 UI 也统一亮，不然编辑器会跟页面脱节
+  const theme = siteThemeEnabled ? resolveTheme(setting) : 'light';
   const previous = root.getAttribute(THEME_ATTR);
   root.setAttribute(THEME_ATTR, theme);
   // 让浏览器把滚动条、表单控件也切成对应配色

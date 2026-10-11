@@ -60832,7 +60832,7 @@ function resolveTheme(setting) {
 */
 function applyTheme(setting) {
 	const root = document.documentElement;
-	const theme = resolveTheme(setting);
+	const theme = siteThemeEnabled ? resolveTheme(setting) : "light";
 	const previous = root.getAttribute(THEME_ATTR);
 	root.setAttribute(THEME_ATTR, theme);
 	originalColorScheme ??= root.style.colorScheme;
