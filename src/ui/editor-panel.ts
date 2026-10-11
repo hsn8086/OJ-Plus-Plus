@@ -2,7 +2,7 @@ import { t } from '../i18n/index.ts';
 import { localLanguageFor } from '../execution/languages.ts';
 import type { Platform } from '../platforms/types.ts';
 import type { Settings } from '../core/types.ts';
-import type { SiteAdapter, SiteEditorSupport } from '../sites/types.ts';
+import type { SiteAdapter, SiteEditorSupport, EditorLanguage } from '../sites/types.ts';
 import { createEditor, type EditorHandle } from '../editor/cm.ts';
 import { ICON_CROSS, ICON_PLAY, ICON_PLUS, ICON_SEND, ICON_SPINNER } from './icons.ts';
 
@@ -111,6 +111,9 @@ export function mountEditorPanel(options: EditorPanelOptions) {
   const head = el('div', 'ojpp-editor-head');
   const title = el('span', 'ojpp-editor-title', t('editor.title'));
   const langSel = el('select', 'ojpp-editor-lang') as HTMLSelectElement;
+  const AUTO_ID = '__auto__';
+  const autoOpt = new Option('auto', AUTO_ID);
+  langSel.add(autoOpt);
   for (const lang of support.languages) {
     const opt = el('option', undefined, lang.name) as HTMLOptionElement;
     opt.value = lang.id;
@@ -118,7 +121,7 @@ export function mountEditorPanel(options: EditorPanelOptions) {
   }
   const savedLang = settings.editorLanguage[site.id];
   const defaultLang = support.languages.find((l) => l.id === savedLang) ?? support.languages[0];
-  langSel.value = defaultLang.id;
+  langSel.value = savedLang === AUTO_ID ? AUTO_ID : defaultLang.id;
 
   const spacer = el('span', 'ojpp-editor-spacer');
   const backend = el('select', 'ojpp-editor-backend') as HTMLSelectElement;
@@ -174,14 +177,49 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     tabSize: 4,
     lspUrl: settings.editorLspUrl,
     onChange: (code) => {
-      support.syncCode?.(code, langSel.value);
+      const picked = resolveLang();
+      support.syncCode?.(code, picked.id);
       if (!key) return;
       getSettings().editorCode[key] = { code, updated: Date.now() };
       persistDebounced();
     },
   });
-  support.syncCode?.(initial, langSel.value);
   const stopDark = onDarkChange((dark) => editor.setDark(dark));
+
+  /* ---------- auto 语言：按代码内容猜，映射到站点语言 ---------- */
+  const detectMode = (code: string): EditorLanguage['mode'] => {
+    if (/\bdef\s+\w+\s*\(|__main__|^\s*elif\b|print\s*\(|input\s*\(/m.test(code) && !/#\s*include|public\s+class|fn\s+main/.test(code)) return 'python';
+    if (/public\s+(?:static\s+)?(?:final\s+)?class\b|System\.out\.|import\s+java\./m.test(code)) return 'java';
+    if (/#\s*include|std::|using\s+namespace|cin\s*>>|cout\s*<<|\bint\s+main\s*\(|\bprintf\s*\(|\bscanf\s*\(/.test(code)) return 'cpp';
+    return 'text';
+  };
+  const pickForMode = (mode: EditorLanguage['mode']): EditorLanguage => {
+    // 优先用户保存的偏好（同 mode）；其次列表里第一个同 mode 的
+    const saved = support.languages.find((l) => l.id === getSettings().editorLanguage[site.id]);
+    if (saved && saved.id !== AUTO_ID && saved.mode === mode) return saved;
+    return support.languages.find((l) => l.mode === mode)
+      ?? support.languages.find((l) => l.mode === 'cpp')
+      ?? support.languages[0];
+  };
+  let lastPicked: EditorLanguage | undefined;
+  const resolveLang = (): EditorLanguage => {
+    if (langSel.value !== AUTO_ID) {
+      lastPicked = undefined;
+      return support.languages.find((l) => l.id === langSel.value) ?? defaultLang;
+    }
+    const mode = detectMode(editor.getCode());
+    const picked = mode === 'text' ? pickForMode('cpp') : pickForMode(mode);
+    if (picked !== lastPicked) {
+      lastPicked = picked;
+      autoOpt.textContent = `auto(${picked.name})`;
+      editor.setMode(picked.mode);
+    }
+    return picked;
+  };
+  const resolvedLangId = () => resolveLang().id;
+  // 初始同步一次（auto 模式下顺带解出高亮与标签）
+  resolveLang();
+  support.syncCode?.(initial, resolvedLangId());
 
   let persistTimer: ReturnType<typeof setTimeout> | undefined;
   function persistDebounced() {
@@ -190,10 +228,10 @@ export function mountEditorPanel(options: EditorPanelOptions) {
   }
 
   langSel.onchange = () => {
-    const lang = support.languages.find((l) => l.id === langSel.value) ?? defaultLang;
-    editor.setMode(lang.mode);
+    const lang = resolveLang();
+    if (langSel.value !== AUTO_ID) editor.setMode(lang.mode);
     support.syncCode?.(editor.getCode(), lang.id);
-    getSettings().editorLanguage[site.id] = lang.id;
+    getSettings().editorLanguage[site.id] = langSel.value;
     persist();
   };
 
@@ -421,7 +459,7 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     runAllBtn.setAttribute('aria-label', runAllBtn.title);
     try {
       // customtest 支持并发（各自独立 job id）——并发池 3 个，别打太多
-      const snapshot = { code: editor.getCode(), languageId: langSel.value };
+      const snapshot = { code: editor.getCode(), languageId: resolvedLangId() };
       const queue = [...rows];
       await Promise.all(
         Array.from({ length: Math.min(local ? 1 : 3, queue.length) }, async () => {
@@ -454,7 +492,7 @@ export function mountEditorPanel(options: EditorPanelOptions) {
     submitStatus.textContent = t('editor.submitting');
     submitStatus.className = 'ojpp-editor-status busy';
     try {
-      const res = await support.submit(editor.getCode(), langSel.value, problemCode);
+      const res = await support.submit(editor.getCode(), resolvedLangId(), problemCode);
       if (res.ok) {
         if (res.url) {
           // 已提交——直接跳到状态页看判题

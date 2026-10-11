@@ -26009,6 +26009,9 @@ function mountEditorPanel(options) {
 	const head = el$1("div", "ojpp-editor-head");
 	const title = el$1("span", "ojpp-editor-title", t$1("editor.title"));
 	const langSel = el$1("select", "ojpp-editor-lang");
+	const AUTO_ID = "__auto__";
+	const autoOpt = new Option("auto", AUTO_ID);
+	langSel.add(autoOpt);
 	for (const lang of support.languages) {
 		const opt = el$1("option", void 0, lang.name);
 		opt.value = lang.id;
@@ -26016,7 +26019,7 @@ function mountEditorPanel(options) {
 	}
 	const savedLang = settings.editorLanguage[site.id];
 	const defaultLang = support.languages.find((l) => l.id === savedLang) ?? support.languages[0];
-	langSel.value = defaultLang.id;
+	langSel.value = savedLang === AUTO_ID ? AUTO_ID : defaultLang.id;
 	const spacer = el$1("span", "ojpp-editor-spacer");
 	const backend = el$1("select", "ojpp-editor-backend");
 	if (support.runCustomTest) backend.add(new Option(t$1("editor.siteRun"), "site"));
@@ -26079,7 +26082,8 @@ function mountEditorPanel(options) {
 		tabSize: 4,
 		lspUrl: settings.editorLspUrl,
 		onChange: (code) => {
-			support.syncCode?.(code, langSel.value);
+			const picked = resolveLang();
+			support.syncCode?.(code, picked.id);
 			if (!key) return;
 			getSettings().editorCode[key] = {
 				code,
@@ -26088,18 +26092,46 @@ function mountEditorPanel(options) {
 			persistDebounced();
 		}
 	});
-	support.syncCode?.(initial, langSel.value);
 	const stopDark = onDarkChange((dark) => editor.setDark(dark));
+	const detectMode = (code) => {
+		if (/\bdef\s+\w+\s*\(|__main__|^\s*elif\b|print\s*\(|input\s*\(/m.test(code) && !/#\s*include|public\s+class|fn\s+main/.test(code)) return "python";
+		if (/public\s+(?:static\s+)?(?:final\s+)?class\b|System\.out\.|import\s+java\./m.test(code)) return "java";
+		if (/#\s*include|std::|using\s+namespace|cin\s*>>|cout\s*<<|\bint\s+main\s*\(|\bprintf\s*\(|\bscanf\s*\(/.test(code)) return "cpp";
+		return "text";
+	};
+	const pickForMode = (mode) => {
+		const saved = support.languages.find((l) => l.id === getSettings().editorLanguage[site.id]);
+		if (saved && saved.id !== AUTO_ID && saved.mode === mode) return saved;
+		return support.languages.find((l) => l.mode === mode) ?? support.languages.find((l) => l.mode === "cpp") ?? support.languages[0];
+	};
+	let lastPicked;
+	const resolveLang = () => {
+		if (langSel.value !== AUTO_ID) {
+			lastPicked = void 0;
+			return support.languages.find((l) => l.id === langSel.value) ?? defaultLang;
+		}
+		const mode = detectMode(editor.getCode());
+		const picked = mode === "text" ? pickForMode("cpp") : pickForMode(mode);
+		if (picked !== lastPicked) {
+			lastPicked = picked;
+			autoOpt.textContent = `auto(${picked.name})`;
+			editor.setMode(picked.mode);
+		}
+		return picked;
+	};
+	const resolvedLangId = () => resolveLang().id;
+	resolveLang();
+	support.syncCode?.(initial, resolvedLangId());
 	let persistTimer;
 	function persistDebounced() {
 		clearTimeout(persistTimer);
 		persistTimer = setTimeout(() => persist(), 600);
 	}
 	langSel.onchange = () => {
-		const lang = support.languages.find((l) => l.id === langSel.value) ?? defaultLang;
-		editor.setMode(lang.mode);
+		const lang = resolveLang();
+		if (langSel.value !== AUTO_ID) editor.setMode(lang.mode);
 		support.syncCode?.(editor.getCode(), lang.id);
-		getSettings().editorLanguage[site.id] = lang.id;
+		getSettings().editorLanguage[site.id] = langSel.value;
 		persist();
 	};
 	const rows = [];
@@ -26330,7 +26362,7 @@ function mountEditorPanel(options) {
 		try {
 			const snapshot = {
 				code: editor.getCode(),
-				languageId: langSel.value
+				languageId: resolvedLangId()
 			};
 			const queue = [...rows];
 			await Promise.all(Array.from({ length: Math.min(local ? 1 : 3, queue.length) }, async () => {
@@ -26359,7 +26391,7 @@ function mountEditorPanel(options) {
 		submitStatus.textContent = t$1("editor.submitting");
 		submitStatus.className = "ojpp-editor-status busy";
 		try {
-			const res = await support.submit(editor.getCode(), langSel.value, problemCode);
+			const res = await support.submit(editor.getCode(), resolvedLangId(), problemCode);
 			if (res.ok) {
 				if (res.url) {
 					window.location.href = res.url;
@@ -61365,6 +61397,21 @@ ${d$1} body, ${d$1} #app, ${d$1} .lfe-body, ${d$1} main, ${d$1} .main-container,
 ${d$1} .main-container.lside-nav, ${d$1} .columba-content-wrap {
   background: #1c2128 !important; color: #cdd9e5;
 }
+/* 洛谷新页面把主题变量塞行内 style（--theme-*）——用 !important
+   自定义属性覆盖，一处解掉所有 themed 元素的白底 */
+${d$1} [style*="--theme-"] {
+  --theme-navi-back: #22272e !important;
+  --theme-navi-fore: #cdd9e5 !important;
+  --theme-navi-fore-rgb: 205,217,229 !important;
+  --theme-body-back: #1c2128 !important;
+  --theme-body-image: none !important;
+  --theme-body-image-repeat: repeat !important;
+  --theme-body-color: #cdd9e5 !important;
+  --theme-body-color-filter: none !important;
+  --theme-body-mid-mask: none !important;
+  --theme-card-background: #22272e !important;
+  --theme-card-backdrop-filter: none !important;
+}
 ${d$1} .theme-page {
   --theme-body-back: #1c2128 !important;
   --theme-body-image: none !important;
@@ -61377,9 +61424,11 @@ ${d$1} .lfe-dropdown, ${d$1} .dropdown, ${d$1} .dropdown-content,
 ${d$1} .popup, ${d$1} .modal, ${d$1} .popover { background: #22272e; color: #cdd9e5; border-color: #373e47; }
 ${d$1} .lfe-marked, ${d$1} .lfe-marked-wrap, ${d$1} .lfe-h1, ${d$1} .lfe-h2, ${d$1} .lfe-h3,
 ${d$1} .stat-text, ${d$1} .lfe-caption { color: #cdd9e5; }
-${d$1} nav, ${d$1} .sidebar, ${d$1} .user-nav, ${d$1} .nav-container, ${d$1} .nav-bar {
+${d$1} nav, ${d$1} .sidebar, ${d$1} .user-nav, ${d$1} .nav-container, ${d$1} .nav-bar,
+${d$1} .sidebar.lside, ${d$1} .lside {
   --theme-navi-back: #22272e !important; --theme-navi-fore: #cdd9e5 !important;
-  --theme-navi-fore-rgb: 205,217,229 !important; background: #22272e; color: #cdd9e5;
+  --theme-navi-fore-rgb: 205,217,229 !important;
+  background: #22272e !important; color: #cdd9e5;
 }
 ${d$1} a:not([class*="lcolor"]):not([class*="user-"]):not(.lfe-button) { color: #539bf5; }
 ${d$1} a:not([class*="lcolor"]):hover { color: #79b8ff; }
@@ -61501,8 +61550,10 @@ ${d$1} .lg-fg-bluedark, ${d$1} .lg-fg-greendark { color: #79b8ff; }
 ${d$1} .am-slider .am-viewport, ${d$1} .am-slider .am-slides li,
 ${d$1} .am-slider .caption, ${d$1} .am-slider .flex-control-nav,
 ${d$1} .am-slider .flex-direction-nav { background: #22272e; color: #cdd9e5; }
-${d$1} .sidebar .nav-pills li a, ${d$1} .sidebar a, ${d$1} .sidebar .nav-link,
+${d$1} .sidebar .nav-pills li a, ${d$1} .sidebar .nav-link,
 ${d$1} .am-list li, ${d$1} .am-list li a { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+/* 新版 .lside 图标条：链接不叠底块，保持透明靠 hover/active 指示 */
+${d$1} .sidebar.lside a { background: transparent; border-color: transparent; }
 ${d$1} .sidebar .nav-pills li a:hover, ${d$1} .sidebar a:hover, ${d$1} .am-list li a:hover { background: #30363d; color: #79b8ff; }
 ${d$1} .am-comment .am-comment-avatar, ${d$1} .am-comment img { background: transparent; }
 ${d$1} .am-panel > .am-panel-bd, ${d$1} .am-panel > .am-panel-hd { border-color: #373e47; }
@@ -61610,6 +61661,14 @@ ${d$1} .sidebar.lside a.selected, ${d$1} .sidebar.lside .active > a { color: #53
 /* ---------- 陶片放逐/动态 author 卡 ---------- */
 ${d$1} .author, ${d$1} .author.author { background: #22272e !important; color: #cdd9e5; }
 ${d$1} .author a, ${d$1} .author .name { color: #79b8ff; }
+
+/* ---------- 文章广场/文章 ---------- */
+/* 标题链接 Vue 行内绑 rgba(0,0,0,.85)——行内只能用 !important 压 */
+${d$1} .row.title a, ${d$1} .row .title a, ${d$1} a[href*="/article/"] { color: #79b8ff !important; }
+${d$1} a[href*="/article/"]:hover { color: #539bf5 !important; }
+/* 分类标签（算法·理论/休闲·娱乐 这类无类的 .name span） */
+${d$1} .wrap .name, ${d$1} .article-card .name, ${d$1} .row .name { background: #30363d; color: #cdd9e5; }
+${d$1} .article-card, ${d$1} .card { background: #22272e; border-color: #373e47; }
 
 /* ---------- 通用按钮/链接对比 ---------- */
 ${d$1} .lfe-button--primary, ${d$1} .l-button--primary, ${d$1} button.primary { color: #fff; }
@@ -66812,6 +66871,11 @@ var CSS = `
   border: 1px solid var(--color-border);
   padding: 6px 10px;
 }
+.ojpp-result-body hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 14px 0;
+}
 .ojpp-result-body pre {
   background: var(--color-bg-secondary);
   padding: 12px;
@@ -68066,7 +68130,7 @@ async function startApp(platform, site) {
 	const extractPdfSamples = async (section) => {
 		if (!section.pdfSamples) return;
 		try {
-			const { extractSamples } = await module.import('./samples-Bfy4FpKL-cJ30xdwQ.js');
+			const { extractSamples } = await module.import('./samples-BaMM5IVl-cJ30xdwQ.js');
 			const images = settings.pdfAsImages && section.images ? await section.images() : void 0;
 			const samples = await extractSamples(platform.request, settings, section.pdfSamples, { images });
 			if (!samples.length) {
@@ -171464,7 +171528,7 @@ async function renderPDFImages(url, { maxPages = 6, maxDim = 1600 } = {}) {
 		await task.destroy();
 	}
 }})}}));
-System.register("./samples-Bfy4FpKL-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
+System.register("./samples-BaMM5IVl-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
 	"你是竞赛题样例的结构化提取器。用户给出从 PDF 提取的样例区文本（可能含两栏交错、残缺格式）。",
 	"请把每组样例整理为 JSON：{\"samples\":[{\"input\":\"...\",\"output\":\"...\",\"note\":\"可选注释\"}]}",
 	"硬性要求：",

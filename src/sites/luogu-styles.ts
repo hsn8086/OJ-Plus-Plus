@@ -4,6 +4,21 @@ ${d} body, ${d} #app, ${d} .lfe-body, ${d} main, ${d} .main-container,
 ${d} .main-container.lside-nav, ${d} .columba-content-wrap {
   background: #1c2128 !important; color: #cdd9e5;
 }
+/* 洛谷新页面把主题变量塞行内 style（--theme-*）——用 !important
+   自定义属性覆盖，一处解掉所有 themed 元素的白底 */
+${d} [style*="--theme-"] {
+  --theme-navi-back: #22272e !important;
+  --theme-navi-fore: #cdd9e5 !important;
+  --theme-navi-fore-rgb: 205,217,229 !important;
+  --theme-body-back: #1c2128 !important;
+  --theme-body-image: none !important;
+  --theme-body-image-repeat: repeat !important;
+  --theme-body-color: #cdd9e5 !important;
+  --theme-body-color-filter: none !important;
+  --theme-body-mid-mask: none !important;
+  --theme-card-background: #22272e !important;
+  --theme-card-backdrop-filter: none !important;
+}
 ${d} .theme-page {
   --theme-body-back: #1c2128 !important;
   --theme-body-image: none !important;
@@ -16,9 +31,11 @@ ${d} .lfe-dropdown, ${d} .dropdown, ${d} .dropdown-content,
 ${d} .popup, ${d} .modal, ${d} .popover { background: #22272e; color: #cdd9e5; border-color: #373e47; }
 ${d} .lfe-marked, ${d} .lfe-marked-wrap, ${d} .lfe-h1, ${d} .lfe-h2, ${d} .lfe-h3,
 ${d} .stat-text, ${d} .lfe-caption { color: #cdd9e5; }
-${d} nav, ${d} .sidebar, ${d} .user-nav, ${d} .nav-container, ${d} .nav-bar {
+${d} nav, ${d} .sidebar, ${d} .user-nav, ${d} .nav-container, ${d} .nav-bar,
+${d} .sidebar.lside, ${d} .lside {
   --theme-navi-back: #22272e !important; --theme-navi-fore: #cdd9e5 !important;
-  --theme-navi-fore-rgb: 205,217,229 !important; background: #22272e; color: #cdd9e5;
+  --theme-navi-fore-rgb: 205,217,229 !important;
+  background: #22272e !important; color: #cdd9e5;
 }
 ${d} a:not([class*="lcolor"]):not([class*="user-"]):not(.lfe-button) { color: #539bf5; }
 ${d} a:not([class*="lcolor"]):hover { color: #79b8ff; }
@@ -140,8 +157,10 @@ ${d} .lg-fg-bluedark, ${d} .lg-fg-greendark { color: #79b8ff; }
 ${d} .am-slider .am-viewport, ${d} .am-slider .am-slides li,
 ${d} .am-slider .caption, ${d} .am-slider .flex-control-nav,
 ${d} .am-slider .flex-direction-nav { background: #22272e; color: #cdd9e5; }
-${d} .sidebar .nav-pills li a, ${d} .sidebar a, ${d} .sidebar .nav-link,
+${d} .sidebar .nav-pills li a, ${d} .sidebar .nav-link,
 ${d} .am-list li, ${d} .am-list li a { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+/* 新版 .lside 图标条：链接不叠底块，保持透明靠 hover/active 指示 */
+${d} .sidebar.lside a { background: transparent; border-color: transparent; }
 ${d} .sidebar .nav-pills li a:hover, ${d} .sidebar a:hover, ${d} .am-list li a:hover { background: #30363d; color: #79b8ff; }
 ${d} .am-comment .am-comment-avatar, ${d} .am-comment img { background: transparent; }
 ${d} .am-panel > .am-panel-bd, ${d} .am-panel > .am-panel-hd { border-color: #373e47; }
@@ -249,6 +268,14 @@ ${d} .sidebar.lside a.selected, ${d} .sidebar.lside .active > a { color: #539bf5
 /* ---------- 陶片放逐/动态 author 卡 ---------- */
 ${d} .author, ${d} .author.author { background: #22272e !important; color: #cdd9e5; }
 ${d} .author a, ${d} .author .name { color: #79b8ff; }
+
+/* ---------- 文章广场/文章 ---------- */
+/* 标题链接 Vue 行内绑 rgba(0,0,0,.85)——行内只能用 !important 压 */
+${d} .row.title a, ${d} .row .title a, ${d} a[href*="/article/"] { color: #79b8ff !important; }
+${d} a[href*="/article/"]:hover { color: #539bf5 !important; }
+/* 分类标签（算法·理论/休闲·娱乐 这类无类的 .name span） */
+${d} .wrap .name, ${d} .article-card .name, ${d} .row .name { background: #30363d; color: #cdd9e5; }
+${d} .article-card, ${d} .card { background: #22272e; border-color: #373e47; }
 
 /* ---------- 通用按钮/链接对比 ---------- */
 ${d} .lfe-button--primary, ${d} .l-button--primary, ${d} button.primary { color: #fff; }

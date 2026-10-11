@@ -237,6 +237,11 @@ export const CSS = `
   border: 1px solid var(--color-border);
   padding: 6px 10px;
 }
+.ojpp-result-body hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 14px 0;
+}
 .ojpp-result-body pre {
   background: var(--color-bg-secondary);
   padding: 12px;
