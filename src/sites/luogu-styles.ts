@@ -202,4 +202,9 @@ ${d} section, ${d} article, ${d} aside, ${d} nav,
 ${d} header, ${d} footer, ${d} fieldset { border-color: #373e47; }
 /* 兜底：剩余偏暗文字 */
 ${d} .main *, ${d} .l-card * { border-color: #373e47; }
+/* 提交卡/常用浅黑字 */
+${d} .light-black, ${d} .l-card .header, ${d} .combo-wrapper .text,
+${d} .l-radio, ${d} .l-check, ${d} .lfe-radio, ${d} .l-checkbox,
+${d} [id^="LRadio"], ${d} [id^="LCheck"], ${d} .l-card.burger *,
+${d} .combo-wrapper .arrow, ${d} .combo-wrapper svg, ${d} .combo-wrapper path { color: #cdd9e5 !important; }
 `;

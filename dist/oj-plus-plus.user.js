@@ -61394,6 +61394,11 @@ ${d$1} section, ${d$1} article, ${d$1} aside, ${d$1} nav,
 ${d$1} header, ${d$1} footer, ${d$1} fieldset { border-color: #373e47; }
 /* 兜底：剩余偏暗文字 */
 ${d$1} .main *, ${d$1} .l-card * { border-color: #373e47; }
+/* 提交卡/常用浅黑字 */
+${d$1} .light-black, ${d$1} .l-card .header, ${d$1} .combo-wrapper .text,
+${d$1} .l-radio, ${d$1} .l-check, ${d$1} .lfe-radio, ${d$1} .l-checkbox,
+${d$1} [id^="LRadio"], ${d$1} [id^="LCheck"], ${d$1} .l-card.burger *,
+${d$1} .combo-wrapper .arrow, ${d$1} .combo-wrapper svg, ${d$1} .combo-wrapper path { color: #cdd9e5 !important; }
 `;
 var fields = {
 	"题目背景": "background",
@@ -61693,6 +61698,11 @@ var luogu = {
 	editor: {
 		languages: LUOGU_LANGUAGES,
 		editorMountPoint(doc) {
+			const submitBody = doc.querySelector(".l-card.burger .body");
+			if (submitBody?.querySelector(".v-codemirror")) return {
+				anchor: submitBody,
+				position: "beforeend"
+			};
 			const anchor = doc.querySelector(".l-card.problem");
 			return anchor ? {
 				anchor,
@@ -61764,7 +61774,7 @@ var luogu = {
 			};
 		}
 	},
-	styles: ".user-nav > .ojpp-settings-btn { margin: 0 8px; } .ojpp-settings-floating { position: fixed; right: 18px; bottom: 18px; z-index: 1000; } .l-card.problem .lfe-marked-wrap, .l-card.problem .io-sample { clear: both; }",
+	styles: ".user-nav > .ojpp-settings-btn { margin: 0 8px; } .ojpp-settings-floating { position: fixed; right: 18px; bottom: 18px; z-index: 1000; } .l-card.problem .lfe-marked-wrap, .l-card.problem .io-sample { clear: both; } html:has(.ojpp-editor) .l-card.burger .body:has(.v-codemirror) > *:not(.ojpp-editor) { display: none !important; } .l-card.burger .body:has(.v-codemirror) { padding-bottom: .3em; }",
 	collectSections(doc) {
 		const sections = [];
 		for (const heading of doc.querySelectorAll(".l-card.problem > h2, .problem-content > h2")) {

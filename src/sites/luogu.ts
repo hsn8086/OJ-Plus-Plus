@@ -153,7 +153,13 @@ export const luogu: SiteAdapter = {
   darkStyles: LUOGU_DARK, preserveInlineColors: true,
   editor: {
     languages: LUOGU_LANGUAGES,
-    editorMountPoint(doc) { const anchor = doc.querySelector<HTMLElement>('.l-card.problem'); return anchor ? { anchor, position: 'afterend' } : null; },
+    editorMountPoint(doc) {
+      // 优先接管提交卡（隐藏原生 CM6，我们的面板放进去）；没登录/没有就挂题目卡后面
+      const submitBody = doc.querySelector<HTMLElement>('.l-card.burger .body');
+      if (submitBody?.querySelector('.v-codemirror')) return { anchor: submitBody, position: 'beforeend' as const };
+      const anchor = doc.querySelector<HTMLElement>('.l-card.problem');
+      return anchor ? { anchor, position: 'afterend' } : null;
+    },
     problemCode(doc) { return /\/problem\/([^/?#]+)/.exec(new URL(doc.URL).pathname)?.[1] ?? null; },
     getSamples(doc) {
       try {
@@ -199,7 +205,10 @@ export const luogu: SiteAdapter = {
   },
   styles: '.user-nav > .ojpp-settings-btn { margin: 0 8px; } .ojpp-settings-floating { position: fixed; right: 18px; bottom: 18px; z-index: 1000; } '
     // h2 里 float:right 的工具栏会压住 overflow:hidden 的 BFC 正文——clear 推下去
-    + '.l-card.problem .lfe-marked-wrap, .l-card.problem .io-sample { clear: both; }',
+    + '.l-card.problem .lfe-marked-wrap, .l-card.problem .io-sample { clear: both; } '
+    // 启用我们编辑器时，把提交卡 code 模式的原生 CM6 藏起来（文件模式没有 v-codemirror 自动露出）
+    + 'html:has(.ojpp-editor) .l-card.burger .body:has(.v-codemirror) > *:not(.ojpp-editor) { display: none !important; } '
+    + '.l-card.burger .body:has(.v-codemirror) { padding-bottom: .3em; }',
   collectSections(doc) {
     const sections: ContentSection[] = [];
     for (const heading of doc.querySelectorAll<HTMLElement>('.l-card.problem > h2, .problem-content > h2')) {
