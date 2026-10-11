@@ -110,4 +110,96 @@ ${d} .block-item, ${d} .lform-input, ${d} .l-select, ${d} .lfe-select {
 ${d} .block-item button, ${d} .lform-input button { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
 ${d} .combo-wrapper .text, ${d} .block-item .text, ${d} .combo .text,
 ${d} .lfe-select .text, ${d} .l-select .text { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
+
+/* ---------- 老版主页（am-* amazeui） ---------- */
+${d} .am-panel, ${d} .am-panel-hd, ${d} .am-panel-bd,
+${d} .am-comment, ${d} .am-comment-hd, ${d} .am-comment-bd,
+${d} .am-comment-main, ${d} .am-comment-flip,
+${d} .lg-article, ${d} .lg-index-content, ${d} .lg-index-calendar,
+${d} .lg-index-stat, ${d} .lg-index-benben, ${d} .lg-right,
+${d} .sidebar.lside, ${d} .am-slider, ${d} .am-slides,
+${d} .feed-li, ${d} .am-viewport, ${d} .am-list {
+  background: #22272e; color: #cdd9e5; border-color: #373e47;
+}
+${d} .am-panel-default, ${d} .am-panel-primary, ${d} .am-panel-success, ${d} .am-panel-danger {
+  border-color: #373e47;
+}
+${d} .am-panel-hd, ${d} .am-panel-title, ${d} .am-comment-hd,
+${d} .am-comment-author, ${d} .am-comment-meta, ${d} .am-comment-title,
+${d} .lg-article h1, ${d} .lg-article h2, ${d} .lg-article h3,
+${d} .lg-article p, ${d} .lg-article td, ${d} .lg-article th,
+${d} .lg-article li, ${d} .lg-article span, ${d} .lg-article div,
+${d} .lg-index-content *, ${d} .lg-right * { color: #cdd9e5; border-color: #373e47; }
+${d} .lg-article a, ${d} .lg-index-content a, ${d} .lg-right a,
+${d} .am-comment a, ${d} .am-panel a { color: #539bf5; }
+${d} .am-comment a:hover, ${d} .am-panel a:hover { color: #79b8ff; }
+${d} .lg-fg-bluedark, ${d} .lg-fg-greendark { color: #79b8ff; }
+${d} .am-slider .am-viewport, ${d} .am-slider .am-slides li,
+${d} .am-slider .caption, ${d} .am-slider .flex-control-nav,
+${d} .am-slider .flex-direction-nav { background: #22272e; color: #cdd9e5; }
+${d} .sidebar .nav-pills li a, ${d} .sidebar a, ${d} .sidebar .nav-link,
+${d} .am-list li, ${d} .am-list li a { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${d} .sidebar .nav-pills li a:hover, ${d} .sidebar a:hover, ${d} .am-list li a:hover { background: #30363d; color: #79b8ff; }
+${d} .am-comment .am-comment-avatar, ${d} .am-comment img { background: transparent; }
+${d} .am-panel > .am-panel-bd, ${d} .am-panel > .am-panel-hd { border-color: #373e47; }
+${d} .lg-article hr, ${d} .lg-index-content hr, ${d} .am-list li { border-color: #373e47; }
+
+/* ---------- 题库/题单/筛选区 ---------- */
+${d} .title, ${d} .title.no-wrap, ${d} .entry, ${d} .toggle-tag,
+${d} .count, ${d} .number, ${d} li, ${d} .provider-display,
+${d} .luogu-username, ${d} .liquid-text, ${d} .card-title,
+${d} .card-desc, ${d} .card-bottom, ${d} .bottom-item { color: #cdd9e5 !important; }
+${d} .entry, ${d} .toggle-tag, ${d} .card-desc { color: #909dab; }
+${d} .tag-button { background: #1c2128 !important; color: #cdd9e5 !important; border-color: #373e47 !important; }
+${d} .tag-button:hover { background: #30363d; color: #79b8ff; border-color: #539bf5; }
+${d} .tag-button.selected, ${d} .tag-button.active { background: #539bf5; color: #fff; border-color: #539bf5; }
+${d} .refined-input, ${d} .search-text { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
+${d} .refined-input input, ${d} .search-text input { background: transparent; color: #cdd9e5; }
+${d} .progress-frame { background: #30363d; border-color: #30363d; }
+${d} .bottom-wrap, ${d} .bottom-wrap.float { background: #22272e; border-color: #373e47; }
+${d} .bottom-wrap .toolbar, ${d} .bottom-wrap .toolbar-left { background: transparent; }
+${d} .training-card { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${d} .training-card:hover { border-color: #539bf5; }
+${d} .training-card .card-title, ${d} .training-card .card-desc,
+${d} .training-card .card-bottom, ${d} .training-card .bottom-item { color: #cdd9e5; }
+${d} .training-card .card-desc { color: #909dab; }
+${d} .training-card a { color: #539bf5; }
+${d} .training-card a:hover { color: #79b8ff; }
+
+/* ---------- 讨论/文章/图床/云剪贴板 ---------- */
+/* 通用黑字（name/time/content/meta/copyright 等） */
+${d} .name, ${d} .content, ${d} .time, ${d} .meta,
+${d} .copyright, ${d} .detail, ${d} .info { color: #cdd9e5 !important; }
+${d} .time, ${d} .meta, ${d} .copyright, ${d} .info { color: #909dab !important; }
+/* 白底容器 */
+${d} .drop, ${d} .image-block, ${d} .casket, ${d} .casket.cs-main,
+${d} .cs-header, ${d} .cs-footer, ${d} .refined-input,
+${d} .article-card, ${d} .article-list, ${d} .discuss-list,
+${d} .feed-card, ${d} .user-card, ${d} .stat-card {
+  background: #22272e; color: #cdd9e5; border-color: #373e47;
+}
+${d} .drop:hover { border-color: #539bf5; }
+${d} .cs-footer *, ${d} .cs-header * { color: #cdd9e5; }
+/* CM5 编辑器（云剪贴板/贴代码） */
+${d} .CodeMirror, ${d} .CodeMirror-lines, ${d} .cm-gutters,
+${d} .cm-gutter, ${d} .cm-lineNumbers, ${d} .cm-foldGutter {
+  background: #161b22; color: #cdd9e5; border-color: #373e47;
+}
+${d} .cm-cursor { border-color: #cdd9e5; }
+${d} .cm-line, ${d} .cm-line * { color: #cdd9e5; }
+${d} .cm-selected, ${d} .CodeMirror-focused .cm-selected { background: rgba(83,155,245,.25); }
+${d} .cm-m-luogu .cm-comment, ${d} .cm-comment { color: #8b949e; }
+${d} .cm-keyword, ${d} .cm-tag, ${d} .cm-property { color: #ff7b72; }
+${d} .cm-string, ${d} .cm-string-2, ${d} .cm-atom, ${d} .cm-regexp { color: #a5d6ff; }
+${d} .cm-number, ${d} .cm-attribute, ${d} .cm-qualifier { color: #79c0ff; }
+${d} .cm-variable, ${d} .cm-def, ${d} .cm-type { color: #d2a8ff; }
+${d} .cm-operator, ${d} .cm-meta, ${d} .cm-bracket { color: #ff9e64; }
+${d} .cm-builtin, ${d} .cm-header, ${d} .cm-link { color: #79b8ff; }
+${d} .cm-error { color: #ffa198; }
+/* 兜底：所有剩余元素边框色统一（只动 border 不动背景） */
+${d} div, ${d} span, ${d} p, ${d} li, ${d} ul, ${d} ol,
+${d} section, ${d} article, ${d} aside, ${d} nav,
+${d} header, ${d} footer, ${d} fieldset { border-color: #373e47; }
+/* 兜底：剩余偏暗文字 */
+${d} .main *, ${d} .l-card * { border-color: #373e47; }
 `;

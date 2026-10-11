@@ -61302,6 +61302,98 @@ ${d$1} .block-item, ${d$1} .lform-input, ${d$1} .l-select, ${d$1} .lfe-select {
 ${d$1} .block-item button, ${d$1} .lform-input button { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
 ${d$1} .combo-wrapper .text, ${d$1} .block-item .text, ${d$1} .combo .text,
 ${d$1} .lfe-select .text, ${d$1} .l-select .text { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
+
+/* ---------- 老版主页（am-* amazeui） ---------- */
+${d$1} .am-panel, ${d$1} .am-panel-hd, ${d$1} .am-panel-bd,
+${d$1} .am-comment, ${d$1} .am-comment-hd, ${d$1} .am-comment-bd,
+${d$1} .am-comment-main, ${d$1} .am-comment-flip,
+${d$1} .lg-article, ${d$1} .lg-index-content, ${d$1} .lg-index-calendar,
+${d$1} .lg-index-stat, ${d$1} .lg-index-benben, ${d$1} .lg-right,
+${d$1} .sidebar.lside, ${d$1} .am-slider, ${d$1} .am-slides,
+${d$1} .feed-li, ${d$1} .am-viewport, ${d$1} .am-list {
+  background: #22272e; color: #cdd9e5; border-color: #373e47;
+}
+${d$1} .am-panel-default, ${d$1} .am-panel-primary, ${d$1} .am-panel-success, ${d$1} .am-panel-danger {
+  border-color: #373e47;
+}
+${d$1} .am-panel-hd, ${d$1} .am-panel-title, ${d$1} .am-comment-hd,
+${d$1} .am-comment-author, ${d$1} .am-comment-meta, ${d$1} .am-comment-title,
+${d$1} .lg-article h1, ${d$1} .lg-article h2, ${d$1} .lg-article h3,
+${d$1} .lg-article p, ${d$1} .lg-article td, ${d$1} .lg-article th,
+${d$1} .lg-article li, ${d$1} .lg-article span, ${d$1} .lg-article div,
+${d$1} .lg-index-content *, ${d$1} .lg-right * { color: #cdd9e5; border-color: #373e47; }
+${d$1} .lg-article a, ${d$1} .lg-index-content a, ${d$1} .lg-right a,
+${d$1} .am-comment a, ${d$1} .am-panel a { color: #539bf5; }
+${d$1} .am-comment a:hover, ${d$1} .am-panel a:hover { color: #79b8ff; }
+${d$1} .lg-fg-bluedark, ${d$1} .lg-fg-greendark { color: #79b8ff; }
+${d$1} .am-slider .am-viewport, ${d$1} .am-slider .am-slides li,
+${d$1} .am-slider .caption, ${d$1} .am-slider .flex-control-nav,
+${d$1} .am-slider .flex-direction-nav { background: #22272e; color: #cdd9e5; }
+${d$1} .sidebar .nav-pills li a, ${d$1} .sidebar a, ${d$1} .sidebar .nav-link,
+${d$1} .am-list li, ${d$1} .am-list li a { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${d$1} .sidebar .nav-pills li a:hover, ${d$1} .sidebar a:hover, ${d$1} .am-list li a:hover { background: #30363d; color: #79b8ff; }
+${d$1} .am-comment .am-comment-avatar, ${d$1} .am-comment img { background: transparent; }
+${d$1} .am-panel > .am-panel-bd, ${d$1} .am-panel > .am-panel-hd { border-color: #373e47; }
+${d$1} .lg-article hr, ${d$1} .lg-index-content hr, ${d$1} .am-list li { border-color: #373e47; }
+
+/* ---------- 题库/题单/筛选区 ---------- */
+${d$1} .title, ${d$1} .title.no-wrap, ${d$1} .entry, ${d$1} .toggle-tag,
+${d$1} .count, ${d$1} .number, ${d$1} li, ${d$1} .provider-display,
+${d$1} .luogu-username, ${d$1} .liquid-text, ${d$1} .card-title,
+${d$1} .card-desc, ${d$1} .card-bottom, ${d$1} .bottom-item { color: #cdd9e5 !important; }
+${d$1} .entry, ${d$1} .toggle-tag, ${d$1} .card-desc { color: #909dab; }
+${d$1} .tag-button { background: #1c2128 !important; color: #cdd9e5 !important; border-color: #373e47 !important; }
+${d$1} .tag-button:hover { background: #30363d; color: #79b8ff; border-color: #539bf5; }
+${d$1} .tag-button.selected, ${d$1} .tag-button.active { background: #539bf5; color: #fff; border-color: #539bf5; }
+${d$1} .refined-input, ${d$1} .search-text { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
+${d$1} .refined-input input, ${d$1} .search-text input { background: transparent; color: #cdd9e5; }
+${d$1} .progress-frame { background: #30363d; border-color: #30363d; }
+${d$1} .bottom-wrap, ${d$1} .bottom-wrap.float { background: #22272e; border-color: #373e47; }
+${d$1} .bottom-wrap .toolbar, ${d$1} .bottom-wrap .toolbar-left { background: transparent; }
+${d$1} .training-card { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${d$1} .training-card:hover { border-color: #539bf5; }
+${d$1} .training-card .card-title, ${d$1} .training-card .card-desc,
+${d$1} .training-card .card-bottom, ${d$1} .training-card .bottom-item { color: #cdd9e5; }
+${d$1} .training-card .card-desc { color: #909dab; }
+${d$1} .training-card a { color: #539bf5; }
+${d$1} .training-card a:hover { color: #79b8ff; }
+
+/* ---------- 讨论/文章/图床/云剪贴板 ---------- */
+/* 通用黑字（name/time/content/meta/copyright 等） */
+${d$1} .name, ${d$1} .content, ${d$1} .time, ${d$1} .meta,
+${d$1} .copyright, ${d$1} .detail, ${d$1} .info { color: #cdd9e5 !important; }
+${d$1} .time, ${d$1} .meta, ${d$1} .copyright, ${d$1} .info { color: #909dab !important; }
+/* 白底容器 */
+${d$1} .drop, ${d$1} .image-block, ${d$1} .casket, ${d$1} .casket.cs-main,
+${d$1} .cs-header, ${d$1} .cs-footer, ${d$1} .refined-input,
+${d$1} .article-card, ${d$1} .article-list, ${d$1} .discuss-list,
+${d$1} .feed-card, ${d$1} .user-card, ${d$1} .stat-card {
+  background: #22272e; color: #cdd9e5; border-color: #373e47;
+}
+${d$1} .drop:hover { border-color: #539bf5; }
+${d$1} .cs-footer *, ${d$1} .cs-header * { color: #cdd9e5; }
+/* CM5 编辑器（云剪贴板/贴代码） */
+${d$1} .CodeMirror, ${d$1} .CodeMirror-lines, ${d$1} .cm-gutters,
+${d$1} .cm-gutter, ${d$1} .cm-lineNumbers, ${d$1} .cm-foldGutter {
+  background: #161b22; color: #cdd9e5; border-color: #373e47;
+}
+${d$1} .cm-cursor { border-color: #cdd9e5; }
+${d$1} .cm-line, ${d$1} .cm-line * { color: #cdd9e5; }
+${d$1} .cm-selected, ${d$1} .CodeMirror-focused .cm-selected { background: rgba(83,155,245,.25); }
+${d$1} .cm-m-luogu .cm-comment, ${d$1} .cm-comment { color: #8b949e; }
+${d$1} .cm-keyword, ${d$1} .cm-tag, ${d$1} .cm-property { color: #ff7b72; }
+${d$1} .cm-string, ${d$1} .cm-string-2, ${d$1} .cm-atom, ${d$1} .cm-regexp { color: #a5d6ff; }
+${d$1} .cm-number, ${d$1} .cm-attribute, ${d$1} .cm-qualifier { color: #79c0ff; }
+${d$1} .cm-variable, ${d$1} .cm-def, ${d$1} .cm-type { color: #d2a8ff; }
+${d$1} .cm-operator, ${d$1} .cm-meta, ${d$1} .cm-bracket { color: #ff9e64; }
+${d$1} .cm-builtin, ${d$1} .cm-header, ${d$1} .cm-link { color: #79b8ff; }
+${d$1} .cm-error { color: #ffa198; }
+/* 兜底：所有剩余元素边框色统一（只动 border 不动背景） */
+${d$1} div, ${d$1} span, ${d$1} p, ${d$1} li, ${d$1} ul, ${d$1} ol,
+${d$1} section, ${d$1} article, ${d$1} aside, ${d$1} nav,
+${d$1} header, ${d$1} footer, ${d$1} fieldset { border-color: #373e47; }
+/* 兜底：剩余偏暗文字 */
+${d$1} .main *, ${d$1} .l-card * { border-color: #373e47; }
 `;
 var fields = {
 	"题目背景": "background",
