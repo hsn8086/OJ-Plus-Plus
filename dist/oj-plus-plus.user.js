@@ -60811,7 +60811,21 @@ function mountSection(section, options) {
 		toolbar.classList.add("ojpp-toolbar-block");
 		section.toolbar.anchor.insertAdjacentElement(section.toolbar.position, toolbar);
 	} else section.toolbar.anchor.insertAdjacentElement(section.toolbar.position, toolbar);
-	const readMarkdown = () => section.markdown?.() ?? htmlToMarkdown(section.content, prepareContent);
+	const imageRefs = /* @__PURE__ */ new Map();
+	const readMarkdown = () => {
+		const raw = section.markdown?.() ?? htmlToMarkdown(section.content, prepareContent);
+		let n = 0;
+		return raw.replace(/!\[[^\]]*\]\(([^)\s]+)\)/g, (_m, url) => {
+			const key = `![图${++n}]`;
+			imageRefs.set(key, url);
+			return key;
+		});
+	};
+	/** 译文里的 ![图N] 换回真实 ![](url)。 */
+	const restoreImages = (md) => md.replace(/!\[图(\d+)\](?:\([^)]*\))?/g, (_m, i) => {
+		const url = imageRefs.get(`![图${i}]`);
+		return url ? `![](${url})` : _m;
+	});
 	/** 收集章节里的插图（data URL），随文发给视觉模型。 */
 	const collectSectionImages = async () => {
 		const imgs = [...section.content.querySelectorAll("img")].map((img) => img.src).filter((src) => src && !src.startsWith("data:"));
@@ -60830,7 +60844,7 @@ function mountSection(section, options) {
 		} catch {}
 		return out;
 	};
-	bindCopy(copy, readMarkdown, platform.writeClipboard);
+	bindCopy(copy, () => restoreImages(readMarkdown()), platform.writeClipboard);
 	let controller;
 	let result;
 	let source;
@@ -60882,6 +60896,10 @@ function mountSection(section, options) {
 				});
 				setCachedTranslation(platform, cacheKey, translated);
 			}
+			translated = {
+				...translated,
+				markdown: restoreImages(translated.markdown)
+			};
 			translatedOnce = true;
 			signal.throwIfAborted();
 			panel.finish(translated);
@@ -60911,7 +60929,7 @@ function mountSection(section, options) {
 		} else {
 			source = document.createElement("pre");
 			source.className = "ojpp-md-source";
-			source.textContent = readMarkdown();
+			source.textContent = restoreImages(readMarkdown());
 			section.content.after(source);
 			section.content.hidden = true;
 			markdown.dataset.state = "active";
@@ -67999,7 +68017,7 @@ async function startApp(platform, site) {
 	const extractPdfSamples = async (section) => {
 		if (!section.pdfSamples) return;
 		try {
-			const { extractSamples } = await module.import('./samples-UXkCYKUT-cJ30xdwQ.js');
+			const { extractSamples } = await module.import('./samples-BCarmXPF-cJ30xdwQ.js');
 			const images = settings.pdfAsImages && section.images ? await section.images() : void 0;
 			const samples = await extractSamples(platform.request, settings, section.pdfSamples, { images });
 			if (!samples.length) {
@@ -171244,7 +171262,7 @@ async function renderPDFImages(url, { maxPages = 6, maxDim = 1600 } = {}) {
 		await task.destroy();
 	}
 }})}}));
-System.register("./samples-UXkCYKUT-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
+System.register("./samples-BCarmXPF-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
 	"你是竞赛题样例的结构化提取器。用户给出从 PDF 提取的样例区文本（可能含两栏交错、残缺格式）。",
 	"请把每组样例整理为 JSON：{\"samples\":[{\"input\":\"...\",\"output\":\"...\",\"note\":\"可选注释\"}]}",
 	"硬性要求：",

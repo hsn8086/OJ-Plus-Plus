@@ -47,7 +47,24 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
     section.toolbar.anchor.insertAdjacentElement(section.toolbar.position, toolbar);
   }
 
-  const readMarkdown = () => section.markdown?.() ?? htmlToMarkdown(section.content, prepareContent);
+  const imageRefs = new Map<string, string>();
+  const readMarkdown = () => {
+    const raw = section.markdown?.() ?? htmlToMarkdown(section.content, prepareContent);
+    // 图片换成可引用占位符：模型写“![图1]”，译文回来替换回真实 URL，
+    // 避免模型改写路径/相对链接拿不到图
+    let n = 0;
+    return raw.replace(/!\[[^\]]*\]\(([^)\s]+)\)/g, (_m, url: string) => {
+      const key = `![图${++n}]`;
+      imageRefs.set(key, url);
+      return key;
+    });
+  };
+  /** 译文里的 ![图N] 换回真实 ![](url)。 */
+  const restoreImages = (md: string) =>
+    md.replace(/!\[图(\d+)\](?:\([^)]*\))?/g, (_m, i) => {
+      const url = imageRefs.get(`![图${i}]`);
+      return url ? `![](${url})` : _m;
+    });
 
   /** 收集章节里的插图（data URL），随文发给视觉模型。 */
   const collectSectionImages = async (): Promise<string[]> => {
@@ -70,7 +87,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
     }
     return out;
   };
-  bindCopy(copy, readMarkdown, platform.writeClipboard);
+  bindCopy(copy, () => restoreImages(readMarkdown()), platform.writeClipboard);
   let controller: AbortController | undefined;
   let result: ReturnType<typeof createResultPanel> | undefined;
   let source: HTMLElement | undefined;
@@ -136,6 +153,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
         });
         void setCachedTranslation(platform, cacheKey, translated);
       }
+      translated = { ...translated, markdown: restoreImages(translated.markdown) };
       translatedOnce = true;
       signal.throwIfAborted();
       panel.finish(translated);
@@ -166,7 +184,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
     } else {
       source = document.createElement('pre');
       source.className = 'ojpp-md-source';
-      source.textContent = readMarkdown();
+      source.textContent = restoreImages(readMarkdown());
       section.content.after(source);
       section.content.hidden = true;
       markdown.dataset.state = 'active';
