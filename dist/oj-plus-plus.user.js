@@ -26869,7 +26869,9 @@ function buildSystemPrompt(settings) {
 		"6. 术语按中文竞赛习惯翻译，例如：sample → 样例，constraint → 数据范围，subtask → 子任务，",
 		"   test case → 测试点，interactive → 交互题，time limit → 时间限制。",
 		"7. 保持原文的段落划分，不要把多个段落合并成一段，也不要增加原文没有的段落。",
-		"8. 如果原文已经是目标语言，直接原样返回。"
+		"8. 样例/输入输出对照表：每个样例一行——同一输入或输出块内的多行数据在单元格里用 <br> 换行，",
+		"   不要把同一样例的多行拆成多行表格。",
+		"9. 如果原文已经是目标语言，直接原样返回。"
 	];
 	if (settings.extraPrompt.trim()) lines.push("", "额外要求：", settings.extraPrompt.trim());
 	return lines.join("\n");
@@ -26880,7 +26882,7 @@ function buildPdfSystemPrompt(settings) {
 		"原文来自 PDF 题面提取：",
 		"- 数学公式可能缺失或残缺；遇到缺失处请按上下文用 KaTeX（$...$ / $$...$$）合理还原，不要照抄残缺文本。",
 		"- 输出必须是规范的 Markdown + KaTeX：标题、列表、表格、代码块（样例用 ``` 包裹）、公式用 $...$。",
-		"- 原文按行提取；样例与表格务必保留换行结构（可用表格、代码块或 <br>）。",
+		"- 原文按行提取；样例与表格务必保留换行结构（表格里一个样例一行、格内多行用 <br>）。",
 		"- 随文附带的图片（如有）是原始 PDF 页面，请以图片内容为准确依据。"
 	];
 	const custom = settings.pdfPrompt?.trim();
@@ -67979,7 +67981,7 @@ async function startApp(platform, site) {
 	const extractPdfSamples = async (section) => {
 		if (!section.pdfSamples) return;
 		try {
-			const { extractSamples } = await module.import('./samples-DjJ2Vj5H-cJ30xdwQ.js');
+			const { extractSamples } = await module.import('./samples-d3IgjX8c-cJ30xdwQ.js');
 			const images = settings.pdfAsImages && section.images ? await section.images() : void 0;
 			const samples = await extractSamples(platform.request, settings, section.pdfSamples, { images });
 			if (!samples.length) {
@@ -171224,7 +171226,7 @@ async function renderPDFImages(url, { maxPages = 6, maxDim = 1600 } = {}) {
 		await task.destroy();
 	}
 }})}}));
-System.register("./samples-DjJ2Vj5H-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
+System.register("./samples-d3IgjX8c-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
 	"你是竞赛题样例的结构化提取器。用户给出从 PDF 提取的样例区文本（可能含两栏交错、残缺格式）。",
 	"请把每组样例整理为 JSON：{\"samples\":[{\"input\":\"...\",\"output\":\"...\",\"note\":\"可选注释\"}]}",
 	"硬性要求：",
