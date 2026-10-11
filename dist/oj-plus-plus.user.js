@@ -67979,16 +67979,17 @@ async function startApp(platform, site) {
 	const extractPdfSamples = async (section) => {
 		if (!section.pdfSamples) return;
 		try {
-			const { extractSamples } = await module.import('./samples-BKGOOctQ-163sro-c.js');
+			const { extractSamples } = await module.import('./samples-Bi2h6kbp-DuYjbp2I.js');
 			const images = settings.pdfAsImages && section.images ? await section.images() : void 0;
 			const samples = await extractSamples(platform.request, settings, section.pdfSamples, { images });
 			if (!samples.length) {
 				toast(t$1("editor.noSamplesExtracted"), "error");
 				return;
 			}
+			const plain = (s) => s.replace(/<br\s*\/?>/gi, "\n");
 			editorPanel?.addSamples(samples.map((s) => ({
-				input: s.input,
-				output: s.output
+				input: plain(s.input),
+				output: plain(s.output)
 			})));
 			toast(t$1("editor.samplesExtracted", { count: samples.length }), "success");
 		} catch (error) {
@@ -171223,14 +171224,15 @@ async function renderPDFImages(url, { maxPages = 6, maxDim = 1600 } = {}) {
 		await task.destroy();
 	}
 }})}}));
-System.register("./samples-BKGOOctQ-163sro-c.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
+System.register("./samples-Bi2h6kbp-DuYjbp2I.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
 	"你是竞赛题样例的结构化提取器。用户给出从 PDF 提取的样例区文本（可能含两栏交错、残缺格式）。",
 	"请把每组样例整理为 JSON：{\"samples\":[{\"input\":\"...\",\"output\":\"...\",\"note\":\"可选注释\"}]}",
 	"硬性要求：",
-	"1. input/output 保留原始行结构与换行，不要合并、不要改写、不要翻译。",
-	"2. 输入输出配对错乱时按上下文合理配对；表头文字（standard input/output 等）不算样例内容。",
-	"3. 无法辨认的字段填空字符串。note 可写样例编号/说明，无可省略。",
-	"4. 只输出 JSON，不要代码块包裹、不要解释。"
+	"1. input/output/note 按 Markdown 表达：公式写 $...$（KaTeX），多行内容的换行用 <br> 标签（不用 \\n）。",
+	"2. 不要合并行、不要改写数据、不要翻译内容。",
+	"3. 输入输出配对错乱时按上下文合理配对；表头文字（standard input/output 等）不算样例内容。",
+	"4. 无法辨认的字段填空字符串。note 可写样例编号/说明，无可省略。",
+	"5. 只输出 JSON，不要代码块包裹、不要解释。"
 ].join("\n");
 /**
 * 把 PDF 样例区文本提取为结构化样例列表。

@@ -204,7 +204,9 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
       const images = settings.pdfAsImages && section.images ? await section.images() : undefined;
       const samples = await extractSamples(platform.request, settings, section.pdfSamples, { images });
       if (!samples.length) { toast(t('editor.noSamplesExtracted'), 'error'); return; }
-      editorPanel?.addSamples(samples.map(s => ({ input: s.input, output: s.output })));
+      // 提取字段是 md/latex/<br> 约定——进编辑器测试行把 <br> 换回 \n（pre 是纯文本）
+      const plain = (s: string) => s.replace(/<br\s*\/?>/gi, '\n');
+      editorPanel?.addSamples(samples.map(s => ({ input: plain(s.input), output: plain(s.output) })));
       toast(t('editor.samplesExtracted', { count: samples.length }), 'success');
     } catch (error) {
       toast(error instanceof Error ? error.message : String(error), 'error');
