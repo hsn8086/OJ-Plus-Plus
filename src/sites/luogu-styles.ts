@@ -1,7 +1,8 @@
 const d = 'html[data-ojpp-theme="dark"]';
 export const LUOGU_DARK = `
-${d} body, ${d} #app, ${d} .lfe-body, ${d} main, ${d} .main-container {
-  background: #1c2128; color: #cdd9e5;
+${d} body, ${d} #app, ${d} .lfe-body, ${d} main, ${d} .main-container,
+${d} .main-container.lside-nav, ${d} .columba-content-wrap {
+  background: #1c2128 !important; color: #cdd9e5;
 }
 ${d} .theme-page {
   --theme-body-back: #1c2128 !important;
@@ -27,6 +28,8 @@ ${d} input:not([type=checkbox]):not([type=radio]), ${d} textarea, ${d} select {
 ${d} pre, ${d} .lfe-marked pre, ${d} .io-sample pre, ${d} :not(pre)>code {
   background: #1c2128; color: #cdd9e5; border-color: #373e47;
 }
+${d} pre code, ${d} code[class*=language], ${d} .lfe-marked code,
+${d} .code-container code { background: transparent; color: #cdd9e5; }
 ${d} .io-sample, ${d} .io-sample .header, ${d} .io-sample .title { background: #22272e; color: #cdd9e5; border-color: #373e47; }
 ${d} table, ${d} th, ${d} td, ${d} hr, ${d} .l-card { border-color: #373e47; }
 ${d} th, ${d} tr:nth-child(even) { background: #22272e; }
@@ -207,4 +210,47 @@ ${d} .light-black, ${d} .l-card .header, ${d} .combo-wrapper .text,
 ${d} .l-radio, ${d} .l-check, ${d} .lfe-radio, ${d} .l-checkbox,
 ${d} [id^="LRadio"], ${d} [id^="LCheck"], ${d} .l-card.burger *,
 ${d} .combo-wrapper .arrow, ${d} .combo-wrapper svg, ${d} .combo-wrapper path { color: #cdd9e5 !important; }
-`;
+
+/* ---------- 题库 tab 条（洛谷/主题库/…） ---------- */
+${d} ul.luogu.luogu { background: #22272e !important; }
+${d} ul.luogu li { color: #cdd9e5; }
+${d} ul.luogu li.selected { background: #539bf5 !important; color: #fff; }
+${d} ul.luogu li:hover { background: #30363d; color: #79b8ff; }
+
+/* ---------- 筛选 tag / 切换标签 ---------- */
+${d} .toggle-tag { background: #1c2128; border-color: #373e47; color: #cdd9e5; }
+${d} .toggle-tag:hover { background: #30363d; color: #79b8ff; }
+${d} .toggle-tag.active, ${d} .toggle-tag.selected { background: #539bf5; color: #fff; }
+
+/* ---------- 题单分类卡（训练列表） ---------- */
+${d} .category-card.category-card { background: #22272e !important; border-color: #373e47 !important; }
+${d} .category-card.category-card:hover { border-color: #539bf5 !important; }
+${d} .category-card.category-card.active { background: #2d333b !important; border-color: #539bf5 !important; }
+${d} .category-card .title, ${d} .category-card .desc { color: #cdd9e5; }
+${d} .category-card .desc { color: #909dab; }
+
+/* ---------- 训练进度环 ---------- */
+${d} circle[fill="#fff"], ${d} circle[fill="white"] { fill: #22272e; }
+${d} circle[stroke="#f2f2f2"], ${d} circle[stroke="#e8e8e8"], ${d} circle[stroke="#fff"] { stroke: #373e47; }
+
+/* ---------- 比赛列表 ---------- */
+${d} .contest-card { border-color: #373e47; }
+${d} .contest-card a.name, ${d} a.name { color: #79b8ff; }
+${d} .contest-card a.name:hover, ${d} a.name:hover { color: #539bf5; }
+${d} .title-row, ${d} .row.space-between { border-color: #373e47; }
+${d} .list-wrap, ${d} .list, ${d} .list-scroll { border-color: #373e47; }
+${d} .header { border-color: #373e47 !important; }
+
+/* ---------- 侧边栏 hover ---------- */
+${d} .sidebar.lside a:hover, ${d} .sidebar.lside li:hover a,
+${d} .lside li:hover > a, ${d} .lside .item:hover { background: #30363d; color: #79b8ff; }
+${d} .sidebar.lside a.selected, ${d} .sidebar.lside .active > a { color: #539bf5; }
+
+/* ---------- 陶片放逐/动态 author 卡 ---------- */
+${d} .author, ${d} .author.author { background: #22272e !important; color: #cdd9e5; }
+${d} .author a, ${d} .author .name { color: #79b8ff; }
+
+/* ---------- 通用按钮/链接对比 ---------- */
+${d} .lfe-button--primary, ${d} .l-button--primary, ${d} button.primary { color: #fff; }
+${d} .punch, ${d} .checkin, ${d} [class*="check"][class*="btn"], ${d} [class*="punch"] { color: #cdd9e5; }
+`

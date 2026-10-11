@@ -61361,8 +61361,9 @@ var qoj = {
 };
 var d$1 = "html[data-ojpp-theme=\"dark\"]";
 var LUOGU_DARK = `
-${d$1} body, ${d$1} #app, ${d$1} .lfe-body, ${d$1} main, ${d$1} .main-container {
-  background: #1c2128; color: #cdd9e5;
+${d$1} body, ${d$1} #app, ${d$1} .lfe-body, ${d$1} main, ${d$1} .main-container,
+${d$1} .main-container.lside-nav, ${d$1} .columba-content-wrap {
+  background: #1c2128 !important; color: #cdd9e5;
 }
 ${d$1} .theme-page {
   --theme-body-back: #1c2128 !important;
@@ -61388,6 +61389,8 @@ ${d$1} input:not([type=checkbox]):not([type=radio]), ${d$1} textarea, ${d$1} sel
 ${d$1} pre, ${d$1} .lfe-marked pre, ${d$1} .io-sample pre, ${d$1} :not(pre)>code {
   background: #1c2128; color: #cdd9e5; border-color: #373e47;
 }
+${d$1} pre code, ${d$1} code[class*=language], ${d$1} .lfe-marked code,
+${d$1} .code-container code { background: transparent; color: #cdd9e5; }
 ${d$1} .io-sample, ${d$1} .io-sample .header, ${d$1} .io-sample .title { background: #22272e; color: #cdd9e5; border-color: #373e47; }
 ${d$1} table, ${d$1} th, ${d$1} td, ${d$1} hr, ${d$1} .l-card { border-color: #373e47; }
 ${d$1} th, ${d$1} tr:nth-child(even) { background: #22272e; }
@@ -61568,6 +61571,49 @@ ${d$1} .light-black, ${d$1} .l-card .header, ${d$1} .combo-wrapper .text,
 ${d$1} .l-radio, ${d$1} .l-check, ${d$1} .lfe-radio, ${d$1} .l-checkbox,
 ${d$1} [id^="LRadio"], ${d$1} [id^="LCheck"], ${d$1} .l-card.burger *,
 ${d$1} .combo-wrapper .arrow, ${d$1} .combo-wrapper svg, ${d$1} .combo-wrapper path { color: #cdd9e5 !important; }
+
+/* ---------- 题库 tab 条（洛谷/主题库/…） ---------- */
+${d$1} ul.luogu.luogu { background: #22272e !important; }
+${d$1} ul.luogu li { color: #cdd9e5; }
+${d$1} ul.luogu li.selected { background: #539bf5 !important; color: #fff; }
+${d$1} ul.luogu li:hover { background: #30363d; color: #79b8ff; }
+
+/* ---------- 筛选 tag / 切换标签 ---------- */
+${d$1} .toggle-tag { background: #1c2128; border-color: #373e47; color: #cdd9e5; }
+${d$1} .toggle-tag:hover { background: #30363d; color: #79b8ff; }
+${d$1} .toggle-tag.active, ${d$1} .toggle-tag.selected { background: #539bf5; color: #fff; }
+
+/* ---------- 题单分类卡（训练列表） ---------- */
+${d$1} .category-card.category-card { background: #22272e !important; border-color: #373e47 !important; }
+${d$1} .category-card.category-card:hover { border-color: #539bf5 !important; }
+${d$1} .category-card.category-card.active { background: #2d333b !important; border-color: #539bf5 !important; }
+${d$1} .category-card .title, ${d$1} .category-card .desc { color: #cdd9e5; }
+${d$1} .category-card .desc { color: #909dab; }
+
+/* ---------- 训练进度环 ---------- */
+${d$1} circle[fill="#fff"], ${d$1} circle[fill="white"] { fill: #22272e; }
+${d$1} circle[stroke="#f2f2f2"], ${d$1} circle[stroke="#e8e8e8"], ${d$1} circle[stroke="#fff"] { stroke: #373e47; }
+
+/* ---------- 比赛列表 ---------- */
+${d$1} .contest-card { border-color: #373e47; }
+${d$1} .contest-card a.name, ${d$1} a.name { color: #79b8ff; }
+${d$1} .contest-card a.name:hover, ${d$1} a.name:hover { color: #539bf5; }
+${d$1} .title-row, ${d$1} .row.space-between { border-color: #373e47; }
+${d$1} .list-wrap, ${d$1} .list, ${d$1} .list-scroll { border-color: #373e47; }
+${d$1} .header { border-color: #373e47 !important; }
+
+/* ---------- 侧边栏 hover ---------- */
+${d$1} .sidebar.lside a:hover, ${d$1} .sidebar.lside li:hover a,
+${d$1} .lside li:hover > a, ${d$1} .lside .item:hover { background: #30363d; color: #79b8ff; }
+${d$1} .sidebar.lside a.selected, ${d$1} .sidebar.lside .active > a { color: #539bf5; }
+
+/* ---------- 陶片放逐/动态 author 卡 ---------- */
+${d$1} .author, ${d$1} .author.author { background: #22272e !important; color: #cdd9e5; }
+${d$1} .author a, ${d$1} .author .name { color: #79b8ff; }
+
+/* ---------- 通用按钮/链接对比 ---------- */
+${d$1} .lfe-button--primary, ${d$1} .l-button--primary, ${d$1} button.primary { color: #fff; }
+${d$1} .punch, ${d$1} .checkin, ${d$1} [class*="check"][class*="btn"], ${d$1} [class*="punch"] { color: #cdd9e5; }
 `;
 var fields = {
 	"题目背景": "background",
@@ -68020,7 +68066,7 @@ async function startApp(platform, site) {
 	const extractPdfSamples = async (section) => {
 		if (!section.pdfSamples) return;
 		try {
-			const { extractSamples } = await module.import('./samples-5ocbPqEj-cJ30xdwQ.js');
+			const { extractSamples } = await module.import('./samples-Bfy4FpKL-cJ30xdwQ.js');
 			const images = settings.pdfAsImages && section.images ? await section.images() : void 0;
 			const samples = await extractSamples(platform.request, settings, section.pdfSamples, { images });
 			if (!samples.length) {
@@ -171418,7 +171464,7 @@ async function renderPDFImages(url, { maxPages = 6, maxDim = 1600 } = {}) {
 		await task.destroy();
 	}
 }})}}));
-System.register("./samples-5ocbPqEj-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
+System.register("./samples-Bfy4FpKL-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
 	"你是竞赛题样例的结构化提取器。用户给出从 PDF 提取的样例区文本（可能含两栏交错、残缺格式）。",
 	"请把每组样例整理为 JSON：{\"samples\":[{\"input\":\"...\",\"output\":\"...\",\"note\":\"可选注释\"}]}",
 	"硬性要求：",
