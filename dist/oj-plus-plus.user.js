@@ -61106,14 +61106,14 @@ function pdfSection(doc) {
 		content.append(summary, pre);
 		frame.after(content);
 	}
-	const text = job.text;
+	const md = job.text.replace(/\n/g, " \\\n");
 	return {
 		kind: "statement",
 		label: t$1("section.statement"),
 		content,
 		ownedContent: true,
 		identity: frame.src,
-		markdown: () => text,
+		markdown: () => md,
 		images: () => module.import('./pdf-text-DEj9jKxS-KQ0mbNzx.js').then((m) => m.renderPDFImages(frame.src)),
 		toolbar: {
 			anchor: content,
