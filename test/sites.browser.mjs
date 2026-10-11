@@ -62,6 +62,15 @@ try {
   assert.equal(await qoj.locator('.ojpp-toolbar').count(), 1);
   await qoj.close();
 
+  // Creation forms contain the same burger/v-codemirror structure as submission cards.
+  // Neither the panel nor its hiding CSS may take over the native Markdown form.
+  const creation = await open('https://www.luogu.com.cn/problem/new?type=T&providerID=101778',
+    '<div class="user-nav"></div><div class="l-card burger"><div class="body"><div class="v-codemirror"><textarea id="native-statement">Native statement</textarea></div><button>Create</button></div></div>',
+    { editorEnabled: true });
+  assert.equal(await creation.locator('.ojpp-editor').count(), 0);
+  assert.equal(await creation.locator('#native-statement').isVisible(), true);
+  await creation.close();
+
   const luogu = await open('https://www.luogu.com.cn/problem/P1001', await fixture('luogu.html'), { targetLang: 'English' });
   assert.equal(await luogu.locator('.ojpp-toolbar').count(), 3);
   assert.equal(await luogu.locator('.io-sample .ojpp-toolbar').count(), 0);

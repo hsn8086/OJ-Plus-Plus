@@ -25,499 +25,50 @@
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
-// @run-at       document-idle
+// @run-at       document-start
 // ==/UserScript==
 
 !function(){function e(e,t){return(t||"")+" (SystemJS Error#"+e+" https://github.com/systemjs/systemjs/blob/main/docs/errors.md#"+e+")"}function t(e,t){if(-1!==e.indexOf("\\")&&(e=e.replace(j,"/")),"/"===e[0]&&"/"===e[1])return t.slice(0,t.indexOf(":")+1)+e;if("."===e[0]&&("/"===e[1]||"."===e[1]&&("/"===e[2]||2===e.length&&(e+="/"))||1===e.length&&(e+="/"))||"/"===e[0]){var n,r=t.slice(0,t.indexOf(":")+1);if(n="/"===t[r.length+1]?"file:"!==r?(n=t.slice(r.length+2)).slice(n.indexOf("/")+1):t.slice(8):t.slice(r.length+("/"===t[r.length])),"/"===e[0])return t.slice(0,t.length-n.length-1)+e;for(var i=n.slice(0,n.lastIndexOf("/")+1)+e,o=[],s=-1,u=0;u<i.length;u++)-1!==s?"/"===i[u]&&(o.push(i.slice(s,u+1)),s=-1):"."===i[u]?"."!==i[u+1]||"/"!==i[u+2]&&u+2!==i.length?"/"===i[u+1]||u+1===i.length?u+=1:s=u:(o.pop(),u+=2):s=u;return-1!==s&&o.push(i.slice(s)),t.slice(0,t.length-n.length)+o.join("")}}function n(e,n){return t(e,n)||(-1!==e.indexOf(":")?e:t("./"+e,n))}function r(e,n,r,i,o){for(var s in e){var a=t(s,r)||s,f=e[s];if("string"==typeof f){var l=c(i,t(f,r)||f,o);l?n[a]=l:u("W1",s,f,"bare specifier did not resolve")}}}function i(e,t,i){var o;for(o in e.imports&&r(e.imports,i.imports,t,i,null),e.scopes||{}){var s=n(o,t);r(e.scopes[o],i.scopes[s]||(i.scopes[s]={}),t,i,s)}for(o in e.depcache||{})i.depcache[n(o,t)]=e.depcache[o];for(o in e.integrity||{})i.integrity[n(o,t)]=e.integrity[o]}function o(e,t){if(t[e])return e;var n=e.length;do{var r=e.slice(0,n+1);if(r in t)return r}while(-1!==(n=e.lastIndexOf("/",n-1)))}function s(e,t){var n=o(e,t);if(n){var r=t[n];if(null===r)return;if(!(e.length>n.length&&"/"!==r[r.length-1]))return r+e.slice(n.length);u("W2",n,r,"should have a trailing '/'")}}function u(t,n,r,i){console.warn(e(t,"Package target "+i+", resolving target '"+r+"' for "+n))}function c(e,t,n){for(var r=e.scopes,i=n&&o(n,r);i;){var u=s(t,r[i]);if(u)return u;i=o(i.slice(0,i.lastIndexOf("/")),r)}return s(t,e.imports)||-1!==t.indexOf(":")&&t}function a(){this[M]={}}function f(e){return e.id}function l(e,t,n,r){if(e.onload(n,t.id,t.d&&t.d.map(f),!!r),n)throw n}function d(t,n,r,i){var o=t[M][n];if(o)return o;var s=[],u=Object.create(null);P&&Object.defineProperty(u,P,{value:"Module"});var c=Promise.resolve().then((function(){return t.instantiate(n,r,i)})).then((function(r){if(!r)throw Error(e(2,"Module "+n+" did not instantiate"));var i=r[1]((function(e,t){o.h=!0;var n=!1;if("string"==typeof e)e in u&&u[e]===t||(u[e]=t,n=!0);else{for(var r in e)t=e[r],r in u&&u[r]===t||(u[r]=t,n=!0);e&&e.__esModule&&(u.__esModule=e.__esModule)}if(n)for(var i=0;i<s.length;i++){var c=s[i];c&&c(u)}return t}),2===r[1].length?{import:function(e,r){return t.import(e,n,r)},meta:t.createContext(n)}:void 0);return o.e=i.execute||function(){},[r[0],i.setters||[],r[2]||[]]}),(function(e){throw o.e=null,o.er=e,l(t,o,e,!0),e})),a=c.then((function(e){return Promise.all(e[0].map((function(r,i){var o=e[1][i],s=e[2][i];return Promise.resolve(t.resolve(r,n)).then((function(e){var r=d(t,e,n,s);return Promise.resolve(r.I).then((function(){return o&&(r.i.push(o),!r.h&&r.I||o(r.n)),r}))}))}))).then((function(e){o.d=e}))}));return o=t[M][n]={id:n,i:s,n:u,m:i,I:c,L:a,h:!1,d:void 0,e:void 0,er:void 0,E:void 0,C:void 0,p:void 0}}function h(e,t,n,r){if(!r[t.id])return r[t.id]=!0,Promise.resolve(t.L).then((function(){return t.p&&null!==t.p.e||(t.p=n),Promise.all(t.d.map((function(t){return h(e,t,n,r)})))})).catch((function(n){if(t.er)throw n;throw t.e=null,l(e,t,n,!1),n}))}function p(e,t){return t.C=h(e,t,t,{}).then((function(){return v(e,t,{})})).then((function(){return t.n}))}function v(e,t,n){function r(){try{var n=o.call(L);if(n)return n=n.then((function(){t.C=t.n,t.E=null,l(e,t,null,!0)}),(function(n){throw t.er=n,t.E=null,l(e,t,n,!0),n})),t.E=n;t.C=t.n,t.L=t.I=void 0}catch(r){throw t.er=r,r}finally{l(e,t,t.er,!0)}}if(!n[t.id]){if(n[t.id]=!0,!t.e){if(t.er)throw t.er;return t.E?t.E:void 0}var i,o=t.e;return t.e=null,t.d.forEach((function(r){try{var o=v(e,r,n);o&&(i=i||[]).push(o)}catch(s){throw t.er=s,l(e,t,s,!1),s}})),i?Promise.all(i).then(r):r()}}function m(){[].forEach.call(document.querySelectorAll("script"),(function(t){if(!t.sp)if("systemjs-module"===t.type){if(t.sp=!0,!t.src)return;System.import("import:"===t.src.slice(0,7)?t.src.slice(7):n(t.src,g)).catch((function(e){if(e.message.indexOf("https://github.com/systemjs/systemjs/blob/main/docs/errors.md#3")>-1){var n=document.createEvent("Event");n.initEvent("error",!1,!1),t.dispatchEvent(n)}return Promise.reject(e)}))}else if("systemjs-importmap"===t.type){t.sp=!0;var r=t.src?(System.fetch||fetch)(t.src,{integrity:t.integrity,priority:t.fetchPriority,passThrough:!0}).then((function(e){if(!e.ok)throw Error("Invalid status code: "+e.status);return e.text()})).catch((function(n){return n.message=e("W4","Error fetching systemjs-import map "+t.src)+"\n"+n.message,console.warn(n),"function"==typeof t.onerror&&t.onerror(),"{}"})):t.innerHTML;W=W.then((function(){return r})).then((function(n){!function(t,n,r){var o={};try{o=JSON.parse(n)}catch(s){console.warn(Error(e("W5","systemjs-importmap contains invalid JSON")+"\n\n"+n+"\n"))}i(o,r,t)}(N,n,t.src||g)}))}}))}var g,y="undefined"!=typeof Symbol,b="undefined"!=typeof self,S="undefined"!=typeof document,w=b?self:global;if(S){var O=document.querySelector("base[href]");O&&(g=O.href)}if(!g&&"undefined"!=typeof location){var E=(g=location.href.split("#")[0].split("?")[0]).lastIndexOf("/");-1!==E&&(g=g.slice(0,E+1))}var x,j=/\\/g,P=y&&Symbol.toStringTag,M=y?Symbol():"@",I=a.prototype;I.import=function(e,t,n){var r=this;return t&&"object"==typeof t&&(n=t,t=void 0),Promise.resolve(r.prepareImport()).then((function(){return r.resolve(e,t,n)})).then((function(e){var t=d(r,e,void 0,n);return t.C||p(r,t)}))},I.createContext=function(e){var t=this;return{url:e,resolve:function(n,r){return Promise.resolve(t.resolve(n,r||e))}}},I.onload=function(){},I.register=function(e,t,n){x=[e,t,n]},I.getRegister=function(){var e=x;return x=void 0,e};var L=Object.freeze(Object.create(null));w.System=new a;var C,R,W=Promise.resolve(),N={imports:{},scopes:{},depcache:{},integrity:{}},T=S;if(I.prepareImport=function(e){return(T||e)&&(m(),T=!1),W},I.getImportMap=function(){return JSON.parse(JSON.stringify(N))},S&&(m(),window.addEventListener("DOMContentLoaded",m)),I.addImportMap=function(e,t){i(e,t||g,N)},S){window.addEventListener("error",(function(e){J=e.filename,_=e.error}));var A=location.origin}I.createScript=function(e){var t=document.createElement("script");t.async=!0,e.indexOf(A+"/")&&(t.crossOrigin="anonymous");var n=N.integrity[e];return n&&(t.integrity=n),t.src=e,t};var J,_,k={},U=I.register;I.register=function(e,t){if(S&&"loading"===document.readyState&&"string"!=typeof e){var n=document.querySelectorAll("script[src]"),r=n[n.length-1];if(r){C=e;var i=this;R=setTimeout((function(){k[r.src]=[e,t],i.import(r.src)}))}}else C=void 0;return U.call(this,e,t)},I.instantiate=function(t,n){var r=k[t];if(r)return delete k[t],r;var i=this;return Promise.resolve(I.createScript(t)).then((function(r){return new Promise((function(o,s){r.addEventListener("error",(function(){s(Error(e(3,"Error loading "+t+(n?" from "+n:""))))})),r.addEventListener("load",(function(){if(document.head.removeChild(r),J===t)s(_);else{var e=i.getRegister(t);e&&e[0]===C&&clearTimeout(R),o(e)}})),document.head.appendChild(r)}))}))},I.shouldFetch=function(){return!1},"undefined"!=typeof fetch&&(I.fetch=fetch);var $=I.instantiate,B=/^(text|application)\/(x-)?javascript(;|$)/;I.instantiate=function(t,n,r){var i=this;return this.shouldFetch(t,n,r)?this.fetch(t,{credentials:"same-origin",integrity:N.integrity[t],meta:r}).then((function(r){if(!r.ok)throw Error(e(7,r.status+" "+r.statusText+", loading "+t+(n?" from "+n:"")));var o=r.headers.get("content-type");if(!o||!B.test(o))throw Error(e(4,'Unknown Content-Type "'+o+'", loading '+t+(n?" from "+n:"")));return r.text().then((function(e){return e.indexOf("//# sourceURL=")<0&&(e+="\n//# sourceURL="+t),(0,eval)(e),i.getRegister(t)}))})):$.apply(this,arguments)},I.resolve=function(n,r){return c(N,t(n,r=r||g)||n,r)||function(t,n){throw Error(e(8,"Unable to resolve bare specifier '"+t+(n?"' from "+n:"'")))}(n,r)};var F=I.instantiate;I.instantiate=function(e,t,n){var r=N.depcache[e];if(r)for(var i=0;i<r.length;i++)d(this,this.resolve(r[i],e),e);return F.call(this,e,t,n)},b&&"function"==typeof importScripts&&(I.instantiate=function(e){var t=this;return Promise.resolve().then((function(){return importScripts(e),t.getRegister(e)}))}),function(e){function t(t){return!e.hasOwnProperty(t)||!isNaN(t)&&t<e.length||a&&e[t]&&"undefined"!=typeof window&&e[t].parent===window}var n,r,i,o=e.System.constructor.prototype,s=o.import;o.import=function(o,u,c){return function(){for(var o in n=r=void 0,e)t(o)||(n?r||(r=o):n=o,i=o)}(),s.call(this,o,u,c)};var u=[[],function(){return{}}],c=o.getRegister;o.getRegister=function(){var o=c.call(this);if(o)return o;var s,a=function(o){var s,u,c=0;for(var a in e)if(!t(a)){if(0===c&&a!==n||1===c&&a!==r)return a;s?(i=a,u=o&&u||a):s=a===i,c++}return u}(this.firstGlobalProp);if(!a)return u;try{s=e[a]}catch(f){return u}return[[],function(e){return{execute:function(){e(s),e({default:s,__useDefault:!0})}}}]};var a="undefined"!=typeof navigator&&-1!==navigator.userAgent.indexOf("Trident")}("undefined"!=typeof self?self:global),function(e){var t=e.System.constructor.prototype,r=/^[^#?]+\.(css|html|json|wasm)([?#].*)?$/,i=t.shouldFetch.bind(t);t.shouldFetch=function(e){return i(e)||r.test(e)};var o=/^application\/json(;|$)/,s=/^text\/css(;|$)/,u=/^application\/wasm(;|$)/,c=t.fetch;t.fetch=function(t,r){return c(t,r).then((function(i){if(r.passThrough)return i;if(!i.ok)return i;var c=i.headers.get("content-type");return o.test(c)?i.json().then((function(e){return new Response(new Blob(['System.register([],function(e){return{execute:function(){e("default",'+JSON.stringify(e)+")}}})"],{type:"application/javascript"}))})):s.test(c)?i.text().then((function(e){return e=e.replace(/url\(\s*(?:(["'])((?:\\.|[^\n\\"'])+)\1|((?:\\.|[^\s,"'()\\])+))\s*\)/g,(function(e,r,i,o){return["url(",r,n(i||o,t),r,")"].join("")})),new Response(new Blob(["System.register([],function(e){return{execute:function(){var s=new CSSStyleSheet();s.replaceSync("+JSON.stringify(e)+');e("default",s)}}})'],{type:"application/javascript"}))})):u.test(c)?(WebAssembly.compileStreaming?WebAssembly.compileStreaming(i):i.arrayBuffer().then(WebAssembly.compile)).then((function(n){e.System.wasmModules||(e.System.wasmModules=Object.create(null)),e.System.wasmModules[t]=n;var r=[],i=[];return WebAssembly.Module.imports&&WebAssembly.Module.imports(n).forEach((function(e){var t=JSON.stringify(e.module);-1===r.indexOf(t)&&(r.push(t),i.push("function(m){i["+t+"]=m}"))})),new Response(new Blob(["System.register(["+r.join(",")+"],function(e){var i={};return{setters:["+i.join(",")+"],execute:function(){return WebAssembly.instantiate(System.wasmModules["+JSON.stringify(t)+"],i).then(function(m){e(m.exports)})}}})"],{type:"application/javascript"}))})):i}))}}("undefined"!=typeof self?self:global);var q="undefined"!=typeof Symbol&&Symbol.toStringTag;I.get=function(e){var t=this[M][e];if(t&&null===t.e&&!t.E)return t.er?null:t.n},I.set=function(t,n){try{new URL(t)}catch(s){console.warn(Error(e("W3",'"'+t+'" is not a valid URL to set in the module registry')))}var r;q&&"Module"===n[q]?r=n:(r=Object.assign(Object.create(null),n),q&&Object.defineProperty(r,q,{value:"Module"}));var i=Promise.resolve(r),o=this[M][t]||(this[M][t]={id:t,i:[],h:!1,d:[],e:null,er:void 0,E:void 0});return!o.e&&!o.E&&(Object.assign(o,{n:r,I:void 0,L:void 0,C:i}),r)},I.has=function(e){return!!this[M][e]},I.delete=function(e){var t=this[M],n=t[e];if(!n||n.p&&null!==n.p.e||n.E)return!1;var r=n.i;return n.d&&n.d.forEach((function(e){var t=e.i.indexOf(n);-1!==t&&e.i.splice(t,1)})),delete t[e],function(){var n=t[e];if(!n||!r||null!==n.e||n.E)return!1;r.forEach((function(e){n.i.push(e),e(n.n)})),r=null}};var D="undefined"!=typeof Symbol&&Symbol.iterator;I.entries=function(){var e,t,n=this,r=Object.keys(n[M]),i=0,o={next:function(){for(;void 0!==(t=r[i++])&&void 0===(e=n.get(t)););return{done:void 0===t,value:void 0!==t&&[t,e]}}};return o[D]=function(){return this},o}}();
 !function(t){function e(t){t.registerRegistry=Object.create(null),t.namedRegisterAliases=Object.create(null)}var r=t.System;e(r);var i,s,n=r.constructor.prototype,l=r.constructor,a=function(){l.call(this),e(this)};a.prototype=n,r.constructor=a;var o=n.register;n.register=function(t,e,r,n){if("string"!=typeof t)return o.apply(this,arguments);var l=[e,r,n];return this.registerRegistry[t]=l,i||(i=l,s=t),Promise.resolve().then((function(){i=null,s=null})),o.apply(this,[e,r,n])};var u=n.resolve;n.resolve=function(t,e){try{return u.call(this,t,e)}catch(r){if(t in this.registerRegistry)return this.namedRegisterAliases[t]||t;throw r}};var c=n.instantiate;n.instantiate=function(t,e,r){var i=this.registerRegistry[t];return i?(this.registerRegistry[t]=null,i):c.call(this,t,e,r)};var g=n.getRegister;n.getRegister=function(t){var e=g.call(this,t);s&&t&&(this.namedRegisterAliases[s]=t);var r=i||e;return i=null,s=null,r}}("undefined"!=typeof self?self:global);
 ;(typeof System!='undefined')&&(System=new System.constructor());
-System.register("./___monkey.entry.js", [],(function(exports,module){'use strict';return{execute:(function(){exports("a",ask);var __defProp = Object.defineProperty;
-var __exportAll = (all, no_symbols) => {
-	let target = {};
-	for (var name in all) __defProp(target, name, {
-		get: all[name],
-		enumerable: true
+System.register("./___monkey.entry.js", [],(function(exports,module){'use strict';return{execute:(function(){exports({c:cacheThemePreference,w:whenDocumentElement});var CACHE_KEY = "ojpp:theme-start:v1";
+function cacheThemePreference(siteId, preference) {
+	try {
+		localStorage.setItem(CACHE_KEY, JSON.stringify({
+			siteId,
+			...preference
+		}));
+	} catch {}
+}
+function whenDocumentElement() {
+	if (document.documentElement) return Promise.resolve(document.documentElement);
+	return new Promise((resolve) => {
+		const observer = new MutationObserver(() => {
+			if (!document.documentElement) return;
+			observer.disconnect();
+			resolve(document.documentElement);
+		});
+		observer.observe(document, { childList: true });
 	});
-	__defProp(target, Symbol.toStringTag, { value: "Module" });
-	return target;
-};
-var APP_NAME = "OJ++";
-/**
-* 英文文案。由 AI 生成初稿后人工校对，键与 zh.ts 一一对应。
-*
-* 键集合必须与 zh.ts 完全一致：缺键会在界面漏出中文，
-* 多键说明 zh.ts 删了文案但没同步这里。
-*/
-var en$2 = {
-	"common.copied": "Copied",
-	"common.copyFailed": "Copy failed",
-	"common.close": "Close",
-	"common.cancel": "Cancel",
-	"common.save": "Save",
-	"common.unnamed": "Unnamed",
-	"common.notFilled": "Not set",
-	"app.settingsTitle": "{name} Settings",
-	"app.settingsSaved": "Settings saved",
-	"toolbar.group": "{label} toolbar",
-	"toolbar.translate": "AI Translate",
-	"toolbar.retranslate": "Retranslate",
-	"toolbar.markdown": "Markdown view",
-	"toolbar.backToOriginal": "Back to original",
-	"toolbar.copyOriginal": "Copy original",
-	"toolbar.noContent": "Nothing to translate",
-	"toolbar.translating": "Translating — click to stop",
-	"toolbar.translateFailed": "Translation failed: {message}",
-	"toolbar.retry": "Retry: {message}",
-	"result.title": "AI Translate",
-	"result.copy": "Copy translation",
-	"result.collapse": "Collapse",
-	"result.expand": "Expand",
-	"settings.title": "Settings",
-	"settings.tab.general": "Translation",
-	"settings.tab.provider": "Providers",
-	"settings.tab.advanced": "Advanced",
-	"settings.general": "General",
-	"settings.basic": "Basic",
-	"settings.behavior": "Behavior",
-	"settings.providers": "Providers",
-	"settings.language": "Language",
-	"settings.name": "Name",
-	"settings.manage": "Manage",
-	"settings.edit": "Edit",
-	"settings.duplicate": "Duplicate",
-	"settings.delete": "Delete",
-	"settings.noProvider": "No providers",
-	"settings.noMatch": "No matches",
-	"settings.search": "Search...",
-	"settings.reset": "Reset to defaults",
-	"settings.resetConfirm": "Reset to default settings? Your current configuration will be cleared.",
-	"settings.saveFailed": "Save failed: {message}",
-	"settings.uiLanguage": "Interface language",
-	"settings.uiLanguageHint": "Language used for the settings panel and buttons. Follows the browser language by default.",
-	"settings.localeAuto": "Follow browser",
-	"settings.localeZh": "简体中文",
-	"settings.localeEn": "English",
-	"settings.targetLang": "Target language",
-	"settings.targetLangHint": "Language for translations, e.g. 简体中文 / English / 日本語.",
-	"settings.targetLangPlaceholder": "简体中文",
-	"settings.extraPrompt": "Extra prompt",
-	"settings.extraPromptPlaceholder": "e.g. Keep proper nouns in English; keep explanations brief.",
-	"settings.extraPromptHint": "Appended after the built-in translation prompt.",
-	"settings.wholeBlock": "Whole block",
-	"settings.wholeBlockHint": "Send the whole block to the model in one request for fuller context. When off, content is split by headings and paragraphs, which suits very long problem statements or models with smaller context windows.",
-	"settings.autoTranslate": "Auto-translate problem statement",
-	"settings.autoTranslateHint": "Per-site toggle; automatically translate the problem statement area when a problem page opens.",
-	"settings.streaming": "Streaming",
-	"settings.pdfAsImages": "Send statement images to vision models",
-	"settings.autoExtractSamples": "Auto-extract samples from PDF statements",
-	"settings.pdfPrompt": "Extra prompt for PDF statements",
-	"settings.pdfPromptPlaceholder": "Custom requirements appended after the built-in PDF prompt; leave empty to use the default",
-	"settings.streamingHint": "Render as it generates for a faster first paint. When off, the full translation appears at once. Falls back automatically if the Provider or script manager doesn't support it.",
-	"settings.theme": "Site theme",
-	"settings.themeHint": "Only affects styles the script adds for the site. If the site has its own dark mode, keep “Follow system”.",
-	"settings.themeAuto": "Follow system",
-	"settings.themeLight": "Light",
-	"settings.themeDark": "Dark",
-	"settings.timeout": "Timeout (ms)",
-	"settings.retries": "Retries",
-	"settings.retriesHint": "Only applies to network errors and 5xx responses.",
-	"settings.addProvider": "Add provider",
-	"settings.editProvider": "Edit provider",
-	"settings.backToList": "Back to list",
-	"settings.chooseProvider": "Choose a provider",
-	"settings.chooseProviderHint": "Start from a preset, or pick Custom and fill it in yourself.",
-	"settings.providerSearch": "Search providers…",
-	"settings.noProviderMatch": "No matching provider",
-	"settings.providerList": "Configured",
-	"settings.providerListEmpty": "No providers yet. Click “Add provider” above to start.",
-	"settings.enableProvider": "Enabled",
-	"settings.confirmAdd": "Add",
-	"settings.deleteConfirm": "Delete this provider?",
-	"settings.inUse": "In use",
-	"settings.addFromPreset": "Add from preset",
-	"settings.add": "Add",
-	"settings.providerActive": "Active: {name} · {model}",
-	"settings.manageProviders": "Manage providers",
-	"settings.providerConfig": "Basic configuration",
-	"settings.advancedOptions": "Advanced options",
-	"settings.actions": "Actions",
-	"settings.deleteProvider": "Delete",
-	"settings.providerName": "Label",
-	"settings.providerNamePlaceholder": "Name this configuration",
-	"settings.protocol": "Protocol",
-	"settings.protocolHint": "Determines the request body format and how responses are parsed.",
-	"settings.baseUrl": "Base URL",
-	"settings.baseUrlHint": "Up to /v1 is enough — the script appends /chat/completions, /responses, or /messages. You can also enter the full endpoint.",
-	"settings.model": "Model",
-	"settings.apiKeyPlaceholder": "Leave empty for local services",
-	"settings.apiKeyHint": "Stored in this platform's local storage and sent with requests to your configured endpoint. Leave empty for local inference services; no auth header is sent.",
-	"settings.reasoning": "Reasoning",
-	"settings.reasoningHint": "Maps to the thinking field; only some Providers support it.",
-	"settings.reasoningEffort": "Reasoning effort",
-	"settings.reasoningEffortHint": "Maps to reasoning_effort / reasoning.effort.",
-	"settings.effortDefault": "Model default",
-	"settings.effortEnabled": "On",
-	"settings.effortDisabled": "Off",
-	"settings.headers": "Extra headers",
-	"settings.headersPlaceholder": "X-Custom-Header: value\\nOne per line",
-	"settings.headersHint": "One Key: Value per line; overrides default headers with the same name.",
-	"settings.body": "Extra request body fields",
-	"settings.bodyHint": "A JSON object merged into the request body; can override any field, such as top_p or max_tokens.",
-	"settings.test": "Test connection",
-	"settings.testing": "Testing…",
-	"settings.testOk": "Connected. Model replied: {reply}",
-	"settings.testFail": "Connection failed: {message}",
-	"settings.copyProvider": "Duplicate configuration",
-	"settings.providerCopySuffix": "{name} copy",
-	"settings.keepOne": "At least one configuration is required.",
-	"settings.providerFooter": "Configurations are stored in this platform's local storage. Translation content and API Key are sent to your configured Provider; you can test the connection on the Providers tab.",
-	"settings.preview": "Configuration preview (Key hidden)",
-	"settings.importPlaceholder": "Paste exported JSON, then click Import",
-	"settings.import": "Import",
-	"settings.importMissing": "Missing providers array",
-	"settings.importOk": "Imported. Takes effect after saving.",
-	"settings.importFail": "Import failed: {message}",
-	"settings.importTitle": "Import configuration",
-	"translate.status": "Translating…",
-	"translate.statusChunk": "Translating chunk {index}/{total}…",
-	"translate.statusSamples": "Organizing samples…",
-	"toolbar.extractSamples": "Extract samples",
-	"editor.samplesExtracted": "Extracted {count} sample(s) into the editor",
-	"editor.noSamplesExtracted": "No samples extracted",
-	"translate.unknownProvider": "Not configured",
-	"error.noProvider": "No Provider configured yet. Open the settings panel and add one first.",
-	"error.noModel": "Model name is empty",
-	"error.requestFailed": "Translation request failed",
-	"error.emptyResponse": "The endpoint returned an empty response; the model may not support this or the prompt was rejected",
-	"error.emptyButOk": "(Empty response, but status code is OK)",
-	"error.network": "Network request failed. Check your connection or the endpoint URL.",
-	"error.timeout": "Request timed out",
-	"error.streamRead": "Failed to read the Streaming response",
-	"error.notUserscript": "Install OJ++ through Tampermonkey or Violentmonkey and grant the required permissions",
-	"error.baseUrlEmpty": "Base URL is empty. Please fill it in the settings.",
-	"site.nowcoder": "Nowcoder",
-	"site.codeforces": "Codeforces",
-	"atcoder.signIn": "Sign in to AtCoder before running tests or submitting code.",
-	"atcoder.testBusy": "An AtCoder custom test is already running. Try again after it finishes.",
-	"atcoder.testTimeout": "Custom test timed out. Check the AtCoder Custom Test page before retrying.",
-	"atcoder.formUnavailable": "AtCoder submission form is unavailable. Open a task page and sign in.",
-	"atcoder.verification": "Complete the verification in the AtCoder submission form below, then submit again.",
-	"atcoder.notConfirmed": "AtCoder did not confirm submission. Check the native submission form.",
-	"site.pdfText": "Extracted PDF text (check formulas and layout against the original)",
-	"settings.authorizing": "Checking provider access… Grant permission if the authorization tab opens.",
-	"settings.sites": "Site features",
-	"settings.sitesHint": "Configure each site independently. Auto-translation requires the toolbar; editors also follow the global editor setting.",
-	"settings.siteTranslation": "Translation, Markdown and copy toolbar",
-	"settings.siteI18n": "Localize website interface",
-	"settings.siteDark": "Website dark theme",
-	"settings.siteEditor": "Code editor",
-	"section.contest": "Contest overview",
-	"section.constraints": "Constraints",
-	"section.statement": "Problem statement",
-	"section.samples": "Samples",
-	"section.input": "Input",
-	"section.output": "Output",
-	"section.note": "Note",
-	"section.solution": "Solution",
-	"section.blog": "Blog",
-	"section.comment": "Comment",
-	"section.talk": "Message",
-	"preset.customOpenAI": "Custom (OpenAI Chat compatible)",
-	"editor.title": "Code",
-	"editor.run": "Test samples",
-	"editor.custom": "Custom test",
-	"editor.customPlaceholder": "Input data (stdin)",
-	"editor.runOne": "Run",
-	"editor.submit": "Submit",
-	"editor.submitting": "Submitting…",
-	"editor.submitted": "Submitted — view status →",
-	"editor.submitFailed": "Submit failed",
-	"editor.running": "Running…",
-	"editor.done": "Done",
-	"editor.match": "Output matches",
-	"editor.mismatch": "Output differs",
-	"editor.accepted": "Accepted",
-	"editor.wrongAnswer": "Wrong answer",
-	"editor.runError": "Run failed",
-	"editor.sample": "Sample",
-	"editor.siteRun": "Run on site",
-	"editor.localRun": "Local WASM",
-	"editor.localRuntime": "Local: Clang 8 (C11/C++17, libc++) or CPython 3.11.3. Results may differ from the site judge.",
-	"editor.localTimeout": "Time limit per local test (compilation has a separate limit)",
-	"editor.localUnsupported": "Local execution supports C, C++ and Python. Use site execution for this language.",
-	"editor.localUnavailable": "Local execution requires the OJ++ browser extension.",
-	"editor.cancelled": "Cancelled",
-	"editor.stderr": "Standard error (stderr)",
-	"editor.expected": "Expected output",
-	"editor.customRun": "Custom test",
-	"editor.noSamples": "No samples found — click \"+ Custom test\" to add one",
-	"editor.noProblem": "Cannot detect problem code on this page",
-	"editor.runAll": "Run all",
-	"editor.addTest": "Add custom test",
-	"editor.customN": "Custom",
-	"editor.delete": "Delete",
-	"editor.input": "Input",
-	"editor.enabled": "Problem page code editor",
-	"editor.enabledHint": "Show a code editor on supported sites’ problem pages — test samples, run custom input, and submit directly.",
-	"editor.lspUrl": "LSP address",
-	"editor.lspUrlPlaceholder": "ws://localhost:20876 (empty to disable)",
-	"editor.lspUrlHint": "Connect a local LSP WebSocket bridge (e.g. lsp-ws-proxy) for semantic completion; leave empty for keyword completion only."
-};
-/**
-* 中文文案，同时作为键的唯一定义来源。
-*
-* 新增文案时先在这里加键，再在 en.ts 补对应翻译。
-* 键按界面区域分组，用 `.` 分隔，便于查找。
-*/
-var zh$2 = {
-	"common.copied": "已复制",
-	"common.copyFailed": "复制失败",
-	"common.close": "关闭",
-	"common.cancel": "取消",
-	"common.save": "保存",
-	"common.unnamed": "未命名",
-	"common.notFilled": "未填",
-	"app.settingsTitle": "{name} 设置",
-	"app.settingsSaved": "设置已保存",
-	"toolbar.group": "{label}工具栏",
-	"toolbar.translate": "AI 翻译",
-	"toolbar.retranslate": "重新翻译",
-	"toolbar.markdown": "Markdown 视图",
-	"toolbar.backToOriginal": "返回原始内容",
-	"toolbar.copyOriginal": "复制原文",
-	"toolbar.noContent": "没有可翻译的内容",
-	"toolbar.translating": "翻译中，点击中止",
-	"toolbar.translateFailed": "翻译失败：{message}",
-	"toolbar.retry": "重试：{message}",
-	"result.title": "AI 翻译",
-	"result.copy": "复制译文",
-	"result.collapse": "收起",
-	"result.expand": "展开",
-	"settings.title": "设置",
-	"settings.tab.general": "翻译设置",
-	"settings.tab.provider": "提供商",
-	"settings.tab.advanced": "高级",
-	"settings.general": "通用",
-	"settings.basic": "基础配置",
-	"settings.behavior": "翻译行为",
-	"settings.providers": "提供商",
-	"settings.language": "界面语言",
-	"settings.name": "名称",
-	"settings.manage": "管理",
-	"settings.edit": "编辑",
-	"settings.duplicate": "复制",
-	"settings.delete": "删除",
-	"settings.noProvider": "无提供商",
-	"settings.noMatch": "无匹配结果",
-	"settings.search": "搜索...",
-	"settings.reset": "恢复默认",
-	"settings.resetConfirm": "确定恢复默认设置？当前配置会被清空。",
-	"settings.saveFailed": "保存失败：{message}",
-	"settings.uiLanguage": "界面语言",
-	"settings.uiLanguageHint": "设置面板和按钮使用的语言。自动跟随浏览器语言。",
-	"settings.localeAuto": "跟随浏览器",
-	"settings.localeZh": "简体中文",
-	"settings.localeEn": "English",
-	"settings.targetLang": "目标语言",
-	"settings.targetLangHint": "译文使用的语言，例如 简体中文 / English / 日本語。",
-	"settings.targetLangPlaceholder": "简体中文",
-	"settings.extraPrompt": "追加提示词",
-	"settings.extraPromptPlaceholder": "例如：专有名词保留英文原文；解释尽量简短。",
-	"settings.extraPromptHint": "会拼接到内置翻译提示词之后。",
-	"settings.wholeBlock": "整段翻译",
-	"settings.wholeBlockHint": "开启后把整块内容一次性发给模型，上下文更完整；关闭则按标题和段落切块，适合超长题面或上下文窗口较小的模型。",
-	"settings.autoTranslate": "自动翻译题面",
-	"settings.autoTranslateHint": "按站点分别开关；打开题目页后自动翻译题目描述区域。",
-	"settings.streaming": "流式显示",
-	"settings.pdfAsImages": "题面图片发给视觉模型",
-	"settings.autoExtractSamples": "PDF 题面自动提取样例",
-	"settings.pdfPrompt": "PDF 翻译附加提示词",
-	"settings.pdfPromptPlaceholder": "追加在 PDF 专用提示词后面的自定义要求；留空用内置",
-	"settings.streamingHint": "边生成边渲染，首屏更快。关闭后等整段译完再一次性显示；服务商或脚本管理器不支持时会自动回退。",
-	"settings.theme": "站点配色",
-	"settings.themeHint": "只影响脚本为站点补的样式；站点自身有暗色模式时选「跟随系统」即可。",
-	"settings.themeAuto": "跟随系统",
-	"settings.themeLight": "浅色",
-	"settings.themeDark": "暗色",
-	"settings.timeout": "超时（毫秒）",
-	"settings.retries": "失败重试次数",
-	"settings.retriesHint": "仅对网络错误和 5xx 生效。",
-	"settings.addProvider": "添加提供商",
-	"settings.editProvider": "编辑提供商",
-	"settings.backToList": "返回列表",
-	"settings.chooseProvider": "选择提供商",
-	"settings.chooseProviderHint": "从预设开始，或选择自定义自己填。",
-	"settings.providerSearch": "查找提供商…",
-	"settings.noProviderMatch": "没有匹配的提供商",
-	"settings.providerList": "已配置",
-	"settings.providerListEmpty": "还没有提供商，点上面的「添加提供商」开始。",
-	"settings.enableProvider": "启用",
-	"settings.confirmAdd": "添加",
-	"settings.deleteConfirm": "删除这个提供商？",
-	"settings.inUse": "使用中",
-	"settings.addFromPreset": "从预设新增",
-	"settings.add": "新增",
-	"settings.providerActive": "当前使用：{name} · {model}",
-	"settings.manageProviders": "管理提供商",
-	"settings.providerConfig": "基础配置",
-	"settings.advancedOptions": "高级选项",
-	"settings.actions": "操作",
-	"settings.deleteProvider": "删除",
-	"settings.providerName": "备注名",
-	"settings.providerNamePlaceholder": "给这个配置起个名字",
-	"settings.protocol": "接口协议",
-	"settings.protocolHint": "决定请求体格式与响应解析方式。",
-	"settings.baseUrl": "接口地址",
-	"settings.baseUrlHint": "填到 /v1 即可，脚本会自动补 /chat/completions、/responses 或 /messages；也可直接填完整端点。",
-	"settings.model": "模型",
-	"settings.apiKeyPlaceholder": "本地服务可留空",
-	"settings.apiKeyHint": "保存在当前平台的本地存储中，随请求发送到你配置的接口。本地推理服务可以留空，此时不会发送认证头。",
-	"settings.reasoning": "推理开关",
-	"settings.reasoningHint": "对应 thinking 字段，部分服务商才支持。",
-	"settings.reasoningEffort": "推理强度",
-	"settings.reasoningEffortHint": "对应 reasoning_effort / reasoning.effort。",
-	"settings.effortDefault": "跟随模型默认",
-	"settings.effortEnabled": "开启",
-	"settings.effortDisabled": "关闭",
-	"settings.headers": "额外请求头",
-	"settings.headersPlaceholder": "X-Custom-Header: value\n每行一个",
-	"settings.headersHint": "每行 Key: Value，会覆盖同名默认请求头。",
-	"settings.body": "额外请求体字段",
-	"settings.bodyHint": "JSON 对象，会合并进请求体，可覆盖任意字段，例如 top_p、max_tokens。",
-	"settings.test": "测试连接",
-	"settings.testing": "正在测试…",
-	"settings.testOk": "连接成功，模型回复：{reply}",
-	"settings.testFail": "连接失败：{message}",
-	"settings.copyProvider": "复制配置",
-	"settings.providerCopySuffix": "{name} 副本",
-	"settings.keepOne": "至少保留一个配置。",
-	"settings.providerFooter": "配置保存在当前平台的本地存储中。翻译内容与 API Key 发往你配置的提供商；可在「提供商」页测试连接。",
-	"settings.preview": "配置预览（已隐藏 Key）",
-	"settings.importPlaceholder": "粘贴导出的 JSON 后点「导入」",
-	"settings.import": "导入",
-	"settings.importMissing": "缺少 providers 数组",
-	"settings.importOk": "导入成功，保存后生效。",
-	"settings.importFail": "导入失败：{message}",
-	"settings.importTitle": "导入配置",
-	"translate.status": "正在翻译…",
-	"translate.statusChunk": "正在翻译第 {index}/{total} 段…",
-	"translate.statusSamples": "正在整理样例…",
-	"toolbar.extractSamples": "提取样例",
-	"editor.samplesExtracted": "已提取 {count} 组样例进编辑器",
-	"editor.noSamplesExtracted": "没提取到样例",
-	"translate.unknownProvider": "未配置",
-	"error.noProvider": "还没有配置任何提供商，请先打开设置面板添加一个",
-	"error.noModel": "未填写模型名",
-	"error.requestFailed": "翻译请求失败",
-	"error.emptyResponse": "接口返回了空内容，可能是模型不支持或提示词被拒绝",
-	"error.emptyButOk": "(空响应，但状态码正常)",
-	"error.network": "网络请求失败，请检查网络或接口地址",
-	"error.timeout": "请求超时",
-	"error.streamRead": "读取流式响应失败",
-	"error.notUserscript": "请通过 Tampermonkey 或 Violentmonkey 安装 OJ++，并允许脚本所需权限",
-	"error.baseUrlEmpty": "接口地址为空，请在设置里填写",
-	"site.nowcoder": "牛客",
-	"site.codeforces": "Codeforces",
-	"atcoder.signIn": "请先登录 AtCoder，再运行测试或提交代码。",
-	"atcoder.testBusy": "AtCoder 正在运行另一个自定义测试，请等待完成后重试。",
-	"atcoder.testTimeout": "自定义测试超时，请先检查 AtCoder 自定义测试页的状态。",
-	"atcoder.formUnavailable": "找不到 AtCoder 提交表单，请打开题目页并确认已登录。",
-	"atcoder.verification": "请在下方 AtCoder 提交表单中完成人机验证，再重新提交。",
-	"atcoder.notConfirmed": "AtCoder 未确认提交成功，请检查原生提交表单。",
-	"site.pdfText": "PDF 提取文本（公式与排版请对照原件）",
-	"settings.authorizing": "正在检查服务权限；如打开授权页，请授权后返回…",
-	"settings.sites": "站点功能",
-	"settings.sitesHint": "独立控制每个站点。自动翻译需要开启翻译工具栏；编辑器还受总开关控制。",
-	"settings.siteTranslation": "翻译、Markdown 与复制工具栏",
-	"settings.siteI18n": "站点界面本地化",
-	"settings.siteDark": "站点暗色适配",
-	"settings.siteEditor": "代码编辑器",
-	"section.contest": "比赛介绍",
-	"section.constraints": "约束条件",
-	"section.statement": "题目描述",
-	"section.samples": "样例",
-	"section.input": "输入描述",
-	"section.output": "输出描述",
-	"section.note": "提示",
-	"section.solution": "题解",
-	"section.blog": "博文",
-	"section.comment": "评论",
-	"section.talk": "私信",
-	"preset.customOpenAI": "自定义（兼容 OpenAI Chat）",
-	"editor.title": "代码",
-	"editor.run": "测试样例",
-	"editor.custom": "自定义测试",
-	"editor.customPlaceholder": "输入数据（stdin）",
-	"editor.runOne": "运行",
-	"editor.submit": "提交",
-	"editor.submitting": "提交中…",
-	"editor.submitted": "已提交，查看提交记录 →",
-	"editor.submitFailed": "提交失败",
-	"editor.running": "运行中…",
-	"editor.done": "完成",
-	"editor.match": "输出一致",
-	"editor.mismatch": "输出不一致",
-	"editor.accepted": "Accepted",
-	"editor.wrongAnswer": "Wrong answer",
-	"editor.runError": "运行失败",
-	"editor.sample": "样例",
-	"editor.siteRun": "站点运行",
-	"editor.localRun": "本地 WASM",
-	"editor.localRuntime": "本地使用 Clang 8（C11/C++17、libc++）或 CPython 3.11.3；与站点评测环境可能不同。",
-	"editor.localTimeout": "每条本地测试的超时限制（编译单独计时）",
-	"editor.localUnsupported": "本地运行目前支持 C、C++ 和 Python；此语言请使用站点运行。",
-	"editor.localUnavailable": "当前平台没有本地运行器，请使用 OJ++ 扩展版。",
-	"editor.cancelled": "已取消",
-	"editor.stderr": "标准错误（stderr）",
-	"editor.expected": "期望输出",
-	"editor.customRun": "自定义测试",
-	"editor.noSamples": "页面里没找到样例，点「+自定义测试」手动添加",
-	"editor.noProblem": "当前页面识别不到题号，无法提交",
-	"editor.runAll": "运行全部",
-	"editor.addTest": "添加自定义测试",
-	"editor.customN": "自定义",
-	"editor.delete": "删除",
-	"editor.input": "输入",
-	"editor.enabled": "题目页代码编辑器",
-	"editor.enabledHint": "在支持的站点题目页显示代码编辑器，可测样例、自定义测试并直接提交。",
-	"editor.lspUrl": "LSP 地址",
-	"editor.lspUrlPlaceholder": "ws://localhost:20876（留空关闭）",
-	"editor.lspUrlHint": "连接本机 LSP WebSocket 桥（如 lsp-ws-proxy）做语义补全；留空只用关键字补全。"
-};
-var CATALOGS = {
-	zh: zh$2,
-	en: en$2
-};
-/**
-* 浏览器语言 → 支持的语言。
-* 只有明确是中文时才用中文，其余一律回退英文，
-* 这样新增语言前不会出现半截中文。
-*/
-function resolveLocale(setting, languages) {
-	if (setting === "zh" || setting === "en") return setting;
-	const first = ((typeof navigator !== "undefined" ? navigator.languages ?? [] : []))[0] ?? "";
-	return /^zh\b/i.test(first) ? "zh" : "en";
 }
-var current = "zh";
-var listeners = /* @__PURE__ */ new Set();
-function getLocale() {
-	return current;
-}
-function setLocale(locale) {
-	if (locale === current) return;
-	current = locale;
-	for (const listener of listeners) listener(locale);
-}
-/**
-* 取文案并替换 {name} 形式的占位符。
-*
-* 找不到键时回退中文，再回退键名本身，方便在界面上一眼看出漏翻。
-*/
-function t$1(key, params) {
-	const template = CATALOGS[current][key] ?? zh$2[key] ?? key;
-	if (!params) return template;
-	return template.replace(/\{(\w+)\}/g, (match, name) => name in params ? String(params[name]) : match);
-}
+var EARLY_THEME_CSS = exports("E",`
+html[data-ojpp-theme="dark"] { background: #1c2128; color-scheme: dark; }
+/* First visit has no synchronous hint. Do not paint unthemed content while storage resolves.
+   CSS also releases the guard if the startup script is interrupted. */
+html[data-ojpp-theme-pending] body { visibility: hidden; animation: ojpp-theme-reveal 0s 1.2s forwards; }
+@keyframes ojpp-theme-reveal { to { visibility: visible; } }
+`);
+whenDocumentElement().then(async () => {
+	const [{ startApp }, { createUserscriptPlatform }, { resolveSite }, { toast }] = await Promise.all([
+		module.import('./app-DDtjY2KX-B9tN-FLq.js').then((n) => n.t),
+		module.import('./userscript-Nyzl0XHx-pRFNYaLy.js'),
+		module.import('./sites-_SPfNL69-CxwJjhDI.js').then((n) => n.n),
+		module.import('./toast-C52sDx5c-BTYeArBY.js')
+	]);
+	const site = resolveSite(new URL(location.href));
+	if (site) await startApp(createUserscriptPlatform(), site).catch((error) => toast(String(error), "error"));
+}).catch((error) => console.error("[OJ++]", error));})}}));
+System.register("./app-DDtjY2KX-B9tN-FLq.js", ['./sites-_SPfNL69-CxwJjhDI.js','./___monkey.entry.js','./i18n-D1L63o1m-DRxdwpYd.js','./toast-C52sDx5c-BTYeArBY.js'],(function(exports,module){'use strict';var __exportAll,restorePageI18n,sites,localLanguageFor,whenDocumentElement,cacheThemePreference,EARLY_THEME_CSS,setLocale,resolveLocale,t$1,getLocale,toast;return{setters:[function(module){__exportAll=module.a;restorePageI18n=module.i;sites=module.t;localLanguageFor=module.r;},function(module){whenDocumentElement=module.w;cacheThemePreference=module.c;EARLY_THEME_CSS=module.E;},function(module){setLocale=module.s;resolveLocale=module.r;t$1=module.t;getLocale=module.g;},function(module){toast=module.toast;}],execute:(function(){exports({n:ask,startApp:startApp});var APP_NAME = "OJ++";
 var SETTINGS_KEY = "ojpp:settings";
 var DEFAULT_TARGET_LANG = "简体中文";
 var DEFAULT_MODEL = "gpt-6-luna";
@@ -701,136 +252,6 @@ function normalizeSiteFeatures(raw) {
 function isAutoTranslateEnabled(settings, siteId) {
 	return isSiteFeatureEnabled(settings, siteId, "translation") && (settings.autoTranslate[siteId] ?? settings.autoTranslate["*"] ?? false);
 }
-/** 默认不翻译的祖先选择器：代码块、编辑器、我们脚本注入的 UI */
-var DEFAULT_EXCLUDE = "pre, code, textarea, script, style, noscript, option, .cm-editor, .ace_editor, .MathJax, .tex-span, [class*=\"ojpp-\"]";
-var originals = /* @__PURE__ */ new WeakMap();
-function translated(node, next, value = false) {
-	const doc = node.ownerDocument;
-	let records = originals.get(doc);
-	if (!records) originals.set(doc, records = /* @__PURE__ */ new Map());
-	const current = value ? node.value : node.textContent ?? "";
-	if (current === next) return;
-	let original = records.get(node);
-	if (!original || current !== original.after) {
-		original = {
-			before: current,
-			after: next,
-			value,
-			...node.nodeType === 1 && !value ? { children: [...node.childNodes] } : {}
-		};
-		records.set(node, original);
-	}
-	original.after = next;
-	if (value) node.value = next;
-	else node.textContent = next;
-}
-/** 恢复仍由本地化逻辑持有的文本，不覆盖站点在此后更新的内容。 */
-function restorePageI18n(doc) {
-	const records = originals.get(doc);
-	if (!records) return;
-	for (const [node, saved] of records) {
-		const current = saved.value ? node.value : node.textContent;
-		if (node.isConnected && current === saved.after) {
-			if (saved.value) node.value = saved.before;
-			else if (saved.children) node.replaceChildren(...saved.children);
-			else node.textContent = saved.before;
-		}
-		if (node.nodeType === 1) node.removeAttribute("data-ojpp-i18n");
-	}
-	records.clear();
-}
-/**
-* 把 rules 应用到 doc。
-* 文本按单个文本节点匹配——一个元素里「Input + [Copy 钮]」这类
-* 文本和子元素混排的，只替换文本部分，不动子元素。
-*/
-function applyPageI18n(doc, rules) {
-	const records = originals.get(doc);
-	if (records) {
-		for (const node of records.keys()) if (!node.isConnected) records.delete(node);
-	}
-	for (const rule of rules) {
-		const exclude = rule.exclude ?? DEFAULT_EXCLUDE;
-		const prefixEntries = rule.prefixMap ? Object.entries(rule.prefixMap) : null;
-		for (const scope of doc.querySelectorAll(rule.scope)) {
-			if (rule.map || prefixEntries || rule.replaceMap) {
-				const replaceEntries = rule.replaceMap ? Object.entries(rule.replaceMap) : null;
-				const walker = doc.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
-				const hit = [];
-				const regexHit = [];
-				let n;
-				while (n = walker.nextNode()) {
-					const parent = n.parentElement;
-					if (!parent || parent.closest(exclude) || parent.dataset.ojppI18n === "skip") continue;
-					const text = n.textContent?.trim();
-					if (!text) continue;
-					if (replaceEntries) for (const [pattern, to] of replaceEntries) try {
-						if (text.match(new RegExp(pattern))) regexHit.push({
-							node: n,
-							pattern,
-							to
-						});
-					} catch {}
-					const arrow = /^[\u2192\u00bb\u25b8\u2794\u279C>\s]+\s*/.exec(text)?.[0] ?? "";
-					const core = arrow ? text.slice(arrow.length).trim() : text;
-					if (rule.map?.[core]) {
-						hit.push({
-							node: n,
-							from: core,
-							to: rule.map[core]
-						});
-						continue;
-					}
-					if (rule.map?.[text]) {
-						hit.push({
-							node: n,
-							from: text,
-							to: rule.map[text]
-						});
-						continue;
-					}
-					if (prefixEntries) for (const [from, to] of prefixEntries) {
-						const target = arrow ? core : text;
-						if (target === from || target.startsWith(from + " ") || target.startsWith(from + ",")) {
-							hit.push({
-								node: n,
-								from,
-								to
-							});
-							break;
-						}
-					}
-				}
-				for (const { node, from, to } of hit) translated(node, (node.textContent ?? "").replace(from, to));
-				for (const { node, pattern, to } of regexHit) try {
-					translated(node, (node.textContent ?? "").replace(new RegExp(pattern, "g"), to));
-				} catch {}
-			}
-			if (rule.values) for (const el of [...scope.matches("input, button") ? [scope] : [], ...scope.querySelectorAll("input, button")]) {
-				if (el.dataset.ojppI18n || el.closest(exclude)) continue;
-				const v = (el.tagName === "INPUT" ? el.value : el.textContent)?.trim() ?? "";
-				if (v && rule.values[v]) {
-					if (el.tagName === "INPUT" && el.value) translated(el, rule.values[v], true);
-					else translated(el, rule.values[v]);
-					el.dataset.ojppI18n = "1";
-				}
-			}
-			if (rule.replaceValues) for (const el of [...scope.matches("input, button") ? [scope] : [], ...scope.querySelectorAll("input, button")]) {
-				if (el.closest(exclude)) continue;
-				const raw = el.tagName === "INPUT" ? el.value : el.textContent;
-				if (!raw) continue;
-				let v = raw;
-				for (const [pattern, to] of Object.entries(rule.replaceValues)) try {
-					v = v.replace(new RegExp(pattern, "g"), to);
-				} catch {}
-				if (v !== raw) {
-					if (el.tagName === "INPUT" && el.value) translated(el, v, true);
-					else translated(el, v);
-				}
-			}
-		}
-	}
-}
 /**
 * 读写配置。
 *
@@ -908,28 +329,6 @@ function bindCopy(button, readText, writeClipboard) {
 		}, 1500);
 	});
 }
-function localLanguageFor(language) {
-	if (language.mode === "python") return "python";
-	if (language.mode !== "cpp") return void 0;
-	return /(?:^|\s)C(?:\s|\d|$)/.test(language.name) && !language.name.includes("++") ? "c" : "cpp";
-}
-var LOCAL_LANGUAGES = [
-	{
-		id: "local-cpp17",
-		name: "C++17 (Clang 8 / WASI)",
-		mode: "cpp"
-	},
-	{
-		id: "local-c11",
-		name: "C11 (Clang 8 / WASI)",
-		mode: "cpp"
-	},
-	{
-		id: "local-python311",
-		name: "Python 3.11.3 (CPython / WASI)",
-		mode: "python"
-	}
-];
 var rangeFrom = [];
 var rangeTo = [];
 (() => {
@@ -26161,7 +25560,8 @@ function mountEditorPanel(options) {
 		try {
 			const code = snapshot?.code ?? editor.getCode();
 			const languageId = snapshot?.languageId ?? langSel.value;
-			const localLanguage = localLanguageFor(support.languages.find((item) => item.id === languageId));
+			const language = support.languages.find((item) => item.id === languageId);
+			const localLanguage = localLanguageFor(language);
 			if (local && !localLanguage) throw new Error(t$1("editor.localUnsupported"));
 			const res = local && platform.localRunner ? await platform.localRunner.run({
 				code,
@@ -59147,7 +58547,7 @@ var m = (n) => {
 	let e = n.charCodeAt(0);
 	return e >= 48 && e <= 57 || e >= 65 && e <= 90 || e >= 97 && e <= 122 || e === 95 ? true : x.test(n);
 };
-var en$1 = (n, e) => {
+var en = (n, e) => {
 	let r = 1;
 	for (let t = e - 1; t >= 0; t -= 1) if (n[t] === "]") r += 1;
 	else if (n[t] === "[" && (r -= 1, r === 0)) return t;
@@ -59409,7 +58809,7 @@ var hn = (n) => Ie(n) % 2 === 1 ? `${n}$` : n;
 var E = "streamdown:incomplete-image";
 var Ee = (n, e, r) => {
 	if (n.substring(e + 2).includes(")")) return null;
-	let i = en$1(n, e);
+	let i = en(n, e);
 	if (i === -1 || f(n, i)) return null;
 	let o = i > 0 && n[i - 1] === "!", s = o ? i - 1 : i, l = n.substring(0, s), a = n.substring(i + 1, e);
 	return o ? `${l}![${a}](${E})` : r === "text-only" ? `${l}${a}` : `${l}[${a}](streamdown:incomplete-link)`;
@@ -59517,7 +58917,7 @@ var An = (n) => {
 };
 var B = (n) => n !== false;
 var Re = (n) => n === true;
-var d$3 = {
+var d = {
 	SINGLE_TILDE: 0,
 	COMPARISON_OPERATORS: 5,
 	HTML_TAGS: 10,
@@ -59539,7 +58939,7 @@ var Ne = [
 		handler: {
 			name: "singleTilde",
 			handle: kn,
-			priority: d$3.SINGLE_TILDE
+			priority: d.SINGLE_TILDE
 		},
 		optionKey: "singleTilde"
 	},
@@ -59547,7 +58947,7 @@ var Ne = [
 		handler: {
 			name: "comparisonOperators",
 			handle: Y,
-			priority: d$3.COMPARISON_OPERATORS
+			priority: d.COMPARISON_OPERATORS
 		},
 		optionKey: "comparisonOperators"
 	},
@@ -59555,7 +58955,7 @@ var Ne = [
 		handler: {
 			name: "htmlTags",
 			handle: gn,
-			priority: d$3.HTML_TAGS
+			priority: d.HTML_TAGS
 		},
 		optionKey: "htmlTags"
 	},
@@ -59563,7 +58963,7 @@ var Ne = [
 		handler: {
 			name: "setextHeadings",
 			handle: bn,
-			priority: d$3.SETEXT_HEADINGS
+			priority: d.SETEXT_HEADINGS
 		},
 		optionKey: "setextHeadings"
 	},
@@ -59571,7 +58971,7 @@ var Ne = [
 		handler: {
 			name: "links",
 			handle: D,
-			priority: d$3.LINKS
+			priority: d.LINKS
 		},
 		optionKey: "links",
 		earlyReturn: (n) => n.endsWith("](streamdown:incomplete-link)") || n.endsWith(`](streamdown:incomplete-image)`)
@@ -59580,7 +58980,7 @@ var Ne = [
 		handler: {
 			name: "boldItalic",
 			handle: fn,
-			priority: d$3.BOLD_ITALIC
+			priority: d.BOLD_ITALIC
 		},
 		optionKey: "boldItalic"
 	},
@@ -59588,7 +58988,7 @@ var Ne = [
 		handler: {
 			name: "bold",
 			handle: sn,
-			priority: d$3.BOLD
+			priority: d.BOLD
 		},
 		optionKey: "bold"
 	},
@@ -59596,7 +58996,7 @@ var Ne = [
 		handler: {
 			name: "italicDoubleUnderscore",
 			handle: ln,
-			priority: d$3.ITALIC_DOUBLE_UNDERSCORE
+			priority: d.ITALIC_DOUBLE_UNDERSCORE
 		},
 		optionKey: "italic"
 	},
@@ -59604,7 +59004,7 @@ var Ne = [
 		handler: {
 			name: "italicSingleAsterisk",
 			handle: an,
-			priority: d$3.ITALIC_SINGLE_ASTERISK
+			priority: d.ITALIC_SINGLE_ASTERISK
 		},
 		optionKey: "italic"
 	},
@@ -59612,7 +59012,7 @@ var Ne = [
 		handler: {
 			name: "italicSingleUnderscore",
 			handle: un,
-			priority: d$3.ITALIC_SINGLE_UNDERSCORE
+			priority: d.ITALIC_SINGLE_UNDERSCORE
 		},
 		optionKey: "italic"
 	},
@@ -59620,7 +59020,7 @@ var Ne = [
 		handler: {
 			name: "inlineCode",
 			handle: dn,
-			priority: d$3.INLINE_CODE
+			priority: d.INLINE_CODE
 		},
 		optionKey: "inlineCode"
 	},
@@ -59628,7 +59028,7 @@ var Ne = [
 		handler: {
 			name: "strikethrough",
 			handle: An,
-			priority: d$3.STRIKETHROUGH
+			priority: d.STRIKETHROUGH
 		},
 		optionKey: "strikethrough"
 	},
@@ -59636,7 +59036,7 @@ var Ne = [
 		handler: {
 			name: "katex",
 			handle: mn,
-			priority: d$3.KATEX
+			priority: d.KATEX
 		},
 		optionKey: "katex"
 	},
@@ -59644,7 +59044,7 @@ var Ne = [
 		handler: {
 			name: "inlineKatex",
 			handle: hn,
-			priority: d$3.INLINE_KATEX
+			priority: d.INLINE_KATEX
 		},
 		optionKey: "inlineKatex"
 	}
@@ -59666,7 +59066,7 @@ var $e = (n, e) => {
 	let r = n.endsWith(" ") && !n.endsWith("  ") ? n.slice(0, -1) : n, t = ye(e), i = ((s = e == null ? void 0 : e.handlers) != null ? s : []).map((l) => {
 		var a;
 		return {
-			handler: P(L({}, l), { priority: (a = l.priority) != null ? a : d$3.DEFAULT }),
+			handler: P(L({}, l), { priority: (a = l.priority) != null ? a : d.DEFAULT }),
 			earlyReturn: void 0
 		};
 	}), o = [...t, ...i].sort((l, a) => {
@@ -61069,5077 +60469,6 @@ function watchInlineColors() {
 		observer.disconnect();
 		restoreInlineColors();
 	};
-}
-function prepareMathContent(root) {
-	root.querySelectorAll("[class*=\"ojpp-\"], .btn-copy, .copy-btn").forEach((e) => e.remove());
-	const math = (tex, display) => {
-		const span = root.ownerDocument.createElement("span");
-		span.dataset.ojppMath = display ? "display" : "inline";
-		span.textContent = tex;
-		return span;
-	};
-	for (const script of root.querySelectorAll("script[type^=\"math/tex\"]")) script.replaceWith(math(script.textContent ?? "", script.type.includes("mode=display")));
-	for (const katex of root.querySelectorAll(".katex")) {
-		const tex = katex.querySelector("annotation[encoding=\"application/x-tex\"]")?.textContent;
-		if (tex == null) continue;
-		const display = katex.parentElement?.classList.contains("katex-display") ?? false;
-		(display ? katex.parentElement : katex).replaceWith(math(tex, display));
-	}
-	root.querySelectorAll(".MathJax, .MathJax_Display, .MathJax_SVG, .MathJax_SVG_Display, .MathJax_Preview").forEach((e) => e.remove());
-	const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-	const texts = [];
-	let node;
-	while (node = walker.nextNode()) if (!node.parentElement?.closest("pre,code,script,style,[data-ojpp-math],.katex")) texts.push(node);
-	for (const text of texts) {
-		const value = text.data;
-		const matches = [...value.matchAll(/\$\$([\s\S]+?)\$\$|\$([^$\n]+?)\$|\\\(([\s\S]+?)\\\)|\\\[([\s\S]+?)\\\]/g)];
-		if (!matches.length) continue;
-		const fragment = root.ownerDocument.createDocumentFragment();
-		let start = 0;
-		for (const match of matches) {
-			fragment.append(value.slice(start, match.index));
-			fragment.append(math(match[1] ?? match[2] ?? match[3] ?? match[4], match[1] != null || match[4] != null));
-			start = match.index + match[0].length;
-		}
-		fragment.append(value.slice(start));
-		text.replaceWith(fragment);
-	}
-}
-function observeSite(doc, onChange) {
-	let timer;
-	const schedule = () => {
-		clearTimeout(timer);
-		timer = setTimeout(onChange, 100);
-	};
-	const observer = new MutationObserver((records) => {
-		if (records.some((r) => {
-			return !(r.target instanceof Element ? r.target : r.target.parentElement)?.closest("[class*=\"ojpp-\"], .CodeMirror, .cm-editor, .ace_editor, .monaco-editor, .katex, .MathJax, .MathJax_SVG");
-		})) schedule();
-	});
-	observer.observe(doc.body, {
-		subtree: true,
-		childList: true,
-		characterData: true
-	});
-	doc.defaultView?.addEventListener("popstate", schedule);
-	doc.defaultView?.addEventListener("hashchange", schedule);
-	return () => {
-		clearTimeout(timer);
-		observer.disconnect();
-		doc.defaultView?.removeEventListener("popstate", schedule);
-		doc.defaultView?.removeEventListener("hashchange", schedule);
-	};
-}
-function mountNavSettings(button, doc, selector) {
-	const nav = doc.querySelector(selector);
-	if (nav) {
-		if (nav.tagName === "UL") {
-			let slot = nav.querySelector(":scope > .ojpp-settings-slot");
-			if (!slot) {
-				slot = doc.createElement("li");
-				slot.className = "ojpp-settings-slot";
-				nav.prepend(slot);
-			}
-			slot.append(button);
-		} else nav.prepend(button);
-	} else {
-		button.classList.add("ojpp-settings-floating");
-		doc.body.append(button);
-	}
-}
-var d$2 = "html[data-ojpp-theme=\"dark\"]";
-var QOJ_DARK = `
-${d$2} body, ${d$2} .uoj-content, ${d$2} .container, ${d$2} .tab-content { background: #1c2128; color: #cdd9e5; }
-${d$2} a:not([class*="uoj-username"]):not(.btn) { color: #539bf5; }
-${d$2} .navbar, ${d$2} .card, ${d$2} .card-body, ${d$2} .card-header, ${d$2} .panel,
-${d$2} .panel-body, ${d$2} .panel-heading, ${d$2} .list-group-item, ${d$2} .dropdown-menu,
-${d$2} .modal-content, ${d$2} .bg-light, ${d$2} .bg-white, ${d$2} .jumbotron {
-  background: #22272e !important; color: #cdd9e5; border-color: #373e47;
-}
-${d$2} .dropdown-item, ${d$2} .nav-link, ${d$2} .navbar-light .navbar-nav .nav-link { color: #cdd9e5; }
-${d$2} .dropdown-item:hover, ${d$2} .nav-tabs .nav-link.active, ${d$2} .nav-link:hover,
-${d$2} .page-link:hover { background: #2d333b; color: #79b8ff; }
-${d$2} .page-link, ${d$2} .page-item.disabled .page-link, ${d$2} .btn-default, ${d$2} .btn-light {
-  background: #22272e; color: #cdd9e5; border-color: #373e47;
-}
-${d$2} pre, ${d$2} code { background: #22272e; color: #cdd9e5; border-color: #373e47; }
-${d$2} input:not([type=checkbox]):not([type=radio]), ${d$2} textarea, ${d$2} select,
-${d$2} .form-control, ${d$2} .custom-select { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
-${d$2} .table, ${d$2} .table td, ${d$2} .table th, ${d$2} hr, ${d$2} .nav-tabs { color: #cdd9e5; border-color: #373e47; }
-${d$2} .table-striped tbody tr:nth-of-type(odd), ${d$2} thead, ${d$2} .table-active { background: #22272e; }
-${d$2} .table-hover tbody tr:hover { background: #2d333b; color: #cdd9e5; }
-${d$2} .alert-info { background: #203247; color: #9bc4ef; border-color: #354c66; }
-${d$2} .alert-warning { background: #3c3424; color: #e5c07b; border-color: #665537; }
-${d$2} .alert-danger { background: #422c30; color: #f3a6ac; border-color: #694047; }
-${d$2} .text-muted, ${d$2} .text-secondary, ${d$2} .uoj-text-gray { color: #909dab !important; }
-${d$2} .uoj-username { color: #cdd9e5; }
-${d$2} .uoj-username-blue { color: #539bf5; }
-${d$2} .uoj-username-green { color: #57ab5a; }
-${d$2} .uoj-username-red { color: #f85149; }
-${d$2} .uoj-username-purple { color: #b392f0; }
-${d$2} .unrated, ${d$2} .uoj-username-grey { color: #cdd9e5; }
-${d$2} .alert-success { background: #1e2f24; color: #a5d6a7; border-color: #2d4a33; }
-
-/* shjs 语法高亮（提交代码视图）：亮色系配色换深色 */
-${d$2} .sh_keyword, ${d$2} .sh_type, ${d$2} .sh_preproc, ${d$2} .sh_tag, ${d$2} .sh_link,
-${d$2} .sh_selector, ${d$2} .sh_reserved { color: #ff7b72; }
-${d$2} .sh_string, ${d$2} .sh_chardef, ${d$2} .sh_number, ${d$2} .sh_specialchar,
-${d$2} .sh_regexp, ${d$2} .sh_value { color: #a5d6ff; }
-${d$2} .sh_function, ${d$2} .sh_property, ${d$2} .sh_attribute, ${d$2} .sh_name,
-${d$2} .sh_variable, ${d$2} .sh_title { color: #d2a8ff; }
-${d$2} .sh_comment, ${d$2} .sh_documentation, ${d$2} .sh_comment_linetoscheme,
-${d$2} .sh_multicomment { color: #8b949e; }
-${d$2} .sh_operator, ${d$2} .sh_brackets, ${d$2} .sh_cbracket, ${d$2} .sh_symbol,
-${d$2} .sh_ip { color: #ff9e64; }
-${d$2} .sh_cbracket, ${d$2} .sh_label, ${d$2} .sh_import, ${d$2} .sh_package { color: #79b8ff; }
-`;
-var pdfJobs = /* @__PURE__ */ new WeakMap();
-var notify = /* @__PURE__ */ new WeakMap();
-function pdfSection(doc) {
-	const frame = doc.querySelector("#statements-pdf");
-	if (!frame || new URL(frame.src, doc.URL).origin !== new URL(doc.URL).origin) return null;
-	let jobs = pdfJobs.get(doc);
-	if (!jobs) pdfJobs.set(doc, jobs = /* @__PURE__ */ new Map());
-	let job = jobs.get(frame.src);
-	if (!job) {
-		job = {};
-		jobs.set(frame.src, job);
-		const pending = job;
-		module.import('./pdf-text-DTzkcjZJ-DKIhPxIK.js').then(async (module) => {
-			const { text, images } = await module.extractPDFText(frame.src);
-			const { statement, samples } = module.splitPdfSamples(text);
-			pending.text = statement;
-			pending.samples = samples;
-			pending.images = images;
-			notify.get(doc)?.();
-		}).catch((error) => {
-			pending.error = String(error);
-			console.warn("[OJ++] QOJ PDF text extraction:", error);
-		});
-	}
-	if (!job.text) return null;
-	let content = doc.querySelector(".ojpp-qoj-pdf-text");
-	if (content && content.dataset.url !== frame.src) {
-		content.remove();
-		content = null;
-	}
-	if (!content) {
-		content = doc.createElement("details");
-		content.className = "ojpp-qoj-pdf-text";
-		content.dataset.url = frame.src;
-		const summary = doc.createElement("summary");
-		summary.textContent = t$1("site.pdfText");
-		const pre = doc.createElement("pre");
-		pre.textContent = job.text;
-		content.append(summary, pre);
-		frame.after(content);
-	}
-	const text = job.text;
-	const samples = job.samples;
-	const images = job.images;
-	return {
-		kind: "statement",
-		label: t$1("section.statement"),
-		content,
-		ownedContent: true,
-		identity: frame.src,
-		markdown: () => text,
-		pdf: true,
-		pdfSamples: samples,
-		imageRefs: images,
-		images: () => module.import('./pdf-text-DTzkcjZJ-DKIhPxIK.js').then((m) => m.renderPDFImages(frame.src)),
-		toolbar: {
-			anchor: content,
-			position: "beforebegin",
-			align: "block-right"
-		},
-		result: {
-			anchor: content,
-			position: "afterend"
-		}
-	};
-}
-var zh$1 = {
-	"Contests": "比赛",
-	"Category": "分类",
-	"Problems": "题库",
-	"Submissions": "提交记录",
-	"Blogs": "博客",
-	"Statement": "题面",
-	"Languages": "语言",
-	"Submit": "提交",
-	"Custom Test": "自定义测试",
-	"Discussions & Issues": "讨论与问题",
-	"Statistics": "统计",
-	"Logout": "退出登录",
-	"Login": "登录",
-	"Register": "注册",
-	"Search": "搜索",
-	"Time Limit:": "时间限制：",
-	"Memory Limit:": "内存限制：",
-	"Total points:": "总分：",
-	"Difficulty:": "难度：",
-	"[show]": "[显示]",
-	"Rank": "排名",
-	"Score": "分数",
-	"Time": "用时",
-	"Memory": "内存",
-	"User": "用户",
-	"Problem": "题目",
-	"Submission Time": "提交时间",
-	"Result": "结果",
-	"Language": "语言",
-	"Source Code": "源代码",
-	"Input": "输入",
-	"Output": "输出",
-	"Sample Input": "样例输入",
-	"Sample Output": "样例输出",
-	"Input Format": "输入格式",
-	"Output Format": "输出格式",
-	"Constraints": "约束条件",
-	"Prev": "上一页",
-	"Next": "下一页",
-	"Previous": "上一页",
-	"Standings": "排行榜",
-	"use advanced editor": "使用高级编辑器",
-	"Text Editor": "文本编辑器",
-	"Upload File": "上传文件"
-};
-var qoj = {
-	id: "qoj",
-	name: "QOJ",
-	hosts: ["qoj.ac"],
-	darkStyles: QOJ_DARK,
-	preserveInlineColors: true,
-	styles: ".ojpp-qoj-pdf-text pre { white-space: pre-wrap; max-height: 400px; overflow: auto; } .ojpp-settings-floating { position: fixed; right: 18px; bottom: 18px; z-index: 1000; }",
-	collectSections(doc) {
-		const sections = [];
-		for (const content of doc.querySelectorAll(".uoj-article")) {
-			if (!content.textContent?.trim() || content.closest("#tab-submit-answer, #tab-custom-test")) continue;
-			sections.push({
-				kind: /\/problem\//.test(new URL(doc.URL).pathname) ? "statement" : "article",
-				label: t$1("section.statement"),
-				content,
-				identity: new URL(doc.URL).pathname,
-				toolbar: {
-					anchor: content,
-					position: "beforebegin",
-					align: "block-right"
-				},
-				result: {
-					anchor: content,
-					position: "afterend"
-				}
-			});
-		}
-		const pdf = pdfSection(doc);
-		if (pdf) sections.push(pdf);
-		return sections;
-	},
-	editor: {
-		localOnly: true,
-		languages: LOCAL_LANGUAGES,
-		editorMountPoint(doc) {
-			const anchor = doc.querySelector("#tab-statement");
-			return anchor ? {
-				anchor,
-				position: "beforeend"
-			} : null;
-		},
-		problemCode(doc) {
-			return /\/problem\/(\d+)/.exec(new URL(doc.URL).pathname)?.[1] ?? null;
-		},
-		getSamples(doc) {
-			const inputs = [], outputs = [];
-			for (const heading of doc.querySelectorAll(".uoj-article h3, .uoj-article h4")) {
-				const label = heading.textContent?.trim() ?? "";
-				const target = /^(Sample Input|样例输入|输入样例)/i.test(label) ? inputs : /^(Sample Output|样例输出|输出样例)/i.test(label) ? outputs : null;
-				if (!target) continue;
-				let next = heading.nextElementSibling;
-				while (next && !/^H[1-4]$/.test(next.tagName)) {
-					const pre = next.matches("pre") ? next : next.querySelector("pre");
-					if (pre) {
-						target.push(pre.textContent ?? "");
-						break;
-					}
-					next = next.nextElementSibling;
-				}
-			}
-			return inputs.slice(0, outputs.length).map((input, i) => ({
-				input,
-				output: outputs[i]
-			}));
-		}
-	},
-	prepareContent: prepareMathContent,
-	mountSettingsButton(button, doc) {
-		mountNavSettings(button, doc, ".navbar-nav, .uoj-header .float-right");
-	},
-	observe(doc, onChange) {
-		notify.set(doc, onChange);
-		const stop = observeSite(doc, onChange);
-		return () => {
-			notify.delete(doc);
-			stop();
-		};
-	},
-	i18nPage(doc, locale) {
-		if (locale !== "zh") return;
-		applyPageI18n(doc, [{
-			scope: ".navbar, .nav, .pagination, .uoj-content label, .uoj-content th, .uoj-content button, .uoj-content .btn, .uoj-content h3, .uoj-content h4",
-			map: zh$1
-		}]);
-	}
-};
-var d$1 = "html[data-ojpp-theme=\"dark\"]";
-var LUOGU_DARK = `
-${d$1} body, ${d$1} #app, ${d$1} .lfe-body, ${d$1} main, ${d$1} .main-container,
-${d$1} .main-container.lside-nav, ${d$1} .columba-content-wrap {
-  background: #1c2128 !important; color: #cdd9e5;
-}
-/* 洛谷新页面把主题变量塞行内 style（--theme-*）——用 !important
-   自定义属性覆盖，一处解掉所有 themed 元素的白底 */
-${d$1} [style*="--theme-"] {
-  --theme-navi-back: #22272e !important;
-  --theme-navi-fore: #cdd9e5 !important;
-  --theme-navi-fore-rgb: 205,217,229 !important;
-  --theme-body-back: #1c2128 !important;
-  --theme-body-image: none !important;
-  --theme-body-image-repeat: repeat !important;
-  --theme-body-color: #cdd9e5 !important;
-  --theme-body-color-filter: none !important;
-  --theme-body-mid-mask: none !important;
-  --theme-card-background: #22272e !important;
-  --theme-card-backdrop-filter: none !important;
-}
-${d$1} .theme-page {
-  --theme-body-back: #1c2128 !important;
-  --theme-body-image: none !important;
-  --theme-body-mid-mask: none !important;
-  --theme-card-background: #22272e !important;
-}
-${d$1} .top-bar, ${d$1} .top-bar .breadcrumb { background: #22272e; color: #cdd9e5; }
-${d$1} .l-card, ${d$1} .lfe-form-sz-middle, ${d$1} .lfe-dialog,
-${d$1} .lfe-dropdown, ${d$1} .dropdown, ${d$1} .dropdown-content,
-${d$1} .popup, ${d$1} .modal, ${d$1} .popover { background: #22272e; color: #cdd9e5; border-color: #373e47; }
-${d$1} .lfe-marked, ${d$1} .lfe-marked-wrap, ${d$1} .lfe-h1, ${d$1} .lfe-h2, ${d$1} .lfe-h3,
-${d$1} .stat-text, ${d$1} .lfe-caption { color: #cdd9e5; }
-${d$1} nav, ${d$1} .sidebar, ${d$1} .user-nav, ${d$1} .nav-container, ${d$1} .nav-bar,
-${d$1} .sidebar.lside, ${d$1} .lside {
-  --theme-navi-back: #22272e !important; --theme-navi-fore: #cdd9e5 !important;
-  --theme-navi-fore-rgb: 205,217,229 !important;
-  background: #22272e !important; color: #cdd9e5;
-}
-${d$1} a:not([class*="lcolor"]):not([class*="user-"]):not(.lfe-button) { color: #539bf5; }
-${d$1} a:not([class*="lcolor"]):hover { color: #79b8ff; }
-${d$1} input:not([type=checkbox]):not([type=radio]), ${d$1} textarea, ${d$1} select {
-  background: #1c2128; color: #cdd9e5; border-color: #373e47;
-}
-${d$1} pre, ${d$1} .lfe-marked pre, ${d$1} .io-sample pre, ${d$1} :not(pre)>code {
-  background: #1c2128; color: #cdd9e5; border-color: #373e47;
-}
-${d$1} pre code, ${d$1} code[class*=language], ${d$1} .lfe-marked code,
-${d$1} .code-container code { background: transparent; color: #cdd9e5; }
-${d$1} .io-sample, ${d$1} .io-sample .header, ${d$1} .io-sample .title { background: #22272e; color: #cdd9e5; border-color: #373e47; }
-${d$1} table, ${d$1} th, ${d$1} td, ${d$1} hr, ${d$1} .l-card { border-color: #373e47; }
-${d$1} th, ${d$1} tr:nth-child(even) { background: #22272e; }
-${d$1} .katex { color: inherit; }
-${d$1} .lcolor--grey-3, ${d$1} .lcolor--grey-4, ${d$1} .lcolor--grey-5 { color: #909dab; }
-
-/* ---------- 自定义组件补漏 ---------- */
-/* 列表/表格分割线 #e8e8e8 太亮 */
-${d$1} .list-wrap.border .row:not(:last-child),
-${d$1} .list-wrap.border .header-wrap,
-${d$1} .row:not(:last-child),
-${d$1} .page-bar.border { border-color: #373e47 !important; }
-
-/* 「共计 N 条结果」等黑字半透明 */
-${d$1} .result .count, ${d$1} .result .number, ${d$1} .count .number { color: #cdd9e5; }
-${d$1} .result .count { color: #909dab; }
-
-/* 分页按钮白底白字 */
-${d$1} .page-bar button, ${d$1} .page-bar .page-item, ${d$1} .pagination button {
-  background: #1c2128; color: #cdd9e5; border-color: #373e47;
-}
-${d$1} .page-bar button:hover { background: #22272e; border-color: #539bf5; }
-${d$1} .page-bar button.selected, ${d$1} .page-bar button.active {
-  background: #539bf5; color: #fff; border-color: #539bf5;
-}
-
-/* 评测记录代码框（lfe-code 组件）与工具条 */
-${d$1} lfe-code, ${d$1} .code-container, ${d$1} .code-toolbar,
-${d$1} .code-toolbar button, ${d$1} .code-toolbar a, ${d$1} .code-toolbar span {
-  background: #161b22; color: #cdd9e5; border-color: #373e47;
-}
-${d$1} .code-container:hover > .copy-button:hover { background: #30363d; }
-/* one-light 语法色 → 深色友好 */
-${d$1} .token.comment, ${d$1} .token.prolog { color: #8b949e; }
-${d$1} .token.keyword, ${d$1} .token.tag, ${d$1} .token.selector { color: #ff7b72; }
-${d$1} .token.string, ${d$1} .token.char, ${d$1} .token.builtin, ${d$1} .token.inserted,
-${d$1} .token.regex, ${d$1} .token.attr-value, ${d$1} .code-snippet { color: #a5d6ff; }
-${d$1} .token.number, ${d$1} .token.atrule, ${d$1} .token.property { color: #79c0ff; }
-${d$1} .token.function, ${d$1} .token.class-name, ${d$1} .token.attr-name { color: #d2a8ff; }
-${d$1} .token.operator, ${d$1} .token.punctuation, ${d$1} .token.entity, ${d$1} .token.url { color: #ff9e64; }
-${d$1} .token.boolean, ${d$1} .token.constant, ${d$1} .token.unit { color: #79c0ff; }
-${d$1} .token.deleted { color: #ffa198; }
-${d$1} .token.important, ${d$1} .token.bold { color: #ff7b72; }
-${d$1} .token.italic { color: #cdd9e5; }
-
-/* 自定义下拉面板全是白底（dropdown 元素 / 各弹层） */
-${d$1} .l-dropdown, ${d$1} .select-dropdown, ${d$1} .setting-dropdown,
-${d$1} .date-picker-dropdown, ${d$1} .time-picker-dropdown,
-${d$1} dropdown-operations, ${d$1} dropdown,
-${d$1} .dropdown > ul, ${d$1} .options, ${d$1} .option-list {
-  background: #22272e !important; color: #cdd9e5; border-color: #373e47 !important;
-}
-${d$1} .dropdown > ul > li:hover, ${d$1} .dropdown-operations > ul li:hover,
-${d$1} dropdown-operations > ul li:hover, ${d$1} .setting-dropdown li:hover,
-${d$1} .option:hover { background: #30363d !important; }
-${d$1} .option, ${d$1} .dropdown li, ${d$1} .date-picker-dropdown *, ${d$1} .time-picker-dropdown * { color: #cdd9e5; }
-${d$1} .option.active { background: #539bf5 !important; color: #fff !important; border-color: #539bf5 !important; }
-${d$1} .calendar-days .day, ${d$1} .calendar-years .year, ${d$1} .time-item { color: #cdd9e5 !important; }
-${d$1} .calendar-days .day.other-month, ${d$1} .calendar-days .day.disabled,
-${d$1} .column-header, ${d$1} .clear-btn, ${d$1} .time-column .column-header { color: #6e7681 !important; }
-${d$1} .calendar-footer, ${d$1} .time-footer, ${d$1} .column-header { border-color: #373e47 !important; }
-${d$1} .calendar-days .day.selected, ${d$1} .calendar-years .year.selected,
-${d$1} .time-column .time-item.selected { background: #539bf5 !important; color: #fff !important; }
-${d$1} .calendar-days .day:hover:not(.selected),
-${d$1} .calendar-years .year:hover:not(.selected),
-${d$1} .time-column .time-item:hover { background: #30363d !important; color: #79b8ff !important; }
-${d$1} .calendar-days .day.today:not(.selected) { border-color: #539bf5 !important; color: #539bf5 !important; }
-
-/* 比赛题切换：选中态是全亮蓝底 */
-${d$1} .contest-problem { border-color: #373e47; }
-${d$1} .contest-problem.current {
-  background: #1f5fa3 !important; border-color: #539bf5; color: #fff;
-}
-${d$1} .contest-problem.current .contest-problem-no, ${d$1} .contest-problem.current * { color: #fff; }
-${d$1} .contest-problem:not(.current):hover { background: #30363d; border-color: #539bf5; }
-
-/* 筛选/块项控件统一深色 */
-${d$1} .block-item, ${d$1} .lform-input, ${d$1} .l-select, ${d$1} .lfe-select {
-  background: #1c2128; color: #cdd9e5; border-color: #373e47;
-}
-${d$1} .block-item button, ${d$1} .lform-input button { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
-${d$1} .combo-wrapper .text, ${d$1} .block-item .text, ${d$1} .combo .text,
-${d$1} .lfe-select .text, ${d$1} .l-select .text { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
-
-/* ---------- 老版主页（am-* amazeui） ---------- */
-${d$1} .am-panel, ${d$1} .am-panel-hd, ${d$1} .am-panel-bd,
-${d$1} .am-comment, ${d$1} .am-comment-hd, ${d$1} .am-comment-bd,
-${d$1} .am-comment-main, ${d$1} .am-comment-flip,
-${d$1} .lg-article, ${d$1} .lg-index-content, ${d$1} .lg-index-calendar,
-${d$1} .lg-index-stat, ${d$1} .lg-index-benben, ${d$1} .lg-right,
-${d$1} .sidebar.lside, ${d$1} .am-slider, ${d$1} .am-slides,
-${d$1} .feed-li, ${d$1} .am-viewport, ${d$1} .am-list {
-  background: #22272e; color: #cdd9e5; border-color: #373e47;
-}
-${d$1} .am-panel-default, ${d$1} .am-panel-primary, ${d$1} .am-panel-success, ${d$1} .am-panel-danger {
-  border-color: #373e47;
-}
-${d$1} .am-panel-hd, ${d$1} .am-panel-title, ${d$1} .am-comment-hd,
-${d$1} .am-comment-author, ${d$1} .am-comment-meta, ${d$1} .am-comment-title,
-${d$1} .lg-article h1, ${d$1} .lg-article h2, ${d$1} .lg-article h3,
-${d$1} .lg-article p, ${d$1} .lg-article td, ${d$1} .lg-article th,
-${d$1} .lg-article li, ${d$1} .lg-article span, ${d$1} .lg-article div,
-${d$1} .lg-index-content *, ${d$1} .lg-right * { color: #cdd9e5; border-color: #373e47; }
-${d$1} .lg-article a, ${d$1} .lg-index-content a, ${d$1} .lg-right a,
-${d$1} .am-comment a, ${d$1} .am-panel a { color: #539bf5; }
-${d$1} .am-comment a:hover, ${d$1} .am-panel a:hover { color: #79b8ff; }
-${d$1} .lg-fg-bluedark, ${d$1} .lg-fg-greendark { color: #79b8ff; }
-${d$1} .am-slider .am-viewport, ${d$1} .am-slider .am-slides li,
-${d$1} .am-slider .caption, ${d$1} .am-slider .flex-control-nav,
-${d$1} .am-slider .flex-direction-nav { background: #22272e; color: #cdd9e5; }
-${d$1} .sidebar .nav-pills li a, ${d$1} .sidebar .nav-link,
-${d$1} .am-list li, ${d$1} .am-list li a { background: #22272e; color: #cdd9e5; border-color: #373e47; }
-/* 新版 .lside 图标条：链接不叠底块，保持透明靠 hover/active 指示 */
-${d$1} .sidebar.lside a { background: transparent; border-color: transparent; }
-${d$1} .sidebar .nav-pills li a:hover, ${d$1} .am-list li a:hover { background: #30363d; color: #79b8ff; }
-${d$1} .am-comment .am-comment-avatar, ${d$1} .am-comment img { background: transparent; }
-${d$1} .am-panel > .am-panel-bd, ${d$1} .am-panel > .am-panel-hd { border-color: #373e47; }
-${d$1} .lg-article hr, ${d$1} .lg-index-content hr, ${d$1} .am-list li { border-color: #373e47; }
-
-/* ---------- 题库/题单/筛选区 ---------- */
-${d$1} .title, ${d$1} .title.no-wrap, ${d$1} .entry, ${d$1} .toggle-tag,
-${d$1} .count, ${d$1} .number, ${d$1} li, ${d$1} .provider-display,
-${d$1} .luogu-username, ${d$1} .liquid-text, ${d$1} .card-title,
-${d$1} .card-desc, ${d$1} .card-bottom, ${d$1} .bottom-item { color: #cdd9e5 !important; }
-${d$1} .entry, ${d$1} .toggle-tag, ${d$1} .card-desc { color: #909dab; }
-${d$1} .tag-button { background: #1c2128 !important; color: #cdd9e5 !important; border-color: #373e47 !important; }
-${d$1} .tag-button:hover { background: #30363d; color: #79b8ff; border-color: #539bf5; }
-${d$1} .tag-button.selected, ${d$1} .tag-button.active { background: #539bf5; color: #fff; border-color: #539bf5; }
-${d$1} .refined-input, ${d$1} .search-text { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
-${d$1} .refined-input input, ${d$1} .search-text input { background: transparent; color: #cdd9e5; }
-${d$1} .progress-frame { background: #30363d; border-color: #30363d; }
-${d$1} .bottom-wrap, ${d$1} .bottom-wrap.float { background: #22272e; border-color: #373e47; }
-${d$1} .bottom-wrap .toolbar, ${d$1} .bottom-wrap .toolbar-left { background: transparent; }
-${d$1} .training-card { background: #22272e; color: #cdd9e5; border-color: #373e47; }
-${d$1} .training-card:hover { border-color: #539bf5; }
-${d$1} .training-card .card-title, ${d$1} .training-card .card-desc,
-${d$1} .training-card .card-bottom, ${d$1} .training-card .bottom-item { color: #cdd9e5; }
-${d$1} .training-card .card-desc { color: #909dab; }
-${d$1} .training-card a { color: #539bf5; }
-${d$1} .training-card a:hover { color: #79b8ff; }
-
-/* ---------- 讨论/文章/图床/云剪贴板 ---------- */
-/* 通用黑字（name/time/content/meta/copyright 等） */
-${d$1} .name, ${d$1} .content, ${d$1} .time, ${d$1} .meta,
-${d$1} .copyright, ${d$1} .detail, ${d$1} .info { color: #cdd9e5 !important; }
-${d$1} .time, ${d$1} .meta, ${d$1} .copyright, ${d$1} .info { color: #909dab !important; }
-/* 白底容器 */
-${d$1} .drop, ${d$1} .image-block, ${d$1} .casket, ${d$1} .casket.cs-main,
-${d$1} .cs-header, ${d$1} .cs-footer, ${d$1} .refined-input,
-${d$1} .article-card, ${d$1} .article-list, ${d$1} .discuss-list,
-${d$1} .feed-card, ${d$1} .user-card, ${d$1} .stat-card {
-  background: #22272e; color: #cdd9e5; border-color: #373e47;
-}
-${d$1} .drop:hover { border-color: #539bf5; }
-${d$1} .cs-footer *, ${d$1} .cs-header * { color: #cdd9e5; }
-/* CM5 编辑器（云剪贴板/贴代码） */
-${d$1} .CodeMirror, ${d$1} .CodeMirror-lines, ${d$1} .cm-gutters,
-${d$1} .cm-gutter, ${d$1} .cm-lineNumbers, ${d$1} .cm-foldGutter {
-  background: #161b22; color: #cdd9e5; border-color: #373e47;
-}
-${d$1} .cm-cursor { border-color: #cdd9e5; }
-${d$1} .cm-line, ${d$1} .cm-line * { color: #cdd9e5; }
-${d$1} .cm-selected, ${d$1} .CodeMirror-focused .cm-selected { background: rgba(83,155,245,.25); }
-${d$1} .cm-m-luogu .cm-comment, ${d$1} .cm-comment { color: #8b949e; }
-${d$1} .cm-keyword, ${d$1} .cm-tag, ${d$1} .cm-property { color: #ff7b72; }
-${d$1} .cm-string, ${d$1} .cm-string-2, ${d$1} .cm-atom, ${d$1} .cm-regexp { color: #a5d6ff; }
-${d$1} .cm-number, ${d$1} .cm-attribute, ${d$1} .cm-qualifier { color: #79c0ff; }
-${d$1} .cm-variable, ${d$1} .cm-def, ${d$1} .cm-type { color: #d2a8ff; }
-${d$1} .cm-operator, ${d$1} .cm-meta, ${d$1} .cm-bracket { color: #ff9e64; }
-${d$1} .cm-builtin, ${d$1} .cm-header, ${d$1} .cm-link { color: #79b8ff; }
-${d$1} .cm-error { color: #ffa198; }
-/* 兜底：所有剩余元素边框色统一（只动 border 不动背景） */
-${d$1} div, ${d$1} span, ${d$1} p, ${d$1} li, ${d$1} ul, ${d$1} ol,
-${d$1} section, ${d$1} article, ${d$1} aside, ${d$1} nav,
-${d$1} header, ${d$1} footer, ${d$1} fieldset { border-color: #373e47; }
-/* 兜底：剩余偏暗文字 */
-${d$1} .main *, ${d$1} .l-card * { border-color: #373e47; }
-/* 提交卡/常用浅黑字 */
-${d$1} .light-black, ${d$1} .l-card .header, ${d$1} .combo-wrapper .text,
-${d$1} .l-radio, ${d$1} .l-check, ${d$1} .lfe-radio, ${d$1} .l-checkbox,
-${d$1} [id^="LRadio"], ${d$1} [id^="LCheck"], ${d$1} .l-card.burger *,
-${d$1} .combo-wrapper .arrow, ${d$1} .combo-wrapper svg, ${d$1} .combo-wrapper path { color: #cdd9e5 !important; }
-
-/* ---------- 题库 tab 条（洛谷/主题库/…） ---------- */
-${d$1} ul.luogu.luogu { background: #22272e !important; }
-${d$1} ul.luogu li { color: #cdd9e5; }
-${d$1} ul.luogu li.selected { background: #539bf5 !important; color: #fff; }
-${d$1} ul.luogu li:hover { background: #30363d; color: #79b8ff; }
-
-/* ---------- 筛选 tag / 切换标签 ---------- */
-${d$1} .toggle-tag { background: #1c2128; border-color: #373e47; color: #cdd9e5; }
-${d$1} .toggle-tag:hover { background: #30363d; color: #79b8ff; }
-${d$1} .toggle-tag.active, ${d$1} .toggle-tag.selected { background: #539bf5; color: #fff; }
-
-/* ---------- 题单分类卡（训练列表） ---------- */
-${d$1} .category-card.category-card { background: #22272e !important; border-color: #373e47 !important; }
-${d$1} .category-card.category-card:hover { border-color: #539bf5 !important; }
-${d$1} .category-card.category-card.active { background: #2d333b !important; border-color: #539bf5 !important; }
-${d$1} .category-card .title, ${d$1} .category-card .desc { color: #cdd9e5; }
-${d$1} .category-card .desc { color: #909dab; }
-
-/* ---------- 训练进度环 ---------- */
-${d$1} circle[fill="#fff"], ${d$1} circle[fill="white"] { fill: #22272e; }
-${d$1} circle[stroke="#f2f2f2"], ${d$1} circle[stroke="#e8e8e8"], ${d$1} circle[stroke="#fff"] { stroke: #373e47; }
-
-/* ---------- 比赛列表 ---------- */
-${d$1} .contest-card { border-color: #373e47; }
-${d$1} .contest-card a.name, ${d$1} a.name { color: #79b8ff; }
-${d$1} .contest-card a.name:hover, ${d$1} a.name:hover { color: #539bf5; }
-${d$1} .title-row, ${d$1} .row.space-between { border-color: #373e47; }
-${d$1} .list-wrap, ${d$1} .list, ${d$1} .list-scroll { border-color: #373e47; }
-${d$1} .header { border-color: #373e47 !important; }
-
-/* ---------- 侧边栏：仅父级 li 提供悬停背景，链接不叠底块/下划线 ---------- */
-${d$1} .sidebar.lside .nav-group > ul > li {
-  background: transparent !important; border-bottom: 0 !important;
-}
-${d$1} .sidebar.lside .nav-group > ul > li:hover,
-${d$1} .sidebar.lside .nav-group > ul > li:focus-within { background: #30363d !important; }
-${d$1} .sidebar.lside .nav-group > ul > li > a {
-  background: transparent !important; background-image: none !important;
-  border-bottom: 0 !important; box-shadow: none !important;
-  text-decoration: none !important; filter: none !important; transition: none !important;
-  color: #cdd9e5 !important;
-}
-${d$1} .sidebar.lside .nav-group > ul > li > a::before,
-${d$1} .sidebar.lside .nav-group > ul > li > a::after { content: none !important; }
-${d$1} .sidebar.lside .nav-group > ul > li > a:hover,
-${d$1} .sidebar.lside .nav-group > ul > li > a:focus-visible,
-${d$1} .sidebar.lside .nav-group > ul > li > a.router-link-exact-active { color: #79b8ff !important; }
-${d$1} .sidebar.lside .nav-group > ul > li > a:focus-visible { outline: 2px solid #539bf5; outline-offset: -2px; }
-${d$1} .sidebar.lside .nav-group > ul > li > a > .title { color: inherit !important; }
-
-/* ---------- 陶片放逐/动态 author 卡 ---------- */
-${d$1} .author, ${d$1} .author.author { background: #22272e !important; color: #cdd9e5; }
-${d$1} .author a, ${d$1} .author .name { color: #79b8ff; }
-
-/* ---------- 文章广场/文章 ---------- */
-/* 标题链接 Vue 行内绑 rgba(0,0,0,.85)——行内只能用 !important 压 */
-${d$1} .row.title a, ${d$1} .row .title a, ${d$1} a[href*="/article/"] { color: #79b8ff !important; }
-${d$1} a[href*="/article/"]:hover { color: #539bf5 !important; }
-/* 分类标签（算法·理论/休闲·娱乐 这类无类的 .name span） */
-${d$1} .wrap .name, ${d$1} .article-card .name { background: #30363d; color: #cdd9e5; }
-${d$1} .article-card, ${d$1} .card { background: #22272e; border-color: #373e47; }
-
-/* ---------- Highcharts（主页通过数统计图，SVG 属性与行内 fill 均需覆盖） ---------- */
-${d$1} #app-old .highcharts-root text,
-${d$1} #app-old .highcharts-root tspan { fill: #cdd9e5 !important; color: #cdd9e5 !important; }
-${d$1} #app-old .highcharts-grid-line,
-${d$1} #app-old .highcharts-axis-line,
-${d$1} #app-old .highcharts-tick { stroke: #373e47; }
-${d$1} #app-old .highcharts-tooltip-box:not(.highcharts-shadow) { fill: #22272e; stroke: #768390; }
-${d$1} #app-old .highcharts-tooltip .highcharts-shadow { display: none; }
-${d$1} #app-old .highcharts-column-series .highcharts-point { fill: #56b6c2; stroke: #56b6c2; }
-${d$1} #app-old .highcharts-column-series .highcharts-point-hover { fill: #8cdae3; stroke: #8cdae3; }
-${d$1} #app-old .highcharts-area { fill: rgba(83,155,245,.2); }
-${d$1} #app-old .highcharts-tooltip tspan[style*="fill:#7cb5ec"] { fill: #79b8ff !important; }
-${d$1} #app-old .highcharts-tooltip tspan[style*="fill:#434348"] { fill: #56b6c2 !important; }
-
-/* ---------- 老主页打卡卡：只给打卡按钮上底色，保留用户名链接 ---------- */
-${d$1} .lg-punch { background: #22272e; color: #cdd9e5; }
-${d$1} #app-old .lg-punch h2 a { background: transparent !important; color: #79b8ff !important; }
-${d$1} #app-old .lg-punch a[name="punch"] {
-  background: #245f99 !important; color: #fff !important; border-color: #539bf5 !important;
-}
-${d$1} #app-old .lg-punch a[name="punch"]:hover,
-${d$1} #app-old .lg-punch a[name="punch"]:focus-visible { background: #2c70b1 !important; color: #fff !important; }
-${d$1} #home-center-nav > .feed-selector > a { background: transparent; color: #cdd9e5 !important; }
-${d$1} #home-center-nav > .feed-selector > a:hover { background: #30363d; }
-${d$1} #home-center-nav > .feed-selector.am-active > a { background: #245f99 !important; color: #fff !important; }
-
-/* ---------- 文章页侧栏动作/彩色链接 ---------- */
-${d$1} .side .actions a { color: #cdd9e5; }
-${d$1} .side .actions a:hover { color: #79b8ff; }
-${d$1} .colored-link-selector a span, ${d$1} .l-card.collections a span,
-${d$1} .colored-link-selector span { background: transparent !important; color: #cdd9e5; }
-
-/* ---------- 筛选卡/搜索框 ---------- */
-${d$1} .filter-card { background: #22272e; border-color: #373e47; }
-${d$1} .filter-card .filter-label, ${d$1} .filter-card .filter-result-count { color: #cdd9e5 !important; }
-${d$1} .refined-input, ${d$1} .refined-input.keyword { background: #1c2128 !important; color: #cdd9e5; border-color: #373e47 !important; }
-${d$1} .refined-input > input { background: transparent !important; color: #cdd9e5; }
-${d$1} .refined-input > .east, ${d$1} .refined-input > .west,
-${d$1} .refined-input .search-icon { background: transparent !important; color: #909dab !important; }
-${d$1} .refined-input > input::placeholder { color: #909dab; opacity: 1; }
-${d$1} .block-item.category { background: transparent; }
-${d$1} .block-item.category > ul.rmj { background: #22272e !important; }
-${d$1} .block-item.category > ul.rmj > li:not(.selected):hover { background: #30363d; }
-
-/* ---------- 比赛名链接去底，避免文章分类的 .wrap .name 误伤 ---------- */
-${d$1} .contest-card .title-row a.name { background: transparent !important; }
-
-/* ---------- 通用按钮/链接对比 ---------- */
-${d$1} .lfe-button--primary, ${d$1} .l-button--primary, ${d$1} button.primary { color: #fff; }
-${d$1} .punch, ${d$1} .checkin, ${d$1} [class*="check"][class*="btn"], ${d$1} [class*="punch"] { color: #cdd9e5; }
-`;
-var fields = {
-	"题目背景": "background",
-	"Background": "background",
-	"题目描述": "description",
-	"Description": "description",
-	"Problem Description": "description",
-	"输入格式": "formatI",
-	"Input Format": "formatI",
-	"输出格式": "formatO",
-	"Output Format": "formatO",
-	"说明/提示": "hint",
-	"说明 / 提示": "hint",
-	"Hint": "hint",
-	"Hints": "hint"
-};
-/** Modern Luogu embeds the original Markdown, while rendered KaTeX omits MathML. */
-function luoguMarkdown(doc, field) {
-	try {
-		const problem = JSON.parse(doc.querySelector("#lentille-context")?.textContent ?? "{}").data?.problem;
-		const pid = /\/problem\/([^/?#]+)/.exec(new URL(doc.URL).pathname)?.[1];
-		if (!pid || problem?.pid !== pid) return void 0;
-		const source = problem.content?.[field];
-		return typeof source === "string" ? source : void 0;
-	} catch {
-		return;
-	}
-}
-/** 洛谷 IDE 语言表（/api/ide_submit 与 /fe/api/problem/submit 共用的数字 id）。 */
-var LUOGU_LANGUAGES = [
-	{
-		id: "12",
-		name: "C++17",
-		mode: "cpp"
-	},
-	{
-		id: "11",
-		name: "C++14",
-		mode: "cpp"
-	},
-	{
-		id: "34",
-		name: "C++23",
-		mode: "cpp"
-	},
-	{
-		id: "27",
-		name: "C++20",
-		mode: "cpp"
-	},
-	{
-		id: "4",
-		name: "C++11",
-		mode: "cpp"
-	},
-	{
-		id: "28",
-		name: "C++14 (GCC 9)",
-		mode: "cpp"
-	},
-	{
-		id: "3",
-		name: "C++98",
-		mode: "cpp"
-	},
-	{
-		id: "2",
-		name: "C",
-		mode: "cpp"
-	},
-	{
-		id: "7",
-		name: "Python 3",
-		mode: "python"
-	},
-	{
-		id: "25",
-		name: "PyPy 3",
-		mode: "python"
-	},
-	{
-		id: "8",
-		name: "Java 8",
-		mode: "text"
-	},
-	{
-		id: "33",
-		name: "Java 21",
-		mode: "text"
-	},
-	{
-		id: "15",
-		name: "Rust",
-		mode: "text"
-	},
-	{
-		id: "14",
-		name: "Go",
-		mode: "text"
-	},
-	{
-		id: "19",
-		name: "Haskell",
-		mode: "text"
-	},
-	{
-		id: "30",
-		name: "OCaml",
-		mode: "text"
-	},
-	{
-		id: "31",
-		name: "Julia",
-		mode: "text"
-	},
-	{
-		id: "32",
-		name: "Lua",
-		mode: "text"
-	},
-	{
-		id: "21",
-		name: "Kotlin/JVM",
-		mode: "text"
-	},
-	{
-		id: "22",
-		name: "Scala",
-		mode: "text"
-	},
-	{
-		id: "17",
-		name: "C# Mono",
-		mode: "text"
-	},
-	{
-		id: "9",
-		name: "Node.js LTS",
-		mode: "text"
-	},
-	{
-		id: "16",
-		name: "PHP",
-		mode: "text"
-	},
-	{
-		id: "13",
-		name: "Ruby",
-		mode: "text"
-	},
-	{
-		id: "23",
-		name: "Perl",
-		mode: "text"
-	},
-	{
-		id: "1",
-		name: "Pascal",
-		mode: "text"
-	}
-];
-function luoguContext(doc) {
-	try {
-		return JSON.parse(doc.querySelector("#lentille-context")?.textContent ?? "{}");
-	} catch {
-		return {};
-	}
-}
-function luoguCsrf(doc) {
-	return doc.querySelector("meta[name=\"csrf-token\"]")?.getAttribute("content") ?? "";
-}
-var LUOGU_WS2 = "wss://ws2.luogu.com.cn/ws";
-var wsEncoder = new TextEncoder();
-var wsDecoder = new TextDecoder();
-function ws2Frame(channel, type, param = "") {
-	const c = wsEncoder.encode(channel), p = wsEncoder.encode(param);
-	const frame = new Uint8Array(1 + c.length + 1 + p.length);
-	frame[0] = c.length;
-	frame.set(c, 1);
-	frame[1 + c.length] = type;
-	frame.set(p, 1 + c.length + 1);
-	return frame;
-}
-/** 在 Ide:U{uid} 频道上等待 recordId === rid 的 compile/execute 推送。 */
-function luoguIdeResult(channel, rid) {
-	return new Promise((resolve, reject) => {
-		const ws = new WebSocket(LUOGU_WS2);
-		ws.binaryType = "arraybuffer";
-		let heartbeat = 0;
-		let settled = false;
-		const finish = (fn) => {
-			if (settled) return;
-			settled = true;
-			clearInterval(heartbeat);
-			clearTimeout(timeout);
-			try {
-				ws.close();
-			} catch {}
-			fn();
-		};
-		const timeout = setTimeout(() => finish(() => reject(/* @__PURE__ */ new Error("洛谷评测超时"))), 12e4);
-		ws.onopen = () => {
-			ws.send(ws2Frame(channel, 192));
-			heartbeat = window.setInterval(() => {
-				try {
-					ws.send(ws2Frame(channel, 192));
-				} catch {}
-			}, 15e3);
-		};
-		ws.onerror = () => finish(() => reject(/* @__PURE__ */ new Error("洛谷推送通道连接失败")));
-		ws.onclose = () => finish(() => reject(/* @__PURE__ */ new Error("洛谷推送通道已断开")));
-		ws.onmessage = (event) => {
-			if (!(event.data instanceof ArrayBuffer)) return;
-			const bytes = new Uint8Array(event.data);
-			const channelLen = bytes[0] ?? 0;
-			if (bytes.length < 1 + channelLen + 1) return;
-			if (bytes[1 + channelLen] !== 16) return;
-			let data;
-			try {
-				data = JSON.parse(wsDecoder.decode(bytes.slice(1 + channelLen + 1)));
-			} catch {
-				return;
-			}
-			if (data?.recordId !== rid) return;
-			if (data.type === "compile") {
-				if (data.success) return;
-				finish(() => resolve({
-					output: "",
-					error: "编译失败",
-					stderr: String(data.desc ?? ""),
-					verdict: "Compile Error"
-				}));
-				return;
-			}
-			if (data.type === "execute") {
-				const x = data.execute ?? {};
-				const error = x.error ? String(x.error) : x.signal ? `Received signal ${x.signal}` : x.exit_code ? `Exit code ${x.exit_code}` : void 0;
-				finish(() => resolve({
-					output: String(data.output ?? ""),
-					error,
-					verdict: x.error ?? void 0,
-					used: `${x.real_time ?? "?"}ms ${x.memory ?? "?"}kb`
-				}));
-			}
-		};
-	});
-}
-var en = {
-	"题目背景": "Background",
-	"题目描述": "Description",
-	"输入格式": "Input Format",
-	"输出格式": "Output Format",
-	"输入输出样例": "Samples",
-	"说明/提示": "Hints",
-	"题目列表": "Problems",
-	"提交答案": "Submit",
-	"提交记录": "Submissions",
-	"查看题解": "Editorials",
-	"题目反馈": "Feedback",
-	"标签": "Tags",
-	"显示算法标签": "Show tags",
-	"相关讨论": "Discussions",
-	"进入讨论版": "Open discussions",
-	"查看讨论": "View discussions",
-	"推荐题目": "Recommended problems",
-	"查看推荐": "Show recommendations",
-	"复制 Markdown": "Copy Markdown",
-	"复制": "Copy",
-	"展开": "Expand",
-	"进入 IDE 模式": "Open IDE",
-	"加入题单": "Add to problem list",
-	"复制题目": "Copy problem",
-	"题目编号": "Problem ID",
-	"提供者": "Provider",
-	"难度": "Difficulty",
-	"历史分数": "Best score",
-	"提交": "Submissions",
-	"通过": "Accepted",
-	"时间限制": "Time limit",
-	"内存限制": "Memory limit",
-	"个人中心": "Profile",
-	"用户设置": "Settings",
-	"练习情况": "Practice",
-	"我的题库": "My problems",
-	"我的专栏": "My articles",
-	"收藏夹": "Bookmarks",
-	"我的工单": "Support tickets",
-	"锁定": "Lock",
-	"登出": "Sign out"
-};
-var luogu = {
-	id: "luogu",
-	name: "洛谷 / Luogu",
-	hosts: ["www.luogu.com.cn", "www.luogu.com"],
-	darkStyles: LUOGU_DARK,
-	preserveInlineColors: true,
-	editor: {
-		languages: LUOGU_LANGUAGES,
-		editorMountPoint(doc) {
-			const submitBody = doc.querySelector(".l-card.burger .body");
-			if (submitBody?.querySelector(".v-codemirror")) return {
-				anchor: submitBody,
-				position: "beforeend"
-			};
-			const anchor = doc.querySelector(".l-card.problem");
-			return anchor ? {
-				anchor,
-				position: "afterend"
-			} : null;
-		},
-		problemCode(doc) {
-			return /\/problem\/([^/?#]+)/.exec(new URL(doc.URL).pathname)?.[1] ?? null;
-		},
-		getSamples(doc) {
-			try {
-				const problem = JSON.parse(doc.querySelector("#lentille-context")?.textContent ?? "{}").data?.problem;
-				if (problem?.pid !== /\/problem\/([^/?#]+)/.exec(new URL(doc.URL).pathname)?.[1]) return [];
-				return Array.isArray(problem.samples) ? problem.samples.filter((s) => Array.isArray(s) && s.length === 2 && s.every((v) => typeof v === "string")).map((s) => ({
-					input: s[0],
-					output: s[1]
-				})) : [];
-			} catch {
-				return [];
-			}
-		},
-		/** 站点远程评测：/api/ide_submit 开票 + ws2 Ide:U{uid} 频道推送结果。 */
-		async runCustomTest(code, languageId, input) {
-			const uid = luoguContext(document).user?.uid;
-			if (!uid) throw new Error("需要登录洛谷才能远程评测");
-			const res = await fetch("/api/ide_submit", {
-				method: "POST",
-				headers: {
-					"content-type": "application/json",
-					"x-csrf-token": luoguCsrf(document)
-				},
-				body: JSON.stringify({
-					lang: Number(languageId),
-					code,
-					input,
-					o2: ""
-				})
-			});
-			const json = await res.json().catch(() => null);
-			if (json?.status !== 200 || !json?.data?.rid) throw new Error(typeof json?.errorMessage === "string" ? json.errorMessage : `洛谷评测失败 (${json?.status ?? res.status})`);
-			return luoguIdeResult(`Ide:U${uid}`, json.data.rid);
-		},
-		/** 正式提交：/fe/api/problem/submit/{pid} → 评测记录页；比赛页要带 ?contestId=。验证码拦截时把洛谷的信息透出来。 */
-		async submit(code, languageId, problemCode) {
-			const contestId = luoguContext(document).data?.contest?.id ?? new URLSearchParams(location.search).get("contestId");
-			const path = `/fe/api/problem/submit/${encodeURIComponent(problemCode)}` + (contestId ? `?contestId=${encodeURIComponent(String(contestId))}` : "");
-			const res = await fetch(path, {
-				method: "POST",
-				headers: {
-					"content-type": "application/json",
-					"x-csrf-token": luoguCsrf(document)
-				},
-				body: JSON.stringify({
-					lang: Number(languageId),
-					code,
-					enableO2: 1
-				})
-			});
-			const json = await res.json().catch(() => null);
-			const rid = json?.rid ?? json?.data?.rid;
-			if (res.ok && rid) return {
-				ok: true,
-				url: `/record/${rid}`
-			};
-			const message = json?.errorMessage ?? (typeof json?.data === "string" ? json.data : null) ?? `提交失败 (${res.status})`;
-			return {
-				ok: false,
-				error: String(message)
-			};
-		}
-	},
-	styles: ".user-nav > .ojpp-settings-btn { margin: 0 8px; } .ojpp-settings-floating { position: fixed; right: 18px; bottom: 18px; z-index: 1000; } .l-card.problem .lfe-marked-wrap, .l-card.problem .io-sample { clear: both; } html:has(.ojpp-editor) .l-card.burger .body:has(.v-codemirror) > *:not(.ojpp-editor) { display: none !important; } .l-card.burger .body:has(.v-codemirror) { padding-bottom: .3em; }",
-	collectSections(doc) {
-		const sections = [];
-		for (const heading of doc.querySelectorAll(".l-card.problem > h2, .problem-content > h2")) {
-			const label = [...heading.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim();
-			const key = fields[label];
-			if (!key) continue;
-			let content = heading.nextElementSibling;
-			while (content?.className.startsWith("ojpp-")) content = content.nextElementSibling;
-			if (!content?.matches(".lfe-marked-wrap, .marked, .markdown-body") || !content.textContent?.trim()) continue;
-			sections.push({
-				kind: key === "formatI" ? "input" : key === "formatO" ? "output" : "statement",
-				label,
-				content,
-				identity: `${new URL(doc.URL).pathname}:${key}`,
-				markdown: () => luoguMarkdown(doc, key),
-				toolbar: {
-					anchor: heading,
-					position: "beforeend",
-					align: "right"
-				},
-				result: {
-					anchor: content,
-					position: "afterend"
-				}
-			});
-		}
-		return sections;
-	},
-	prepareContent: prepareMathContent,
-	mountSettingsButton(button, doc) {
-		mountNavSettings(button, doc, ".user-nav:not(.rside), .nav-container");
-	},
-	observe: observeSite,
-	i18nPage(doc, locale) {
-		if (locale !== "en") return;
-		applyPageI18n(doc, [{
-			scope: "nav, .user-nav, header .stat, .l-card > h2, .l-card > h3, .problem-block-actions, .io-sample .header, .l-card .lfe-caption, .l-card > a",
-			map: en
-		}]);
-	}
-};
-function atcoderContest(path) {
-	return /^\/contests\/([\w-]+)(?:\/|$)/.exec(path)?.[1] ?? null;
-}
-function atcoderLanguageMode(name) {
-	if (/C\+\+|Clang|\bC\d*\b/.test(name)) return "cpp";
-	if (/Python|PyPy|Codon/i.test(name)) return "python";
-	if (/^Java\b/.test(name)) return "java";
-	return "text";
-}
-function atcoderLanguageContent(root) {
-	const variants = [...root.querySelectorAll(".lang-en, .lang-ja")];
-	return variants.find((e) => root.ownerDocument.defaultView?.getComputedStyle(e).display !== "none") ?? variants[0] ?? root;
-}
-function atcoderStatement(doc) {
-	const root = doc.querySelector("#task-statement");
-	return root ? atcoderLanguageContent(root) : null;
-}
-function atcoderSamples(doc) {
-	const root = atcoderStatement(doc);
-	if (!root) return [];
-	const inputs = [];
-	const outputs = [];
-	for (const section of root.querySelectorAll("section")) {
-		const heading = section.querySelector("h3")?.textContent?.trim() ?? "";
-		const pre = section.querySelector("pre");
-		if (!pre) continue;
-		if (/^(Sample Input|入力例|样例输入)\s*\d+/.test(heading)) inputs.push(pre);
-		if (/^(Sample Output|出力例|样例输出)\s*\d+/.test(heading)) outputs.push(pre);
-	}
-	const samples = [];
-	for (let i = 0; i < Math.min(inputs.length, outputs.length); i++) samples.push({
-		input: inputs[i].textContent ?? "",
-		output: outputs[i].textContent ?? ""
-	});
-	return samples;
-}
-function parseAtcoderResult(data) {
-	if (!data.Result || data.Interval || [1, 2].includes(data.Result.Status)) return null;
-	const r = data.Result;
-	if (!r.Id) return null;
-	const output = (data.Stdout ?? "").replace(/\r\n/g, "\n");
-	const stderr = (data.Stderr ?? "").replace(/\r\n/g, "\n");
-	const failed = Number(r.ExitCode) !== 0 || r.Status !== 3;
-	return {
-		output,
-		...stderr ? { stderr } : {},
-		used: `${r.TimeConsumption}, ${r.MemoryConsumption}`,
-		verdict: failed ? "ERROR" : "OK",
-		...failed ? { error: `Exit code: ${r.ExitCode} (status ${r.Status})` } : {}
-	};
-}
-function languages(doc) {
-	return [...doc.querySelectorAll("select[name=\"data.LanguageId\"] option")].filter((o) => o.value).map((o) => ({
-		id: o.value,
-		name: o.text,
-		mode: atcoderLanguageMode(o.text)
-	})).sort((a, b) => Number(/^C\+\+.*GCC/.test(b.name)) - Number(/^C\+\+.*GCC/.test(a.name)));
-}
-function syncAce(code) {
-	const ace = (typeof unsafeWindow !== "undefined" ? unsafeWindow : window).ace;
-	if (ace && document.querySelector("#editor")) {
-		const editor = ace.edit("editor");
-		if (editor.getValue() !== code) editor.setValue(code, -1);
-	}
-}
-async function fetchChecked(url, init) {
-	const res = await fetch(url, {
-		credentials: "same-origin",
-		signal: AbortSignal.timeout(3e4),
-		...init
-	});
-	if (!res.ok) throw new Error(`AtCoder HTTP ${res.status}`);
-	if (new URL(res.url).pathname === "/login") throw new Error(t$1("atcoder.signIn"));
-	return res;
-}
-async function runTest(code, languageId, input) {
-	const contest = atcoderContest(location.pathname);
-	if (!contest) throw new Error("No AtCoder contest.");
-	const base = `/contests/${contest}/custom_test`;
-	const token = new DOMParser().parseFromString(await (await fetchChecked(base)).text(), "text/html").querySelector("input[name=\"csrf_token\"]")?.value;
-	if (!token) throw new Error(t$1("atcoder.signIn"));
-	const before = await (await fetchChecked(`${base}/json?reload=true`)).json();
-	if (before.Interval || [1, 2].includes(before.Result?.Status ?? 0)) throw new Error(t$1("atcoder.testBusy"));
-	const body = new URLSearchParams({
-		"data.LanguageId": languageId,
-		sourceCode: code,
-		input,
-		csrf_token: token
-	});
-	const reply = await (await fetchChecked(`${base}/submit/json`, {
-		method: "POST",
-		body
-	})).text();
-	if (reply.trim() && reply.trim() !== "\"\"") throw new Error(new DOMParser().parseFromString(reply, "text/html").body.textContent?.trim() || "Custom test rejected.");
-	const deadline = Date.now() + 12e4;
-	while (Date.now() < deadline) {
-		await new Promise((resolve) => setTimeout(resolve, 1e3));
-		const data = await (await fetchChecked(`${base}/json?reload=true`)).json();
-		if (data.Result?.Id === before.Result?.Id) continue;
-		const result = parseAtcoderResult(data);
-		if (result) return result;
-	}
-	throw new Error(t$1("atcoder.testTimeout"));
-}
-var testQueue = Promise.resolve();
-var atcoderEditor = {
-	editorMountPoint(doc) {
-		const root = doc.querySelector("#task-statement");
-		return root && languages(doc).length ? {
-			anchor: root,
-			position: "afterend"
-		} : null;
-	},
-	problemCode(doc) {
-		return /\/tasks\/([\w-]+)$/.exec(new URL(doc.URL).pathname)?.[1] ?? null;
-	},
-	get languages() {
-		return languages(document);
-	},
-	getSamples: atcoderSamples,
-	syncCode(code, languageId) {
-		const source = document.querySelector("#plain-textarea");
-		const language = document.querySelector("select[name=\"data.LanguageId\"]");
-		if (source) {
-			source.value = code;
-			source.dispatchEvent(new Event("input", { bubbles: true }));
-		}
-		if (language) language.value = languageId;
-		syncAce(code);
-	},
-	runCustomTest(code, languageId, input) {
-		const run = async () => navigator.locks ? await navigator.locks.request("ojpp-atcoder-custom-test", () => runTest(code, languageId, input)) : await runTest(code, languageId, input);
-		const result = testQueue.then(run);
-		testQueue = result.catch(() => void 0);
-		return result;
-	},
-	async submit(code, languageId, problemCode) {
-		const form = document.querySelector("form.form-code-submit");
-		if (!form || !/\/submit$/.test(new URL(form.action).pathname)) return {
-			ok: false,
-			error: t$1("atcoder.formUnavailable")
-		};
-		const source = form.querySelector("[name=\"sourceCode\"]");
-		const language = form.querySelector("[name=\"data.LanguageId\"]");
-		if (!source || !language) return {
-			ok: false,
-			error: t$1("atcoder.formUnavailable")
-		};
-		source.value = code;
-		language.value = languageId;
-		syncAce(code);
-		const body = new URLSearchParams();
-		for (const [key, value] of new FormData(form)) if (typeof value === "string") body.set(key, value);
-		body.set("data.TaskScreenName", problemCode);
-		body.set("sourceCode", code);
-		body.set("data.LanguageId", languageId);
-		const challenge = form.querySelector("[name=\"cf-turnstile-response\"]");
-		if (challenge && !challenge.value) {
-			form.scrollIntoView({ block: "center" });
-			return {
-				ok: false,
-				error: t$1("atcoder.verification")
-			};
-		}
-		const response = await fetchChecked(form.action, {
-			method: "POST",
-			body
-		});
-		if (/\/submissions(?:\/|$)/.test(new URL(response.url).pathname)) return {
-			ok: true,
-			url: response.url
-		};
-		return {
-			ok: false,
-			error: [...new DOMParser().parseFromString(await response.text(), "text/html").querySelectorAll(".alert-danger, .has-error .help-block")].map((e) => e.textContent?.trim()).filter(Boolean).join("; ") || t$1("atcoder.notConfirmed")
-		};
-	},
-	editorPage(doc) {
-		if (doc.querySelector("#task-statement")) return null;
-		const textarea = doc.querySelector("#plain-textarea");
-		const native = doc.querySelector("#editor");
-		if (!textarea || !native) return null;
-		return {
-			anchor: native,
-			position: "afterend",
-			hide: native,
-			textarea,
-			langSelect: doc.querySelector("select[name=\"data.LanguageId\"]") ?? void 0,
-			langMode: (id) => languages(doc).find((l) => l.id === id)?.mode ?? "text",
-			syncBack: syncAce
-		};
-	}
-};
-var zh = {
-	"Home": "首页",
-	"Top": "首页",
-	"Contests": "比赛",
-	"Contest": "比赛",
-	"Tasks": "题目",
-	"Submit": "提交",
-	"Results": "结果",
-	"Standings": "排行榜",
-	"Virtual Standings": "虚拟排行榜",
-	"Submissions": "提交记录",
-	"All Submissions": "全部提交",
-	"My Submissions": "我的提交",
-	"Custom Test": "自定义测试",
-	"Editorial": "题解",
-	"Virtual Participation": "虚拟参赛",
-	"バーチャル参加": "虚拟参赛",
-	"My Score": "我的得分",
-	"Clarifications": "提问",
-	"Rules": "规则",
-	"Rating": "积分",
-	"Rank": "排名",
-	"Rankings": "排行榜",
-	"User": "用户",
-	"Username": "用户名",
-	"Task": "题目",
-	"Language": "语言",
-	"Score": "分数",
-	"Status": "状态",
-	"Task:": "题目：",
-	"Language:": "语言：",
-	"Status:": "状态：",
-	"User:": "用户：",
-	"Username:": "用户名：",
-	"< Prev": "< 上一页",
-	"Next >": "下一页 >",
-	"Prev": "上一页",
-	"Next": "下一页",
-	"Elapsed": "用时",
-	"Code Size": "代码长度",
-	"Exec Time": "运行时间",
-	"Memory": "内存",
-	"Submission Time": "提交时间",
-	"Detail": "详情",
-	"Details": "详情",
-	"Source Code": "源代码",
-	"Source code": "源代码",
-	"Input": "输入",
-	"Output": "输出",
-	"Standard Input": "标准输入",
-	"Standard Output": "标准输出",
-	"Standard Error": "标准错误",
-	"Exit Code": "退出码",
-	"Problem Statement": "题目描述",
-	"Constraints": "约束条件",
-	"Copy": "复制",
-	"Run": "运行",
-	"Reset": "重置",
-	"Search": "搜索",
-	"Filter": "筛选",
-	"All": "全部",
-	"Duration": "时长",
-	"Start Time": "开始时间",
-	"Contest Duration": "比赛时长",
-	"Contest Type": "比赛类型",
-	"Rated Range": "计分范围",
-	"Upcoming Contests": "即将举行的比赛",
-	"Active Contests": "进行中的比赛",
-	"Recent Contests": "近期比赛",
-	"Permanent Contests": "长期比赛",
-	"Past Contests": "历史比赛",
-	"Contest Archive": "比赛归档",
-	"Sign In": "登录",
-	"Sign Out": "退出登录",
-	"Sign Up": "注册",
-	"Register": "报名",
-	"Unregister": "取消报名",
-	"My Profile": "我的主页",
-	"General Settings": "通用设置",
-	"Change Photo": "更换头像",
-	"Change Password": "修改密码",
-	"Manage Fav": "管理收藏",
-	"Settings": "设置",
-	"Help": "帮助",
-	"Terms of service": "服务条款",
-	"Privacy Policy": "隐私政策",
-	"Company": "公司",
-	"Contact": "联系",
-	"Search in Archive": "搜索历史比赛",
-	"Contest Name": "比赛名称",
-	"Daily Contests": "每日比赛",
-	"Rule": "规则",
-	"Terms of Use": "使用条款",
-	"Information Protection Policy": "信息保护政策",
-	"at most 512 KiB": "最多 512 KiB",
-	"A newline character is also at the end of the input data usually.": "输入数据的末尾通常也有换行符。",
-	"マイプロフィール": "我的主页",
-	"基本設定": "通用设置",
-	"アイコン設定": "头像设置",
-	"パスワードの変更": "修改密码",
-	"お気に入り管理": "管理收藏",
-	"トップ": "首页",
-	"バーチャル順位表": "虚拟排行榜",
-	"ランキング": "排行榜",
-	"コンテスト一覧": "比赛列表",
-	"開催中のコンテスト": "进行中的比赛",
-	"常設中のコンテスト": "长期比赛",
-	"予定されたコンテスト": "即将举行的比赛",
-	"過去のコンテスト": "历史比赛",
-	"開始時刻": "开始时间",
-	"コンテスト名": "比赛名称",
-	"時間": "时长",
-	"レーティング対象": "计分范围",
-	"更新": "更新",
-	"順位": "排名",
-	"ユーザ": "用户",
-	"最高": "最高",
-	"参加回数": "参赛次数",
-	"Highest Rating": "最高积分",
-	"Competitions": "参赛次数",
-	"Matches": "参赛次数",
-	"Country/Region": "国家或地区",
-	"Affiliation": "所属机构",
-	"Birth Year": "出生年份",
-	"Active Users": "活跃用户",
-	"All Users": "全部用户",
-	"Algorithm": "算法",
-	"Heuristic": "启发式",
-	"FAQ": "常见问题",
-	"Glossary": "术语表",
-	"Tutorial": "教程",
-	"About": "关于",
-	"Back to Home": "返回首页",
-	"Discuss": "讨论",
-	"For beginners": "初学者说明",
-	"Time Limit:": "时间限制：",
-	"Memory Limit:": "内存限制：",
-	"Contest Duration:": "比赛时长：",
-	"Editorial by": "题解作者",
-	"Editorials": "题解",
-	"Online Contests": "在线比赛",
-	"Contest has ended.": "比赛已结束。",
-	"Contest is over": "比赛已结束",
-	"Practice": "练习",
-	"Time limit exceeded": "超出时间限制",
-	"Memory limit exceeded": "超出内存限制",
-	"Open File": "打开文件",
-	"Toggle Editor": "切换编辑器",
-	"Auto Height": "自动高度",
-	"Customize": "自定义",
-	"Test Case": "测试点",
-	"Test Set": "测试集",
-	"Time Limit": "时间限制",
-	"Memory Limit": "内存限制",
-	"Official": "官方",
-	"User Editorial": "用户题解",
-	"Overall Editorial": "整体题解",
-	"Write an Editorial": "撰写题解",
-	"問題文": "题目描述",
-	"制約": "约束条件",
-	"入力": "输入",
-	"出力": "输出",
-	"解説": "题解",
-	"問題": "题目",
-	"提出": "提交",
-	"提出結果": "提交记录",
-	"順位表": "排行榜",
-	"質問": "提问",
-	"コードテスト": "自定义测试",
-	"コンテスト": "比赛",
-	"ホーム": "首页",
-	"参加登録": "报名",
-	"ログイン": "登录",
-	"ログアウト": "退出登录",
-	"新規登録": "注册",
-	"すべての提出": "全部提交",
-	"自分の提出": "我的提交",
-	"言語": "语言",
-	"得点": "分数",
-	"実行時間": "运行时间",
-	"メモリ": "内存",
-	"ソースコード": "源代码",
-	"標準入力": "标准输入",
-	"標準出力": "标准输出",
-	"標準エラー出力": "标准错误",
-	"実行": "运行",
-	"詳細": "详情",
-	"配点": "分数"
-};
-function localizeAtcoder(doc, locale) {
-	if (locale !== "zh") return;
-	applyPageI18n(doc, [{
-		scope: ".navbar, .header-inner, .header-sub_nav, .a-title_ttl, .a-btnarea, #contest-nav-tabs, #contest-tabs, #main-container h2, #main-container .h2, #main-container h3, #main-container h4, #main-container th, #main-container label, #main-container .btn, #main-container .panel-heading, #main-container .nav, #main-container .pager, #main-container summary, #main-container .label, footer, #footer",
-		map: zh,
-		replaceMap: {
-			"^Sample Input\\s+(\\d+)": "样例输入 $1",
-			"^Sample Output\\s+(\\d+)": "样例输出 $1",
-			"^入力例\\s*(\\d+)": "样例输入 $1",
-			"^出力例\\s*(\\d+)": "样例输出 $1"
-		}
-	}, {
-		scope: "input[type=\"submit\"], input[type=\"button\"]",
-		values: zh
-	}]);
-	if (/^\/contests\/[^/]+\/virtual\/?$/.test(new URL(doc.URL).pathname)) applyPageI18n(doc, [{
-		scope: "#main-container .lang-en, #main-container .lang-ja",
-		map: {
-			"Virtual participation does not change rating.": "虚拟参赛不会影响积分。",
-			"The following are prohibited while virtual participation.": "虚拟参赛期间禁止以下行为：",
-			"Submitting someone else's code.": "提交他人的代码。",
-			"Submitting code created before start your virtual participation.": "提交在本次虚拟参赛开始前编写的代码。",
-			"参加条件に制限はありませんが、以下の行為はお控えください。": "参加条件没有限制，但请勿进行以下行为：",
-			"他人の回答をコピーして提出する行為": "复制并提交他人的代码。",
-			"事前に作成した回答ソースコードを提出する行為": "提交在本次虚拟参赛开始前编写的代码。",
-			"バーチャル参加とは、コンテストに仮想的に参加できる機能です。": "虚拟参赛可以模拟参加比赛。",
-			"バーチャル参加を開始すると、": "开始虚拟参赛后，",
-			"バーチャル順位表": "虚拟排行榜",
-			"が経過時間に応じてリアルタイムに更新されていきます。": "会随比赛用时实时更新。",
-			"ただし、本番のコンテストとは異なり、レーティングの変動は起こりません。": "与正式比赛不同，虚拟参赛不会影响积分。"
-		}
-	}]);
-}
-var scope = "html[data-ojpp-theme=\"dark\"]";
-var atcoder = {
-	id: "atcoder",
-	name: "AtCoder",
-	hosts: ["atcoder.jp"],
-	editor: atcoderEditor,
-	styles: `
-    .navbar-right .ojpp-settings-btn { margin: 8px 6px; }
-    #task-statement .ojpp-toolbar { font-size: 14px; }
-    #task-statement .ojpp-result { white-space: normal; }
-    .ojpp-editor-page .cm-scroller { min-height: 240px; }
-    /* Keep the form fields and Cloudflare challenge, but remove duplicate task-page controls. */
-    body:has(.ojpp-editor) form.form-code-submit > .form-group:has(#select-lang, #sourceCode),
-    body:has(.ojpp-editor) form.form-code-submit button[type="submit"] { display: none !important; }
-    /* On native editor pages CM6 owns editing; retain the actual submission textarea. */
-    body:has(.ojpp-editor-page, .ojpp-editor) #editor, body:has(.ojpp-editor-page, .ojpp-editor) #plain-textarea,
-    body:has(.ojpp-editor-page, .ojpp-editor) .btn-toggle-editor, body:has(.ojpp-editor-page, .ojpp-editor) #btn-customize,
-    body:has(.ojpp-editor-page, .ojpp-editor) #btn-open-file { display: none !important; }
-  `,
-	darkStyles: `
-${scope} { color-scheme: dark; }
-${scope} body, ${scope} #main-container, ${scope} #main-div, ${scope} #main-container .container,
-${scope} #contest-nav-tabs {
-  background: #1c2128; color: #cdd9e5;
-}
-${scope} a:not([class*="user-"]):not(.btn) { color: #539bf5; }
-${scope} a:not([class*="user-"]):hover { color: #79b8ff; }
-${scope} .navbar, ${scope} .navbar-default, ${scope} .navbar-inverse,
-${scope} .panel, ${scope} .panel-default, ${scope} .well, ${scope} .modal-content,
-${scope} .dropdown-menu, ${scope} .popover, ${scope} .list-group-item,
-${scope} .select2-drop, ${scope} .select2-results { background: #22272e; color: #cdd9e5; border-color: #373e47; }
-${scope} .panel-heading, ${scope} .panel-footer, ${scope} .modal-header,
-${scope} .modal-footer, ${scope} .popover-title { background: #22272e; color: #cdd9e5; border-color: #373e47; }
-${scope} .navbar a, ${scope} .dropdown-menu>li>a { color: #cdd9e5; }
-${scope} .dropdown-menu>li>a:hover, ${scope} .dropdown-menu>li>a:focus,
-${scope} .navbar .open>a, ${scope} .nav>li>a:hover, ${scope} .nav>li>a:focus,
-${scope} .nav-tabs>li.active>a, ${scope} .nav-tabs>li.active>a:hover,
-${scope} .pagination>.active>a { background: #2d333b; color: #79b8ff; border-color: #373e47; }
-${scope} .nav-tabs, ${scope} hr, ${scope} .table>thead>tr>th,
-${scope} .table>tbody>tr>td, ${scope} .table>tbody>tr>th, ${scope} .table-bordered,
-${scope} .table-bordered>thead>tr>th, ${scope} .table-bordered>tbody>tr>td { border-color: #373e47; }
-${scope} .table-striped>tbody>tr:nth-of-type(odd), ${scope} .table-striped>tbody>tr:nth-child(odd)>td,
-${scope} .table-striped>tbody>tr:nth-child(odd)>th { background: #22272e; }
-${scope} .table-hover>tbody>tr:hover>td, ${scope} .table-hover>tbody>tr:hover>th { background: #2d333b; }
-${scope} .table>thead>tr.active>th, ${scope} .table>thead>tr.active>td,
-${scope} .table>tbody>tr.active>th, ${scope} .table>tbody>tr.active>td,
-${scope} .table>thead>tr>th.active, ${scope} .table>tbody>tr>td.active { background: #22272e; color: #cdd9e5; }
-${scope} .table-hover>tbody>tr.active:hover>th, ${scope} .table-hover>tbody>tr.active:hover>td,
-${scope} .table-hover>tbody>tr:hover>td.active { background: #2d333b; }
-${scope} .table .success, ${scope} .table .success>td { background: #22392b; }
-${scope} .table .warning, ${scope} .table .warning>td { background: #3c3424; }
-${scope} .table .danger, ${scope} .table .danger>td { background: #422c30; }
-${scope} input:not([type=checkbox]):not([type=radio]), ${scope} select, ${scope} textarea,
-${scope} .form-control, ${scope} .select2-container .select2-choice,
-${scope} .select2-container .select2-choice .select2-arrow, ${scope} .select2-search input {
-  background: #1c2128; background-image: none; color: #cdd9e5; border-color: #373e47;
-}
-${scope} .select2-results .select2-highlighted { background: #2d333b; color: #79b8ff; }
-${scope} .btn-default, ${scope} .btn-default:focus, ${scope} .pagination>li>a,
-${scope} .pagination>li>span { background: #22272e; color: #cdd9e5; border-color: #373e47; }
-${scope} .btn-default:hover { background: #2d333b; }
-${scope} pre, ${scope} code, ${scope} .source-code-for-copy { background: #22272e; color: #cdd9e5; border-color: #373e47; }
-${scope} #task-statement var, ${scope} .katex { color: inherit; background: transparent; }
-${scope} .alert-info { background: #203247; color: #9bc4ef; border-color: #354c66; }
-${scope} .alert-warning { background: #3c3424; color: #e5c07b; border-color: #665537; }
-${scope} .alert-danger { background: #422c30; color: #f3a6ac; border-color: #694047; }
-${scope} .alert-success { background: #22392b; color: #8bc89a; border-color: #365d40; }
-${scope} .text-muted, ${scope} .help-block, ${scope} small { color: #909dab; }
-${scope} blockquote { border-color: #536170; }
-${scope} .close { color: #cdd9e5; text-shadow: none; opacity: .8; }
-${scope} #main-div, ${scope} #main-container { box-shadow: none; }
-${scope} .insert-participant-box { background: #22272e; color: #cdd9e5; }
-${scope} .btn-copy.btn-pre {
-  background: #22272e; color: #cdd9e5; border-color: #373e47;
-}
-${scope} .btn-copy.btn-pre:hover, ${scope} .btn-copy.btn-pre:focus {
-  background: #2d333b; color: #79b8ff; border-color: #536170;
-}
-${scope} #fixed-server-timer { background: #22272e; color: #cdd9e5; border-color: #373e47; }
-${scope} .select2-container .select2-selection--single,
-${scope} .select2-dropdown, ${scope} .select2-search__field {
-  background: #1c2128; color: #cdd9e5; border-color: #373e47;
-}
-${scope} .select2-container .select2-selection--single .select2-selection__rendered { color: #cdd9e5; }
-${scope} .select2-container .select2-results__option[aria-selected=true] { background: #2d333b; }
-${scope} .select2-container .select2-results__option--highlighted[aria-selected] { background: #354961; color: #fff; }
-${scope} .table>tbody>tr.success>th, ${scope} .table>tbody>tr>th.success { background: #22392b; }
-${scope} .table>tbody>tr.danger>th, ${scope} .table>tbody>tr>th.danger { background: #422c30; }
-${scope} .table>tbody>tr.warning>th, ${scope} .table>tbody>tr>th.warning { background: #3c3424; }
-${scope} .pager>li>a, ${scope} .pager>li>span {
-  background: #22272e; color: #539bf5; border-color: #373e47;
-}
-${scope} .pager>li>a:hover, ${scope} .pager>li>a:focus { background: #2d333b; color: #79b8ff; }
-${scope} .pager>li.disabled>a, ${scope} .pager>li.disabled>a:hover,
-${scope} .pager>li.disabled>a:focus, ${scope} .pager>li.disabled>span {
-  background: #1c2128; color: #909dab; border-color: #373e47;
-}
-${scope} .user-unrated, ${scope} .glyphicon.black { color: #cdd9e5 !important; }
-${scope} .standings-score { color: #79b8ff; }
-${scope} .sort-th { background-image: none !important; position: relative; padding-right: 20px; }
-${scope} .sort-th::after {
-  content: '↕'; position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
-  color: #909dab; font-size: 12px; pointer-events: none;
-}
-${scope} .sort-th.sort-asc::after { content: '▴'; color: #79b8ff; }
-${scope} .sort-th.sort-desc::after { content: '▾'; color: #79b8ff; }
-${scope} .user-gray { color: #a0a0a0 !important; }
-${scope} .user-brown { color: #b78b66 !important; }
-${scope} .user-green { color: #57ab5a !important; }
-${scope} .user-cyan { color: #56c7c7 !important; }
-${scope} .user-blue { color: #539bf5 !important; }
-${scope} .user-yellow { color: #d8cf55 !important; }
-${scope} .user-orange { color: #f0883e !important; }
-${scope} .user-red { color: #f85149 !important; }
-`,
-	collectSections(doc) {
-		const sections = [];
-		const root = atcoderStatement(doc);
-		if (root) {
-			for (const section of root.querySelectorAll("section")) {
-				const heading = section.querySelector("h3");
-				if (!heading || !section.textContent?.trim()) continue;
-				const label = [...heading.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim();
-				if (section.querySelector("pre[id^=\"pre-sample\"]") || /^(Sample (Input|Output)|入力例|出力例|样例输入|样例输出)\s*\d+/.test(label)) {
-					for (const paragraph of [...section.children].filter((e) => e instanceof HTMLElement && [
-						"P",
-						"UL",
-						"OL"
-					].includes(e.tagName))) sections.push({
-						kind: "output",
-						label: t$1("section.note"),
-						content: paragraph,
-						toolbar: {
-							anchor: paragraph,
-							position: "beforebegin",
-							align: "block-right"
-						},
-						result: {
-							anchor: paragraph,
-							position: "afterend"
-						}
-					});
-					continue;
-				}
-				const kind = /^(Input|入力|输入)$/.test(label) ? "input" : /^(Output|出力|输出)$/.test(label) ? "output" : "statement";
-				const localizedLabel = /^(Constraints|制約|约束条件)$/.test(label) ? t$1("section.constraints") : kind === "input" ? t$1("section.input") : kind === "output" ? t$1("section.output") : /^(Problem Statement|問題文|题目描述)$/.test(label) ? t$1("section.statement") : label;
-				sections.push({
-					kind,
-					label: localizedLabel,
-					content: section,
-					toolbar: {
-						anchor: heading,
-						position: "beforeend",
-						align: "right"
-					},
-					result: {
-						anchor: section,
-						position: "afterend"
-					}
-				});
-			}
-			if (!sections.length && !root.querySelector("section")) sections.push({
-				kind: "statement",
-				label: t$1("section.statement"),
-				content: root,
-				toolbar: {
-					anchor: root,
-					position: "beforebegin",
-					align: "block-right"
-				},
-				result: {
-					anchor: root,
-					position: "afterend"
-				}
-			});
-		}
-		const contest = doc.querySelector("#contest-statement");
-		if (contest) {
-			const content = atcoderLanguageContent(contest);
-			if (content.textContent?.trim()) sections.push({
-				kind: "article",
-				label: t$1("section.contest"),
-				content,
-				toolbar: {
-					anchor: content,
-					position: "beforebegin",
-					align: "block-right"
-				},
-				result: {
-					anchor: content,
-					position: "afterend"
-				}
-			});
-		}
-		const editorialSelector = /\/editorial\/\d+/.test(new URL(doc.URL).pathname) ? "#main-container h2 + hr + div:not(.clearfix)" : "#main-container .editorial";
-		for (const content of doc.querySelectorAll(editorialSelector)) {
-			if (!content.textContent?.trim()) continue;
-			sections.push({
-				kind: "solution",
-				label: t$1("section.solution"),
-				content,
-				toolbar: {
-					anchor: content,
-					position: "beforebegin",
-					align: "block-right"
-				},
-				result: {
-					anchor: content,
-					position: "afterend"
-				}
-			});
-		}
-		for (const content of doc.querySelectorAll(".blog-post")) {
-			if (!content.textContent?.trim()) continue;
-			const heading = content.parentElement?.querySelector(".post-heading h3");
-			sections.push({
-				kind: "article",
-				label: t$1("section.blog"),
-				content,
-				toolbar: {
-					anchor: heading ?? content,
-					position: heading ? "beforeend" : "beforebegin",
-					align: "right"
-				},
-				result: {
-					anchor: content,
-					position: "afterend"
-				}
-			});
-		}
-		return sections;
-	},
-	prepareContent(root) {
-		root.querySelectorAll(".btn-copy, .div-btn-copy, .ojpp-toolbar, .ojpp-result").forEach((e) => e.remove());
-		for (const math of root.querySelectorAll("var, .katex-display, .katex")) {
-			if (!root.contains(math)) continue;
-			const tex = math.querySelector("annotation[encoding=\"application/x-tex\"]")?.textContent ?? (math.tagName === "VAR" && !math.querySelector(".MathJax") ? math.textContent : null);
-			if (tex === null) continue;
-			const node = root.ownerDocument.createElement("span");
-			const display = math.classList.contains("katex-display");
-			node.setAttribute("data-ojpp-math", display ? "display" : "inline");
-			node.textContent = tex;
-			math.replaceWith(node);
-		}
-		for (const script of root.querySelectorAll("script[type^=\"math/tex\"]")) {
-			const display = script.type.includes("mode=display");
-			const span = root.ownerDocument.createElement("span");
-			span.setAttribute("data-ojpp-math", display ? "display" : "inline");
-			span.textContent = script.textContent;
-			script.replaceWith(span);
-		}
-		root.querySelectorAll(".MathJax, .MathJax_Display, .MathJax_Preview").forEach((e) => e.remove());
-	},
-	mountSettingsButton(button, doc) {
-		const nav = doc.querySelector(".navbar-right");
-		if (nav) {
-			const li = doc.createElement("li");
-			li.className = "ojpp-settings-entry";
-			li.append(button);
-			nav.querySelector(".ojpp-settings-entry")?.remove();
-			nav.insertBefore(li, nav.lastElementChild);
-		} else doc.body.append(button);
-	},
-	observe(doc, onChange) {
-		let timer;
-		const observer = new MutationObserver((records) => {
-			if (!records.some((record) => {
-				return !(record.target instanceof Element ? record.target : record.target.parentElement)?.closest("[class*=\"ojpp-\"], .ace_editor, .katex, .MathJax");
-			})) return;
-			clearTimeout(timer);
-			timer = setTimeout(onChange, 120);
-		});
-		observer.observe(doc.body, {
-			childList: true,
-			subtree: true,
-			attributes: true,
-			attributeFilter: ["style"]
-		});
-		return () => {
-			clearTimeout(timer);
-			observer.disconnect();
-		};
-	},
-	i18nPage: localizeAtcoder
-};
-var CF_SUBS_RULES = [
-	{
-		scope: ".datatable",
-		replaceMap: {
-			"Virtual participation »": "参加虚拟重现赛 »",
-			"Enter »": "进入 »",
-			"Current standings": "当前榜单",
-			"Final standings": "最终榜单",
-			"Preliminary results": "初步结果",
-			"open hacking:": "开放黑客攻击中",
-			"School/University/City/Region Championship": "学校/大学/城市/区域比赛",
-			"Official School Contest": "学校官方比赛",
-			"Training Contest": "训练赛",
-			"Training Camp Contest": "训练营比赛",
-			"Official ICPC Contest": "ICPC官方比赛",
-			"Official International Personal Contest": "官方国际个人赛",
-			"China": "中国",
-			"Statements": "题目描述",
-			"in Chinese": "中文",
-			"Trainings": "训练",
-			"Prepared by": "编写人",
-			"Current or upcoming contests": "当前或即将举行的比赛",
-			"Rating:\xA0users\xA0participated\xA0in\xA0recent\xA06\xA0months": "评级：最近 6 个月有参与的用户",
-			"Past contests": "过去的比赛",
-			"Exclusions": "排除",
-			"Before start": "距比赛开始还有",
-			"Before registration": "距报名开始还有",
-			"Until closing ": "距报名结束还有",
-			"Before extra registration": "额外报名还未开始",
-			"Register »": "报名 »",
-			"Registration completed": "已报名",
-			"Registration closed": "报名已结束",
-			"Problems\n": "问题集",
-			"My Submissions": "我的提交",
-			"Standings": "榜单",
-			"Questions about problems": "关于问题的提问",
-			"Contest status": "比赛状态",
-			"Invited users": "邀请的用户",
-			"Invitation links": "邀请链接",
-			"API keys": "API密钥"
-		}
-	},
-	{
-		scope: ".first-row, .datatable .top",
-		replaceMap: {
-			"When": "提交时间",
-			"Who": "提交者",
-			"Problem": "问题",
-			"Lang": "语言",
-			"Verdict": "判题状态",
-			"Time": "时间",
-			"Memory": "内存",
-			"Author": "提交者",
-			"Sent": "提交时间",
-			"Judged": "判题时间",
-			"Name": "比赛名称",
-			"Writers": "编写者",
-			"Start": "开始时间",
-			"Length": "持续时长"
-		}
-	},
-	{
-		scope: ".datatable .problems, .datatable .status-small",
-		replaceMap: {
-			"进入": "Enter",
-			"题目描述": "Statements",
-			"训练": "Trainings",
-			"问题集": "Problems",
-			"榜单": "Standings"
-		}
-	},
-	{
-		scope: ".menu-list.main-menu-list",
-		replaceMap: {
-			"Home": "主页",
-			"Top": "热门",
-			"Catalog": "指南目录",
-			"Contests": "比赛",
-			"Gym": "训练营",
-			"Problemset": "题库",
-			"Groups": "团体",
-			"Rating": "排行榜",
-			"Edu": "培训",
-			"Calendar": "日历",
-			"ICPC Challenge": "ICPC挑战赛",
-			"Help": "帮助"
-		}
-	},
-	{
-		scope: ".nav-links",
-		replaceMap: {
-			"Settings": "设置",
-			"Blog": "博客",
-			"Teams": "队伍",
-			"Submissions": "提交记录",
-			"Favourites": "收藏",
-			"Problemsetting": "参与编写的问题",
-			"Groups": "团体",
-			"Propose a contest/problems": "提议比赛/题目",
-			"Talks": "私信",
-			"Contests": "比赛"
-		}
-	},
-	{
-		scope: ".contest-state-phase",
-		replaceMap: {
-			"Before contest": "即将进行的比赛",
-			"Contest is running": "比赛进行中",
-			"Registration is running": "报名进行中"
-		}
-	},
-	{
-		scope: ".notice",
-		replaceMap: {
-			"has extra registration": "有额外的报名时期",
-			"If you are late to register in 5 minutes before the start, you can register later during the extra registration. Extra registration opens 10 minutes after the contest starts and lasts 25 minutes.": "如果您在比赛开始前5分钟前还未报名，您可以在额外的报名期间稍后报名。额外的报名将在比赛开始后10分钟开放，并持续25分钟。",
-			"in timezone ([^)]*)": "$1 时区",
-			"Contest will be available for virtual participation when over. Leave this field blank to allow virtual participation at any time": "比赛结束后将允许虚拟参赛。将此字段留空以允许随时进行虚拟参赛",
-			"Contest duration in minutes": "比赛持续时间（分钟）",
-			"or choose": "或选择",
-			"Standings freeze period in minutes": "榜单冻结时间（分钟）",
-			"Time when final results are available": "最终结果可用时间",
-			"Is it allowed to solve contest problems unofficially after the end": "比赛结束后是否允许非官方解决比赛问题",
-			"Is it allowed to run contest as virtual after the end": "比赛结束后是否允许虚拟参赛",
-			"Is it allowed participate in contest out of competition": "是否允许非竞赛参赛",
-			"Are participants allowed to register for the contest themselves": "是否允许参赛者自行报名",
-			"Can non-registered users and anonyms view contest standings, problems and other statistics": "是否允许未注册用户和匿名用户查看比赛榜单、问题和其他统计信息",
-			"If unchecked they will view only personal status": "如果未选中，他们将只能查看个人状态",
-			"To manage allowed program languages": "管理允许的编程语言",
-			"The system will automatically adjust time limits for some languages. Recommended for use only for educational purpose.": "系统将自动调整某些语言的时间限制。仅建议用于教育目的。",
-			"Check it if you want to allow contestants view statements": "如果允许参赛者查看题目描述，请勾选此项",
-			"Check it if contestants can view standings": "如果允许参赛者查看榜单，请勾选此项",
-			"Where the contest was held originally": "比赛原本举办的地点",
-			"Official contest site URL": "官方比赛网站URL",
-			"Enter a name for your new API key. It should describe what this key is used for.": "为您的新API密钥输入一个名称。它应该描述这个密钥的用途。",
-			"Enter your account password to confirm access. If you do not have password, logout and use password recovery feature.": "输入您的账户密码以确认访问。如果您没有密码，请注销并使用密码恢复功能。"
-		}
-	},
-	{
-		scope: ".propertyLinks",
-		replaceMap: {
-			"Rating": "等级分",
-			"Contribution": "贡献"
-		}
-	},
-	{
-		scope: ".contests-table",
-		replaceMap: { "Contest history": "比赛历史" }
-	},
-	{
-		scope: ".roundbox.sidebox.borderTopRound",
-		replaceMap: {
-			"Register now": "现在报名",
-			"No tag edit access": "没有标签编辑权限",
-			"Problem:": "问题:",
-			"Verdict:": "判题状态:",
-			"Language:": "语言:",
-			"Test:": "测试点数量:",
-			"Participant": "参赛者",
-			"Choose file:": "选择文件:",
-			"Want to solve the contest problems after the official contest ends\\? Just register for practice and you will be able to submit solutions.": "想在正式比赛结束后解决比赛问题吗？只需登录或注册账号，您就可以提交代码。",
-			"The package for this problem was not updated by the problem writer or Codeforces administration after we've upgraded the judging servers. To adjust the time limit constraint, a solution execution time will be multiplied by 2. For example, if your solution works for 400 ms on judging servers, then the value 800 ms will be displayed and used to determine the verdict.": "这个题目的数据包未在我们升级评测服务器后由出题人或Codeforces管理团队更新。为了调整时间限制的约束，一个解答的执行时间将被乘以2。例如，如果你的解答在评测服务器上运行了400毫秒，那么将显示并使用800毫秒的值来确定结果。",
-			"Virtual contest is a way to take part in past contest, as close as possible to participation on time. It is supported only ICPC mode for virtual contests.": "虚拟比赛是一种参加过去比赛的方式，尽可能接近实时参赛。目前只支持ICPC模式的虚拟赛事。",
-			"If you've seen these problems, a virtual contest is not for you - solve these problems in the archive.": "如果你已经看过这些题目，虚拟赛事就不适合你——应该在题库中解决这些题目。",
-			"If you just want to solve some problem from a contest, a virtual contest is not for you - solve this problem in the archive.": "如果你只是想解决比赛中的某个问题，虚拟赛事也不适合你——应该在题库中解决这个问题。",
-			"Never use someone else's code, read the tutorials or communicate with other person during a virtual contest.": "在虚拟比赛期间，切勿使用别人的代码，阅读题解或与他人交流。",
-			"You can clone this contest to a mashup.": "您可以将此比赛克隆到混搭比赛中。",
-			"Mashup is a special type of training contest, which consists of public problems from past Codeforces rounds. Also it is possible to add": "混搭是一种特殊类型的训练比赛，由过去Codeforces比赛的公开问题组成。还可以添加",
-			"problems to mashup contest.": "问题到混搭比赛。",
-			"Such contests can not be made public, they are only for personal training purpose. Also it is allowed to add mashups to groups. To specify additional information about mashup contest, use Gym contest edit form.": "这样的比赛不能公开，只用于个人训练目的。还可以将混搭添加到团体中。要指定有关混搭比赛的其他信息，请使用训练营比赛编辑表单。"
-		}
-	},
-	{
-		scope: ".roundbox.sidebox.virtual-contests.borderTopRound",
-		replaceMap: {
-			"Contest": "比赛名称",
-			"Time": "开始时间",
-			"Enter »": "进入 »"
-		}
-	},
-	{
-		scope: ".roundbox.sidebox.top-contributed.borderTopRound",
-		replaceMap: {
-			"User": "用户名",
-			"Rating": "等级分",
-			"Contrib.": "贡献"
-		}
-	},
-	{
-		scope: ".roundbox.sidebox.borderTopRound .rtable.smaller",
-		replaceMap: {
-			"Submission": "#",
-			"Time": "提交时间",
-			"Verdict": "判题状态",
-			"提交时间 limit exceeded": "Time limit exceeded"
-		}
-	},
-	{
-		scope: ".reset-status-filter",
-		replaceMap: {
-			"Status filter is used, click ": "状态筛选已启用，点击",
-			"here": "此处",
-			" to reset ": "重置"
-		}
-	},
-	{
-		scope: ".icon-eye-close.icon-large",
-		replaceMap: { "Add to exclusions": "添加到排除列表" }
-	},
-	{
-		scope: ".roundbox.sidebox.sidebar-menu.borderTopRound",
-		replaceMap: {
-			"Announcement": "公告",
-			"Statements": "题面陈述",
-			"Tutorial": "题解"
-		}
-	},
-	{
-		scope: ".second-level-menu",
-		replaceMap: {
-			"Problems": "问题",
-			"Submit Code": "提交代码",
-			"My Submissions": "我的提交",
-			"Status": "状态",
-			"Standings": "榜单",
-			"Adm.": "管理",
-			"Edit": "编辑",
-			"Custom Invocation": "自定义调试",
-			"Common standings": "全部排行",
-			"Friends standings": "只看关注",
-			"Rating Changes": "全部评级变化",
-			"Friends 全部评级变化": "关注评级变化",
-			"Submit": "提交",
-			"Hacks": "黑客",
-			"Room": "房间",
-			"Custom test": "自定义测试",
-			"Blog": "博客",
-			"Teams": "队伍",
-			"Submissions": "提交记录",
-			"Groups": "团体",
-			"Rating": "评级",
-			"Friends rating": "关注的评级",
-			"Favourites": "收藏",
-			"Contests": "比赛",
-			"Magic": "魔法",
-			"Handle": "账号",
-			"Members": "成员",
-			"问题etting": "参与编写的问题",
-			"Streams": "直播",
-			"Gym": "训练营",
-			"Mashups": "组合混搭",
-			"Posts": "帖子",
-			"Comments": "回复",
-			"Main": "主题库",
-			"Settings": "设置",
-			"Lists": "列表",
-			"General": "基本",
-			"Sidebar": "侧边栏",
-			"Social": "社会信息",
-			"Address": "地址",
-			"Wallets": "钱包"
-		}
-	},
-	{
-		scope: ".topic-toggle-collapse",
-		replaceMap: { "Expand": "展开" }
-	},
-	{
-		scope: ".topic-read-more",
-		replaceMap: { "Full text and comments": "阅读全文/评论" }
-	},
-	{
-		scope: ".toggleEditorCheckboxLabel",
-		replaceMap: { "Switch off editor": "关闭编辑器语法高亮" }
-	},
-	{
-		scope: ".submit",
-		replaceMap: { "Registration for the contest": "比赛报名" }
-	},
-	{
-		scope: "._FilterByTagsFrame_difficulty",
-		replaceMap: { "Difficulty:": "难度:" }
-	},
-	{
-		scope: "._FilterByTagsFrame_addTagLink",
-		replaceMap: { "Add\xA0tag": "添加标签" }
-	},
-	{
-		scope: ".alert",
-		replaceMap: {
-			"Rating changes for last rounds are temporarily rolled back. They will be returned soon.": "上一轮的评级变化暂时回滚。它们将很快恢复。",
-			"Reminder: in case of any technical issues, you can use the lightweight website": "提醒：如果出现任何技术问题，您可以使用轻量网站",
-			"Please subscribe to the official Codeforces channel in Telegram via the link": "请通过链接订阅Codeforces的官方Telegram频道",
-			"Thank you for your interest in Codeforces. You have been successfully registered.": "感谢您对Codeforces的关注。您已成功注册。",
-			"Now you need to confirm your email. A letter was sent to your email, follow the instructions to complete the registration.": "现在您需要确认您的电子邮件。一封信已发送到您的电子邮件，请按照说明完成注册。",
-			"If for any reason the letter did not come, it can be sent again": "如果由于任何原因信件未到达，可以再次发送",
-			"The user is disabled.": "该用户已被封禁。"
-		}
-	},
-	{
-		scope: ".lang-chooser",
-		replaceMap: {
-			"Enter": "登录",
-			"Register": "注册",
-			"Contest rating": "等级分",
-			"Logout": "退出登录"
-		}
-	},
-	{
-		scope: ".userbox",
-		replaceMap: {
-			"Change photo": "更换图片",
-			"Contest rating": "等级分",
-			"Contribution": "贡献",
-			"Friend of": "粉丝",
-			"My friends": "我的好友",
-			"Change settings": "改变设置",
-			"Last visit": "最后访问",
-			"not visible": "不可见的",
-			"Registered": "注册于",
-			"Blog entries": "博客条目",
-			"comments": "评论",
-			"Write new entry": "编写新条目",
-			"View my talks": "查看我的私信",
-			"Talks": "私信",
-			"Send message": "发送消息"
-		}
-	},
-	{
-		scope: "#vote-reset-filterDifficultyLowerBorder",
-		replaceMap: { "Reset": "重置" }
-	},
-	{
-		scope: "#vote-reset-filterDifficultyUpperBorder",
-		replaceMap: { "Reset": "重置" }
-	},
-	{
-		scope: ".alert.alert-info",
-		replaceMap: {
-			"The problem statement has recently been changed.": "题目描述最近已被更改。",
-			"View the changes.": "查看更改"
-		}
-	},
-	{
-		scope: ".enterPage",
-		replaceMap: {
-			"Fill in the form to login into Codeforces.": "填写表单以登录到Codeforces。",
-			"You can use": "你也可以使用",
-			"as an alternative way to enter.": "登录"
-		}
-	},
-	{
-		scope: ".notice.small",
-		replaceMap: { "\\* To view the complete list, click ": "* 要查看完整列表，请点击" }
-	},
-	{
-		scope: ".setting-name",
-		replaceMap: {
-			"Contest type:": "比赛类型：",
-			"Rated:": "已评级：",
-			"Tried:": "已尝试：",
-			"Substring:": "关键字："
-		}
-	},
-	{
-		scope: ".shiftUp",
-		replaceMap: { "In contest title and writers": "在比赛标题与编写者中搜索" }
-	},
-	{
-		scope: ".by-form",
-		replaceMap: {
-			"Sort by:": "排序依据：",
-			"relevance": "相关",
-			"popularity": "热度",
-			"time": "时间"
-		}
-	},
-	{
-		scope: ".roundbox.borderTopRound",
-		replaceMap: {
-			"If you invite users to this contest, the contest will become visible to them regardless of its visibility. You can share the contest using the link:": "如果您邀请用户参加此竞赛，则无论其可见性如何，该竞赛都将对用户可见。您可以使用以下链接分享比赛：",
-			"Generate link and share it with other users": "生成链接并与其他用户共享",
-			"Show Log »": "展示日志 »",
-			"Move all to practice\xA0»": "全部移至练习者 »",
-			"Remove All »": "移除全部 »",
-			"Add »": "添加 »",
-			"Set »": "设置 »",
-			"Download Archive »": "下载归档 »"
-		}
-	},
-	{
-		scope: ".caption.titled",
-		replaceMap: {
-			"Pay attention": "注意",
-			"Top rated": "评级排行",
-			"Top contributors": "贡献者排行",
-			"Find user": "查找用户",
-			"Recent actions": "最新动态",
-			"Training filter": "过滤筛选",
-			"Find training": "搜索比赛/问题",
-			"Virtual participation": "什么是虚拟参赛",
-			"Contest materials": "比赛相关资料",
-			"Settings": "设置",
-			"Create Mashup Contest": "创建混搭比赛",
-			"Clone Contest to Mashup": "克隆比赛到组合混搭",
-			"Invitations": "邀请",
-			"Status filter": "状态过滤器",
-			"Administration": "管理",
-			"Submit": "提交",
-			"Practice": "练习",
-			"Problem tags": "问题标签",
-			"Filter Problems": "过滤问题",
-			"Last unsolved": "上次未解决",
-			"Attention": "注意",
-			"Past contests filter": "筛选过去的比赛",
-			"Recent virt. contests": "过去的虚拟参赛",
-			"About Contest": "关于比赛",
-			"Last submissions": "提交历史",
-			"Streams": "直播",
-			"Coach rights": "教练权限",
-			"Advices to fill address": "填写地址的建议",
-			"Hacks filter": "黑客过滤器",
-			"Score table": "评分表",
-			"Contests": "比赛",
-			"History": "编辑历史",
-			"Login into Codeforces": "登录 Codeforces",
-			"Export the judgment log to DAT-file": "导出判题日志为 DAT 文件",
-			"Contest managers": "比赛管理员",
-			"Contest writers": "比赛编写者",
-			"Spectator ranklists": "观众排名列表",
-			"Ghosts:": "幽灵选手",
-			"Export Submissions": "导出提交",
-			"Register in Codeforces": "注册 Codeforces",
-			"Password recovery": "密码恢复"
-		}
-	},
-	{
-		scope: "#gym-filter-form div label, #gym-filter-form div",
-		replaceMap: {
-			"Contest type:": "比赛类型:",
-			"ICPC region:": "ICPC地区:",
-			"Contest format:": "比赛形式:",
-			"Order by:": "排序方式:",
-			"Secondary order by:": "次要排序方式:",
-			"Hide, if participated:": "隐藏我参加过的:",
-			"Hide excluded gyms": "隐藏已排除的:",
-			"Season:": "时间范围（年度）",
-			"Duration, hours:": "持续时间（小时）:",
-			"Difficulty:": "难度:"
-		}
-	},
-	{
-		scope: ".setting-value select option, .setting-last-value select option",
-		replaceMap: {
-			"Official ACM-ICPC Contest": "ICPC官方比赛",
-			"Official School Contest": "学校官方比赛",
-			"Opencup Contest": "Opencup比赛",
-			"School/University/City/Region Championship": "学校/大学/城市/地区锦标赛",
-			"Training Camp Contest": "训练营比赛",
-			"Official International Personal Contest": "官方国际个人赛",
-			"Training Contest": "训练比赛",
-			"ID_ASC": "创建时间（升序）",
-			"ID_DESC": "创建时间（降序）",
-			"RATING_ASC": "评分（升序）",
-			"RATING_DESC": "评分（降序）",
-			"DIFFICULTY_ASC": "难度（升序）",
-			"DIFFICULTY_DESC": "难度（降序）",
-			"START_TIME_ASC": "开始时间（升序）",
-			"START_TIME_DESC": "开始时间（降序）",
-			"DURATION_ASC": "持续时间（升序）",
-			"DURATION_DESC": "持续时间（降序）",
-			"POPULARITY_ASC": "热度（升序）",
-			"POPULARITY_DESC": "热度（降序）",
-			"UPDATE_TIME_ASC": "更新时间（升序）",
-			"UPDATE_TIME_DESC": "更新时间（降序）"
-		}
-	},
-	{
-		scope: ".options li label, .CaptionCont span",
-		replaceMap: {
-			"Educational": "教育性",
-			"Global": "全球",
-			"VK Cup": "VK杯",
-			"Long Rounds": "长期回合",
-			"April Fools": "愚人节",
-			"Team Contests": "团队比赛",
-			"ICPC Scoring": "ICPC计分",
-			"Doesn't matter": "----",
-			"Any": "所有",
-			"Yes$": "是",
-			"No$": "否",
-			"No submission(s)": "无提交",
-			"Have submission(s)": "有提交",
-			"No solved problem(s)": "无解决问题",
-			"Have solved problem(s)": "有解决问题"
-		}
-	},
-	{
-		scope: ".sidebox div label",
-		replaceMap: {
-			"Show tags for unsolved problems": "显示未解决问题的标签",
-			"Hide solved problems": "隐藏已解决的问题"
-		}
-	},
-	{
-		scope: "td.field-name label",
-		replaceMap: {
-			"Postal/zip code": "邮政编码/邮编",
-			"Country //(English//)": "国家（英文）",
-			"State //(English//)": "州/省份（英文）",
-			"City //(English//)": "城市（英文）",
-			"Address //(English//)": "地址（英文）",
-			"Recipient //(English//)": "收件人姓名（英文）",
-			"Country //(Native//)": "国家（本地语言）",
-			"State //(Native//)": "州/省份（本地语言）",
-			"City //(Native//)": "城市（本地语言）",
-			"Address //(Native//)": "地址（本地语言）",
-			"Recipient //(Native//)": "收件人姓名（本地语言）",
-			"Phone": "电话",
-			"TON Wallet:": "TON 钱包:",
-			"Secret Code:": "验证码:",
-			"Terms of agreement:": "协议条款:",
-			"Choose team:": "选择团队:"
-		}
-	},
-	{
-		scope: "._FilterByTagsFrame_addTagLabel select option, ._FilterByTagsFrame_tagBoxCaption, .notice, .tag-box",
-		replaceMap: {
-			"combine tags by OR": "按逻辑或组合我选择的标签",
-			"combine-tags-by-or": "按逻辑或组合我选择的标签（combine-tags-by-or）",
-			"2-sat": "2-SAT（2-sat）",
-			"binary search": "二分（binary search）",
-			"bitmasks": "状态压缩（bitmasks）",
-			"brute force": "暴力枚举（brute force）",
-			"chinese remainder theorem": "中国剩余定理（chinese remainder theorem）",
-			"combinatorics": "组合数学（combinatorics）",
-			"constructive algorithms": "构造（constructive algorithms）",
-			"data structures": "数据结构（data structures）",
-			"dfs and similar": "DFS及其变种（dfs and similar）",
-			"divide and conquer": "分治（divide and conquer）",
-			"dp": "动态规划（dp）",
-			"dsu": "并查集（dsu）",
-			"expression parsing": "表达式解析（expression parsing）",
-			"fft": "快速傅里叶变换（fft）",
-			"flows": "流（flows）",
-			"games": "博弈论（games）",
-			"geometry": "计算几何（geometry）",
-			"graph matchings": "图匹配（graph matchings）",
-			"graphs": "图论（graphs）",
-			"greedy": "贪心（greedy）",
-			"hashing": "哈希表（hashing）",
-			"implementation": "模拟（implementation）",
-			"interactive": "交互题（interactive）",
-			"math": "数学（math）",
-			"matrices": "矩阵（matrices）",
-			"meet-in-the-middle": "双向搜索（meet-in-the-middle）",
-			"number theory": "数论（number theory）",
-			"probabilities": "概率论（probabilities）",
-			"schedules": "调度算法（schedules）",
-			"shortest paths": "最短路（shortest paths）",
-			"sortings": "排序（sortings）",
-			"string suffix structures": "字符串后缀结构（string suffix structures）",
-			"strings": "字符串处理（strings）",
-			"ternary search": "三分（ternary search）",
-			"trees": "树形结构（trees）",
-			"two pointers": "双指针（two pointers）"
-		}
-	},
-	{
-		scope: ".field-name",
-		replaceMap: {
-			"Hide sidebar block \"Find user\"": "隐藏侧边栏块“查找用户”",
-			"Hide sidebar block \"Current user\"": "隐藏侧边栏块“当前用户”",
-			"Hide sidebar block \"Recent аctions\"": "隐藏侧边栏块“最新动态”",
-			"Hide sidebar block \"Favourite groups\"": "隐藏侧边栏块“收藏组”",
-			"Hide sidebar block \"Top contributors\"": "隐藏侧边栏块“贡献者排行”",
-			"Hide sidebar block \"Top rated\"": "隐藏侧边栏块“评级排行”",
-			"Hide sidebar block \"Streams\"": "隐藏侧边栏块“直播”",
-			"Old password": "旧密码",
-			"New password": "新密码",
-			"Confirm new password": "确认新密码",
-			"Contest email notification": "比赛邮件通知",
-			"Send email on new user talk": "在有新用户对话时发送电子邮件",
-			"Send email on new comment": "在有新评论时发送电子邮件",
-			"Hide contact information": "隐藏联系人信息",
-			"Remember me by Gmail, Facebook and etc": "通过 Gmail、Facebook 等记住我",
-			"Show tags for unsolved problems": "显示未解决问题的标签",
-			"Hide solved problems from problemset": "从问题集中隐藏已解决的问题",
-			"Hide low rated blogs": "隐藏评级较低的博客",
-			"Offer to publish great rating rises": "提供展示Rating显著提升的机会",
-			"Enforce https": "强制 HTTPS",
-			"Show private activity in the profile": "在个人资料中显示私人活动",
-			"Show diagnostics": "显示诊断信息"
-		}
-	},
-	{
-		scope: ".field-name",
-		replaceMap: {
-			"Problem:": "题目:",
-			"Question": "问题",
-			"Language:": "语言:",
-			"Source code:": "源代码:",
-			"Or choose file:": "或者选择文件:",
-			"Choose file:": "选择文件:",
-			"Notice:": "注意:",
-			"virtual participation:": "虚拟参与:",
-			"Registration for the contest:": "比赛报名:",
-			"Take part:": "参与:",
-			"as individual participant:": "作为个人参与者:",
-			"as a team member:": "作为团队成员:",
-			"Virtual start time:": "虚拟开始时间:",
-			"Complete problemset:": "完整的问题集:",
-			"First name \\(English\\)": "名字（英文）",
-			"Last name \\(English\\)": "姓氏（英文）",
-			"First name \\(Native\\)": "名字（本地语言）",
-			"Last name \\(Native\\)": "姓氏（本地语言）",
-			"Birth date": "出生日期",
-			"Country": "国家",
-			"City": "城市",
-			"Organization": "组织",
-			"Handle/Email": "账号/邮箱",
-			"Name": "名称",
-			"Handle": "账号",
-			"Email": "邮箱",
-			"Confirm": "确认",
-			"Password": "密码",
-			"New Rank": "新的Rank",
-			"Training name \\(English\\):": "训练名称（英文）:",
-			"Training name \\(Russian\\):": "训练名称（俄语）:",
-			"Contest format:": "比赛格式:",
-			"Start time:": "开始时间:",
-			"Duration:": "持续时间:",
-			"Visibility:": "可见性:",
-			"Attach parent contest\\?:": "关联父级比赛?",
-			"Participation type:": "参与类型:",
-			"Freeze period:": "冻结期间:",
-			"Unfreeze time:": "解冻时间:",
-			"Is practice allowed\\?:": "是否允许练习?",
-			"Is virtual allowed\\?:": "是否允许虚拟参赛?",
-			"Is out of competition allowed\\?:": "是否允许非竞赛参赛?",
-			"Is self-registration allowed\\?:": "是否允许自助注册?",
-			"Can non-registered view the contest\\?:": "未注册用户能否查看比赛?",
-			"Can participants view common status\\?:": "参赛选手能否查看共享状态?",
-			"Contest testdata policy:": "比赛测试数据策略:",
-			"Allow view other submissions to:": "允许查看其他提交给:",
-			"Manage program languages:": "管理编程语言:",
-			"Use time limits scaling policy\\?:": "使用时间限制缩放策略?",
-			"Allow statements\\?:": "允许查看题目描述?",
-			"Allow standings\\?:": "允许查看排名?",
-			"Season:": "季节:",
-			"Contest type:": "比赛类型:",
-			"ICPC region:": "ICPC 地区:",
-			"Country:": "国家:",
-			"City:": "城市:",
-			"Contest difficulty:": "比赛难度:",
-			"Website URL:": "网站链接:",
-			"Description \\(English\\):": "描述（英文）:",
-			"Description \\(Russian\\):": "描述（俄语）:",
-			"Registration confirmation text \\(English\\):": "注册确认文字（英文）:",
-			"Registration confirmation text \\(Russian\\):": "注册确认文字（俄语）:",
-			"Logo \\(English\\):": "徽标（英文）:",
-			"Logo \\(Russian\\):": "徽标（俄语）:",
-			"End time:": "结束时间:",
-			"Name:": "名称:",
-			"Contest\\(s\\):": "比赛:",
-			"Add contest:": "添加比赛:",
-			"Show Contestants:": "显示参赛选手:",
-			"Show Out of Competition Participants:": "显示非竞赛参与者:",
-			"Show Practices:": "显示练习:",
-			"Show Virtuals:": "显示虚拟选手:",
-			"Show Ghosts:": "显示幽灵选手:",
-			"Text:": "文本:",
-			"Rewrite Examples:": "重写样例:",
-			"Add images:": "添加图片:",
-			"Do not use:": "不使用:",
-			"Problem short name:": "题目简称:",
-			"Source problem:": "源问题:",
-			"Problem name \\(English\\):": "题目名称（英文）:",
-			"Input file name:": "输入文件名:",
-			"Output file name:": "输出文件名:",
-			"Time Limit:": "时间限制:",
-			"Memory Limit:": "内存限制:",
-			"Output only:": "仅输出:"
-		}
-	},
-	{
-		scope: ".ask-question-link",
-		replaceMap: { "Ask a question": "提一个问题" }
-	},
-	{
-		scope: ".add-announcement-link",
-		replaceMap: { "Add announcement": "添加公告" }
-	},
-	{
-		scope: "#pageContent > div:nth-child(7) > div",
-		replaceMap: { "You may double click into cells \\(or ctrl\\+click\\) to view the submissions(\\s)*history or hack the solution": "你可以双击单元格（或者按住Ctrl并点击）来查看提交历史或者对其他人的代码进行攻击。" }
-	},
-	{
-		scope: ".choose-order",
-		replaceMap: {
-			"Default order": "默认顺序",
-			"Submission time": "提交时间",
-			"Judging Time": "判题时间",
-			"Solution Size": "代码长度",
-			"Execution Time": "执行时间"
-		}
-	},
-	{
-		scope: ".error.for__password",
-		replaceMap: { "Please, confirm email before entering the website.": "在进入网站之前请先验证电子邮件。" }
-	},
-	{
-		scope: "#enterForm",
-		replaceMap: {
-			"Remember me for a month": "记住我一个月",
-			"Forgot your password": "忘记密码"
-		}
-	},
-	{
-		scope: ".centered-message",
-		replaceMap: { "Password recovery letter has been sent successfully": "密码恢复邮件已成功发送" }
-	},
-	{
-		scope: "button",
-		replaceMap: { "Compare": "比较" }
-	},
-	{
-		scope: ".click-to-view-tests-div",
-		replaceMap: {
-			"Click": "点击",
-			"to see test details": "查看测试详情"
-		}
-	},
-	{
-		scope: ".unrated-allowed",
-		replaceMap: { "Unrated allowed": "允许未评级报名" }
-	},
-	{
-		scope: ".contestRegistration",
-		replaceMap: {
-			"The registration confirms that you:": "报名即代表你：",
-			"\\* have read the contest rules  by the links http://codeforces.com/blog/entry/456 and http://codeforces.com/blog/entry/4088": "* 已阅读比赛规则，链接：http://codeforces.com/blog/entry/456、http://codeforces.com/blog/entry/4088",
-			"\\* will not violate the rules described on http://codeforces.com/blog/entry/456 and/or http://codeforces.com/blog/entry/4088": "* 不会违反规则，规则描述见：http://codeforces.com/blog/entry/456、http://codeforces.com/blog/entry/4088",
-			"\\* have read the regulations on AI assistants at the following link: https://codeforces.com/blog/entry/133941 and agree to comply with them": "* 已阅读以下链接中的 AI 使用规定并同意遵守：https://codeforces.com/blog/entry/133941",
-			"\\* will not communicate with other participants, share ideas of solutions and hacks": "* 不会与其他参赛者交流、分享解题和 hack 思路。",
-			"\\* will not use third-party code, except stated in http://codeforces.com/blog/entry/8790": "* 不会使用第三方代码，除非属于该规则中明确列出的允许情形：http://codeforces.com/blog/entry/8790",
-			"\\* will not attempt to deliberately destabilize the testing process and try to hack the contest system in any form": "* 不会故意干扰评测过程，也不会以任何形式试图攻击比赛系统。",
-			"\\* will not use multiple accounts and will take part in the contest using your personal and the single account\\.": "* 不会使用多个账号，仅使用你的个人且唯一账号参赛。",
-			"I want to register unrated": "我想非评级报名"
-		}
-	},
-	{
-		scope: "#jGrowl",
-		replaceMap: {
-			"Welcome": "欢迎",
-			"Goodbye, ": "再见，",
-			"Looking forward to seeing you at Codeforces.": "期待再次在Codeforces见到你。",
-			"You have been successfully registered": "您已成功报名",
-			"No such contests": "没有该比赛",
-			"The example input has been copied into the clipboard": "样例输入已复制到剪贴板",
-			"The example output has been copied into the clipboard": "样例输出已复制到剪贴板",
-			"The source code has been copied into the clipboard": "源代码已复制到剪贴板",
-			"Settings have been updated": "设置已更新",
-			"Solution to the problem": "问题",
-			"has been submitted successfully": "的解答已成功提交",
-			"Settings have been saved": "设置已保存",
-			"Contest is over": "比赛已结束",
-			"Illegal contest ID": "非法的比赛ID",
-			"No such contest": "没有该比赛",
-			"Can't find such user": "找不到此用户",
-			"No such blog entry": "没有该博客条目",
-			"Compilation error": "编译错误",
-			"No registration is opened now": "现在没有开放报名",
-			"Blog entry has been deleted": "博客条目已删除",
-			"Added to liked": "已点击喜欢",
-			"Hold Ctrl\\+Alt and click to hide column. Also, you can drag\\&drop columns to reorder them.": "按住Ctrl+Alt并点击一列可以隐藏该列。此外，您还可以通过拖放列来重新排序它们。"
-		}
-	},
-	{
-		scope: "input[type='submit']",
-		replaceValues: {
-			"Register for virtual participation": "报名虚拟参赛",
-			"Register for practice": "登录以开始练习",
-			"Apply": "应用",
-			"Register": "报名",
-			"Login": "登录",
-			"Run": "运行",
-			"Start virtual contest": "开始虚拟参赛",
-			"Manage invitations": "管理邀请",
-			"Disable manager mode": "临时关闭管理模式",
-			"Enable manager mode": "开启管理模式",
-			"Clone Contest": "克隆比赛",
-			"Submit": "提交",
-			"Save changes": "保存设置",
-			"Filter": "过滤",
-			"Find": "查找",
-			"Save": "保存",
-			"Create Mashup Contest": "创建混搭比赛",
-			"Delete problem": "删除问题",
-			"Restore problem": "恢复问题",
-			"Generate": "生成",
-			"Send": "发送",
-			"Recover": "恢复"
-		}
-	},
-	{
-		scope: "input[type='button']",
-		replaceValues: {
-			"Reset": "重置",
-			"Delete contest": "删除比赛",
-			"Preview": "预览",
-			"Delete": "删除",
-			"Save draft": "保存草稿",
-			"Post": "发布"
-		}
-	}
-];
-/**
-* Codeforces 的公式有两种完全不同的形态，取决于题目年代：
-*
-* 老题（约 2019 前）：服务端直接渲染成 HTML，页面里没有 LaTeX 源。
-*   形如 <span class="tex-span"><i>n</i> × <i>m</i></span>
-*   上下标是 <sup class="upper-index"> / <sub class="lower-index">。
-*   这类只能按结构还原成 LaTeX。
-*
-* 新题（约 2019 后）：服务器输出 $$$...$$$，由 MathJax 在浏览器里渲染。
-*   渲染后原始 TeX 保留在 <script type="math/tex"> 里（display 公式带 mode=display），
-*   渲染出来的节点（.MathJax*、.MJX*）是副本，必须丢弃，否则会和源重复。
-*
-* 所以适配器要同时处理：优先用 MathJax 源码，其次还原老的 .tex-span。
-*/
-/** MathJax 渲染出的节点，都是 script 源码的副本。 */
-var MATHJAX_RENDERED = [
-	".MathJax",
-	".MathJax_Display",
-	".MathJax_Preview",
-	".MathJax_CHTML",
-	".MathJax_SVG",
-	".MathJax_SVG_Display",
-	".mjx-chtml",
-	".MJXc-display",
-	".MJX_Assistive_MathML",
-	".MJXp-math"
-].join(", ");
-/** 老题 .tex-span 里用于排版的字符，转成 LaTeX 命令。 */
-var TEX_CHAR_MAP = {
-	"×": "\\times ",
-	"≤": "\\le ",
-	"≥": "\\ge ",
-	"≠": "\\ne ",
-	"±": "\\pm ",
-	"∞": "\\infty ",
-	"·": "\\cdot ",
-	"−": "-",
-	"–": "-",
-	"⌊": "\\lfloor ",
-	"⌋": "\\rfloor ",
-	"⌈": "\\lceil ",
-	"⌉": "\\rceil ",
-	"∑": "\\sum ",
-	"∏": "\\prod ",
-	"→": "\\to ",
-	"⋅": "\\cdot "
-};
-/**
-* 把老题的 .tex-span 结构还原成 LaTeX。
-*
-* 只认识 <i>（变量）、<sub>/<sup>（上下标）和少量排版字符。
-* 认不出来时保留原文，宁可少转换也不能丢内容。
-*/
-function texSpanToLatex(node) {
-	let out = "";
-	for (const child of node.childNodes) {
-		if (child.nodeType === 3) {
-			const text = child.textContent ?? "";
-			let mapped = "";
-			for (const ch of text) mapped += TEX_CHAR_MAP[ch] ?? ch;
-			out += mapped;
-			continue;
-		}
-		if (child.nodeType !== 1) continue;
-		const el = child;
-		const tag = el.tagName.toLowerCase();
-		const inner = texSpanToLatex(el);
-		if (tag === "i" || tag === "em") out += /^[a-zA-Z]$/.test(inner) ? inner : `\\mathrm{${inner}}`;
-		else if (tag === "sub") out += `_{${inner}}`;
-		else if (tag === "sup") out += `^{${inner}}`;
-		else out += inner;
-	}
-	return out.replace(/\u2009|\u00a0|\u2002|\u2003/g, " ").trim();
-}
-/** 老题独立成段的公式会被包在单独的 p 里，此时用 $$...$$ */
-function isStandaloneSpan(span) {
-	const parent = span.closest("p, div");
-	if (!parent) return false;
-	return (parent.textContent ?? "").trim() === (span.textContent ?? "").trim() && (parent.textContent ?? "").trim().length > 0;
-}
-var CF_LANGUAGES = [
-	{
-		id: "54",
-		name: "GNU G++17 7.3.0",
-		mode: "cpp"
-	},
-	{
-		id: "89",
-		name: "GNU G++20 13.2",
-		mode: "cpp"
-	},
-	{
-		id: "91",
-		name: "GNU G++23 14.2",
-		mode: "cpp"
-	},
-	{
-		id: "43",
-		name: "GNU GCC C11 5.1.0",
-		mode: "cpp"
-	},
-	{
-		id: "87",
-		name: "Java 21 64bit",
-		mode: "java"
-	},
-	{
-		id: "36",
-		name: "Java 8 32bit",
-		mode: "java"
-	},
-	{
-		id: "31",
-		name: "Python 3.13.2",
-		mode: "python"
-	},
-	{
-		id: "70",
-		name: "PyPy 3.10 (7.3.15)",
-		mode: "python"
-	},
-	{
-		id: "7",
-		name: "Python 2.7.18",
-		mode: "python"
-	},
-	{
-		id: "32",
-		name: "Go 1.22.2",
-		mode: "text"
-	},
-	{
-		id: "75",
-		name: "Rust 1.89.0",
-		mode: "text"
-	},
-	{
-		id: "83",
-		name: "Kotlin 1.7.20",
-		mode: "text"
-	},
-	{
-		id: "65",
-		name: "C# 8 (.NET Core 3.1)",
-		mode: "text"
-	}
-];
-var codeforces = {
-	id: "codeforces",
-	get name() {
-		return t$1("site.codeforces");
-	},
-	hosts: [
-		"codeforces.com",
-		"m1.codeforces.com",
-		"m2.codeforces.com",
-		"codeforces.ml"
-	],
-	styles: `
-    /* 齿轮放在登录区、用户名左边 */
-    .ojpp-codeforces-settings {
-      display: inline-flex; align-items: center;
-      margin-right: 6px; vertical-align: middle;
-    }
-    .ojpp-codeforces-settings .ojpp-icon-btn {
-      width: 22px; height: 22px; vertical-align: middle;
-    }
-  `,
-	/**
-	* Codeforces 自己只有浅色主题，这里为它补一套暗色。
-	*
-	* 站点用外部 CSS（style.css、problem-statement.css、roundbox.css 等），
-	* 这些规则的选择器都很具体，所以覆盖时要写同等或更高的优先级。
-	* 只处理阅读相关部分：正文、样例块、侧边栏、表格、二级菜单。
-	* 导航栏原本就是深色，不动。
-	*/
-	darkStyles: `
-    /* ---------- 页面骨架 ---------- */
-    html[data-ojpp-theme="dark"],
-    html[data-ojpp-theme="dark"] body,
-    html[data-ojpp-theme="dark"] #body,
-    html[data-ojpp-theme="dark"] #pageContent,
-    html[data-ojpp-theme="dark"] .content-with-sidebar {
-      background: #1c2128 !important;
-      color: #cdd9e5;
-    }
-
-    /* ---------- 题面 ---------- */
-    html[data-ojpp-theme="dark"] .ttypography,
-    html[data-ojpp-theme="dark"] .problem-statement {
-      color: #cdd9e5;
-    }
-    /* 题面容器自带背景：站点给 .ttypography 和 .problem-statement 都设过底色，
-       暗色下会与页面背景形成色差。全部置为透明，让它们统一继承页面背景。 */
-    html[data-ojpp-theme="dark"] .problem-statement,
-    html[data-ojpp-theme="dark"] .problemindexholder,
-    html[data-ojpp-theme="dark"] .problem-frames,
-    html[data-ojpp-theme="dark"] .ttypography {
-      background-color: transparent !important;
-    }
-    html[data-ojpp-theme="dark"] .problem-statement .header .title {
-      color: #e6edf3;
-    }
-    /* 时限、内存限制的标签是 #666，暗色下几乎看不见 */
-    html[data-ojpp-theme="dark"] .problem-statement .property-title,
-    html[data-ojpp-theme="dark"] .problem-statement .section-title {
-      color: #e6edf3;
-    }
-    html[data-ojpp-theme="dark"] .problem-statement .section-title {
-      border-bottom-color: #373e47;
-    }
-    html[data-ojpp-theme="dark"] .ttypography a:not(.rated-user):not([class*="user-"]),
-    html[data-ojpp-theme="dark"] .problem-statement a:not(.rated-user):not([class*="user-"]) {
-      color: #539bf5;
-    }
-
-    /* 样例的输入/输出：站点把 pre 设成 #efefef，必须显式覆盖 */
-    html[data-ojpp-theme="dark"] .problem-statement .sample-tests pre,
-    html[data-ojpp-theme="dark"] .problem-statement pre {
-      background-color: #22272e !important;
-      color: #cdd9e5;
-    }
-    /* 样例按行高亮：偶数行 #E0E0E0，奇数行白 */
-    html[data-ojpp-theme="dark"] .problem-statement .test-example-line-even {
-      background-color: #2d333b !important;
-    }
-    html[data-ojpp-theme="dark"] .problem-statement .test-example-line-odd {
-      background-color: #22272e !important;
-    }
-    /* 站点脚本会把高亮的测试行染成 #FFFDE7（内联样式），
-       以及配套的 .testCaseMarker 标记块。
-       这里只覆盖带内联高亮色的行，不要写成 .test-example-line，
-       否则会盖掉奇偶行的交替底色。 */
-    html[data-ojpp-theme="dark"] .problem-statement [style*="FFFDE7"],
-    html[data-ojpp-theme="dark"] .problem-statement [style*="fffde7"] {
-      background-color: #3a3320 !important;
-    }
-    html[data-ojpp-theme="dark"] .testCaseMarker {
-      border-color: #d9a441 !important;
-    }
-    html[data-ojpp-theme="dark"] .notice {
-      background: #2d333b;
-      color: #cdd9e5;
-      border-color: #444c56;
-    }
-    html[data-ojpp-theme="dark"] .problem-statement .sample-test,
-    html[data-ojpp-theme="dark"] .problem-statement .sample-test .input,
-    html[data-ojpp-theme="dark"] .problem-statement .sample-test .output {
-      border-color: #373e47;
-    }
-    html[data-ojpp-theme="dark"] .problem-statement .sample-test .title {
-      color: #909dab;
-    }
-    /* 样例块的输入输出标题栏（站点用 .input .title / .output .title） */
-    html[data-ojpp-theme="dark"] .problem-statement .input .title,
-    html[data-ojpp-theme="dark"] .problem-statement .output .title {
-      background: #2d333b;
-      color: #cdd9e5;
-    }
-    html[data-ojpp-theme="dark"] .problem-statement .input-output-copier {
-      color: #909dab;
-      border-color: #444c56;
-    }
-    /* 悬停时站点把背景设成 #def，暗色下会闪一下亮蓝 */
-    html[data-ojpp-theme="dark"] .problem-statement .input-output-copier:hover,
-    html[data-ojpp-theme="dark"] .copier-small:hover {
-      background-color: #373e47 !important;
-      color: #cdd9e5 !important;
-    }
-
-    html[data-ojpp-theme="dark"] .problem-statement code,
-    html[data-ojpp-theme="dark"] .ttypography code {
-      background: rgba(99, 110, 123, .4);
-      color: #cdd9e5;
-    }
-    /* 站点把 .ttypography 里的 pre 设成深红（#800000），
-       暗色下像一块深红色字。统一改成正常文本色 */
-    html[data-ojpp-theme="dark"] .problem-statement pre,
-    html[data-ojpp-theme="dark"] .ttypography pre {
-      color: #cdd9e5;
-    }
-    html[data-ojpp-theme="dark"] .problem-statement table,
-    html[data-ojpp-theme="dark"] .ttypography table,
-    html[data-ojpp-theme="dark"] .problem-statement th,
-    html[data-ojpp-theme="dark"] .problem-statement td,
-    html[data-ojpp-theme="dark"] .ttypography th,
-    html[data-ojpp-theme="dark"] .ttypography td {
-      border-color: #373e47;
-    }
-    /* 题面里的引用与分隔线 */
-    html[data-ojpp-theme="dark"] .problem-statement blockquote,
-    html[data-ojpp-theme="dark"] .ttypography blockquote {
-      border-left-color: #373e47;
-      color: #adbac7;
-    }
-    html[data-ojpp-theme="dark"] .problem-statement hr,
-    html[data-ojpp-theme="dark"] .ttypography hr {
-      border-color: #373e47;
-    }
-
-    /* ---------- 折叠博客底部的渐隐 ---------- */
-    /* /top 折叠的博文在底部用 ::before 铺一条 rgba(255,255,255,0)→#fff
-       的渐隐遮罩，暗色下是一条浅蓝白带。改成渐隐到页面底色 */
-    html[data-ojpp-theme="dark"] .collapsible-topic.collapsed .content .collapsible-topic-options::before {
-      background-image: linear-gradient(rgba(28, 33, 40, 0), #1c2128) !important;
-    }
-
-    /* ---------- 公式 ---------- */
-    html[data-ojpp-theme="dark"] .MathJax,
-    html[data-ojpp-theme="dark"] .MathJax_Preview,
-    html[data-ojpp-theme="dark"] .MathJax_Display,
-    html[data-ojpp-theme="dark"] .MathJax_SVG,
-    html[data-ojpp-theme="dark"] .MathJax_SVG_Display,
-    html[data-ojpp-theme="dark"] .MJXp-math,
-    html[data-ojpp-theme="dark"] .mjx-chtml,
-    html[data-ojpp-theme="dark"] mjx-container,
-    html[data-ojpp-theme="dark"] .tex-span {
-      color: #cdd9e5 !important;
-    }
-    /* MathJax SVG 输出的颜色写在 fill/stroke 属性上，color 管不着；
-       只覆盖显式黑色的节点，保留 fill="none" 的透明区域 */
-    html[data-ojpp-theme="dark"] .MathJax_SVG svg [fill="black"],
-    html[data-ojpp-theme="dark"] .MathJax_SVG svg [fill="#000"],
-    html[data-ojpp-theme="dark"] .MathJax_SVG svg [fill="#000000"] {
-      fill: #cdd9e5 !important;
-    }
-    html[data-ojpp-theme="dark"] .MathJax_SVG svg [stroke="black"],
-    html[data-ojpp-theme="dark"] .MathJax_SVG svg [stroke="#000"],
-    html[data-ojpp-theme="dark"] .MathJax_SVG svg [stroke="#000000"] {
-      stroke: #cdd9e5 !important;
-    }
-    /* 老题用 espresso 渲染好的公式 PNG（黑字透明底），反色成白字；
-       译文面板里是 markdown 渲染出的 img，没有 tex-formula 类，按域名一起覆盖 */
-    html[data-ojpp-theme="dark"] img.tex-formula,
-    html[data-ojpp-theme="dark"] img[src*="espresso.codeforces.com"] { filter: invert(0.92); }
-
-    /* ---------- 侧边栏信息框 ---------- */
-    /* .roundbox 的圆角是四张 png 图片，暗色下会露出白角，直接去掉 */
-    html[data-ojpp-theme="dark"] .roundbox,
-    html[data-ojpp-theme="dark"] .sidebox {
-      background: #22272e !important;
-      border-color: #373e47;
-      color: #cdd9e5;
-    }
-    html[data-ojpp-theme="dark"] .roundbox .roundbox-lt,
-    html[data-ojpp-theme="dark"] .roundbox .roundbox-rt,
-    html[data-ojpp-theme="dark"] .roundbox .roundbox-lb,
-    html[data-ojpp-theme="dark"] .roundbox .roundbox-rb {
-      background-image: none;
-    }
-    html[data-ojpp-theme="dark"] .roundbox .caption,
-    html[data-ojpp-theme="dark"] .sidebox .caption {
-      color: #e6edf3;
-      border-color: #373e47;
-    }
-    html[data-ojpp-theme="dark"] .roundbox .titled,
-    html[data-ojpp-theme="dark"] .roundbox .bottom-links {
-      border-color: #373e47;
-    }
-    html[data-ojpp-theme="dark"] .roundbox .bottom-links,
-    html[data-ojpp-theme="dark"] .roundbox .dark {
-      background-color: #2d333b;
-    }
-    /* 侧边栏里的“Practice”按钮：站点是白底，暗色下太刺眼 */
-    html[data-ojpp-theme="dark"] .sidebox .button,
-    html[data-ojpp-theme="dark"] .sidebox a.button,
-    html[data-ojpp-theme="dark"] .roundbox a.button {
-      background: #2d333b !important;
-      color: #cdd9e5 !important;
-      border-color: #444c56;
-    }
-    /* 收藏星星那一行 */
-    html[data-ojpp-theme="dark"] .sidebox .favourite,
-    html[data-ojpp-theme="dark"] .sidebox .star {
-      background: #2d333b;
-    }
-
-    /* ---------- 表格（最近提交、标签等） ---------- */
-    html[data-ojpp-theme="dark"] .datatable,
-    html[data-ojpp-theme="dark"] .datatable th,
-    html[data-ojpp-theme="dark"] .datatable td,
-    /* datatable 外面还有一层包装容器，站点给它设了 #e1e1e1 */
-    html[data-ojpp-theme="dark"] .datatable > div,
-    html[data-ojpp-theme="dark"] div.datatable > div {
-      background: #22272e !important;
-      border-color: #373e47 !important;
-      color: #cdd9e5;
-    }
-    /* 分页信息那一行（“1-50 of 1234”） */
-    html[data-ojpp-theme="dark"] .datatable .pagination,
-    html[data-ojpp-theme="dark"] .datatable > div:last-child {
-      background: #22272e !important;
-      color: #909dab;
-    }
-    html[data-ojpp-theme="dark"] .datatable th {
-      background: #2d333b;
-    }
-    html[data-ojpp-theme="dark"] .datatable tr:hover td {
-      background: #2d333b;
-    }
-    html[data-ojpp-theme="dark"] .roundbox table.rtable td,
-    html[data-ojpp-theme="dark"] .roundbox table.rtable th {
-      border-color: #373e47;
-    }
-    /* 提交结果的颜色：按站点真实语义映射到暗色可读版——
-       CF 亮态是 accepted=#00aa00 绿、rejected(WA/TLE/RE)=#0000aa 深蓝、
-       failed/hacked=红、waiting=灰。暗色里换成对应的可读色 */
-    html[data-ojpp-theme="dark"] .verdict-accepted,
-    html[data-ojpp-theme="dark"] .verdict-accepted-challenged,
-    html[data-ojpp-theme="dark"] .verdict-successful-challenge {
-      color: #57ab5a !important;
-    }
-    /* rejected 在 CF 是深蓝色（WA/TLE/RE），暗色下提亮成可读蓝 */
-    html[data-ojpp-theme="dark"] .verdict-rejected,
-    html[data-ojpp-theme="dark"] .verdict-unsuccessful-challenge,
-    html[data-ojpp-theme="dark"] .verdict-format-judged {
-      color: #8ab4ff !important;
-    }
-    html[data-ojpp-theme="dark"] .verdict-failed,
-    html[data-ojpp-theme="dark"] .verdict-challenged,
-    html[data-ojpp-theme="dark"] .verdict-wrong-answer {
-      color: #f85149 !important;
-    }
-    html[data-ojpp-theme="dark"] .verdict-waiting,
-    html[data-ojpp-theme="dark"] .verdict-in-queue,
-    html[data-ojpp-theme="dark"] .verdict-judging {
-      color: #909dab !important;
-    }
-    /* 逐条测试的 verdict_type：welldone=OK 绿、error=失败红、pending 灰 */
-    html[data-ojpp-theme="dark"] .welldone,
-    html[data-ojpp-theme="dark"] .welldone .verdict {
-      color: #57ab5a !important;
-    }
-    html[data-ojpp-theme="dark"] .verdict_type.error,
-    html[data-ojpp-theme="dark"] .verdict_type.error .verdict {
-      color: #f85149 !important;
-    }
-    /* 未判定的 "Verdict: ?" 用灰，别用亮白 */
-    html[data-ojpp-theme="dark"] .verdict_type:not(.welldone):not(.error),
-    html[data-ojpp-theme="dark"] .verdict_type:not(.welldone):not(.error) .verdict {
-      color: #909dab !important;
-    }
-    /* 比赛状态（Finished / Running 等）：站点用 #3b5998 深蓝，深底上看不清 */
-    html[data-ojpp-theme="dark"] .contest-state-phase {
-      color: #79b8ff !important;
-    }
-    /* 页脚链接：站点用 #0000cc 深蓝 */
-    html[data-ojpp-theme="dark"] #footer,
-    html[data-ojpp-theme="dark"] #footer a:not(.rated-user):not([class*="user-"]),
-    html[data-ojpp-theme="dark"] .switchToMobile {
-      color: #768390 !important;
-    }
-    html[data-ojpp-theme="dark"] #footer a:hover {
-      color: #adbac7 !important;
-    }
-    /* 标签块：chip 底色贴平所在容器，只留描边 */
-    html[data-ojpp-theme="dark"] .tag-box,
-    html[data-ojpp-theme="dark"] .tag-box a,
-    html[data-ojpp-theme="dark"] .roundbox .tag-box {
-      background: transparent;
-      border-color: #444c56;
-      color: #cdd9e5;
-    }
-
-    /* ---------- 顶部导航 ---------- */
-    /* 站点给菜单项设了 color:#000（style.css 的 .menu-list li a），
-       背景被我们压暗后黑字就看不见了 */
-    html[data-ojpp-theme="dark"] .menu-list li a {
-      color: #cdd9e5 !important;
-    }
-    html[data-ojpp-theme="dark"] .menu-list li a:hover {
-      color: #e6edf3 !important;
-    }
-    html[data-ojpp-theme="dark"] .menu-list li.current {
-      border-bottom-color: #539bf5;
-    }
-
-    /* 顶部区域分两条：上面是 logo / 登录，下面是主导航。
-       站点本来就是这样分的（#header 与 .menu-box）。
-       上条与页面底色一致，不留色块；下条稍亮一点，把导航栏衬托出来。 */
-    html[data-ojpp-theme="dark"] #header {
-      background: #1c2128 !important;
-      border-color: transparent !important;
-    }
-    html[data-ojpp-theme="dark"] .menu-box,
-    html[data-ojpp-theme="dark"] .roundbox.menu-box,
-    html[data-ojpp-theme="dark"] .menu-list-container {
-      background: #2a313c !important;
-      border-color: transparent !important;
-    }
-    /* 两层之间加一条细线，让分隔看得出来 */
-    html[data-ojpp-theme="dark"] .menu-box {
-      border-top: 1px solid #3b434e !important;
-    }
-    /* 登录区与语言选择：站点用的是深蓝 #0000cc，在深底上几乎看不清 */
-    html[data-ojpp-theme="dark"] #header a,
-    html[data-ojpp-theme="dark"] .lang-chooser a {
-      color: #79b8ff !important;
-    }
-    html[data-ojpp-theme="dark"] #header a:hover,
-    html[data-ojpp-theme="dark"] .lang-chooser a:hover {
-      color: #a5d6ff !important;
-    }
-
-    /* Codeforces 的 logo 是白底深字的 PNG（无 alpha）。
-       invert 把白底变黑、深字变亮，再用 screen 混合让黑色消失，
-       于是白底透明、文字反色，不需要额外的图片资源。 */
-    html[data-ojpp-theme="dark"] #header img[alt="Codeforces"] {
-      filter: invert(1) hue-rotate(180deg) brightness(1.1);
-      mix-blend-mode: screen;
-    }
-
-    /* ---------- 二级菜单（题目页的 Problems / Submit code 那一排） ---------- */
-    /* 站点的当前项背景是两张 PNG 圆角图（backLava/leftLava）定位出来的，
-       暗色下会形成一条条横向色带。全部去掉图片，改成扁平的纯色。 */
-    html[data-ojpp-theme="dark"] .second-level-menu,
-    html[data-ojpp-theme="dark"] .second-level-menu-list {
-      background: transparent !important;
-    }
-    html[data-ojpp-theme="dark"] .second-level-menu-list li.backLava,
-    html[data-ojpp-theme="dark"] .second-level-menu-list li.backLava .leftLava,
-    html[data-ojpp-theme="dark"] .second-level-menu-list li.backLava .bottomLava,
-    html[data-ojpp-theme="dark"] .second-level-menu-list li.backLava .cornerLava {
-      background-image: none !important;
-      background-color: #373e47;
-    }
-    html[data-ojpp-theme="dark"] .second-level-menu-list li a {
-      background: transparent !important;
-      color: #adbac7 !important;
-      border: none;
-      border-radius: 4px;
-    }
-    html[data-ojpp-theme="dark"] .second-level-menu-list li a:hover {
-      color: #e6edf3 !important;
-    }
-    html[data-ojpp-theme="dark"] .second-level-menu-list li.current a {
-      color: #e6edf3 !important;
-    }
-
-    /* ---------- 全局链接 ---------- */
-    /* 站点几乎所有正文链接都是 #0000cc 这种深蓝，深底上对比不足。
-       这是提交记录、状态、博客、题面里最普遍的问题，所以放在最前面兜底。 */
-    html[data-ojpp-theme="dark"] a:not(.rated-user):not([class*="user-"]),
-    html[data-ojpp-theme="dark"] a:not(.rated-user):not([class*="user-"]):visited {
-      color: #539bf5;
-    }
-    html[data-ojpp-theme="dark"] a:not(.rated-user):not([class*="user-"]):hover,
-    html[data-ojpp-theme="dark"] a:not(.rated-user):not([class*="user-"]):active {
-      color: #79b8ff;
-    }
-    /* 已访问过的链接不要变成紫色，暗色下同样难读 */
-    html[data-ojpp-theme="dark"] a:not(.rated-user):not([class*="user-"]):visited {
-      color: #b083f0;
-    }
-
-    /* ---------- 评级颜色 ---------- */
-    /* 站点用 .user-* 类给用户名上色，色值是纯红/纯蓝/gray 这类，
-       在深底上要么刺眼要么看不清。这里换成同色系的亮版本，
-       保持“颜色代表段位”这个语义，只调整明度。 */
-    /* 用户名几乎总是 <a class="rated-user user-段位">。
-       段位色必须同时命中 a 和普通元素：站点自己的 a { color } 会跟
-       .user-* 抢，而 color: inherit 是错的——那会继承父元素（通常是
-       没有段位类的 td），段位色就整个丢了。
-       所以这里对两类元素都直接写死颜色，并且一律 !important。 */
-    html[data-ojpp-theme="dark"] .user-black,
-    html[data-ojpp-theme="dark"] a.user-black { color: #9aa4b2 !important; }
-    html[data-ojpp-theme="dark"] .user-gray,
-    html[data-ojpp-theme="dark"] a.user-gray { color: #9aa4b2 !important; }
-    html[data-ojpp-theme="dark"] .user-green,
-    html[data-ojpp-theme="dark"] a.user-green { color: #57ab5a !important; }
-    html[data-ojpp-theme="dark"] .user-cyan,
-    html[data-ojpp-theme="dark"] a.user-cyan { color: #39c5bb !important; }
-    html[data-ojpp-theme="dark"] .user-blue,
-    html[data-ojpp-theme="dark"] a.user-blue { color: #539bf5 !important; }
-    html[data-ojpp-theme="dark"] .user-violet,
-    html[data-ojpp-theme="dark"] a.user-violet { color: #c297ff !important; }
-    html[data-ojpp-theme="dark"] .user-orange,
-    html[data-ojpp-theme="dark"] a.user-orange { color: #f0883e !important; }
-    html[data-ojpp-theme="dark"] .user-red,
-    html[data-ojpp-theme="dark"] a.user-red { color: #f85149 !important; }
-    /* 站点还按具体分数给类名（user-1200 ~ user-4000），
-       这些也是段位色：>=4000 红，2400-3999 橙，2100-2399 紫，1600-2099 蓝，
-       1200-1599 青，<1200 灰。覆盖最常见的几档。 */
-    html[data-ojpp-theme="dark"] .user-4000,
-    html[data-ojpp-theme="dark"] a.user-4000,
-    html[data-ojpp-theme="dark"] [class*="user-4"] { color: #f85149 !important; }
-    html[data-ojpp-theme="dark"] [class*="user-3"],
-    html[data-ojpp-theme="dark"] [class*="user-2"],
-    html[data-ojpp-theme="dark"] [class*="user-24"],
-    html[data-ojpp-theme="dark"] [class*="user-25"],
-    html[data-ojpp-theme="dark"] [class*="user-26"],
-    html[data-ojpp-theme="dark"] [class*="user-27"],
-    html[data-ojpp-theme="dark"] [class*="user-28"],
-    html[data-ojpp-theme="dark"] [class*="user-29"],
-    html[data-ojpp-theme="dark"] [class*="user-30"],
-    html[data-ojpp-theme="dark"] [class*="user-31"],
-    html[data-ojpp-theme="dark"] [class*="user-32"],
-    html[data-ojpp-theme="dark"] [class*="user-33"],
-    html[data-ojpp-theme="dark"] [class*="user-34"],
-    html[data-ojpp-theme="dark"] [class*="user-35"],
-    html[data-ojpp-theme="dark"] [class*="user-36"],
-    html[data-ojpp-theme="dark"] [class*="user-37"],
-    html[data-ojpp-theme="dark"] [class*="user-38"],
-    html[data-ojpp-theme="dark"] [class*="user-39"] { color: #f0883e !important; }
-    html[data-ojpp-theme="dark"] [class*="user-21"],
-    html[data-ojpp-theme="dark"] [class*="user-22"],
-    html[data-ojpp-theme="dark"] [class*="user-23"] { color: #c297ff !important; }
-    html[data-ojpp-theme="dark"] [class*="user-16"],
-    html[data-ojpp-theme="dark"] [class*="user-17"],
-    html[data-ojpp-theme="dark"] [class*="user-18"],
-    html[data-ojpp-theme="dark"] [class*="user-19"],
-    html[data-ojpp-theme="dark"] [class*="user-20"] { color: #539bf5 !important; }
-    html[data-ojpp-theme="dark"] [class*="user-12"],
-    html[data-ojpp-theme="dark"] [class*="user-13"],
-    html[data-ojpp-theme="dark"] [class*="user-14"],
-    html[data-ojpp-theme="dark"] [class*="user-15"] { color: #39c5bb !important; }
-    html[data-ojpp-theme="dark"] [class*="user-1"],
-    html[data-ojpp-theme="dark"] [class*="user-0"] { color: #9aa4b2 !important; }
-    html[data-ojpp-theme="dark"] .user-legendary,
-    html[data-ojpp-theme="dark"] a.user-legendary { color: #f85149 !important; }
-    /* admin/头衔类没有段位色，给个中性亮色 */
-    html[data-ojpp-theme="dark"] .user-admin,
-    html[data-ojpp-theme="dark"] a.user-admin { color: #cdd9e5 !important; }
-    /* legendary 段位的首字母被站点强制成黑色（.user-legendary::first-letter），
-       深底上就变成“首字母看不见、其余红色”。改成白色首字母。
-       注意 ::first-letter 只能对块级容器生效，站点在 span 上也做了处理。 */
-    html[data-ojpp-theme="dark"] .user-legendary::first-letter,
-    html[data-ojpp-theme="dark"] a.user-legendary::first-letter,
-    html[data-ojpp-theme="dark"] .legendary-user-first-letter,
-    html[data-ojpp-theme="dark"] .legendary-user-first-letter::first-letter {
-      color: #ffffff !important;
-    }
-    /* 段位色写在里面的 span 上时（站点有这种结构），别被外层规则盖掉 */
-    html[data-ojpp-theme="dark"] .rated-user span[class*="user-"] {
-      color: inherit !important;
-    }
-
-    /* ---------- 表格（提交记录、状态、排行榜等） ---------- */
-    /* 站点给状态表用了浅色底与斑马纹，暗色下是整片亮块 */
-    html[data-ojpp-theme="dark"] table.status-frame-datatable,
-    html[data-ojpp-theme="dark"] .status-frame-datatable,
-    html[data-ojpp-theme="dark"] table.problems,
-    html[data-ojpp-theme="dark"] table.standings,
-    html[data-ojpp-theme="dark"] .datatable,
-    html[data-ojpp-theme="dark"] table {
-      background: #22272e;
-      border-color: #373e47 !important;
-      color: #cdd9e5;
-    }
-    html[data-ojpp-theme="dark"] .status-frame-datatable tr,
-    html[data-ojpp-theme="dark"] .datatable tr,
-    html[data-ojpp-theme="dark"] table tr {
-      background: #22272e !important;
-      border-color: #373e47 !important;
-    }
-    /* 斑马纹：隔行稍亮一点，保留可读性 */
-    html[data-ojpp-theme="dark"] .status-frame-datatable tr:nth-child(even),
-    html[data-ojpp-theme="dark"] .datatable tr:nth-child(even),
-    html[data-ojpp-theme="dark"] table tr:nth-child(even) {
-      background: #272d36 !important;
-    }
-    html[data-ojpp-theme="dark"] .status-frame-datatable th,
-    html[data-ojpp-theme="dark"] .status-frame-datatable td,
-    html[data-ojpp-theme="dark"] .datatable th,
-    html[data-ojpp-theme="dark"] .datatable td,
-    html[data-ojpp-theme="dark"] table th,
-    html[data-ojpp-theme="dark"] table td {
-      background: transparent !important;
-      border-color: #373e47 !important;
-      color: #cdd9e5;
-    }
-    html[data-ojpp-theme="dark"] .status-frame-datatable th,
-    html[data-ojpp-theme="dark"] .datatable th,
-    html[data-ojpp-theme="dark"] table th {
-      background: #2d333b !important;
-      color: #e6edf3;
-    }
-    html[data-ojpp-theme="dark"] table tr:hover td,
-    html[data-ojpp-theme="dark"] .datatable tr:hover td {
-      background: #2d333b !important;
-    }
-    /* 表头里的排序箭头/小图标是深色 PNG */
-    html[data-ojpp-theme="dark"] table th img,
-    html[data-ojpp-theme="dark"] .datatable th img {
-      filter: invert(1) brightness(1.3);
-    }
-    /* 比赛报名/设置这类表单：.table-form 是表单布局表，不是数据表。
-       站点本来就让它透明贴页面，但上面 table 的全局斑马纹把它
-       染成了花花绿绿的隔行。统一还原透明，贴回 #1c2128 底色 */
-    html[data-ojpp-theme="dark"] .table-form,
-    html[data-ojpp-theme="dark"] .table-form tr,
-    html[data-ojpp-theme="dark"] .table-form tr:nth-child(even),
-    html[data-ojpp-theme="dark"] .table-form th,
-    html[data-ojpp-theme="dark"] .table-form td,
-    html[data-ojpp-theme="dark"] .table-form .field-name,
-    /* 协议条款的滚框（站点是 #ffffdd 高亮框）也统一回底色——
-       它仍留边框，能看出是个可滚动的框 */
-    html[data-ojpp-theme="dark"] .table-form textarea {
-      background: transparent !important;
-    }
-    /* 表格分页条 */
-    html[data-ojpp-theme="dark"] .pagination,
-    html[data-ojpp-theme="dark"] .pagination span,
-    html[data-ojpp-theme="dark"] .pagination a:not(.rated-user):not([class*="user-"]) {
-      background: transparent !important;
-      color: #adbac7;
-      border-color: #373e47;
-    }
-    html[data-ojpp-theme="dark"] .pagination span.active {
-      background: #2d333b !important;
-      color: #e6edf3;
-    }
-    html[data-ojpp-theme="dark"] .pagination a:hover {
-      background: #2d333b !important;
-    }
-
-    /* ---------- 表单（提交页、筛选面板） ---------- */
-    /* 站点大量使用原生 select / input，暗色下会是白底。
-       这里统一处理，并去掉 Chrome 的原生立体感。 */
-    html[data-ojpp-theme="dark"] select,
-    html[data-ojpp-theme="dark"] input[type="text"],
-    html[data-ojpp-theme="dark"] input[type="password"],
-    html[data-ojpp-theme="dark"] input[type="number"],
-    html[data-ojpp-theme="dark"] input[type="email"],
-    html[data-ojpp-theme="dark"] input:not([type]),
-    html[data-ojpp-theme="dark"] textarea {
-      background-color: #2d333b !important;
-      color: #cdd9e5 !important;
-      border: 1px solid #444c56 !important;
-      border-radius: 4px;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-    /* select 被去掉原生外观后需要自己补一个下拉箭头 */
-    html[data-ojpp-theme="dark"] select {
-      background-image: linear-gradient(45deg, transparent 50%, #909dab 50%),
-                        linear-gradient(135deg, #909dab 50%, transparent 50%);
-      background-position: calc(100% - 14px) calc(50% - 2px), calc(100% - 9px) calc(50% - 2px);
-      background-size: 5px 5px, 5px 5px;
-      background-repeat: no-repeat;
-      padding-right: 24px;
-    }
-    html[data-ojpp-theme="dark"] input::placeholder,
-    html[data-ojpp-theme="dark"] textarea::placeholder {
-      color: #768390;
-    }
-    /* 提交页的代码编辑器（站点用 CodeMirror 或 textarea） */
-    html[data-ojpp-theme="dark"] .CodeMirror,
-    html[data-ojpp-theme="dark"] .CodeMirror-scroll,
-    html[data-ojpp-theme="dark"] .CodeMirror-gutters,
-    html[data-ojpp-theme="dark"] #editor,
-    html[data-ojpp-theme="dark"] .editor {
-      background: #22272e !important;
-      color: #cdd9e5 !important;
-      border-color: #373e47 !important;
-    }
-    html[data-ojpp-theme="dark"] .CodeMirror-gutters {
-      background: #1c2128 !important;
-      border-right-color: #373e47 !important;
-    }
-    html[data-ojpp-theme="dark"] .CodeMirror-linenumber { color: #768390; }
-    html[data-ojpp-theme="dark"] .CodeMirror-cursor { border-left-color: #cdd9e5; }
-    html[data-ojpp-theme="dark"] .CodeMirror-selected { background: #373e47 !important; }
-    html[data-ojpp-theme="dark"] .CodeMirror-activeline-background { background: #2d333b !important; }
-    /* 文件选择按钮 */
-    html[data-ojpp-theme="dark"] input[type="file"]::file-selector-button {
-      background: #2d333b;
-      color: #cdd9e5;
-      border: 1px solid #444c56;
-      border-radius: 4px;
-    }
-
-    /* ---------- 首页 / 公告 ---------- */
-    /* 首页公告里的标题与表格：站点用深色文字，暗色下看不见 */
-    html[data-ojpp-theme="dark"] .topic,
-    html[data-ojpp-theme="dark"] .topic h1,
-    html[data-ojpp-theme="dark"] .topic h2,
-    html[data-ojpp-theme="dark"] .topic h3,
-    html[data-ojpp-theme="dark"] .topic p,
-    html[data-ojpp-theme="dark"] .topic li,
-    html[data-ojpp-theme="dark"] .topic div,
-    html[data-ojpp-theme="dark"] .ttypography h1,
-    html[data-ojpp-theme="dark"] .ttypography h2,
-    html[data-ojpp-theme="dark"] .ttypography h3,
-    html[data-ojpp-theme="dark"] .ttypography h4,
-    html[data-ojpp-theme="dark"] .ttypography h5,
-    html[data-ojpp-theme="dark"] .ttypography h6 {
-      color: #e6edf3;
-    }
-    /* 首页的评分表：表头原本是深色底、正文是白底 */
-    html[data-ojpp-theme="dark"] .topic table,
-    html[data-ojpp-theme="dark"] .ttypography table {
-      border-color: #373e47 !important;
-    }
-    /* 公告里的引用块左侧竖线 */
-    html[data-ojpp-theme="dark"] .topic blockquote,
-    html[data-ojpp-theme="dark"] .ttypography blockquote {
-      border-left-color: #475060;
-      color: #adbac7;
-    }
-    /* 隐藏的公告标题（首页 “Hello, Codeforces!” 那种被压暗的标题） */
-    html[data-ojpp-theme="dark"] .topic .spoiler-title,
-    html[data-ojpp-theme="dark"] .spoiler-title {
-      color: #e6edf3;
-    }
-
-    /* ---------- 博客 / changelog ---------- */
-    html[data-ojpp-theme="dark"] .blog-entry,
-    html[data-ojpp-theme="dark"] .blog-entry .title,
-    html[data-ojpp-theme="dark"] .blog-entry .info,
-    html[data-ojpp-theme="dark"] .comment,
-    html[data-ojpp-theme="dark"] .comment .content {
-      color: #cdd9e5;
-    }
-    html[data-ojpp-theme="dark"] .blog-entry .title a:not(.rated-user):not([class*="user-"]),
-    html[data-ojpp-theme="dark"] .comment a:not(.rated-user):not([class*="user-"]) {
-      color: #539bf5 !important;
-    }
-    /* changelog 里的日期与作者信息 */
-    html[data-ojpp-theme="dark"] .blog-entry .info,
-    html[data-ojpp-theme="dark"] .comment .info {
-      color: #909dab;
-    }
-
-    /* ---------- 日历 ---------- */
-    html[data-ojpp-theme="dark"] .calendar,
-    html[data-ojpp-theme="dark"] .calendar-table,
-    html[data-ojpp-theme="dark"] table.calendar {
-      background: #22272e !important;
-      border-color: #373e47 !important;
-      color: #cdd9e5;
-    }
-    html[data-ojpp-theme="dark"] .calendar td,
-    html[data-ojpp-theme="dark"] .calendar th,
-    html[data-ojpp-theme="dark"] table.calendar td,
-    html[data-ojpp-theme="dark"] table.calendar th {
-      background: #22272e !important;
-      border-color: #373e47 !important;
-      color: #cdd9e5;
-    }
-    html[data-ojpp-theme="dark"] .calendar .day,
-    html[data-ojpp-theme="dark"] table.calendar td.day {
-      color: #cdd9e5;
-    }
-    /* 日历里表示“有比赛”的标记色块，原色在深底上过暗 */
-    html[data-ojpp-theme="dark"] .calendar .contest,
-    html[data-ojpp-theme="dark"] table.calendar .contest {
-      background: #2d333b !important;
-      color: #adbac7;
-    }
-
-    /* ---------- 搜索框与筛选表单 ---------- */
-    /* 状态页的筛选面板：站点用 fieldset 包裹，标题是蓝色 */
-    html[data-ojpp-theme="dark"] fieldset,
-    html[data-ojpp-theme="dark"] .filter-box {
-      border-color: #373e47 !important;
-    }
-    html[data-ojpp-theme="dark"] fieldset legend,
-    html[data-ojpp-theme="dark"] .filter-box label {
-      color: #adbac7;
-    }
-    /* 筛选面板里的蓝色标签（Problem: / Verdict: 等） */
-    html[data-ojpp-theme="dark"] .status-filter label,
-    html[data-ojpp-theme="dark"] .filter-box b,
-    html[data-ojpp-theme="dark"] .filter-box strong {
-      color: #79b8ff;
-    }
-
-    /* ---------- 首页列表 ---------- */
-    /* 公告与比赛的标题：站点用 #3b5998 深蓝（.topic .title 里的链接）。
-       这些链接里混着 .rated-user 用户名（Top rated 那栏就是链接列表），
-       不能把段位色一起刷掉，所以一律 :not(.rated-user)。 */
-    html[data-ojpp-theme="dark"] .topic .title a:not(.rated-user):not([class*="user-"]),
-    html[data-ojpp-theme="dark"] .topic .title,
-    html[data-ojpp-theme="dark"] .topic a:not(.rated-user):not([class*="user-"]),
-    /* 标题文字实际落在 a 里的 <p> 上，颜色设在那里而不是 a 上 */
-    html[data-ojpp-theme="dark"] .topic .title a p,
-    html[data-ojpp-theme="dark"] .topic a p,
-    html[data-ojpp-theme="dark"] .contestList .contestName a:not(.rated-user):not([class*="user-"]),
-    html[data-ojpp-theme="dark"] .recent-actions a:not(.rated-user):not([class*="user-"]),
-    html[data-ojpp-theme="dark"] .roundbox .caption a:not(.rated-user):not([class*="user-"]) {
-      color: #79b8ff !important;
-    }
-    /* 首页右栏的“Top rated”之类列表：默认文字色即可。
-       必须排除 .rated-user，否则会把段位色一起刷掉——
-       “Top rated”里全是红名/橙名，正是最需要保留颜色的地方。 */
-    html[data-ojpp-theme="dark"] .personal-sidebar a:not(.rated-user),
-    html[data-ojpp-theme="dark"] .sidebox a:not(.rated-user),
-    html[data-ojpp-theme="dark"] .roundbox a:not(.rated-user) {
-      color: #cdd9e5 !important;
-    }
-    /* 公告的 rating 变化：.topic-rating 是 #008000 深绿 */
-    html[data-ojpp-theme="dark"] .topic-rating,
-    html[data-ojpp-theme="dark"] .green,
-    html[data-ojpp-theme="dark"] .rating-up {
-      color: #57ab5a !important;
-    }
-    html[data-ojpp-theme="dark"] .red,
-    html[data-ojpp-theme="dark"] .rating-down {
-      color: #f85149 !important;
-    }
-
-    /* ---------- 博客与评论区 ---------- */
-    /* 博客标题：站点的结构是 h3 > a，没有稳定的 class，
-       所以直接按标签层级选，并排除页脚等区域 */
-    html[data-ojpp-theme="dark"] #pageContent h3 a,
-    html[data-ojpp-theme="dark"] #pageContent h3,
-    html[data-ojpp-theme="dark"] .blog-entry h3 a:not(.rated-user):not([class*="user-"]),
-    html[data-ojpp-theme="dark"] .blog-entry .title {
-      color: #79b8ff !important;
-    }
-    /* 评论的投票分数：正值 #008000、负值 #800000 */
-    html[data-ojpp-theme="dark"] .commentRating,
-    html[data-ojpp-theme="dark"] .commentRating span {
-      color: #57ab5a !important;
-    }
-    html[data-ojpp-theme="dark"] .commentRating.negative,
-    html[data-ojpp-theme="dark"] .commentRating.negative span {
-      color: #f85149 !important;
-    }
-    /* 代码高亮（Google prettify）：站点为浅色背景设计的配色，
-       深底上几乎全是深色，直接按语法类别换成亮色版本 */
-    html[data-ojpp-theme="dark"] .prettyprint,
-    html[data-ojpp-theme="dark"] code.prettyprint,
-    html[data-ojpp-theme="dark"] pre.prettyprint {
-      background: #22272e !important;
-      border-color: #373e47 !important;
-      color: #cdd9e5 !important;
-    }
-    html[data-ojpp-theme="dark"] .prettyprint .pln,
-    html[data-ojpp-theme="dark"] .prettyprint .pun { color: #cdd9e5 !important; }
-    html[data-ojpp-theme="dark"] .prettyprint .kwd,
-    html[data-ojpp-theme="dark"] .prettyprint .kwd span { color: #f47067 !important; }
-    html[data-ojpp-theme="dark"] .prettyprint .typ,
-    html[data-ojpp-theme="dark"] .prettyprint .atn { color: #79b8ff !important; }
-    html[data-ojpp-theme="dark"] .prettyprint .lit,
-    html[data-ojpp-theme="dark"] .prettyprint .str,
-    html[data-ojpp-theme="dark"] .prettyprint .atv { color: #8ddb8c !important; }
-    html[data-ojpp-theme="dark"] .prettyprint .com { color: #768390 !important; }
-    html[data-ojpp-theme="dark"] .prettyprint .tag { color: #f47067 !important; }
-    html[data-ojpp-theme="dark"] .prettyprint .dec,
-    html[data-ojpp-theme="dark"] .prettyprint .var { color: #dcbdfb !important; }
-    html[data-ojpp-theme="dark"] .prettyprint .fun { color: #dcbdfb !important; }
-
-    /* ---------- 提交结果单元格 ---------- */
-    /* .cell-rejected（-1/被拒绝）、.cell-accepted（已解决）等
-       站点用的是浅灰/浅蓝，深底上都偏暗。按语义上色 */
-    html[data-ojpp-theme="dark"] .cell-rejected {
-      color: #f85149 !important;
-    }
-    html[data-ojpp-theme="dark"] .cell-accepted,
-    html[data-ojpp-theme="dark"] .cell-solved,
-    html[data-ojpp-theme="dark"] .cell-ok {
-      color: #57ab5a !important;
-    }
-    html[data-ojpp-theme="dark"] .cell-verdict,
-    html[data-ojpp-theme="dark"] .cell-time {
-      color: #909dab;
-    }
-    /* standings 里的得分与名次 */
-    html[data-ojpp-theme="dark"] .cell-rank,
-    html[data-ojpp-theme="dark"] .cell-points {
-      color: #cdd9e5;
-    }
-
-    /* ---------- 表单控件（筛选、提交等） ---------- */
-    /* SumoSelect 下拉框：站点给它设了白底，暗色下是个白块 */
-    html[data-ojpp-theme="dark"] .SumoSelect p.CaptionCont,
-    html[data-ojpp-theme="dark"] .SumoSelect .CaptionCont,
-    html[data-ojpp-theme="dark"] .SumoSelect select,
-    html[data-ojpp-theme="dark"] .SumoSelect .optWrapper {
-      background: #2d333b !important;
-      border-color: #373e47 !important;
-      color: #cdd9e5 !important;
-    }
-    html[data-ojpp-theme="dark"] .SumoSelect .optWrapper ul li {
-      background: #2d333b !important;
-      color: #cdd9e5 !important;
-    }
-    html[data-ojpp-theme="dark"] .SumoSelect .optWrapper ul li:hover {
-      background: #373e47 !important;
-    }
-    /* 展开列表的底色也要深——展开才是用户常看的样子 */
-    html[data-ojpp-theme="dark"] .SumoSelect .optWrapper.multiple,
-    html[data-ojpp-theme="dark"] .SumoSelect.open .optWrapper,
-    html[data-ojpp-theme="dark"] .SumoSelect .MultiControls {
-      background: #2d333b !important;
-      border-color: #373e47 !important;
-      color: #cdd9e5 !important;
-    }
-    /* 选项里的复选框 i：站点是白底小方框 */
-    html[data-ojpp-theme="dark"] .SumoSelect .optWrapper li.opt i,
-    html[data-ojpp-theme="dark"] .SumoSelect .select-all > span i {
-      background: #22272e !important;
-      border-color: #373e47 !important;
-    }
-    html[data-ojpp-theme="dark"] .SumoSelect .select-all.partial > span i,
-    html[data-ojpp-theme="dark"] .SumoSelect .select-all.selected > span i {
-      background: #57ab5a !important;
-      border-color: transparent !important;
-    }
-    /* 下拉箭头：站点把一张黑色三角 PNG 放在 label>i 的 background-image，
-       直接改色没用——是图片。用 filter 反成亮色箭头。 */
-    html[data-ojpp-theme="dark"] .SumoSelect p.CaptionCont label i,
-    html[data-ojpp-theme="dark"] .SumoSelect .CaptionCont label i {
-      filter: invert(0.8) !important;
-    }
-    /* 展开时的底色 */
-    html[data-ojpp-theme="dark"] .SumoSelect.open > .CaptionCont,
-    html[data-ojpp-theme="dark"] .SumoSelect:focus > .CaptionCont {
-      background: #2d333b !important;
-      border-color: #539bf5 !important;
-    }
-    /* 筛选标签（“Gym”那类的蓝色） */
-    html[data-ojpp-theme="dark"] .setting-name label,
-    html[data-ojpp-theme="dark"] .setting-name,
-    html[data-ojpp-theme="dark"] .settings-form label {
-      color: #cdd9e5 !important;
-    }
-    /* 站点把部分 label 设成 #3b5998 深蓝，暗色下看不见 */
-    html[data-ojpp-theme="dark"] label {
-      color: #cdd9e5;
-    }
-
-    /* ---------- 星级评分控件（gym 筛选的 Difficulty） ---------- */
-    /* 站点用 rating.png 精灵图画“空星+白底”的整条，反转颜色
-       太突兀。改成纯 CSS 重绘：隐藏精灵图，用 ::before 画 5 颗
-       空星（深色实心星，视觉上像描边），已选中的那一条叠金色
-       实心星，靠 li 的宽度裁掉多余的部分——站点本来就是用
-       width 控制选几颗，所以 hover/选择都能自动工作。 */
-    html[data-ojpp-theme="dark"] ul[id^="vote-list-"],
-    html[data-ojpp-theme="dark"] ul.vote-list {
-      background-image: none !important;
-      filter: none !important;
-      position: relative;
-    }
-    /* 未选中的空星：深色实心星，读作“空/未选” */
-    html[data-ojpp-theme="dark"] ul[id^="vote-list-"]::before {
-      content: "★★★★★";
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 22px;
-      line-height: 1;
-      letter-spacing: 3px;
-      color: #3d434d;
-      white-space: nowrap;
-      pointer-events: none;
-    }
-    /* 已选中的那一条：同样 5 颗星，亮金色。li 用 overflow:hidden
-       + 站点设置的 width 来裁，所以选几颗就显示几颗。 */
-    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li[id^="vote-current-"],
-    html[data-ojpp-theme="dark"] ul.vote-list li[id^="vote-current-"] {
-      background-image: none !important;
-      overflow: hidden;
-      white-space: nowrap;
-      filter: none !important;
-    }
-    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li[id^="vote-current-"]::before,
-    html[data-ojpp-theme="dark"] ul.vote-list li[id^="vote-current-"]::before {
-      content: "★★★★★";
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 22px;
-      line-height: 1;
-      letter-spacing: 3px;
-      color: #f0883e;
-      white-space: nowrap;
-      pointer-events: none;
-    }
-    /* hover 预览：站点给 a.vote-item:hover 铺 rating.gif 下半截
-       （白底金星精灵，GIF 无 alpha），暗色下是一条白块。去精灵，
-       同样用 ::before 画金星，锚点 width 裁掉多余的星 */
-    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li a.vote-item,
-    html[data-ojpp-theme="dark"] ul.vote-list li a.vote-item,
-    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li a.vote-item:hover,
-    html[data-ojpp-theme="dark"] ul.vote-list li a.vote-item:hover {
-      background-image: none !important;
-      overflow: hidden;
-    }
-    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li a.vote-item:hover::before,
-    html[data-ojpp-theme="dark"] ul.vote-list li a.vote-item:hover::before {
-      content: "★★★★★";
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 22px;
-      line-height: 1;
-      letter-spacing: 3px;
-      color: #f0883e;
-      white-space: nowrap;
-      text-indent: 0;
-      pointer-events: none;
-    }
-
-    /* ---------- 题目副标签（standard input/output、时限） ---------- */
-    /* 站点给这些 .notice 设了浅灰底做“信息条”，暗色下是一块
-       和背景不一样的灰块。直接透明，只留文字色 */
-    html[data-ojpp-theme="dark"] .notice {
-      background: transparent !important;
-      border: none !important;
-      color: #909dab !important;
-    }
-    /* 但 .notice 里的文字要可读——站点给 td .notice 设过灰，优先级不够会输 */
-    html[data-ojpp-theme="dark"] .notice *,
-    html[data-ojpp-theme="dark"] td .notice,
-    html[data-ojpp-theme="dark"] .notice a {
-      color: #909dab !important;
-    }
-
-    /* ---------- 倒计时/截止标签 ---------- */
-    /* “Until closing X days” 里的时间是 span.countdown，站点给 #777 深灰。
-       按“截止”语义上色成琥珀色。注意别用 .irt——那其实是 datatable
-       的圆角精灵图 class，之前误认作倒计时元素 */
-    html[data-ojpp-theme="dark"] .countdown,
-    html[data-ojpp-theme="dark"] .countdown * {
-      color: #f0883e !important;
-      border-color: #f0883e !important;
-    }
-
-    /* ---------- datatable/roundbox 的角精灵图 ---------- */
-    /* CF 的圆角是靠 ilt/irt/ilb/irb 几个小 PNG 角落图拼出来的。
-       暗色下这些白色角落图会变成白块。全部去掉，容器自己给
-       border-radius 保持圆角 */
-    html[data-ojpp-theme="dark"] .ilt,
-    html[data-ojpp-theme="dark"] .irt,
-    html[data-ojpp-theme="dark"] .ilb,
-    html[data-ojpp-theme="dark"] .irb,
-    html[data-ojpp-theme="dark"] .lt,
-    html[data-ojpp-theme="dark"] .rt,
-    html[data-ojpp-theme="dark"] .lb,
-    html[data-ojpp-theme="dark"] .rb {
-      background-image: none !important;
-    }
-    html[data-ojpp-theme="dark"] .datatable,
-    html[data-ojpp-theme="dark"] .borderTopRound {
-      border-radius: 4px;
-    }
-
-    /* ---------- 个人资料与图表 ---------- */
-    /* 评分曲线图例的白底 */
-    html[data-ojpp-theme="dark"] .legend,
-    html[data-ojpp-theme="dark"] .legend div {
-      background: transparent !important;
-      color: #cdd9e5;
-    }
-    /* 评分曲线图本体是 canvas，不动它 */
-
-    /* ---------- 题号行的通过/未通过标记 ---------- */
-    /* 站点的做/未做标记分两处：① td.act（操作列图标格）上浅底色，
-       ② td.id 左侧 6px 彩色条（border-left）。两处都用同色。
-       之前写成 .accepted-problem td 把整行染绿——多了，且 td.id 的
-       6px 浅绿条在暗底下太刺眼。改成：td.act 给深色底，td.id 的左条
-       换成就感分明但不刺眼的色相 */
-    html[data-ojpp-theme="dark"] tr.accepted-problem td.act,
-    html[data-ojpp-theme="dark"] .accepted-problem td.act,
-    html[data-ojpp-theme="dark"] td.act.accepted-problem {
-      background: #1d2b1d !important;
-      color: #a6d189;
-    }
-    html[data-ojpp-theme="dark"] tr.accepted-problem td.id,
-    html[data-ojpp-theme="dark"] .accepted-problem td.id {
-      border-left-color: #57ab5a !important;
-    }
-    html[data-ojpp-theme="dark"] tr.rejected-problem td.act,
-    html[data-ojpp-theme="dark"] .rejected-problem td.act,
-    html[data-ojpp-theme="dark"] td.act.rejected-problem {
-      background: #451d1d !important;
-      color: #f85149;
-    }
-    html[data-ojpp-theme="dark"] tr.rejected-problem td.id,
-    html[data-ojpp-theme="dark"] .rejected-problem td.id {
-      border-left-color: #f85149 !important;
-    }
-    html[data-ojpp-theme="dark"] tr.submitted-verdict-problem td.act,
-    html[data-ojpp-theme="dark"] .submitted-verdict-problem td.act,
-    html[data-ojpp-theme="dark"] td.act.submitted-verdict-problem {
-      background: #1c2b3d !important;
-      color: #79b8ff;
-    }
-    html[data-ojpp-theme="dark"] tr.submitted-verdict-problem td.id,
-    html[data-ojpp-theme="dark"] .submitted-verdict-problem td.id {
-      border-left-color: #79b8ff !important;
-    }
-    /* 普通行的 td.act（尤其斑马行 td.act.dark）：站点是 #f8f8f8 白底，
-       暗色下是白块。改成透明让它跟行底色一致 */
-    html[data-ojpp-theme="dark"] td.act,
-    html[data-ojpp-theme="dark"] td.act.dark,
-    html[data-ojpp-theme="dark"] .act.dark {
-      background: transparent !important;
-    }
-
-    /* ---------- 排行榜标记 ---------- */
-    /* 站点用 #ff0000 纯红和 #008000 纯绿标“失败/成功”，
-       深底上要么刺眼要么太暗。换成亮版本，语义不变 */
-    html[data-ojpp-theme="dark"] .cell-failed-system-test,
-    html[data-ojpp-theme="dark"] .cell-challenged {
-      color: #f85149 !important;
-    }
-    html[data-ojpp-theme="dark"] .successfulChallengeCount,
-    html[data-ojpp-theme="dark"] .successful-submission,
-    html[data-ojpp-theme="dark"] .successful-test {
-      color: #57ab5a !important;
-    }
-
-    /* ---------- 提交详情的 I/O 对比块 ---------- */
-    /* .file .text 是 #ddd，test-for-popup pre #eee，sample-tests pre #efefef，
-       test-example-line-even #e0e0e0——全是浅块，暗色下是大片白 */
-    html[data-ojpp-theme="dark"] .file,
-    html[data-ojpp-theme="dark"] .file .text,
-    html[data-ojpp-theme="dark"] .file .name,
-    html[data-ojpp-theme="dark"] .test-for-popup pre,
-    html[data-ojpp-theme="dark"] .test-for-popup,
-    html[data-ojpp-theme="dark"] .sample-tests pre {
-      background: #22272e !important;
-      border-color: #373e47 !important;
-      color: #cdd9e5;
-    }
-    /* 别碰 .test-example-line-even/odd——题面里靠它做奇偶交替，
-       前面已有专门规则（even #2d333b / odd #22272e），盖掉就分不清行了 */
-    html[data-ojpp-theme="dark"] .file pre,
-    html[data-ojpp-theme="dark"] .file .text pre,
-    html[data-ojpp-theme="dark"] .sample-tests pre * {
-      color: #cdd9e5 !important;
-    }
-    /* .file 的标题行（Input / Participant's output / Jury's answer） */
-    html[data-ojpp-theme="dark"] .file .name {
-      color: #909dab !important;
-    }
-
-    /* ---------- facebox 弹窗（view source / hack 等所有弹层） ---------- */
-    /* #facebox .content 站点给的是 #fff，a.close 也是白底，暗色下
-       整个弹窗是一块大白板。内部 .source-popup / pre 都是透明的，
-       把容器压成页面底色即可 */
-    html[data-ojpp-theme="dark"] #facebox .content,
-    html[data-ojpp-theme="dark"] #facebox .popup .content {
-      background-color: #1d2127 !important;
-      color: #cdd9e5;
-    }
-    html[data-ojpp-theme="dark"] #facebox a.close {
-      background-color: #1d2127 !important;
-    }
-    html[data-ojpp-theme="dark"] #facebox .source-popup pre,
-    html[data-ojpp-theme="dark"] #facebox pre {
-      background-color: #22272e;
-      color: #cdd9e5;
-    }
-    html[data-ojpp-theme="dark"] #facebox hr {
-      border-color: #373e47;
-      background-color: #373e47;
-    }
-    /* 高亮块：站点用 --highlighted-* 浅彩底，暗色下深底 */
-    html[data-ojpp-theme="dark"] [style*="background-color: rgb(221, 238, 255)"],
-    html[data-ojpp-theme="dark"] [style*="background-color: #ddeeff"],
-    html[data-ojpp-theme="dark"] [style*="background-color: rgb(239, 239, 239)"] {
-      background-color: #22272e !important;
-    }
-    /* 过滤框/代码预览的输入与预览区 */
-    html[data-ojpp-theme="dark"] .filter-box input,
-    html[data-ojpp-theme="dark"] .datatable .filter input,
-    html[data-ojpp-theme="dark"] .datatable input {
-      background: #2d333b !important;
-      border-color: #373e47 !important;
-      color: #cdd9e5;
-    }
-    html[data-ojpp-theme="dark"] .markItUpPreviewFrame {
-      background: #22272e !important;
-      border-color: #373e47;
-    }
-    /* ---------- text-label-* 状态徽章 ---------- */
-    /* 站点用浅彩底+深字，暗色下要反成深底+亮字 */
-    html[data-ojpp-theme="dark"] .text-label-blue,
-    html[data-ojpp-theme="dark"] .text-label-info {
-      background: #1c3a5e !important;
-      color: #79b8ff !important;
-    }
-    html[data-ojpp-theme="dark"] .text-label-green,
-    html[data-ojpp-theme="dark"] .text-label-success {
-      background: #1d3a2c !important;
-      color: #57ab5a !important;
-    }
-    html[data-ojpp-theme="dark"] .text-label-yellow,
-    html[data-ojpp-theme="dark"] .text-label-warning {
-      background: #4a3a1a !important;
-      color: #f0883e !important;
-    }
-    html[data-ojpp-theme="dark"] .text-label-red,
-    html[data-ojpp-theme="dark"] .text-label-error {
-      background: #4a2323 !important;
-      color: #f85149 !important;
-    }
-    html[data-ojpp-theme="dark"] .text-label-gray,
-    html[data-ojpp-theme="dark"] .text-label-muted {
-      background: #373e47 !important;
-      color: #909dab !important;
-    }
-
-    /* ---------- 目录页（Catalog） ---------- */
-    /* 目录/更新历史里的深蓝字与黑色时间戳 */
-    html[data-ojpp-theme="dark"] ._catalogFolderName,
-    html[data-ojpp-theme="dark"] ._CatalogHistorySidebarFrame_name,
-    html[data-ojpp-theme="dark"] ._catalogNode ._nameBody,
-    html[data-ojpp-theme="dark"] .caption {
-      color: #cdd9e5 !important;
-    }
-    html[data-ojpp-theme="dark"] .format-humantime,
-    html[data-ojpp-theme="dark"] .humantime,
-    html[data-ojpp-theme="dark"] time {
-      color: #909dab !important;
-    }
-    /* 目录的增删记录：del 浅红、ins 浅绿 */
-    html[data-ojpp-theme="dark"] ._CatalogHistorySidebarFrame_value del,
-    html[data-ojpp-theme="dark"] del {
-      background: #3d2b2b !important;
-      color: #f85149 !important;
-      text-decoration-color: #f85149;
-    }
-    html[data-ojpp-theme="dark"] ._CatalogHistorySidebarFrame_value ins,
-    html[data-ojpp-theme="dark"] ins {
-      background: #1d2b1d !important;
-      color: #57ab5a !important;
-      text-decoration-color: #57ab5a;
-    }
-    /* 目录的文件/文件夹图标：站点用 icon-* 字体渲染，
-       还把颜色写进 style="color:black" 或站点 !important 规则里。
-       必须 !important + 覆盖 ::before 才能抢到。 */
-    html[data-ojpp-theme="dark"] [class*="icon-"],
-    html[data-ojpp-theme="dark"] [class*="icon-"]::before,
-    html[data-ojpp-theme="dark"] [class*="icon-"]::after,
-    html[data-ojpp-theme="dark"] .icon-file,
-    html[data-ojpp-theme="dark"] .icon-folder {
-      color: #cdd9e5 !important;
-    }
-    /* 站点对目录树里的 icon 用 black !important，点名覆盖 */
-    html[data-ojpp-theme="dark"] ._catalogBlogEntry ._name i[class*="icon-"],
-    html[data-ojpp-theme="dark"] ._catalogFolder ._name i[class*="icon-"],
-    html[data-ojpp-theme="dark"] ._catalogNode i[class*="icon-"],
-    html[data-ojpp-theme="dark"] ._name i[class*="icon-"],
-    html[data-ojpp-theme="dark"] ._nameContent i[class*="icon-"] {
-      color: #909dab !important;
-    }
-
-    /* ---------- 提示条与代码编辑器 ---------- */
-    html[data-ojpp-theme="dark"] div.alert-info,
-    html[data-ojpp-theme="dark"] div.alert-warning,
-    html[data-ojpp-theme="dark"] div.alert-error,
-    html[data-ojpp-theme="dark"] div.alert-success {
-      background: #2d333b;
-      border-color: #444c56;
-      color: #cdd9e5;
-    }
-    html[data-ojpp-theme="dark"] .highlight {
-      background: #3a3320 !important;
-    }
-    /* 顶部搜索框：站点给它设了 #f4f4f4 和放大镜背景图 */
-    html[data-ojpp-theme="dark"] input.search,
-    html[data-ojpp-theme="dark"] .search {
-      background-color: #232a33 !important;
-      color: #cdd9e5;
-      border-color: #475060;
-    }
-    /* 输入框、下拉框、按钮：站点默认白底，暗色下会刺眼 */
-    html[data-ojpp-theme="dark"] input:not([type="checkbox"]):not([type="radio"]),
-    html[data-ojpp-theme="dark"] select,
-    html[data-ojpp-theme="dark"] textarea {
-      background-color: #2d333b;
-      color: #cdd9e5;
-      border-color: #444c56;
-    }
-    /* 提交类按钮：站点用 border:2px outset 做立体感，
-       暗色下看起来像 90 年代的控件。改成扁平样式。 */
-    html[data-ojpp-theme="dark"] input[type="submit"],
-    html[data-ojpp-theme="dark"] input[type="button"],
-    html[data-ojpp-theme="dark"] button,
-    html[data-ojpp-theme="dark"] .button {
-      background-color: #2d333b !important;
-      color: #cdd9e5 !important;
-      border: 1px solid #444c56 !important;
-      border-radius: 4px;
-    }
-    html[data-ojpp-theme="dark"] input[type="submit"]:hover,
-    html[data-ojpp-theme="dark"] input[type="button"]:hover,
-    html[data-ojpp-theme="dark"] button:hover {
-      background-color: #373e47 !important;
-    }
-
-    /* ---------- 侧边栏里的链接 ---------- */
-    /* 站点给侧边栏链接设了黑色（a.not-decorated 等），
-       有些还写成内联 style="color: black"，所以要用 !important。
-       但必须排除 .rated-user：“Top rated”这类列表里全是
-       红名/橙名，笼统的 a 规则会把段位色一起刷掉。 */
-    html[data-ojpp-theme="dark"] .roundbox a:not(.rated-user):not([class*="user-"]),
-    html[data-ojpp-theme="dark"] .sidebox a:not(.rated-user):not([class*="user-"]),
-    html[data-ojpp-theme="dark"] .roundbox li,
-    html[data-ojpp-theme="dark"] .sidebox li {
-      color: #cdd9e5 !important;
-    }
-    html[data-ojpp-theme="dark"] .roundbox a:hover,
-    html[data-ojpp-theme="dark"] .sidebox a:hover {
-      color: #539bf5 !important;
-    }
-    /* 侧边栏列表项的圆点标记 */
-    html[data-ojpp-theme="dark"] .roundbox ul li::before,
-    html[data-ojpp-theme="dark"] .sidebox ul li::before {
-      color: #768390;
-    }
-    /* “Contest materials”这类列表：站点给 li 加了 1px 白边框，
-       暗色下每行都套一圈亮框。改成素色分隔线，鼠标悬停时再高亮。 */
-    html[data-ojpp-theme="dark"] .sidebar-menu ul li,
-    html[data-ojpp-theme="dark"] .sidebox ul li {
-      border: none !important;
-      border-bottom: 1px solid #2d333b !important;
-      border-radius: 0;
-      background: transparent;
-    }
-    html[data-ojpp-theme="dark"] .sidebar-menu ul li:last-child,
-    html[data-ojpp-theme="dark"] .sidebox ul li:last-child {
-      border-bottom: none !important;
-    }
-    html[data-ojpp-theme="dark"] .sidebar-menu ul li:hover,
-    html[data-ojpp-theme="dark"] .sidebox ul li:hover {
-      background: #2d333b !important;
-    }
-    /* 悬停时链接要变亮。站点没有给 hover 设颜色，
-       之前悬停后文字仍然很淡，看起来像被禁用。 */
-    html[data-ojpp-theme="dark"] .sidebar-menu ul li a:hover,
-    html[data-ojpp-theme="dark"] .sidebox ul li a:hover {
-      color: #e6edf3 !important;
-    }
-    /* 资源语言标记（如 (en)）：站点是 #666，深底上看不清 */
-    html[data-ojpp-theme="dark"] .resource-locale {
-      color: #768390 !important;
-    }
-    /* 删除资源的小叉：原图是 10x10 灰度 PNG（白底 + 深色叉），
-       深底上几乎看不见。invert 会把白底也变成深色方块，
-       所以用 mix-blend-mode: screen 让白色消失、只留叉的轮廓。 */
-    html[data-ojpp-theme="dark"] .delete-resource-link {
-      filter: invert(1);
-      mix-blend-mode: screen;
-      opacity: .75;
-    }
-    html[data-ojpp-theme="dark"] .delete-resource-link:hover {
-      opacity: 1;
-    }
-    /* 侧边栏顶部收起/展开的箭头图标（同样是深色小图） */
-    html[data-ojpp-theme="dark"] .sidebar-menu .caption .top-links img,
-    html[data-ojpp-theme="dark"] .sidebox .caption img {
-      filter: invert(1);
-      mix-blend-mode: screen;
-    }
-  `,
-	collectSections(doc) {
-		const sections = [];
-		const statement = doc.querySelector(".problem-statement");
-		if (!statement) {
-			const post = doc.querySelector(".topic > .content > .ttypography");
-			if (post?.textContent?.trim()) {
-				const title = doc.querySelector(".topic .title, .content .title");
-				sections.push({
-					kind: "article",
-					label: t$1("section.blog"),
-					content: post,
-					toolbar: {
-						anchor: title ?? post,
-						position: title ? "beforeend" : "beforebegin",
-						align: "right"
-					},
-					result: {
-						anchor: post,
-						position: "afterend"
-					}
-				});
-			}
-			let idx = 0;
-			for (const comment of doc.querySelectorAll(".comment:not(.comment-reply-prototype)")) {
-				const content = comment.querySelector(".ttypography");
-				if (!content?.textContent?.trim()) continue;
-				const info = comment.querySelector(".info, .comment-info, td.right .info");
-				idx++;
-				sections.push({
-					kind: "comment",
-					label: `${t$1("section.comment")} ${idx}`,
-					content,
-					toolbar: {
-						anchor: info ?? content,
-						position: "beforeend",
-						align: "right"
-					},
-					result: {
-						anchor: content,
-						position: "afterend"
-					}
-				});
-			}
-			return sections;
-		}
-		const add = (content, heading, kind, label, toolbarAnchor) => {
-			if (!content || !heading || !content.textContent?.trim()) return;
-			const blockLevel = !!toolbarAnchor;
-			const anchor = toolbarAnchor ?? heading;
-			sections.push({
-				kind,
-				label,
-				content,
-				toolbar: blockLevel ? {
-					anchor,
-					position: "afterend",
-					align: "block-right"
-				} : {
-					anchor,
-					position: "beforeend",
-					align: "right"
-				},
-				result: {
-					anchor: content,
-					position: "afterend"
-				}
-			});
-		};
-		const header = statement.querySelector(".header");
-		add([...statement.children].filter((node) => node instanceof HTMLElement).find((node) => node !== header && !node.classList.contains("ojpp-toolbar")) ?? null, statement.querySelector(".header .title"), "statement", t$1("section.statement"), header);
-		add(statement.querySelector(".input-specification"), statement.querySelector(".input-specification .section-title"), "input", t$1("section.input"));
-		add(statement.querySelector(".output-specification"), statement.querySelector(".output-specification .section-title"), "output", t$1("section.output"));
-		add(statement.querySelector(".note"), statement.querySelector(".note .section-title"), "output", t$1("section.note"));
-		return sections;
-	},
-	prepareContent(root) {
-		const doc = root.ownerDocument;
-		const hasScripts = !!root.querySelector("script[type^=\"math/tex\"]");
-		for (const rendered of root.querySelectorAll(MATHJAX_RENDERED)) {
-			if (rendered.querySelector("script[type^=\"math/tex\"]")) {
-				for (const child of [...rendered.children]) if (!child.matches("script[type^=\"math/tex\"]") && !child.querySelector("script[type^=\"math/tex\"]")) child.remove();
-				continue;
-			}
-			if (hasScripts) rendered.remove();
-		}
-		for (const script of root.querySelectorAll("script[type^=\"math/tex\"]")) {
-			const latex = (script.textContent ?? "").trim();
-			if (!latex) {
-				script.remove();
-				continue;
-			}
-			const math = doc.createElement("span");
-			math.setAttribute("data-ojpp-math", /mode\s*=\s*display/.test(script.type) ? "display" : "inline");
-			math.textContent = latex;
-			script.replaceWith(math);
-		}
-		for (const span of root.querySelectorAll(".tex-span")) {
-			if (span.parentElement?.closest(".tex-span")) continue;
-			const latex = texSpanToLatex(span);
-			if (!latex) {
-				span.remove();
-				continue;
-			}
-			const math = doc.createElement("span");
-			math.setAttribute("data-ojpp-math", isStandaloneSpan(span) ? "display" : "inline");
-			math.textContent = latex;
-			span.replaceWith(math);
-		}
-		for (const tt of root.querySelectorAll(".tex-font-style-tt, .text-verb")) {
-			const code = doc.createElement("code");
-			code.textContent = tt.textContent ?? "";
-			tt.replaceWith(code);
-		}
-		for (const [selector, open, close] of [
-			[
-				".tex-font-style-bf",
-				"**",
-				"**"
-			],
-			[
-				".tex-font-style-it",
-				"*",
-				"*"
-			],
-			[
-				".tex-font-style-sl",
-				"*",
-				"*"
-			],
-			[
-				".tex-font-style-striked",
-				"~~",
-				"~~"
-			]
-		]) for (const el of root.querySelectorAll(selector)) {
-			const text = el.textContent ?? "";
-			if (!text) continue;
-			el.replaceWith(doc.createTextNode(`${open}${text}${close}`));
-		}
-		for (const el of root.querySelectorAll(".section-title, .property-title")) {
-			const text = (el.textContent ?? "").trim();
-			if (!text) continue;
-			const bold = doc.createElement("strong");
-			bold.textContent = selectorEndsWithProperty(el) ? `${text}: ` : text;
-			el.replaceWith(bold);
-		}
-		for (const el of root.querySelectorAll(".input-output-copier")) el.remove();
-	},
-	mountSettingsButton(button, doc) {
-		const loginRow = doc.querySelector(".lang-chooser > div:last-child");
-		if (loginRow) {
-			const host = doc.createElement("span");
-			host.className = "ojpp-codeforces-settings";
-			host.append(button);
-			loginRow.prepend(host);
-			return;
-		}
-		const menu = doc.querySelector(".menu-list.main-menu-list") ?? doc.querySelector("#header");
-		if (menu) {
-			const host = doc.createElement("li");
-			host.className = "ojpp-codeforces-settings";
-			host.append(button);
-			menu.append(host);
-			return;
-		}
-		button.classList.add("ojpp-settings-floating");
-		doc.body.append(button);
-	},
-	observe(doc, onChange) {
-		let timer;
-		const schedule = () => {
-			if (timer !== void 0) return;
-			timer = setTimeout(() => {
-				timer = void 0;
-				onChange();
-			}, 150);
-		};
-		const observer = new MutationObserver(schedule);
-		observer.observe(doc.body, {
-			childList: true,
-			subtree: true
-		});
-		const onReady = () => schedule();
-		doc.addEventListener("DOMContentLoaded", onReady);
-		window.addEventListener("load", onReady);
-		return () => {
-			observer.disconnect();
-			clearTimeout(timer);
-			doc.removeEventListener("DOMContentLoaded", onReady);
-			window.removeEventListener("load", onReady);
-		};
-	},
-	editor: {
-		languages: CF_LANGUAGES,
-		editorMountPoint(doc) {
-			const statement = doc.querySelector(".problem-statement");
-			if (!statement) return null;
-			if (!statement.parentElement) return null;
-			return {
-				anchor: statement,
-				position: "afterend"
-			};
-		},
-		editorPage(doc) {
-			const ta = doc.querySelector("textarea#sourceCodeTextarea");
-			const ace = doc.querySelector("#editor");
-			if (!ta || !ace) return null;
-			return {
-				anchor: ace,
-				position: "afterend",
-				hide: ace,
-				textarea: ta,
-				langSelect: doc.querySelector("select[name=\"programTypeId\"]") ?? void 0,
-				offToggle: doc.querySelector("#toggleEditorCheckbox") ?? void 0,
-				langMode: (id) => CF_LANGUAGES.find((l) => l.id === id)?.mode ?? "text",
-				syncBack: (code) => {
-					try {
-						(globalThis.unsafeWindow ?? doc.defaultView).ace?.edit?.("editor")?.setValue?.(code);
-					} catch {}
-				}
-			};
-		},
-		problemCode(doc) {
-			const p = doc.location.pathname;
-			const m = /^\/problemset\/problem\/(\d+)\/([A-Z]\w*)/.exec(p) ?? /^\/(?:contest|gym)\/(\d+)\/problem\/([A-Z]\w*)/.exec(p);
-			return m ? `${m[1]}${m[2]}` : null;
-		},
-		getSamples(doc) {
-			const inputs = [...doc.querySelectorAll(".sample-tests .input pre, .sample-test .input pre")];
-			const outputs = [...doc.querySelectorAll(".sample-tests .output pre, .sample-test .output pre")];
-			const out = [];
-			for (let i = 0; i < inputs.length; i++) {
-				const input = inputs[i]?.innerText?.trim();
-				if (input !== void 0) out.push({
-					input,
-					output: outputs[i]?.innerText?.trim() ?? ""
-				});
-			}
-			return out;
-		},
-		async runCustomTest(code, languageId, input) {
-			const csrf = csrfToken();
-			const submitBody = new URLSearchParams({
-				csrf_token: csrf,
-				communityCode: "",
-				action: "submitSourceCode",
-				programTypeId: languageId,
-				sourceCode: code,
-				source: code,
-				input,
-				tabSize: "4",
-				output: "",
-				_tta: ttaValue()
-			});
-			const submitJson = await (await fetch("/data/customtest", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-					"X-Requested-With": "XMLHttpRequest"
-				},
-				body: submitBody.toString()
-			})).json();
-			if (!submitJson?.customTestSubmitId) return {
-				output: "",
-				error: submitJson?.error ?? "提交失败（customTestSubmitId 为空）"
-			};
-			const id = String(submitJson.customTestSubmitId);
-			const deadline = Date.now() + 6e4;
-			while (Date.now() < deadline) {
-				await new Promise((r) => setTimeout(r, 1500));
-				const vb = new URLSearchParams({
-					csrf_token: csrf,
-					communityCode: "",
-					action: "getVerdict",
-					customTestSubmitId: id
-				});
-				const vj = await (await fetch("/data/customtest", {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-						"X-Requested-With": "XMLHttpRequest"
-					},
-					body: vb.toString()
-				})).json().catch(() => null);
-				if (vj?.verdict != null) {
-					const result = {
-						output: String(vj.output ?? ""),
-						used: [vj.verdict, vj.stat].filter(Boolean).join(", ") || void 0,
-						verdict: vj.verdict
-					};
-					if (vj.verdict !== "OK" && !result.output) result.error = result.used;
-					return result;
-				}
-			}
-			return {
-				output: "",
-				error: "等待判题结果超时"
-			};
-		},
-		async submit(code, languageId, problemCode) {
-			const csrf = csrfToken();
-			const contestMatch = /^\/(contest|gym)\/(\d+)\/problem\/([A-Z]\w*)/.exec(document.location.pathname);
-			const fields = {
-				csrf_token: csrf,
-				action: "submitSolutionFormSubmitted",
-				programTypeId: languageId,
-				source: code,
-				tabSize: "4",
-				ftaa: ftaaValue(),
-				bfaa: bfaaValue(),
-				_tta: ttaValue()
-			};
-			let pageUrl = "/problemset/submit";
-			if (contestMatch) {
-				pageUrl = `/${contestMatch[1]}/${contestMatch[2]}/submit`;
-				fields.submittedProblemIndex = contestMatch[3];
-			} else fields.submittedProblemCode = problemCode;
-			const doc = await postFormToIframe(pageUrl, fields);
-			const url = doc.URL;
-			const errors = [...doc.querySelectorAll(".error, .forbidden")].map((e) => e.textContent?.trim()).filter((t) => !!t);
-			const errorText = errors.length ? errors.join("; ") : void 0;
-			const ok = /\/(?:contest\/\d+|gym\/\d+)?\/?(my|status)/.test(url) || /status|contest\/\d+\/my/.test(url);
-			return {
-				ok: ok && !errorText,
-				url: ok ? url : void 0,
-				error: errorText ?? (ok ? void 0 : parseSubmitError(doc))
-			};
-		}
-	},
-	i18nPage(doc, locale) {
-		if (locale !== "zh") return;
-		applyPageI18n(doc, [{
-			scope: "body",
-			map: CF_I18N_ZH,
-			prefixMap: CF_I18N_ZH_PREFIX,
-			values: CF_I18N_ZH_VALUES,
-			replaceMap: {
-				"(\\d+)\\s+years?\\s+ago": "$1 年前",
-				"(\\d+)\\s+months?\\s+ago": "$1 个月前",
-				"(\\d+)\\s+days?\\s+ago": "$1 天前",
-				"(\\d+)\\s+hours?\\s+ago": "$1 小时前",
-				"(\\d+)\\s+minutes?\\s+ago": "$1 分钟前",
-				"(\\d+)\\s+seconds?\\s+ago": "$1 秒前",
-				"Rev\\.\\s*(\\d+)": "修订版 $1"
-			}
-		}, ...CF_SUBS_RULES]);
-	}
-};
-/** CF 全站界面文本 → 中文。精确匹配（trim 后整个文本节点）。 */
-var CF_I18N_ZH = {
-	"Home": "首页",
-	"Top": "主页",
-	"Catalog": "目录",
-	"Contests": "比赛",
-	"Gym": "Gym",
-	"Problemset": "题库",
-	"Groups": "群组",
-	"Rating": "排行榜",
-	"Edu": "Edu",
-	"Calendar": "日历",
-	"Help": "帮助",
-	"Enter": "登录",
-	"Register": "注册",
-	"Logout": "登出",
-	"Profile": "个人资料",
-	"Messages": "消息",
-	"Settings": "设置",
-	"Search": "搜索",
-	"Favourites": "收藏",
-	"My submissions": "我的提交",
-	"My status": "我的状态",
-	"Friends status": "好友状态",
-	"My blog": "我的博客",
-	"Input": "输入",
-	"Output": "输出",
-	"Examples": "样例",
-	"Note": "说明",
-	"Copy": "复制",
-	"input": "输入",
-	"output": "输出",
-	"interactive": "交互题",
-	"Submit?": "提交",
-	"Tutorial": "题解",
-	"Materials": "资料",
-	"Problem": "题目",
-	"time limit per test": "每组数据时限",
-	"memory limit per test": "每组数据内存限制",
-	"standard input": "标准输入",
-	"standard output": "标准输出",
-	"Problem Tags": "题目标签",
-	"Verdict": "判定",
-	"Status": "状态",
-	"Submissions": "提交",
-	"When": "提交时间",
-	"Who": "用户",
-	"Lang": "语言",
-	"Time": "用时",
-	"Memory": "内存",
-	"Score": "分数",
-	"Rank": "排名",
-	"Penalty": "罚时",
-	"Solved": "已通过",
-	"Points": "分数",
-	"Rating change": "Rating 变化",
-	"Contest": "比赛",
-	"Contestants": "参赛者",
-	"Standings": "排行榜",
-	"Problems": "题目",
-	"Submit": "提交",
-	"Save": "保存",
-	"Cancel": "取消",
-	"Compare": "对比",
-	"Source": "源码",
-	"Send": "发送",
-	"Back": "返回",
-	"Next": "下一个",
-	"Previous": "上一个",
-	"Filter": "筛选",
-	"Apply": "应用",
-	"Diagnostics": "诊断",
-	"Compile and Run": "编译并运行",
-	"Edit": "编辑",
-	"Delete": "删除",
-	"Reply": "回复",
-	"Like": "赞",
-	"Dislike": "踩",
-	"Comments": "评论",
-	"Views": "浏览",
-	"Tags": "标签",
-	"More": "更多",
-	"Less": "收起",
-	"Show": "显示",
-	"Hide": "隐藏",
-	"Loading": "加载中",
-	"Run": "运行",
-	"Read": "阅读",
-	"Difficulty": "难度",
-	"Choose problem": "选择题号",
-	"Before contest": "赛前",
-	"Attention": "注意",
-	"Source:": "源代码：",
-	"Source code:": "源代码：",
-	"Problem:": "题目：",
-	"Compiler:": "编译器：",
-	"Language:": "语言：",
-	"Input:": "输入：",
-	"Output:": "输出：",
-	"Tab size:": "缩进宽度：",
-	"Switch off editor": "关闭编辑器",
-	"Use custom test": "使用自定义测试",
-	"No more than 256 KB": "不超过 256 KB",
-	"First 255 bytes only": "只显示前 255 字节",
-	"Choose File": "选择文件",
-	"Choose file": "选择文件",
-	"choose file": "选择文件",
-	"Browse": "浏览",
-	"or click here": "或点这里",
-	"Official": "正式",
-	"Unofficial": "非正式",
-	"Register now": "立即报名",
-	"Virtual participation": "虚拟参赛",
-	"Start virtual": "开始虚拟赛",
-	"Friends only": "只看好友",
-	"All": "全部",
-	"Final": "终榜",
-	"Unofficial standings": "非正式榜单",
-	"Custom test": "自定义测试",
-	"Terms and Conditions": "服务条款",
-	"Privacy Policy": "隐私政策",
-	"Supported by": "由提供支持",
-	"No items": "暂无条目",
-	"Powered by": "由提供支持",
-	"View the change": "查看变更",
-	"View the changes.": "查看变更",
-	"View the changes": "查看变更",
-	"The problem statement has recently been changed.": "题面最近有改动。",
-	"Submit code": "提交代码",
-	"Hacks": "Hack",
-	"Room": "房间",
-	"Custom invocation": "自定义测试",
-	"Custom tests": "自定义测试",
-	"Start virtual contest": "开始虚拟赛",
-	"Show archived": "显示已归档",
-	"Write comment?": "发表评论？",
-	"hide": "收起",
-	"history": "历史版本",
-	"By": "作者",
-	"ago": "前",
-	"months ago": "个月前",
-	"years ago": "年前",
-	"days ago": "天前",
-	"hours ago": "小时前",
-	"minutes ago": "分钟前",
-	"seconds ago": "秒前",
-	"yesterday": "昨天",
-	"Finished": "已结束",
-	"Practice": "练习",
-	"Problem tags": "题目标签",
-	"Contest materials": "比赛资料",
-	"No tag edit access": "无标签编辑权限",
-	"Clone Contest to Mashup": "克隆比赛到 Mashup",
-	"You can clone this contest to a mashup.": "你可以把这场比赛克隆为 mashup。",
-	"Clone Contest": "克隆比赛",
-	"Last submissions": "最近提交",
-	"Choose file:": "选择文件：",
-	"Last visit:": "上次访问：",
-	"Last visit": "上次访问",
-	"Attention before contest": "赛前注意",
-	"Contest status": "比赛状态",
-	"Your position": "你的名次",
-	"My contests": "我的比赛",
-	"All contests": "全部比赛",
-	"Contests are running": "比赛进行中",
-	"implementation": "模拟",
-	"math": "数学",
-	"greedy": "贪心",
-	"dp": "动态规划",
-	"data structures": "数据结构",
-	"brute force": "暴力",
-	"constructive algorithms": "构造",
-	"graphs": "图论",
-	"sortings": "排序",
-	"binary search": "二分",
-	"dfs and similar": "DFS 类",
-	"trees": "树",
-	"strings": "字符串",
-	"number theory": "数论",
-	"combinatorics": "组合",
-	"geometry": "几何",
-	"bitmasks": "位运算",
-	"dsu": "并查集",
-	"two pointers": "双指针",
-	"hashing": "哈希",
-	"probabilities": "概率",
-	"shortest paths": "最短路",
-	"matrices": "矩阵",
-	"fft": "FFT",
-	"flows": "网络流",
-	"games": "博弈",
-	"schedules": "调度",
-	"expression parsing": "表达式解析",
-	"meet-in-the-middle": "中间相遇",
-	"ternary search": "三分",
-	"divide and conquer": "分治",
-	"string suffix structures": "后缀结构",
-	"graph matchings": "图匹配",
-	"chinese remainder theorem": "中国剩余定理",
-	"2-sat": "2-SAT"
-};
-/** verdict 前缀——只翻 TLE/MLE，AC/WA/RE/CE 等保留英文（圈内惯例）。 */
-var CF_I18N_ZH_PREFIX = {
-	"Time limit exceeded": "超出时间限制",
-	"Memory limit exceeded": "超出内存限制",
-	"Idleness limit exceeded": "超出空闲限制",
-	"Contest is running": "比赛进行中",
-	"Comments": "评论"
-};
-/** input/button 的 value → 中文。 */
-var CF_I18N_ZH_VALUES = {
-	"Run": "运行",
-	"Submit": "提交",
-	"Save": "保存",
-	"Cancel": "取消",
-	"Send": "发送",
-	"Apply": "应用",
-	"Reset": "重置",
-	"Search": "搜索",
-	"Compile and Run": "编译并运行",
-	"Clone Contest": "克隆比赛",
-	"Start virtual contest": "开始虚拟赛",
-	"Register for virtual participation": "报名虚拟参赛",
-	"Register for practice": "报名练习"
-};
-/** .property-title 后面要跟冒号（如 "time limit per test: "），.section-title 不要。 */
-function selectorEndsWithProperty(el) {
-	return el.classList.contains("property-title");
-}
-function csrfToken() {
-	return document.querySelector("input[name=\"csrf_token\"]")?.value ?? "";
-}
-function ttaValue() {
-	return document.querySelector("input[name=\"_tta\"]")?.value ?? "237";
-}
-function ftaaValue() {
-	return antiBotToken("ftaa");
-}
-function bfaaValue() {
-	return antiBotToken("bfaa");
-}
-/** ftaa/bfaa 是页面脚本注入的 window 全局（反自动化参数）。 */
-function antiBotToken(name) {
-	const win = window;
-	const direct = win[`_${name}`] ?? win[name];
-	if (typeof direct === "string" && direct) return direct;
-	for (const s of document.querySelectorAll("script:not([src])")) {
-		const m = new RegExp(`_${name}\\s*=\\s*"([^"]+)"`).exec(s.textContent ?? "") ?? new RegExp(`${name}\\s*:\\s*"([^"]+)"`).exec(s.textContent ?? "");
-		if (m) return m[1];
-	}
-	return "";
-}
-function parseSubmitError(doc) {
-	const t = doc.querySelector("[class*=\"error\"]")?.textContent?.trim();
-	if (t) return t.slice(0, 200);
-	const text = doc.body?.textContent ?? "";
-	return /(?:have|must|cannot|can't|empty|invalid|choose|select|required|denied)[^\n]{0,120}/i.exec(text)?.[0]?.trim();
-}
-/**
-* 两段式隐藏 iframe 表单提交：
-* 先 GET 目标页（customtest/submit），再在其文档内建表单 POST。
-* 这样 Referer 就是目标页自身，和用户在页面上点按钮完全一致——
-* fetch/跨页 iframe POST 都会被服务端退回表单页。
-*/
-function postFormToIframe(pageUrl, fields) {
-	return new Promise((resolve, reject) => {
-		const frame = document.createElement("iframe");
-		frame.setAttribute("sandbox", "allow-same-origin allow-forms");
-		frame.style.display = "none";
-		let submitted = false;
-		let prevDoc = null;
-		const done = () => {
-			clearInterval(poll);
-			clearTimeout(timeout);
-			setTimeout(() => frame.remove(), 200);
-		};
-		const timeout = setTimeout(() => {
-			done();
-			reject(/* @__PURE__ */ new Error("请求超时"));
-		}, 9e4);
-		const poll = setInterval(() => {
-			let doc = null;
-			try {
-				doc = frame.contentDocument;
-			} catch {
-				return;
-			}
-			if (!doc) return;
-			if (!submitted) {
-				if (!doc.URL.includes(pageUrl) || doc.readyState !== "complete") return;
-				prevDoc = doc;
-				const form = doc.createElement("form");
-				form.method = "POST";
-				form.action = "";
-				form.style.display = "none";
-				for (const [name, value] of Object.entries(fields)) {
-					const input = doc.createElement("input");
-					input.type = "hidden";
-					input.name = name;
-					input.value = value;
-					form.append(input);
-				}
-				doc.body.append(form);
-				submitted = true;
-				HTMLFormElement.prototype.submit.call(form);
-			} else {
-				if (doc === prevDoc) return;
-				if (doc.readyState !== "complete") return;
-				done();
-				resolve(doc);
-			}
-		}, 250);
-		document.body.append(frame);
-		frame.src = pageUrl;
-	});
-}
-var d = "html[data-ojpp-theme=\"dark\"]";
-var NOWCODER_DARK = `
-${d} { color-scheme: dark; }
-${d} body, ${d} .nk-container, ${d} .nk-main, ${d} .nk-content,
-${d} .nk-acm-container, ${d} .content-board, ${d} .nc-el-container,
-${d} .question-main, ${d} .question-content, ${d} .subject-box {
-  background: #1c2128; color: #cdd9e5;
-}
-${d} .module-box, ${d} .module-head, ${d} .module-body, ${d} .subject-main,
-${d} .subject-item-wrap, ${d} .subject-item, ${d} .question-intr, ${d} .question-oi-bd,
-${d} .question-oi-hd, ${d} .code-editor-header, ${d} .code-editor-header.theme-default,
-${d} .panel-header, ${d} .panel-body, ${d} .panel-footer, ${d} .code-editor-footer,
-${d} .nc-post-content, ${d} .menu-list, ${d} .dropdown-menu, ${d} .select-options,
-${d} .tooltip-inner, ${d} .pop-box, ${d} .pop-content, ${d} .pop-main {
-  background: #22272e; color: #cdd9e5; border-color: #373e47;
-}
-${d} .header-bar, ${d} .nk-header, ${d} .nk-footer, ${d} .acm-header,
-${d} .menu-box, ${d} .menu-line-box { background: #22272e; color: #cdd9e5; }
-${d} .acm-header a, ${d} .menu-box a { color: #cdd9e5; }
-${d} .menu-box .selected, ${d} .menu-box li:hover { background: #2d333b; }
-${d} .subject-question, ${d} .subject-describe, ${d} .subject-item-title,
-${d} .question-title, ${d} .question-oi-cont, ${d} .module-head h1,
-${d} .module-head h2, ${d} .module-head h3, ${d} .module-head h4,
-${d} .code-editor-header, ${d} .panel-header { color: #cdd9e5; }
-${d} a:not(.btn):not([class*="level-"]):not([class*="user-"]) { color: #539bf5; }
-${d} a:not(.btn):hover { color: #79b8ff; }
-${d} pre, ${d} .subject-describe pre, ${d} .question-oi-cont pre,
-${d} :not(pre)>code { background: #22272e; color: #cdd9e5; border-color: #373e47; }
-${d} input:not([type=checkbox]):not([type=radio]), ${d} select, ${d} textarea,
-${d} .input-txt, ${d} .input-box, ${d} .search-box, ${d} .search-input {
-  background: #1c2128; color: #cdd9e5; border-color: #373e47;
-}
-${d} .btn-default, ${d} .btn-white, ${d} .btn-copy, ${d} .copy,
-${d} .pagination a, ${d} .pagination li { background: #22272e; color: #cdd9e5; border-color: #373e47; }
-${d} table, ${d} th, ${d} td, ${d} .module-box, ${d} .subject-item,
-${d} .panel-header, ${d} .question-oi-bd, ${d} .question-oi-hd,
-${d} .code-editor-header, ${d} hr { border-color: #373e47; }
-${d} th, ${d} thead td, ${d} .table-tr-head { background: #22272e; color: #cdd9e5; }
-${d} tbody tr:nth-child(odd) { background: #22272e; }
-${d} tbody tr:hover { background: #2d333b; }
-${d} .CodeMirror, ${d} .CodeMirror-gutters { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
-${d} .CodeMirror-cursor { border-left-color: #cdd9e5; }
-${d} .CodeMirror-selected { background: #354961; }
-${d} .CodeMirror-activeline-background { background: #22272e; }
-${d} .CodeMirror-linenumber { color: #909dab; }
-${d} .result, ${d} .test-result, ${d} .result-panel, ${d} .test-panel { background: #1c2128; color: #cdd9e5; }
-${d} .code-editor-header.theme-default, ${d} .el-popover, ${d} .el-dialog,
-${d} .el-message-box, ${d} .el-select-dropdown, ${d} .el-dropdown-menu,
-${d} .el-popper { background: #22272e !important; color: #cdd9e5; border-color: #373e47; }
-${d} .el-select-dropdown__item, ${d} .el-dropdown-menu__item, ${d} .el-dialog__title,
-${d} .panel-header .tab-item, ${d} .el-popover__title { color: #cdd9e5; }
-${d} .el-select-dropdown__item.hover, ${d} .el-select-dropdown__item:hover,
-${d} .el-dropdown-menu__item:hover { background: #2d333b; }
-${d} .el-input__inner, ${d} .el-textarea__inner { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
-${d} .el-popper[x-placement^=bottom] .popper__arrow::after { border-bottom-color: #22272e; }
-${d} .el-popper[x-placement^=top] .popper__arrow::after { border-top-color: #22272e; }
-${d} .gray, ${d} .color-gray, ${d} .text-muted, ${d} .subject-limit { color: #909dab; }
-${d} .katex { color: inherit; }
-`;
-function equationFromImg(img) {
-	const src = img.getAttribute("src") ?? "";
-	const alt = img.getAttribute("alt")?.trim();
-	if (alt && /equation|tex/i.test(src)) return alt;
-	const match = /[?&]tex=([^&]+)/.exec(src);
-	if (!match) return null;
-	try {
-		return decodeURIComponent(match[1]);
-	} catch {
-		return match[1];
-	}
-}
-/**
-* 牛客用公式做缩进（如 \hspace{15pt}），这些不是内容。
-* 不滤掉的话，它们会污染提示词，译文里也会冒出一堆空白公式。
-*/
-function isSpacingOnly(latex) {
-	return !latex.replace(/\\(hspace|hfill|quad|qquad|,|;|:|!)\s*(\{[^{}]*\})?/g, "").replace(/[\s~]/g, "");
-}
-/** 牛客用 \hspace{23pt}\bullet\, 模拟列表项，转成 Markdown 列表标记。 */
-function isBullet(latex) {
-	return /^\\(hspace\s*\{[^{}]*\})?\s*\\bullet\b/.test(latex.trim());
-}
-var nowcoder = {
-	id: "nowcoder",
-	get name() {
-		return t$1("site.nowcoder");
-	},
-	hosts: ["ac.nowcoder.com", "www.nowcoder.com"],
-	darkStyles: NOWCODER_DARK,
-	preserveInlineColors: true,
-	styles: `
-    .ojpp-nowcoder-settings {
-      display: inline-flex; align-items: center; margin-left: 8px;
-    }
-    .ojpp-nowcoder-settings .ojpp-icon-btn { color: #cfd3d8; }
-    .ojpp-nowcoder-settings .ojpp-icon-btn:hover {
-      background: rgba(255, 255, 255, .14); color: #fff;
-    }
-  `,
-	collectSections(doc) {
-		const sections = [];
-		const add = (content, heading, kind, label) => {
-			if (!content || !heading || !content.textContent?.trim()) return;
-			sections.push({
-				kind,
-				label,
-				content,
-				toolbar: {
-					anchor: heading,
-					position: "beforeend",
-					align: "right"
-				},
-				result: {
-					anchor: content,
-					position: "afterend"
-				}
-			});
-		};
-		add(doc.querySelector(".subject-question"), doc.querySelector(".subject-item-title"), "statement", t$1("section.statement"));
-		for (const heading of doc.querySelectorAll(".subject-describe > h2")) {
-			const label = heading.textContent ?? "";
-			if (!/描述/.test(label)) continue;
-			let sibling = heading.nextElementSibling;
-			while (sibling && sibling.tagName !== "PRE" && sibling.tagName !== "H2") sibling = sibling.nextElementSibling;
-			if (sibling?.tagName !== "PRE") continue;
-			const isInput = /输入/.test(label);
-			add(sibling, heading, isInput ? "input" : "output", isInput ? t$1("section.input") : t$1("section.output"));
-		}
-		for (const heading of doc.querySelectorAll("h2")) {
-			const label = (heading.textContent ?? "").trim();
-			if (!/^(说明|备注|提示|注意)/.test(label)) continue;
-			const body = heading.nextElementSibling;
-			if (!body || !body.textContent?.trim()) continue;
-			if (body.querySelector("textarea")) continue;
-			add(body, heading, "output", label.replace(/[:：]\s*$/, ""));
-		}
-		for (const content of doc.querySelectorAll("div.nc-post-content")) add(content, content, "solution", t$1("section.solution"));
-		return sections;
-	},
-	prepareContent(root) {
-		for (const katex of root.querySelectorAll(".katex")) {
-			const tex = katex.querySelector("annotation[encoding=\"application/x-tex\"]")?.textContent?.trim();
-			if (!tex) continue;
-			const wrapper = katex.parentElement;
-			const display = wrapper?.classList.contains("katex-display") ?? false;
-			const target = display && wrapper ? wrapper : katex;
-			if (isSpacingOnly(tex)) {
-				target.remove();
-				continue;
-			}
-			const math = root.ownerDocument.createElement("span");
-			if (isBullet(tex)) {
-				math.textContent = "• ";
-				target.replaceWith(math);
-				continue;
-			}
-			math.setAttribute("data-ojpp-math", display ? "display" : "inline");
-			math.textContent = tex;
-			target.replaceWith(math);
-		}
-		for (const img of root.querySelectorAll("img")) {
-			const latex = equationFromImg(img);
-			if (latex === null) continue;
-			const math = root.ownerDocument.createElement("span");
-			math.setAttribute("data-ojpp-math", "inline");
-			math.textContent = latex;
-			img.replaceWith(math);
-		}
-		if (root.tagName === "PRE" && !root.querySelector("code")) {
-			const paragraph = root.ownerDocument.createElement("div");
-			paragraph.innerHTML = root.innerHTML;
-			root.replaceChildren(paragraph);
-		}
-	},
-	mountSettingsButton(button, doc) {
-		const header = doc.querySelector(".header-right") ?? doc.querySelector(".header-bar");
-		if (header) {
-			const host = doc.createElement("span");
-			host.className = "ojpp-nowcoder-settings";
-			if (header.matches(".header-bar")) host.style.marginLeft = "auto";
-			host.append(button);
-			header.append(host);
-		} else {
-			button.classList.add("ojpp-settings-floating");
-			doc.body.append(button);
-		}
-	},
-	observe(doc, onChange) {
-		let timer;
-		const schedule = () => {
-			if (timer !== void 0) return;
-			timer = setTimeout(() => {
-				timer = void 0;
-				onChange();
-			}, 100);
-		};
-		const observer = new MutationObserver(schedule);
-		observer.observe(doc.body, {
-			childList: true,
-			subtree: true
-		});
-		const onClick = (event) => {
-			if (event.target instanceof Element && event.target.closest(".more-unfold, .js-full-question, .js-small-question")) schedule();
-		};
-		doc.addEventListener("click", onClick);
-		return () => {
-			observer.disconnect();
-			clearTimeout(timer);
-			doc.removeEventListener("click", onClick);
-		};
-	},
-	i18nPage(doc, locale) {
-		if (locale === "en") {
-			applyPageI18n(doc, [{
-				scope: "body",
-				map: NC_I18N_EN,
-				prefixMap: NC_I18N_EN_PREFIX,
-				values: NC_I18N_EN_VALUES
-			}]);
-			return;
-		}
-		if (locale !== "zh") return;
-		applyPageI18n(doc, [{
-			scope: ".question-ide, .submit-box, .nc-post-content",
-			map: {
-				"Run": "运行",
-				"Submit": "提交",
-				"Reset": "重置",
-				"Editor": "编辑器",
-				"Test": "自测",
-				"Sample": "样例"
-			},
-			values: {
-				"Run": "运行",
-				"Submit": "提交",
-				"Submit code": "提交代码"
-			}
-		}]);
-	}
-};
-/** 牛客界面文本 → 英文（目标语言=en 时）。 */
-var NC_I18N_EN = {
-	"输入": "Input",
-	"输出": "Output",
-	"输入描述:": "Input description:",
-	"输入描述：": "Input description:",
-	"输出描述:": "Output description:",
-	"输出描述：": "Output description:",
-	"说明": "Note",
-	"示例": "Example",
-	"示例1": "Example 1",
-	"复制": "Copy",
-	"题目描述": "Problem description",
-	"题目纠错": "Report error",
-	"返回全部题目": "All problems",
-	"比赛主页": "Contest home",
-	"我的提交": "My submissions",
-	"提交记录": "Submissions",
-	"题解": "Solutions",
-	"讨论": "Discussions",
-	"只看题目内容": "Problem only",
-	"做题遇到困难？": "Stuck?",
-	"查看编程常见问题": "FAQ",
-	"查看语言环境详情": "Environment details",
-	"在线IDE": "Online IDE",
-	"自测输入": "Test input",
-	"自测运行": "Test run",
-	"自测输入输出": "Test I/O",
-	"运行结果": "Result",
-	"提交": "Submit",
-	"保存并提交": "Save & Submit",
-	"运行": "Run",
-	"重置": "Reset",
-	"主题": "Theme",
-	"字体大小": "Font size",
-	"键位绑定": "Key bindings",
-	"编辑器快捷键": "Editor shortcuts",
-	"代码右缩进": "Indent right",
-	"代码左缩进": "Indent left",
-	"代码自动补全": "Auto complete",
-	"行注释": "Line comment",
-	"撤销": "Undo",
-	"通用": "General",
-	"快速加载复制代码": "Load template",
-	"快速加载最优代码": "Load best code",
-	"检测": "Check",
-	"函数方法参数文档提示": "Parameter hints",
-	"剪切": "Cut",
-	"2个空格": "2 spaces",
-	"4个空格": "4 spaces",
-	"8个空格": "8 spaces",
-	"已通过": "Accepted",
-	"答案错误": "Wrong Answer",
-	"编译错误": "Compile Error",
-	"运行错误": "Runtime Error",
-	"超出时间限制": "Time Limit Exceeded",
-	"超出内存限制": "Memory Limit Exceeded",
-	"等待评测": "Pending",
-	"评测中": "Judging",
-	"部分通过": "Partial",
-	"竞赛": "Contests",
-	"题库": "Problems",
-	"课程": "Courses",
-	"求职": "Jobs",
-	"登录": "Login",
-	"注册": "Register",
-	"登出": "Logout",
-	"搜索": "Search",
-	"设置": "Settings",
-	"难度": "Difficulty",
-	"通过率": "Acceptance",
-	"标签": "Tags",
-	"上一题": "Previous",
-	"下一题": "Next",
-	"收藏": "Favorite",
-	"分享": "Share",
-	"默认": "Default",
-	"牛客经典": "Nowcoder Classic",
-	"列表加载中...": "Loading...",
-	"列表加载中…": "Loading…",
-	"加大": "Bigger",
-	"更大": "Bigger",
-	"大": "Large",
-	"小": "Small",
-	"中": "Medium",
-	"编辑器设置": "Editor settings",
-	"牛客网": "Nowcoder",
-	"比赛": "Contest",
-	"练习": "Practice"
-};
-var NC_I18N_EN_PREFIX = {
-	"载入示例": "Load sample",
-	"加载中": "Loading",
-	"列表加载中": "Loading"
-};
-var NC_I18N_EN_VALUES = {
-	"提交": "Submit",
-	"运行": "Run",
-	"保存并提交": "Save & Submit",
-	"重置": "Reset"
-};
-var sites = [
-	nowcoder,
-	codeforces,
-	atcoder,
-	qoj,
-	luogu
-];
-sites.flatMap((site) => site.hosts.map((host) => `https://${host}/*`));
-function resolveSite(url) {
-	if (url.protocol !== "https:") return void 0;
-	return sites.find((site) => site.hosts.includes(url.hostname));
 }
 /**
 * 动效系统：统一的缓动曲线、时长和动画工具
@@ -67994,53 +62323,29 @@ html[data-ojpp-theme="dark"] .ojpp-toast[data-kind="success"] {
   border: none;
 }
 `;
-var timer;
-var currentToast;
-function toast(message, kind = "info") {
-	if (currentToast) {
-		const old = currentToast;
-		old.style.animation = "none";
-		old.style.transition = "opacity var(--duration-dropdown) var(--ease-out), transform var(--duration-dropdown) var(--ease-out)";
-		old.style.opacity = "0";
-		old.style.transform = "translateY(100%) scale(0.9)";
-		setTimeout(() => old.remove(), 200);
-	}
-	clearTimeout(timer);
-	const node = document.createElement("div");
-	node.className = "ojpp-toast";
-	node.dataset.kind = kind;
-	node.setAttribute("role", kind === "error" ? "alert" : "status");
-	node.textContent = message;
-	document.body.append(node);
-	currentToast = node;
-	timer = setTimeout(() => {
-		if (node === currentToast) {
-			node.style.transition = "opacity var(--duration-dropdown) var(--ease-out), transform var(--duration-dropdown) var(--ease-out)";
-			node.style.opacity = "0";
-			node.style.transform = "translateY(100%) scale(0.9)";
-			setTimeout(() => {
-				node.remove();
-				if (currentToast === node) currentToast = void 0;
-			}, 200);
-		}
-	}, kind === "error" ? 6e3 : 3e3);
-}
+var app_exports = exports("t",/* @__PURE__ */ __exportAll({ startApp: () => startApp }));
 /** 组合根：通用功能只接收站点与平台契约，不选择具体适配器。 */
 async function startApp(platform, site) {
-	if (document.readyState === "loading") await new Promise((resolve) => document.addEventListener("DOMContentLoaded", () => resolve(), { once: true }));
-	let settings = await loadSettings(platform.storage);
+	const settingsPromise = loadSettings(platform.storage);
+	await whenDocumentElement();
+	let settings = await settingsPromise;
 	setLocale(resolveLocale(settings.locale));
 	const feature = (key) => isSiteFeatureEnabled(settings, site.id, key);
 	setSiteThemeEnabled(feature("darkMode") && !!site.darkStyles, !site.preserveInlineColors);
-	applyTheme(settings.theme);
+	cacheThemePreference(site.id, {
+		theme: settings.theme,
+		enabled: feature("darkMode") && !!site.darkStyles
+	});
 	const style = document.createElement("style");
-	style.textContent = CSS + (site.styles ?? "") + DARK_CSS;
+	style.textContent = EARLY_THEME_CSS + CSS + (site.styles ?? "") + DARK_CSS;
 	const siteDarkStyle = document.createElement("style");
 	siteDarkStyle.dataset.ojppSiteDark = site.id;
 	siteDarkStyle.textContent = feature("darkMode") ? site.darkStyles ?? "" : "";
-	document.head.append(style, siteDarkStyle);
+	(document.head ?? document.documentElement).append(style, siteDarkStyle);
+	applyTheme(settings.theme);
 	const stopThemeWatch = watchSystemTheme(() => applyTheme(settings.theme));
 	const stopInlineWatch = watchInlineColors();
+	if (document.readyState === "loading") await new Promise((resolve) => document.addEventListener("DOMContentLoaded", () => resolve(), { once: true }));
 	let closeSettings;
 	const settingsButton = iconButton(ICON_SETTINGS, t$1("app.settingsTitle", { name: APP_NAME }), "ojpp-settings-btn");
 	settingsButton.addEventListener("click", () => {
@@ -68059,6 +62364,10 @@ async function startApp(platform, site) {
 				const darkCSS = feature("darkMode") ? site.darkStyles ?? "" : "";
 				if (siteDarkStyle.textContent !== darkCSS) siteDarkStyle.textContent = darkCSS;
 				setSiteThemeEnabled(feature("darkMode") && !!site.darkStyles, !site.preserveInlineColors);
+				cacheThemePreference(site.id, {
+					theme: settings.theme,
+					enabled: feature("darkMode") && !!site.darkStyles
+				});
 				setLocale(resolveLocale(updated.locale));
 				applyTheme(settings.theme);
 				toast(t$1("app.settingsSaved"));
@@ -68192,7 +62501,7 @@ async function startApp(platform, site) {
 	const extractPdfSamples = async (section) => {
 		if (!section.pdfSamples) return;
 		try {
-			const { extractSamples } = await module.import('./samples-LSzs5N0n-cJ30xdwQ.js');
+			const { extractSamples } = await module.import('./samples-XG_buKCo-CH3PzmEc.js');
 			const images = settings.pdfAsImages && section.images ? await section.images() : void 0;
 			const samples = await extractSamples(platform.request, settings, section.pdfSamples, { images });
 			if (!samples.length) {
@@ -68233,8 +62542,8 @@ async function startApp(platform, site) {
 		style.remove();
 		siteDarkStyle.remove();
 	};
-}
-var _GM_getValue = /* @__PURE__ */ (() => typeof GM_getValue != "undefined" ? GM_getValue : void 0)();
+}})}}));
+System.register("./userscript-Nyzl0XHx-pRFNYaLy.js", ['./i18n-D1L63o1m-DRxdwpYd.js'],(function(exports){'use strict';var t;return{setters:[function(module){t=module.t;}],execute:(function(){exports("createUserscriptPlatform",createUserscriptPlatform);var _GM_getValue = /* @__PURE__ */ (() => typeof GM_getValue != "undefined" ? GM_getValue : void 0)();
 var _GM_setClipboard = /* @__PURE__ */ (() => typeof GM_setClipboard != "undefined" ? GM_setClipboard : void 0)();
 var _GM_setValue = /* @__PURE__ */ (() => typeof GM_setValue != "undefined" ? GM_setValue : void 0)();
 var _GM_xmlhttpRequest = /* @__PURE__ */ (() => typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : void 0)();
@@ -68263,8 +62572,8 @@ var request = (req) => new Promise((resolve, reject) => {
 				text: res.responseText
 			});
 		},
-		onerror: () => fail(new Error(t$1("error.network"))),
-		ontimeout: () => fail(new Error(t$1("error.timeout"))),
+		onerror: () => fail(new Error(t("error.network"))),
+		ontimeout: () => fail(new Error(t("error.timeout"))),
 		onabort: () => fail(new DOMException("Aborted", "AbortError"))
 	});
 	function onAbort() {
@@ -68348,7 +62657,7 @@ var stream = (req) => new Promise((resolve, reject) => {
 			});
 		};
 		consume(res.response).then(complete).catch((error) => {
-			fail(error instanceof Error ? error : new Error(t$1("error.streamRead")));
+			fail(error instanceof Error ? error : new Error(t("error.streamRead")));
 		});
 		if (waitMs > 0) fallbackTimer = setTimeout(complete, waitMs);
 	};
@@ -68362,13 +62671,13 @@ var stream = (req) => new Promise((resolve, reject) => {
 		partialSize: 64,
 		onreadystatechange(res) {
 			if ((res.readyState ?? 0) >= 2) consume(res.response).catch((error) => {
-				fail(error instanceof Error ? error : new Error(t$1("error.streamRead")));
+				fail(error instanceof Error ? error : new Error(t("error.streamRead")));
 			});
 		},
 		onload: (res) => finish(res, 250),
 		onloadend: finish,
-		onerror: () => fail(new Error(t$1("error.network"))),
-		ontimeout: () => fail(new Error(t$1("error.timeout"))),
+		onerror: () => fail(new Error(t("error.network"))),
+		ontimeout: () => fail(new Error(t("error.timeout"))),
 		onabort: () => fail(new DOMException("Aborted", "AbortError"))
 	});
 	function onAbort() {
@@ -68383,7 +62692,7 @@ function createUserscriptPlatform() {
 		_GM_setValue,
 		_GM_xmlhttpRequest,
 		_GM_setClipboard
-	].some((api) => typeof api !== "function")) throw new Error(t$1("error.notUserscript"));
+	].some((api) => typeof api !== "function")) throw new Error(t("error.notUserscript"));
 	return {
 		id: "userscript",
 		storage: {
@@ -68400,13 +62709,5834 @@ function createUserscriptPlatform() {
 			_GM_setClipboard(text, "text");
 		}
 	};
+}})}}));
+System.register("./sites-_SPfNL69-CxwJjhDI.js", ['./i18n-D1L63o1m-DRxdwpYd.js'],(function(exports,module){'use strict';var t;return{setters:[function(module){t=module.t;}],execute:(function(){exports({i:restorePageI18n,r:localLanguageFor});var __defProp = Object.defineProperty;
+var __exportAll = exports("a",(all, no_symbols) => {
+	let target = {};
+	for (var name in all) __defProp(target, name, {
+		get: all[name],
+		enumerable: true
+	});
+	__defProp(target, Symbol.toStringTag, { value: "Module" });
+	return target;
+});
+/** 默认不翻译的祖先选择器：代码块、编辑器、我们脚本注入的 UI */
+var DEFAULT_EXCLUDE = "pre, code, textarea, script, style, noscript, option, .cm-editor, .ace_editor, .MathJax, .tex-span, [class*=\"ojpp-\"]";
+var originals = /* @__PURE__ */ new WeakMap();
+function translated(node, next, value = false) {
+	const doc = node.ownerDocument;
+	let records = originals.get(doc);
+	if (!records) originals.set(doc, records = /* @__PURE__ */ new Map());
+	const current = value ? node.value : node.textContent ?? "";
+	if (current === next) return;
+	let original = records.get(node);
+	if (!original || current !== original.after) {
+		original = {
+			before: current,
+			after: next,
+			value,
+			...node.nodeType === 1 && !value ? { children: [...node.childNodes] } : {}
+		};
+		records.set(node, original);
+	}
+	original.after = next;
+	if (value) node.value = next;
+	else node.textContent = next;
 }
-var site = resolveSite(new URL(location.href));
-if (site) try {
-	startApp(createUserscriptPlatform(), site).catch((error) => toast(String(error), "error"));
-} catch (error) {
-	console.error("[OJ++]", error);
-	alert(error instanceof Error ? error.message : String(error));
+/** 恢复仍由本地化逻辑持有的文本，不覆盖站点在此后更新的内容。 */
+function restorePageI18n(doc) {
+	const records = originals.get(doc);
+	if (!records) return;
+	for (const [node, saved] of records) {
+		const current = saved.value ? node.value : node.textContent;
+		if (node.isConnected && current === saved.after) {
+			if (saved.value) node.value = saved.before;
+			else if (saved.children) node.replaceChildren(...saved.children);
+			else node.textContent = saved.before;
+		}
+		if (node.nodeType === 1) node.removeAttribute("data-ojpp-i18n");
+	}
+	records.clear();
+}
+/**
+* 把 rules 应用到 doc。
+* 文本按单个文本节点匹配——一个元素里「Input + [Copy 钮]」这类
+* 文本和子元素混排的，只替换文本部分，不动子元素。
+*/
+function applyPageI18n(doc, rules) {
+	const records = originals.get(doc);
+	if (records) {
+		for (const node of records.keys()) if (!node.isConnected) records.delete(node);
+	}
+	for (const rule of rules) {
+		const exclude = rule.exclude ?? DEFAULT_EXCLUDE;
+		const prefixEntries = rule.prefixMap ? Object.entries(rule.prefixMap) : null;
+		for (const scope of doc.querySelectorAll(rule.scope)) {
+			if (rule.map || prefixEntries || rule.replaceMap) {
+				const replaceEntries = rule.replaceMap ? Object.entries(rule.replaceMap) : null;
+				const walker = doc.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
+				const hit = [];
+				const regexHit = [];
+				let n;
+				while (n = walker.nextNode()) {
+					const parent = n.parentElement;
+					if (!parent || parent.closest(exclude) || parent.dataset.ojppI18n === "skip") continue;
+					const text = n.textContent?.trim();
+					if (!text) continue;
+					if (replaceEntries) for (const [pattern, to] of replaceEntries) try {
+						if (text.match(new RegExp(pattern))) regexHit.push({
+							node: n,
+							pattern,
+							to
+						});
+					} catch {}
+					const arrow = /^[\u2192\u00bb\u25b8\u2794\u279C>\s]+\s*/.exec(text)?.[0] ?? "";
+					const core = arrow ? text.slice(arrow.length).trim() : text;
+					if (rule.map?.[core]) {
+						hit.push({
+							node: n,
+							from: core,
+							to: rule.map[core]
+						});
+						continue;
+					}
+					if (rule.map?.[text]) {
+						hit.push({
+							node: n,
+							from: text,
+							to: rule.map[text]
+						});
+						continue;
+					}
+					if (prefixEntries) for (const [from, to] of prefixEntries) {
+						const target = arrow ? core : text;
+						if (target === from || target.startsWith(from + " ") || target.startsWith(from + ",")) {
+							hit.push({
+								node: n,
+								from,
+								to
+							});
+							break;
+						}
+					}
+				}
+				for (const { node, from, to } of hit) translated(node, (node.textContent ?? "").replace(from, to));
+				for (const { node, pattern, to } of regexHit) try {
+					translated(node, (node.textContent ?? "").replace(new RegExp(pattern, "g"), to));
+				} catch {}
+			}
+			if (rule.values) for (const el of [...scope.matches("input, button") ? [scope] : [], ...scope.querySelectorAll("input, button")]) {
+				if (el.dataset.ojppI18n || el.closest(exclude)) continue;
+				const v = (el.tagName === "INPUT" ? el.value : el.textContent)?.trim() ?? "";
+				if (v && rule.values[v]) {
+					if (el.tagName === "INPUT" && el.value) translated(el, rule.values[v], true);
+					else translated(el, rule.values[v]);
+					el.dataset.ojppI18n = "1";
+				}
+			}
+			if (rule.replaceValues) for (const el of [...scope.matches("input, button") ? [scope] : [], ...scope.querySelectorAll("input, button")]) {
+				if (el.closest(exclude)) continue;
+				const raw = el.tagName === "INPUT" ? el.value : el.textContent;
+				if (!raw) continue;
+				let v = raw;
+				for (const [pattern, to] of Object.entries(rule.replaceValues)) try {
+					v = v.replace(new RegExp(pattern, "g"), to);
+				} catch {}
+				if (v !== raw) {
+					if (el.tagName === "INPUT" && el.value) translated(el, v, true);
+					else translated(el, v);
+				}
+			}
+		}
+	}
+}
+function localLanguageFor(language) {
+	if (language.mode === "python") return "python";
+	if (language.mode !== "cpp") return void 0;
+	return /(?:^|\s)C(?:\s|\d|$)/.test(language.name) && !language.name.includes("++") ? "c" : "cpp";
+}
+var LOCAL_LANGUAGES = [
+	{
+		id: "local-cpp17",
+		name: "C++17 (Clang 8 / WASI)",
+		mode: "cpp"
+	},
+	{
+		id: "local-c11",
+		name: "C11 (Clang 8 / WASI)",
+		mode: "cpp"
+	},
+	{
+		id: "local-python311",
+		name: "Python 3.11.3 (CPython / WASI)",
+		mode: "python"
+	}
+];
+function prepareMathContent(root) {
+	root.querySelectorAll("[class*=\"ojpp-\"], .btn-copy, .copy-btn").forEach((e) => e.remove());
+	const math = (tex, display) => {
+		const span = root.ownerDocument.createElement("span");
+		span.dataset.ojppMath = display ? "display" : "inline";
+		span.textContent = tex;
+		return span;
+	};
+	for (const script of root.querySelectorAll("script[type^=\"math/tex\"]")) script.replaceWith(math(script.textContent ?? "", script.type.includes("mode=display")));
+	for (const katex of root.querySelectorAll(".katex")) {
+		const tex = katex.querySelector("annotation[encoding=\"application/x-tex\"]")?.textContent;
+		if (tex == null) continue;
+		const display = katex.parentElement?.classList.contains("katex-display") ?? false;
+		(display ? katex.parentElement : katex).replaceWith(math(tex, display));
+	}
+	root.querySelectorAll(".MathJax, .MathJax_Display, .MathJax_SVG, .MathJax_SVG_Display, .MathJax_Preview").forEach((e) => e.remove());
+	const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+	const texts = [];
+	let node;
+	while (node = walker.nextNode()) if (!node.parentElement?.closest("pre,code,script,style,[data-ojpp-math],.katex")) texts.push(node);
+	for (const text of texts) {
+		const value = text.data;
+		const matches = [...value.matchAll(/\$\$([\s\S]+?)\$\$|\$([^$\n]+?)\$|\\\(([\s\S]+?)\\\)|\\\[([\s\S]+?)\\\]/g)];
+		if (!matches.length) continue;
+		const fragment = root.ownerDocument.createDocumentFragment();
+		let start = 0;
+		for (const match of matches) {
+			fragment.append(value.slice(start, match.index));
+			fragment.append(math(match[1] ?? match[2] ?? match[3] ?? match[4], match[1] != null || match[4] != null));
+			start = match.index + match[0].length;
+		}
+		fragment.append(value.slice(start));
+		text.replaceWith(fragment);
+	}
+}
+function observeSite(doc, onChange) {
+	let timer;
+	const schedule = () => {
+		clearTimeout(timer);
+		timer = setTimeout(onChange, 100);
+	};
+	const observer = new MutationObserver((records) => {
+		if (records.some((r) => {
+			return !(r.target instanceof Element ? r.target : r.target.parentElement)?.closest("[class*=\"ojpp-\"], .CodeMirror, .cm-editor, .ace_editor, .monaco-editor, .katex, .MathJax, .MathJax_SVG");
+		})) schedule();
+	});
+	observer.observe(doc.body, {
+		subtree: true,
+		childList: true,
+		characterData: true
+	});
+	doc.defaultView?.addEventListener("popstate", schedule);
+	doc.defaultView?.addEventListener("hashchange", schedule);
+	return () => {
+		clearTimeout(timer);
+		observer.disconnect();
+		doc.defaultView?.removeEventListener("popstate", schedule);
+		doc.defaultView?.removeEventListener("hashchange", schedule);
+	};
+}
+function mountNavSettings(button, doc, selector) {
+	const nav = doc.querySelector(selector);
+	if (nav) {
+		if (nav.tagName === "UL") {
+			let slot = nav.querySelector(":scope > .ojpp-settings-slot");
+			if (!slot) {
+				slot = doc.createElement("li");
+				slot.className = "ojpp-settings-slot";
+				nav.prepend(slot);
+			}
+			slot.append(button);
+		} else nav.prepend(button);
+	} else {
+		button.classList.add("ojpp-settings-floating");
+		doc.body.append(button);
+	}
+}
+var d$2 = "html[data-ojpp-theme=\"dark\"]";
+var QOJ_DARK = `
+${d$2} body, ${d$2} .uoj-content, ${d$2} .container, ${d$2} .tab-content { background: #1c2128; color: #cdd9e5; }
+${d$2} a:not([class*="uoj-username"]):not(.btn) { color: #539bf5; }
+${d$2} .navbar, ${d$2} .card, ${d$2} .card-body, ${d$2} .card-header, ${d$2} .panel,
+${d$2} .panel-body, ${d$2} .panel-heading, ${d$2} .list-group-item, ${d$2} .dropdown-menu,
+${d$2} .modal-content, ${d$2} .bg-light, ${d$2} .bg-white, ${d$2} .jumbotron {
+  background: #22272e !important; color: #cdd9e5; border-color: #373e47;
+}
+${d$2} .dropdown-item, ${d$2} .nav-link, ${d$2} .navbar-light .navbar-nav .nav-link { color: #cdd9e5; }
+${d$2} .dropdown-item:hover, ${d$2} .nav-tabs .nav-link.active, ${d$2} .nav-link:hover,
+${d$2} .page-link:hover { background: #2d333b; color: #79b8ff; }
+${d$2} .page-link, ${d$2} .page-item.disabled .page-link, ${d$2} .btn-default, ${d$2} .btn-light {
+  background: #22272e; color: #cdd9e5; border-color: #373e47;
+}
+${d$2} pre, ${d$2} code { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${d$2} input:not([type=checkbox]):not([type=radio]), ${d$2} textarea, ${d$2} select,
+${d$2} .form-control, ${d$2} .custom-select { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
+${d$2} .table, ${d$2} .table td, ${d$2} .table th, ${d$2} hr, ${d$2} .nav-tabs { color: #cdd9e5; border-color: #373e47; }
+${d$2} .table-striped tbody tr:nth-of-type(odd), ${d$2} thead, ${d$2} .table-active { background: #22272e; }
+${d$2} .table-hover tbody tr:hover { background: #2d333b; color: #cdd9e5; }
+${d$2} .alert-info { background: #203247; color: #9bc4ef; border-color: #354c66; }
+${d$2} .alert-warning { background: #3c3424; color: #e5c07b; border-color: #665537; }
+${d$2} .alert-danger { background: #422c30; color: #f3a6ac; border-color: #694047; }
+${d$2} .text-muted, ${d$2} .text-secondary, ${d$2} .uoj-text-gray { color: #909dab !important; }
+${d$2} .uoj-username { color: #cdd9e5; }
+${d$2} .uoj-username-blue { color: #539bf5; }
+${d$2} .uoj-username-green { color: #57ab5a; }
+${d$2} .uoj-username-red { color: #f85149; }
+${d$2} .uoj-username-purple { color: #b392f0; }
+${d$2} .unrated, ${d$2} .uoj-username-grey { color: #cdd9e5; }
+${d$2} .alert-success { background: #1e2f24; color: #a5d6a7; border-color: #2d4a33; }
+
+/* shjs 语法高亮（提交代码视图）：亮色系配色换深色 */
+${d$2} .sh_keyword, ${d$2} .sh_type, ${d$2} .sh_preproc, ${d$2} .sh_tag, ${d$2} .sh_link,
+${d$2} .sh_selector, ${d$2} .sh_reserved { color: #ff7b72; }
+${d$2} .sh_string, ${d$2} .sh_chardef, ${d$2} .sh_number, ${d$2} .sh_specialchar,
+${d$2} .sh_regexp, ${d$2} .sh_value { color: #a5d6ff; }
+${d$2} .sh_function, ${d$2} .sh_property, ${d$2} .sh_attribute, ${d$2} .sh_name,
+${d$2} .sh_variable, ${d$2} .sh_title { color: #d2a8ff; }
+${d$2} .sh_comment, ${d$2} .sh_documentation, ${d$2} .sh_comment_linetoscheme,
+${d$2} .sh_multicomment { color: #8b949e; }
+${d$2} .sh_operator, ${d$2} .sh_brackets, ${d$2} .sh_cbracket, ${d$2} .sh_symbol,
+${d$2} .sh_ip { color: #ff9e64; }
+${d$2} .sh_cbracket, ${d$2} .sh_label, ${d$2} .sh_import, ${d$2} .sh_package { color: #79b8ff; }
+`;
+var pdfJobs = /* @__PURE__ */ new WeakMap();
+var notify = /* @__PURE__ */ new WeakMap();
+function pdfSection(doc) {
+	const frame = doc.querySelector("#statements-pdf");
+	if (!frame || new URL(frame.src, doc.URL).origin !== new URL(doc.URL).origin) return null;
+	let jobs = pdfJobs.get(doc);
+	if (!jobs) pdfJobs.set(doc, jobs = /* @__PURE__ */ new Map());
+	let job = jobs.get(frame.src);
+	if (!job) {
+		job = {};
+		jobs.set(frame.src, job);
+		const pending = job;
+		module.import('./pdf-text-DTzkcjZJ-DKIhPxIK.js').then(async (module) => {
+			const { text, images } = await module.extractPDFText(frame.src);
+			const { statement, samples } = module.splitPdfSamples(text);
+			pending.text = statement;
+			pending.samples = samples;
+			pending.images = images;
+			notify.get(doc)?.();
+		}).catch((error) => {
+			pending.error = String(error);
+			console.warn("[OJ++] QOJ PDF text extraction:", error);
+		});
+	}
+	if (!job.text) return null;
+	let content = doc.querySelector(".ojpp-qoj-pdf-text");
+	if (content && content.dataset.url !== frame.src) {
+		content.remove();
+		content = null;
+	}
+	if (!content) {
+		content = doc.createElement("details");
+		content.className = "ojpp-qoj-pdf-text";
+		content.dataset.url = frame.src;
+		const summary = doc.createElement("summary");
+		summary.textContent = t("site.pdfText");
+		const pre = doc.createElement("pre");
+		pre.textContent = job.text;
+		content.append(summary, pre);
+		frame.after(content);
+	}
+	const text = job.text;
+	const samples = job.samples;
+	const images = job.images;
+	return {
+		kind: "statement",
+		label: t("section.statement"),
+		content,
+		ownedContent: true,
+		identity: frame.src,
+		markdown: () => text,
+		pdf: true,
+		pdfSamples: samples,
+		imageRefs: images,
+		images: () => module.import('./pdf-text-DTzkcjZJ-DKIhPxIK.js').then((m) => m.renderPDFImages(frame.src)),
+		toolbar: {
+			anchor: content,
+			position: "beforebegin",
+			align: "block-right"
+		},
+		result: {
+			anchor: content,
+			position: "afterend"
+		}
+	};
+}
+var zh$1 = {
+	"Contests": "比赛",
+	"Category": "分类",
+	"Problems": "题库",
+	"Submissions": "提交记录",
+	"Blogs": "博客",
+	"Statement": "题面",
+	"Languages": "语言",
+	"Submit": "提交",
+	"Custom Test": "自定义测试",
+	"Discussions & Issues": "讨论与问题",
+	"Statistics": "统计",
+	"Logout": "退出登录",
+	"Login": "登录",
+	"Register": "注册",
+	"Search": "搜索",
+	"Time Limit:": "时间限制：",
+	"Memory Limit:": "内存限制：",
+	"Total points:": "总分：",
+	"Difficulty:": "难度：",
+	"[show]": "[显示]",
+	"Rank": "排名",
+	"Score": "分数",
+	"Time": "用时",
+	"Memory": "内存",
+	"User": "用户",
+	"Problem": "题目",
+	"Submission Time": "提交时间",
+	"Result": "结果",
+	"Language": "语言",
+	"Source Code": "源代码",
+	"Input": "输入",
+	"Output": "输出",
+	"Sample Input": "样例输入",
+	"Sample Output": "样例输出",
+	"Input Format": "输入格式",
+	"Output Format": "输出格式",
+	"Constraints": "约束条件",
+	"Prev": "上一页",
+	"Next": "下一页",
+	"Previous": "上一页",
+	"Standings": "排行榜",
+	"use advanced editor": "使用高级编辑器",
+	"Text Editor": "文本编辑器",
+	"Upload File": "上传文件"
+};
+var qoj = {
+	id: "qoj",
+	name: "QOJ",
+	hosts: ["qoj.ac"],
+	darkStyles: QOJ_DARK,
+	preserveInlineColors: true,
+	styles: ".ojpp-qoj-pdf-text pre { white-space: pre-wrap; max-height: 400px; overflow: auto; } .ojpp-settings-floating { position: fixed; right: 18px; bottom: 18px; z-index: 1000; }",
+	collectSections(doc) {
+		const sections = [];
+		for (const content of doc.querySelectorAll(".uoj-article")) {
+			if (!content.textContent?.trim() || content.closest("#tab-submit-answer, #tab-custom-test")) continue;
+			sections.push({
+				kind: /\/problem\//.test(new URL(doc.URL).pathname) ? "statement" : "article",
+				label: t("section.statement"),
+				content,
+				identity: new URL(doc.URL).pathname,
+				toolbar: {
+					anchor: content,
+					position: "beforebegin",
+					align: "block-right"
+				},
+				result: {
+					anchor: content,
+					position: "afterend"
+				}
+			});
+		}
+		const pdf = pdfSection(doc);
+		if (pdf) sections.push(pdf);
+		return sections;
+	},
+	editor: {
+		localOnly: true,
+		languages: LOCAL_LANGUAGES,
+		editorMountPoint(doc) {
+			const anchor = doc.querySelector("#tab-statement");
+			return anchor ? {
+				anchor,
+				position: "beforeend"
+			} : null;
+		},
+		problemCode(doc) {
+			return /\/problem\/(\d+)/.exec(new URL(doc.URL).pathname)?.[1] ?? null;
+		},
+		getSamples(doc) {
+			const inputs = [], outputs = [];
+			for (const heading of doc.querySelectorAll(".uoj-article h3, .uoj-article h4")) {
+				const label = heading.textContent?.trim() ?? "";
+				const target = /^(Sample Input|样例输入|输入样例)/i.test(label) ? inputs : /^(Sample Output|样例输出|输出样例)/i.test(label) ? outputs : null;
+				if (!target) continue;
+				let next = heading.nextElementSibling;
+				while (next && !/^H[1-4]$/.test(next.tagName)) {
+					const pre = next.matches("pre") ? next : next.querySelector("pre");
+					if (pre) {
+						target.push(pre.textContent ?? "");
+						break;
+					}
+					next = next.nextElementSibling;
+				}
+			}
+			return inputs.slice(0, outputs.length).map((input, i) => ({
+				input,
+				output: outputs[i]
+			}));
+		}
+	},
+	prepareContent: prepareMathContent,
+	mountSettingsButton(button, doc) {
+		mountNavSettings(button, doc, ".navbar-nav, .uoj-header .float-right");
+	},
+	observe(doc, onChange) {
+		notify.set(doc, onChange);
+		const stop = observeSite(doc, onChange);
+		return () => {
+			notify.delete(doc);
+			stop();
+		};
+	},
+	i18nPage(doc, locale) {
+		if (locale !== "zh") return;
+		applyPageI18n(doc, [{
+			scope: ".navbar, .nav, .pagination, .uoj-content label, .uoj-content th, .uoj-content button, .uoj-content .btn, .uoj-content h3, .uoj-content h4",
+			map: zh$1
+		}]);
+	}
+};
+var d$1 = "html[data-ojpp-theme=\"dark\"]";
+var LUOGU_DARK = `
+${d$1} body, ${d$1} #app, ${d$1} .lfe-body, ${d$1} main, ${d$1} .main-container,
+${d$1} .main-container.lside-nav, ${d$1} .columba-content-wrap {
+  background: #1c2128 !important; color: #cdd9e5;
+}
+/* 洛谷新页面把主题变量塞行内 style（--theme-*）——用 !important
+   自定义属性覆盖，一处解掉所有 themed 元素的白底 */
+${d$1} [style*="--theme-"] {
+  --theme-navi-back: #22272e !important;
+  --theme-navi-fore: #cdd9e5 !important;
+  --theme-navi-fore-rgb: 205,217,229 !important;
+  --theme-body-back: #1c2128 !important;
+  --theme-body-image: none !important;
+  --theme-body-image-repeat: repeat !important;
+  --theme-body-color: #cdd9e5 !important;
+  --theme-body-color-filter: none !important;
+  --theme-body-mid-mask: none !important;
+  --theme-card-background: #22272e !important;
+  --theme-card-backdrop-filter: none !important;
+}
+${d$1} .theme-page {
+  --theme-body-back: #1c2128 !important;
+  --theme-body-image: none !important;
+  --theme-body-mid-mask: none !important;
+  --theme-card-background: #22272e !important;
+}
+${d$1} .top-bar, ${d$1} .top-bar .breadcrumb { background: #22272e; color: #cdd9e5; }
+${d$1} .l-card, ${d$1} .lfe-form-sz-middle, ${d$1} .lfe-dialog,
+${d$1} .lfe-dropdown, ${d$1} .dropdown, ${d$1} .dropdown-content,
+${d$1} .popup, ${d$1} .modal, ${d$1} .popover { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${d$1} .lfe-marked, ${d$1} .lfe-marked-wrap, ${d$1} .lfe-h1, ${d$1} .lfe-h2, ${d$1} .lfe-h3,
+${d$1} .stat-text, ${d$1} .lfe-caption { color: #cdd9e5; }
+${d$1} nav, ${d$1} .sidebar, ${d$1} .user-nav, ${d$1} .nav-container, ${d$1} .nav-bar,
+${d$1} .sidebar.lside, ${d$1} .lside {
+  --theme-navi-back: #22272e !important; --theme-navi-fore: #cdd9e5 !important;
+  --theme-navi-fore-rgb: 205,217,229 !important;
+  background: #22272e !important; color: #cdd9e5;
+}
+${d$1} a:not([class*="lcolor"]):not([class*="user-"]):not(.lfe-button) { color: #539bf5; }
+${d$1} a:not([class*="lcolor"]):hover { color: #79b8ff; }
+${d$1} input:not([type=checkbox]):not([type=radio]), ${d$1} textarea, ${d$1} select {
+  background: #1c2128; color: #cdd9e5; border-color: #373e47;
+}
+${d$1} pre, ${d$1} .lfe-marked pre, ${d$1} .io-sample pre, ${d$1} :not(pre)>code {
+  background: #1c2128; color: #cdd9e5; border-color: #373e47;
+}
+${d$1} pre code, ${d$1} code[class*=language], ${d$1} .lfe-marked code,
+${d$1} .code-container code { background: transparent; color: #cdd9e5; }
+${d$1} .io-sample, ${d$1} .io-sample .header, ${d$1} .io-sample .title { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${d$1} table, ${d$1} th, ${d$1} td, ${d$1} hr, ${d$1} .l-card { border-color: #373e47; }
+${d$1} th, ${d$1} tr:nth-child(even) { background: #22272e; }
+${d$1} .katex { color: inherit; }
+${d$1} .lcolor--grey-3, ${d$1} .lcolor--grey-4, ${d$1} .lcolor--grey-5 { color: #909dab; }
+
+/* ---------- 自定义组件补漏 ---------- */
+/* 列表/表格分割线 #e8e8e8 太亮 */
+${d$1} .list-wrap.border .row:not(:last-child),
+${d$1} .list-wrap.border .header-wrap,
+${d$1} .row:not(:last-child),
+${d$1} .page-bar.border { border-color: #373e47 !important; }
+
+/* 「共计 N 条结果」等黑字半透明 */
+${d$1} .result .count, ${d$1} .result .number, ${d$1} .count .number { color: #cdd9e5; }
+${d$1} .result .count { color: #909dab; }
+
+/* 分页按钮白底白字 */
+${d$1} .page-bar button, ${d$1} .page-bar .page-item, ${d$1} .pagination button {
+  background: #1c2128; color: #cdd9e5; border-color: #373e47;
+}
+${d$1} .page-bar button:hover { background: #22272e; border-color: #539bf5; }
+${d$1} .page-bar button.selected, ${d$1} .page-bar button.active {
+  background: #539bf5; color: #fff; border-color: #539bf5;
+}
+
+/* 评测详情：通用 .info 灰字不能覆盖 AC 测试点的耗时/内存。 */
+${d$1} .test-case.lcolor-bg-green-3 { background: #214b31 !important; color: #dcfce7; }
+${d$1} .test-case.lcolor-bg-green-3 .content,
+${d$1} .test-case.lcolor-bg-green-3 .info { color: inherit !important; }
+
+/* 评测记录代码框（lfe-code 组件）与工具条 */
+${d$1} lfe-code, ${d$1} .code-container, ${d$1} .code-toolbar,
+${d$1} .code-toolbar button, ${d$1} .code-toolbar a, ${d$1} .code-toolbar span {
+  background: #161b22; color: #cdd9e5; border-color: #373e47;
+}
+${d$1} .code-container:hover > .copy-button:hover { background: #30363d; }
+/* one-light 语法色 → 深色友好 */
+${d$1} .token.comment, ${d$1} .token.prolog { color: #8b949e; }
+${d$1} .token.keyword, ${d$1} .token.tag, ${d$1} .token.selector { color: #ff7b72; }
+${d$1} .token.string, ${d$1} .token.char, ${d$1} .token.builtin, ${d$1} .token.inserted,
+${d$1} .token.regex, ${d$1} .token.attr-value, ${d$1} .code-snippet { color: #a5d6ff; }
+${d$1} .token.number, ${d$1} .token.atrule, ${d$1} .token.property { color: #79c0ff; }
+${d$1} .token.function, ${d$1} .token.class-name, ${d$1} .token.attr-name { color: #d2a8ff; }
+${d$1} .token.operator, ${d$1} .token.punctuation, ${d$1} .token.entity, ${d$1} .token.url { color: #ff9e64; }
+${d$1} .token.boolean, ${d$1} .token.constant, ${d$1} .token.unit { color: #79c0ff; }
+${d$1} .token.deleted { color: #ffa198; }
+${d$1} .token.important, ${d$1} .token.bold { color: #ff7b72; }
+${d$1} .token.italic { color: #cdd9e5; }
+
+/* 自定义下拉面板全是白底（dropdown 元素 / 各弹层） */
+${d$1} .l-dropdown, ${d$1} .select-dropdown, ${d$1} .setting-dropdown,
+${d$1} .date-picker-dropdown, ${d$1} .time-picker-dropdown,
+${d$1} dropdown-operations, ${d$1} dropdown,
+${d$1} .dropdown > ul, ${d$1} .options, ${d$1} .option-list {
+  background: #22272e !important; color: #cdd9e5; border-color: #373e47 !important;
+}
+${d$1} .dropdown > ul > li:hover, ${d$1} .dropdown-operations > ul li:hover,
+${d$1} dropdown-operations > ul li:hover, ${d$1} .setting-dropdown li:hover,
+${d$1} .option:hover { background: #30363d !important; }
+${d$1} .option, ${d$1} .dropdown li, ${d$1} .date-picker-dropdown *, ${d$1} .time-picker-dropdown * { color: #cdd9e5; }
+${d$1} .option.active { background: #539bf5 !important; color: #fff !important; border-color: #539bf5 !important; }
+${d$1} .calendar-days .day, ${d$1} .calendar-years .year, ${d$1} .time-item { color: #cdd9e5 !important; }
+${d$1} .calendar-days .day.other-month, ${d$1} .calendar-days .day.disabled,
+${d$1} .column-header, ${d$1} .clear-btn, ${d$1} .time-column .column-header { color: #6e7681 !important; }
+${d$1} .calendar-footer, ${d$1} .time-footer, ${d$1} .column-header { border-color: #373e47 !important; }
+${d$1} .calendar-days .day.selected, ${d$1} .calendar-years .year.selected,
+${d$1} .time-column .time-item.selected { background: #539bf5 !important; color: #fff !important; }
+${d$1} .calendar-days .day:hover:not(.selected),
+${d$1} .calendar-years .year:hover:not(.selected),
+${d$1} .time-column .time-item:hover { background: #30363d !important; color: #79b8ff !important; }
+${d$1} .calendar-days .day.today:not(.selected) { border-color: #539bf5 !important; color: #539bf5 !important; }
+
+/* 比赛题切换：选中态是全亮蓝底 */
+${d$1} .contest-problem { border-color: #373e47; }
+${d$1} .contest-problem.current {
+  background: #1f5fa3 !important; border-color: #539bf5; color: #fff;
+}
+${d$1} .contest-problem.current .contest-problem-no, ${d$1} .contest-problem.current * { color: #fff; }
+${d$1} .contest-problem:not(.current):hover { background: #30363d; border-color: #539bf5; }
+
+/* 筛选/块项控件统一深色 */
+${d$1} .block-item, ${d$1} .lform-input, ${d$1} .l-select, ${d$1} .lfe-select {
+  background: #1c2128; color: #cdd9e5; border-color: #373e47;
+}
+${d$1} .block-item button, ${d$1} .lform-input button { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
+${d$1} .combo-wrapper .text, ${d$1} .block-item .text, ${d$1} .combo .text,
+${d$1} .lfe-select .text, ${d$1} .l-select .text { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
+
+/* ---------- 老版主页（am-* amazeui） ---------- */
+${d$1} .am-panel, ${d$1} .am-panel-hd, ${d$1} .am-panel-bd,
+${d$1} .am-comment, ${d$1} .am-comment-hd, ${d$1} .am-comment-bd,
+${d$1} .am-comment-main, ${d$1} .am-comment-flip,
+${d$1} .lg-article, ${d$1} .lg-index-content, ${d$1} .lg-index-calendar,
+${d$1} .lg-index-stat, ${d$1} .lg-index-benben, ${d$1} .lg-right,
+${d$1} .sidebar.lside, ${d$1} .am-slider, ${d$1} .am-slides,
+${d$1} .feed-li, ${d$1} .am-viewport, ${d$1} .am-list {
+  background: #22272e; color: #cdd9e5; border-color: #373e47;
+}
+${d$1} .am-panel-default, ${d$1} .am-panel-primary, ${d$1} .am-panel-success, ${d$1} .am-panel-danger {
+  border-color: #373e47;
+}
+${d$1} .am-panel-hd, ${d$1} .am-panel-title, ${d$1} .am-comment-hd,
+${d$1} .am-comment-author, ${d$1} .am-comment-meta, ${d$1} .am-comment-title,
+${d$1} .lg-article h1, ${d$1} .lg-article h2, ${d$1} .lg-article h3,
+${d$1} .lg-article p, ${d$1} .lg-article td, ${d$1} .lg-article th,
+${d$1} .lg-article li, ${d$1} .lg-article span, ${d$1} .lg-article div,
+${d$1} .lg-index-content *, ${d$1} .lg-right * { color: #cdd9e5; border-color: #373e47; }
+${d$1} .lg-article a, ${d$1} .lg-index-content a, ${d$1} .lg-right a,
+${d$1} .am-comment a, ${d$1} .am-panel a { color: #539bf5; }
+${d$1} .am-comment a:hover, ${d$1} .am-panel a:hover { color: #79b8ff; }
+${d$1} .lg-fg-bluedark, ${d$1} .lg-fg-greendark { color: #79b8ff; }
+${d$1} .am-slider .am-viewport, ${d$1} .am-slider .am-slides li,
+${d$1} .am-slider .caption, ${d$1} .am-slider .flex-control-nav,
+${d$1} .am-slider .flex-direction-nav { background: #22272e; color: #cdd9e5; }
+${d$1} .sidebar .nav-pills li a, ${d$1} .sidebar .nav-link,
+${d$1} .am-list li, ${d$1} .am-list li a { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+/* 新版 .lside 图标条：链接不叠底块，保持透明靠 hover/active 指示 */
+${d$1} .sidebar.lside a { background: transparent; border-color: transparent; }
+${d$1} .sidebar .nav-pills li a:hover, ${d$1} .am-list li a:hover { background: #30363d; color: #79b8ff; }
+${d$1} .am-comment .am-comment-avatar, ${d$1} .am-comment img { background: transparent; }
+${d$1} .am-panel > .am-panel-bd, ${d$1} .am-panel > .am-panel-hd { border-color: #373e47; }
+${d$1} .lg-article hr, ${d$1} .lg-index-content hr, ${d$1} .am-list li { border-color: #373e47; }
+
+/* ---------- 题库/题单/筛选区 ---------- */
+${d$1} .title, ${d$1} .title.no-wrap, ${d$1} .entry, ${d$1} .toggle-tag,
+${d$1} .count, ${d$1} .number, ${d$1} li, ${d$1} .provider-display,
+${d$1} .luogu-username, ${d$1} .liquid-text, ${d$1} .card-title,
+${d$1} .card-desc, ${d$1} .card-bottom, ${d$1} .bottom-item { color: #cdd9e5 !important; }
+${d$1} .entry, ${d$1} .toggle-tag, ${d$1} .card-desc { color: #909dab; }
+${d$1} .tag-button { background: #1c2128 !important; color: #cdd9e5 !important; border-color: #373e47 !important; }
+${d$1} .tag-button:hover { background: #30363d; color: #79b8ff; border-color: #539bf5; }
+${d$1} .tag-button.selected, ${d$1} .tag-button.active { background: #539bf5; color: #fff; border-color: #539bf5; }
+${d$1} .refined-input, ${d$1} .search-text { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
+${d$1} .refined-input input, ${d$1} .search-text input { background: transparent; color: #cdd9e5; }
+${d$1} .progress-frame { background: #30363d; border-color: #30363d; }
+${d$1} .bottom-wrap, ${d$1} .bottom-wrap.float { background: #22272e; border-color: #373e47; }
+${d$1} .bottom-wrap .toolbar, ${d$1} .bottom-wrap .toolbar-left { background: transparent; }
+${d$1} .training-card { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${d$1} .training-card:hover { border-color: #539bf5; }
+${d$1} .training-card .card-title, ${d$1} .training-card .card-desc,
+${d$1} .training-card .card-bottom, ${d$1} .training-card .bottom-item { color: #cdd9e5; }
+${d$1} .training-card .card-desc { color: #909dab; }
+${d$1} .training-card a { color: #539bf5; }
+${d$1} .training-card a:hover { color: #79b8ff; }
+
+/* 团队各列表共用 inner-card；个人中心的页签栏和统计文字。 */
+${d$1} .l-card .inner-card { background: #2d333b; color: #cdd9e5; border-color: #373e47; }
+${d$1} .user-header-bottom, ${d$1} .cover-upload { background: #22272e !important; color: #cdd9e5; }
+${d$1} .user-header-bottom .stat-text { color: #cdd9e5 !important; }
+${d$1} .heat-map .heat-map-cell[style*="232, 232, 232"] { background: #30363d !important; }
+${d$1} .heat-map .heat-map-cell[style*="255, 237, 181"] { background: #4d3f28 !important; }
+${d$1} .heat-map .heat-map-cell[style*="255, 222, 140"] { background: #795820 !important; }
+${d$1} .heat-map .heat-map-cell[style*="255, 206, 99"] { background: #ad7a27 !important; }
+${d$1} .heat-map .heat-map-cell[style*="255, 186, 59"] { background: #d29922 !important; }
+
+/* ---------- 讨论/文章/图床/云剪贴板 ---------- */
+/* 通用黑字（name/time/content/meta/copyright 等） */
+${d$1} .name, ${d$1} .content, ${d$1} .time, ${d$1} .meta,
+${d$1} .copyright, ${d$1} .detail, ${d$1} .info { color: #cdd9e5 !important; }
+${d$1} .time, ${d$1} .meta, ${d$1} .copyright, ${d$1} .info { color: #909dab !important; }
+/* 白底容器 */
+${d$1} .drop, ${d$1} .image-block, ${d$1} .casket, ${d$1} .casket.cs-main,
+${d$1} .cs-header, ${d$1} .cs-footer, ${d$1} .refined-input,
+${d$1} .article-card, ${d$1} .article-list, ${d$1} .discuss-list,
+${d$1} .feed-card, ${d$1} .user-card, ${d$1} .stat-card {
+  background: #22272e; color: #cdd9e5; border-color: #373e47;
+}
+${d$1} .drop:hover { border-color: #539bf5; }
+${d$1} .cs-footer *, ${d$1} .cs-header * { color: #cdd9e5; }
+/* CM5 编辑器（云剪贴板/贴代码） */
+${d$1} .CodeMirror, ${d$1} .CodeMirror-lines, ${d$1} .cm-gutters,
+${d$1} .cm-gutter, ${d$1} .cm-lineNumbers, ${d$1} .cm-foldGutter {
+  background: #161b22; color: #cdd9e5; border-color: #373e47;
+}
+/* 原生 Markdown 编辑器保留站点功能，只调整当前行、行号和选区配色。 */
+${d$1} .v-codemirror .cm-editor { background: #161b22; color: #cdd9e5; }
+${d$1} .v-codemirror .cm-activeLine, ${d$1} .CodeMirror-activeline-background { background: #253341 !important; }
+${d$1} .v-codemirror .cm-activeLineGutter,
+${d$1} .CodeMirror-activeline-gutter .CodeMirror-linenumber { background: #253341 !important; color: #cdd9e5 !important; }
+${d$1} .v-codemirror .cm-selectionBackground, ${d$1} .CodeMirror-selected { background: #344f70 !important; }
+${d$1} .cm-cursor { border-color: #cdd9e5; }
+${d$1} .cm-line, ${d$1} .cm-line * { color: #cdd9e5; }
+${d$1} .cm-selected, ${d$1} .CodeMirror-focused .cm-selected { background: rgba(83,155,245,.25); }
+${d$1} .cm-m-luogu .cm-comment, ${d$1} .cm-comment { color: #8b949e; }
+${d$1} .cm-keyword, ${d$1} .cm-tag, ${d$1} .cm-property { color: #ff7b72; }
+${d$1} .cm-string, ${d$1} .cm-string-2, ${d$1} .cm-atom, ${d$1} .cm-regexp { color: #a5d6ff; }
+${d$1} .cm-number, ${d$1} .cm-attribute, ${d$1} .cm-qualifier { color: #79c0ff; }
+${d$1} .cm-variable, ${d$1} .cm-def, ${d$1} .cm-type { color: #d2a8ff; }
+${d$1} .cm-operator, ${d$1} .cm-meta, ${d$1} .cm-bracket { color: #ff9e64; }
+${d$1} .cm-builtin, ${d$1} .cm-header, ${d$1} .cm-link { color: #79b8ff; }
+${d$1} .cm-error { color: #ffa198; }
+/* 兜底：所有剩余元素边框色统一（只动 border 不动背景） */
+${d$1} div, ${d$1} span, ${d$1} p, ${d$1} li, ${d$1} ul, ${d$1} ol,
+${d$1} section, ${d$1} article, ${d$1} aside, ${d$1} nav,
+${d$1} header, ${d$1} footer, ${d$1} fieldset { border-color: #373e47; }
+/* 兜底：剩余偏暗文字 */
+${d$1} .main *, ${d$1} .l-card * { border-color: #373e47; }
+/* 提交卡/常用浅黑字 */
+${d$1} .light-black, ${d$1} .l-card .header, ${d$1} .combo-wrapper .text,
+${d$1} .l-radio, ${d$1} .l-check, ${d$1} .lfe-radio, ${d$1} .l-checkbox,
+${d$1} [id^="LRadio"], ${d$1} [id^="LCheck"], ${d$1} .l-card.burger *,
+${d$1} .combo-wrapper .arrow, ${d$1} .combo-wrapper svg, ${d$1} .combo-wrapper path { color: #cdd9e5 !important; }
+
+/* ---------- 题库 tab 条（洛谷/主题库/…） ---------- */
+${d$1} ul.luogu.luogu { background: #22272e !important; }
+${d$1} ul.luogu li { color: #cdd9e5; }
+${d$1} ul.luogu li.selected { background: #539bf5 !important; color: #fff; }
+${d$1} ul.luogu li:hover { background: #30363d; color: #79b8ff; }
+
+/* ---------- 筛选 tag / 切换标签 ---------- */
+${d$1} .toggle-tag { background: #1c2128; border-color: #373e47; color: #cdd9e5; }
+${d$1} .toggle-tag:hover { background: #30363d; color: #79b8ff; }
+${d$1} .toggle-tag.active, ${d$1} .toggle-tag.selected { background: #539bf5; color: #fff; }
+
+/* ---------- 题单分类卡（训练列表） ---------- */
+${d$1} .category-card.category-card { background: #22272e !important; border-color: #373e47 !important; }
+${d$1} .category-card.category-card:hover { border-color: #539bf5 !important; }
+${d$1} .category-card.category-card.active { background: #2d333b !important; border-color: #539bf5 !important; }
+${d$1} .category-card .title, ${d$1} .category-card .desc { color: #cdd9e5; }
+${d$1} .category-card .desc { color: #909dab; }
+
+/* ---------- 训练进度环 ---------- */
+${d$1} circle[fill="#fff"], ${d$1} circle[fill="white"] { fill: #22272e; }
+${d$1} circle[stroke="#f2f2f2"], ${d$1} circle[stroke="#e8e8e8"], ${d$1} circle[stroke="#fff"] { stroke: #373e47; }
+
+/* ---------- 比赛列表 ---------- */
+${d$1} .contest-card { border-color: #373e47; }
+${d$1} .contest-card a.name, ${d$1} a.name { color: #79b8ff; }
+${d$1} .contest-card a.name:hover, ${d$1} a.name:hover { color: #539bf5; }
+${d$1} .title-row, ${d$1} .row.space-between { border-color: #373e47; }
+${d$1} .list-wrap, ${d$1} .list, ${d$1} .list-scroll { border-color: #373e47; }
+${d$1} .header { border-color: #373e47 !important; }
+
+/* ---------- 侧边栏：仅父级 li 提供悬停背景，链接不叠底块/下划线 ---------- */
+${d$1} .sidebar.lside .nav-group > ul > li {
+  background: transparent !important; border-bottom: 0 !important;
+}
+${d$1} .sidebar.lside .nav-group > ul > li:hover,
+${d$1} .sidebar.lside .nav-group > ul > li:focus-within { background: #30363d !important; }
+${d$1} .sidebar.lside .nav-group > ul > li > a {
+  background: transparent !important; background-image: none !important;
+  border-bottom: 0 !important; box-shadow: none !important;
+  text-decoration: none !important; filter: none !important; transition: none !important;
+  color: #cdd9e5 !important;
+}
+${d$1} .sidebar.lside .nav-group > ul > li > a::before,
+${d$1} .sidebar.lside .nav-group > ul > li > a::after { content: none !important; }
+${d$1} .sidebar.lside .nav-group > ul > li > a:hover,
+${d$1} .sidebar.lside .nav-group > ul > li > a:focus-visible,
+${d$1} .sidebar.lside .nav-group > ul > li > a.router-link-exact-active { color: #79b8ff !important; }
+${d$1} .sidebar.lside .nav-group > ul > li > a:focus-visible { outline: 2px solid #539bf5; outline-offset: -2px; }
+${d$1} .sidebar.lside .nav-group > ul > li > a > .title { color: inherit !important; }
+
+/* ---------- 陶片放逐/动态 author 卡 ---------- */
+${d$1} .author, ${d$1} .author.author { background: #22272e !important; color: #cdd9e5; }
+${d$1} .author a, ${d$1} .author .name { color: #79b8ff; }
+
+/* ---------- 文章广场/文章 ---------- */
+/* 标题链接 Vue 行内绑 rgba(0,0,0,.85)——行内只能用 !important 压 */
+${d$1} .row.title a, ${d$1} .row .title a, ${d$1} a[href*="/article/"] { color: #79b8ff !important; }
+${d$1} a[href*="/article/"]:hover { color: #539bf5 !important; }
+/* 分类标签（算法·理论/休闲·娱乐 这类无类的 .name span） */
+${d$1} .wrap .name, ${d$1} .article-card .name { background: #30363d; color: #cdd9e5; }
+${d$1} .article-card, ${d$1} .card { background: #22272e; border-color: #373e47; }
+
+/* 文章详情的外层白底是行内样式；只覆盖承载 article-content 的容器。 */
+${d$1} main > div:has(> .article-content) { background: #1c2128 !important; }
+${d$1} .article-banner .author { background: transparent !important; }
+${d$1} .article-banner .label,
+${d$1} .article-content .update-info, ${d$1} .article-content .update-info span,
+${d$1} .article-content .update-info time { color: #adbac7 !important; }
+${d$1} .article-content .admin-public-comment {
+  background: #35272b; color: #cdd9e5; border-left-color: #e78187 !important;
+}
+${d$1} .article-content > .actions {
+  background: #22272e !important; border-color: #373e47; box-shadow: 0 2px 8px #0004;
+}
+${d$1} .article-content .button-2line .text { color: #adbac7 !important; }
+${d$1} .article-content .button-2line:not(.active) .icon { color: #adbac7; }
+${d$1} .article-content .button-2line:hover .text,
+${d$1} .article-content .button-2line:hover .icon { color: #79b8ff !important; }
+${d$1} .article-content .toc { color: #adbac7; }
+${d$1} .article-content .toc li::before { background: #373e47; }
+${d$1} .article-content .toc li:hover { background: #30363d; color: #79b8ff !important; }
+${d$1} .article-comment .lfe-h4, ${d$1} .reply-editor .lfe-h4 { color: #cdd9e5; }
+${d$1} .cs-editor .cs-upload { background: #30363d; color: #cdd9e5; }
+${d$1} .article-comment .reply-item > .meta { background: #2d333b; border-color: #373e47; }
+${d$1} .main-container footer { background: #1c2128 !important; color: #909dab; }
+${d$1} .main-container footer p { color: #909dab; }
+
+/* ---------- Highcharts（主页通过数统计图，SVG 属性与行内 fill 均需覆盖） ---------- */
+${d$1} #app-old .highcharts-root text,
+${d$1} #app-old .highcharts-root tspan { fill: #cdd9e5 !important; color: #cdd9e5 !important; }
+${d$1} #app-old .highcharts-grid-line,
+${d$1} #app-old .highcharts-axis-line,
+${d$1} #app-old .highcharts-tick { stroke: #373e47; }
+${d$1} #app-old .highcharts-tooltip-box:not(.highcharts-shadow) { fill: #22272e; stroke: #768390; }
+${d$1} #app-old .highcharts-tooltip .highcharts-shadow { display: none; }
+${d$1} #app-old .highcharts-column-series .highcharts-point { fill: #56b6c2; stroke: #56b6c2; }
+${d$1} #app-old .highcharts-column-series .highcharts-point-hover { fill: #8cdae3; stroke: #8cdae3; }
+${d$1} #app-old .highcharts-area { fill: rgba(83,155,245,.2); }
+${d$1} #app-old .highcharts-tooltip tspan[style*="fill:#7cb5ec"] { fill: #79b8ff !important; }
+${d$1} #app-old .highcharts-tooltip tspan[style*="fill:#434348"] { fill: #56b6c2 !important; }
+
+/* ---------- 老主页打卡卡：只给打卡按钮上底色，保留用户名链接 ---------- */
+${d$1} .lg-punch { background: #22272e; color: #cdd9e5; }
+${d$1} #app-old .lg-punch h2 a { background: transparent !important; color: #79b8ff !important; }
+${d$1} #app-old .lg-punch a[name="punch"] {
+  background: #245f99 !important; color: #fff !important; border-color: #539bf5 !important;
+}
+${d$1} #app-old .lg-punch a[name="punch"]:hover,
+${d$1} #app-old .lg-punch a[name="punch"]:focus-visible { background: #2c70b1 !important; color: #fff !important; }
+${d$1} #home-center-nav > .feed-selector > a { background: transparent; color: #cdd9e5 !important; }
+${d$1} #home-center-nav > .feed-selector > a:hover { background: #30363d; }
+${d$1} #home-center-nav > .feed-selector.am-active > a { background: #245f99 !important; color: #fff !important; }
+
+/* ---------- 文章页侧栏动作/彩色链接 ---------- */
+${d$1} .side .actions a { color: #cdd9e5; }
+${d$1} .side .actions a:hover { color: #79b8ff; }
+${d$1} .colored-link-selector a span, ${d$1} .l-card.collections a span,
+${d$1} .colored-link-selector span { background: transparent !important; color: #cdd9e5; }
+
+/* ---------- 筛选卡/搜索框 ---------- */
+${d$1} .filter-card { background: #22272e; border-color: #373e47; }
+${d$1} .filter-card .filter-label, ${d$1} .filter-card .filter-result-count { color: #cdd9e5 !important; }
+${d$1} .refined-input, ${d$1} .refined-input.keyword { background: #1c2128 !important; color: #cdd9e5; border-color: #373e47 !important; }
+${d$1} .refined-input > input { background: transparent !important; color: #cdd9e5; }
+${d$1} .refined-input > .east, ${d$1} .refined-input > .west,
+${d$1} .refined-input .search-icon { background: transparent !important; color: #909dab !important; }
+${d$1} .refined-input > input::placeholder { color: #909dab; opacity: 1; }
+${d$1} .block-item.category { background: transparent; }
+${d$1} .block-item.category > ul.rmj { background: #22272e !important; }
+${d$1} .block-item.category > ul.rmj > li:not(.selected):hover { background: #30363d; }
+
+/* ---------- 比赛名链接去底，避免文章分类的 .wrap .name 误伤 ---------- */
+${d$1} .contest-card .title-row a.name { background: transparent !important; }
+
+/* ---------- 通用按钮/链接对比 ---------- */
+${d$1} a.l-button.solid, ${d$1} button.solid { color: #fff !important; }
+${d$1} a.l-button.solid:not([class*="lcolor-var-"]), ${d$1} button.solid:not([class*="lcolor-var-"]) {
+  background: #245f99; border-color: #539bf5;
+}
+${d$1} a.l-button.solid:not([class*="lcolor-var-"]):hover,
+${d$1} button.solid:not([class*="lcolor-var-"]):hover { background: #2c70b1; }
+${d$1} .lfe-button--primary, ${d$1} .l-button--primary, ${d$1} button.primary { color: #fff; }
+${d$1} .punch, ${d$1} .checkin, ${d$1} [class*="check"][class*="btn"], ${d$1} [class*="punch"] { color: #cdd9e5; }
+`;
+var fields = {
+	"题目背景": "background",
+	"Background": "background",
+	"题目描述": "description",
+	"Description": "description",
+	"Problem Description": "description",
+	"输入格式": "formatI",
+	"Input Format": "formatI",
+	"输出格式": "formatO",
+	"Output Format": "formatO",
+	"说明/提示": "hint",
+	"说明 / 提示": "hint",
+	"Hint": "hint",
+	"Hints": "hint"
+};
+/** Modern Luogu embeds the original Markdown, while rendered KaTeX omits MathML. */
+function luoguMarkdown(doc, field) {
+	try {
+		const problem = JSON.parse(doc.querySelector("#lentille-context")?.textContent ?? "{}").data?.problem;
+		const pid = /\/problem\/([^/?#]+)/.exec(new URL(doc.URL).pathname)?.[1];
+		if (!pid || problem?.pid !== pid) return void 0;
+		const source = problem.content?.[field];
+		return typeof source === "string" ? source : void 0;
+	} catch {
+		return;
+	}
+}
+/** 洛谷 IDE 语言表（/api/ide_submit 与 /fe/api/problem/submit 共用的数字 id）。 */
+var LUOGU_LANGUAGES = [
+	{
+		id: "12",
+		name: "C++17",
+		mode: "cpp"
+	},
+	{
+		id: "11",
+		name: "C++14",
+		mode: "cpp"
+	},
+	{
+		id: "34",
+		name: "C++23",
+		mode: "cpp"
+	},
+	{
+		id: "27",
+		name: "C++20",
+		mode: "cpp"
+	},
+	{
+		id: "4",
+		name: "C++11",
+		mode: "cpp"
+	},
+	{
+		id: "28",
+		name: "C++14 (GCC 9)",
+		mode: "cpp"
+	},
+	{
+		id: "3",
+		name: "C++98",
+		mode: "cpp"
+	},
+	{
+		id: "2",
+		name: "C",
+		mode: "cpp"
+	},
+	{
+		id: "7",
+		name: "Python 3",
+		mode: "python"
+	},
+	{
+		id: "25",
+		name: "PyPy 3",
+		mode: "python"
+	},
+	{
+		id: "8",
+		name: "Java 8",
+		mode: "text"
+	},
+	{
+		id: "33",
+		name: "Java 21",
+		mode: "text"
+	},
+	{
+		id: "15",
+		name: "Rust",
+		mode: "text"
+	},
+	{
+		id: "14",
+		name: "Go",
+		mode: "text"
+	},
+	{
+		id: "19",
+		name: "Haskell",
+		mode: "text"
+	},
+	{
+		id: "30",
+		name: "OCaml",
+		mode: "text"
+	},
+	{
+		id: "31",
+		name: "Julia",
+		mode: "text"
+	},
+	{
+		id: "32",
+		name: "Lua",
+		mode: "text"
+	},
+	{
+		id: "21",
+		name: "Kotlin/JVM",
+		mode: "text"
+	},
+	{
+		id: "22",
+		name: "Scala",
+		mode: "text"
+	},
+	{
+		id: "17",
+		name: "C# Mono",
+		mode: "text"
+	},
+	{
+		id: "9",
+		name: "Node.js LTS",
+		mode: "text"
+	},
+	{
+		id: "16",
+		name: "PHP",
+		mode: "text"
+	},
+	{
+		id: "13",
+		name: "Ruby",
+		mode: "text"
+	},
+	{
+		id: "23",
+		name: "Perl",
+		mode: "text"
+	},
+	{
+		id: "1",
+		name: "Pascal",
+		mode: "text"
+	}
+];
+function luoguContext(doc) {
+	try {
+		return JSON.parse(doc.querySelector("#lentille-context")?.textContent ?? "{}");
+	} catch {
+		return {};
+	}
+}
+function luoguCsrf(doc) {
+	return doc.querySelector("meta[name=\"csrf-token\"]")?.getAttribute("content") ?? "";
+}
+var LUOGU_WS2 = "wss://ws2.luogu.com.cn/ws";
+var wsEncoder = new TextEncoder();
+var wsDecoder = new TextDecoder();
+function ws2Frame(channel, type, param = "") {
+	const c = wsEncoder.encode(channel), p = wsEncoder.encode(param);
+	const frame = new Uint8Array(1 + c.length + 1 + p.length);
+	frame[0] = c.length;
+	frame.set(c, 1);
+	frame[1 + c.length] = type;
+	frame.set(p, 1 + c.length + 1);
+	return frame;
+}
+/** 在 Ide:U{uid} 频道上等待 recordId === rid 的 compile/execute 推送。 */
+function luoguIdeResult(channel, rid) {
+	return new Promise((resolve, reject) => {
+		const ws = new WebSocket(LUOGU_WS2);
+		ws.binaryType = "arraybuffer";
+		let heartbeat = 0;
+		let settled = false;
+		const finish = (fn) => {
+			if (settled) return;
+			settled = true;
+			clearInterval(heartbeat);
+			clearTimeout(timeout);
+			try {
+				ws.close();
+			} catch {}
+			fn();
+		};
+		const timeout = setTimeout(() => finish(() => reject(/* @__PURE__ */ new Error("洛谷评测超时"))), 12e4);
+		ws.onopen = () => {
+			ws.send(ws2Frame(channel, 192));
+			heartbeat = window.setInterval(() => {
+				try {
+					ws.send(ws2Frame(channel, 192));
+				} catch {}
+			}, 15e3);
+		};
+		ws.onerror = () => finish(() => reject(/* @__PURE__ */ new Error("洛谷推送通道连接失败")));
+		ws.onclose = () => finish(() => reject(/* @__PURE__ */ new Error("洛谷推送通道已断开")));
+		ws.onmessage = (event) => {
+			if (!(event.data instanceof ArrayBuffer)) return;
+			const bytes = new Uint8Array(event.data);
+			const channelLen = bytes[0] ?? 0;
+			if (bytes.length < 1 + channelLen + 1) return;
+			if (bytes[1 + channelLen] !== 16) return;
+			let data;
+			try {
+				data = JSON.parse(wsDecoder.decode(bytes.slice(1 + channelLen + 1)));
+			} catch {
+				return;
+			}
+			if (data?.recordId !== rid) return;
+			if (data.type === "compile") {
+				if (data.success) return;
+				finish(() => resolve({
+					output: "",
+					error: "编译失败",
+					stderr: String(data.desc ?? ""),
+					verdict: "Compile Error"
+				}));
+				return;
+			}
+			if (data.type === "execute") {
+				const x = data.execute ?? {};
+				const error = x.error ? String(x.error) : x.signal ? `Received signal ${x.signal}` : x.exit_code ? `Exit code ${x.exit_code}` : void 0;
+				finish(() => resolve({
+					output: String(data.output ?? ""),
+					error,
+					verdict: x.error ?? void 0,
+					used: `${x.real_time ?? "?"}ms ${x.memory ?? "?"}kb`
+				}));
+			}
+		};
+	});
+}
+var en = {
+	"题目背景": "Background",
+	"题目描述": "Description",
+	"输入格式": "Input Format",
+	"输出格式": "Output Format",
+	"输入输出样例": "Samples",
+	"说明/提示": "Hints",
+	"题目列表": "Problems",
+	"提交答案": "Submit",
+	"提交记录": "Submissions",
+	"查看题解": "Editorials",
+	"题目反馈": "Feedback",
+	"标签": "Tags",
+	"显示算法标签": "Show tags",
+	"相关讨论": "Discussions",
+	"进入讨论版": "Open discussions",
+	"查看讨论": "View discussions",
+	"推荐题目": "Recommended problems",
+	"查看推荐": "Show recommendations",
+	"复制 Markdown": "Copy Markdown",
+	"复制": "Copy",
+	"展开": "Expand",
+	"进入 IDE 模式": "Open IDE",
+	"加入题单": "Add to problem list",
+	"复制题目": "Copy problem",
+	"题目编号": "Problem ID",
+	"提供者": "Provider",
+	"难度": "Difficulty",
+	"历史分数": "Best score",
+	"提交": "Submissions",
+	"通过": "Accepted",
+	"时间限制": "Time limit",
+	"内存限制": "Memory limit",
+	"个人中心": "Profile",
+	"用户设置": "Settings",
+	"练习情况": "Practice",
+	"我的题库": "My problems",
+	"我的专栏": "My articles",
+	"收藏夹": "Bookmarks",
+	"我的工单": "Support tickets",
+	"锁定": "Lock",
+	"登出": "Sign out"
+};
+var luogu = {
+	id: "luogu",
+	name: "洛谷 / Luogu",
+	hosts: ["www.luogu.com.cn", "www.luogu.com"],
+	darkStyles: LUOGU_DARK,
+	preserveInlineColors: true,
+	editor: {
+		languages: LUOGU_LANGUAGES,
+		editorMountPoint(doc) {
+			if (!/^\/problem\/(?!new(?:\/|$))[^/]+\/?$/.test(new URL(doc.URL).pathname)) return null;
+			const submitBody = doc.querySelector(".l-card.burger .body");
+			if (submitBody?.querySelector(".v-codemirror")) return {
+				anchor: submitBody,
+				position: "beforeend"
+			};
+			const anchor = doc.querySelector(".l-card.problem");
+			return anchor ? {
+				anchor,
+				position: "afterend"
+			} : null;
+		},
+		problemCode(doc) {
+			return /\/problem\/([^/?#]+)/.exec(new URL(doc.URL).pathname)?.[1] ?? null;
+		},
+		getSamples(doc) {
+			try {
+				const problem = JSON.parse(doc.querySelector("#lentille-context")?.textContent ?? "{}").data?.problem;
+				if (problem?.pid !== /\/problem\/([^/?#]+)/.exec(new URL(doc.URL).pathname)?.[1]) return [];
+				return Array.isArray(problem.samples) ? problem.samples.filter((s) => Array.isArray(s) && s.length === 2 && s.every((v) => typeof v === "string")).map((s) => ({
+					input: s[0],
+					output: s[1]
+				})) : [];
+			} catch {
+				return [];
+			}
+		},
+		/** 站点远程评测：/api/ide_submit 开票 + ws2 Ide:U{uid} 频道推送结果。 */
+		async runCustomTest(code, languageId, input) {
+			const uid = luoguContext(document).user?.uid;
+			if (!uid) throw new Error("需要登录洛谷才能远程评测");
+			const res = await fetch("/api/ide_submit", {
+				method: "POST",
+				headers: {
+					"content-type": "application/json",
+					"x-csrf-token": luoguCsrf(document)
+				},
+				body: JSON.stringify({
+					lang: Number(languageId),
+					code,
+					input,
+					o2: ""
+				})
+			});
+			const json = await res.json().catch(() => null);
+			if (json?.status !== 200 || !json?.data?.rid) throw new Error(typeof json?.errorMessage === "string" ? json.errorMessage : `洛谷评测失败 (${json?.status ?? res.status})`);
+			return luoguIdeResult(`Ide:U${uid}`, json.data.rid);
+		},
+		/** 正式提交：/fe/api/problem/submit/{pid} → 评测记录页；比赛页要带 ?contestId=。验证码拦截时把洛谷的信息透出来。 */
+		async submit(code, languageId, problemCode) {
+			const contestId = luoguContext(document).data?.contest?.id ?? new URLSearchParams(location.search).get("contestId");
+			const path = `/fe/api/problem/submit/${encodeURIComponent(problemCode)}` + (contestId ? `?contestId=${encodeURIComponent(String(contestId))}` : "");
+			const res = await fetch(path, {
+				method: "POST",
+				headers: {
+					"content-type": "application/json",
+					"x-csrf-token": luoguCsrf(document)
+				},
+				body: JSON.stringify({
+					lang: Number(languageId),
+					code,
+					enableO2: 1
+				})
+			});
+			const json = await res.json().catch(() => null);
+			const rid = json?.rid ?? json?.data?.rid;
+			if (res.ok && rid) return {
+				ok: true,
+				url: `/record/${rid}`
+			};
+			const message = json?.errorMessage ?? (typeof json?.data === "string" ? json.data : null) ?? `提交失败 (${res.status})`;
+			return {
+				ok: false,
+				error: String(message)
+			};
+		}
+	},
+	styles: ".user-nav > .ojpp-settings-btn { margin: 0 8px; } .ojpp-settings-floating { position: fixed; right: 18px; bottom: 18px; z-index: 1000; } .l-card.problem .lfe-marked-wrap, .l-card.problem .io-sample { clear: both; } .l-card.burger .body:has(> .ojpp-editor):has(.v-codemirror) > *:not(.ojpp-editor) { display: none !important; } .l-card.burger .body:has(.v-codemirror) { padding-bottom: .3em; }",
+	collectSections(doc) {
+		const sections = [];
+		for (const heading of doc.querySelectorAll(".l-card.problem > h2, .problem-content > h2")) {
+			const label = [...heading.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim();
+			const key = fields[label];
+			if (!key) continue;
+			let content = heading.nextElementSibling;
+			while (content?.className.startsWith("ojpp-")) content = content.nextElementSibling;
+			if (!content?.matches(".lfe-marked-wrap, .marked, .markdown-body") || !content.textContent?.trim()) continue;
+			sections.push({
+				kind: key === "formatI" ? "input" : key === "formatO" ? "output" : "statement",
+				label,
+				content,
+				identity: `${new URL(doc.URL).pathname}:${key}`,
+				markdown: () => luoguMarkdown(doc, key),
+				toolbar: {
+					anchor: heading,
+					position: "beforeend",
+					align: "right"
+				},
+				result: {
+					anchor: content,
+					position: "afterend"
+				}
+			});
+		}
+		return sections;
+	},
+	prepareContent: prepareMathContent,
+	mountSettingsButton(button, doc) {
+		mountNavSettings(button, doc, ".user-nav:not(.rside), .nav-container");
+	},
+	observe: observeSite,
+	i18nPage(doc, locale) {
+		if (locale !== "en") return;
+		applyPageI18n(doc, [{
+			scope: "nav, .user-nav, header .stat, .l-card > h2, .l-card > h3, .problem-block-actions, .io-sample .header, .l-card .lfe-caption, .l-card > a",
+			map: en
+		}]);
+	}
+};
+function atcoderContest(path) {
+	return /^\/contests\/([\w-]+)(?:\/|$)/.exec(path)?.[1] ?? null;
+}
+function atcoderLanguageMode(name) {
+	if (/C\+\+|Clang|\bC\d*\b/.test(name)) return "cpp";
+	if (/Python|PyPy|Codon/i.test(name)) return "python";
+	if (/^Java\b/.test(name)) return "java";
+	return "text";
+}
+function atcoderLanguageContent(root) {
+	const variants = [...root.querySelectorAll(".lang-en, .lang-ja")];
+	return variants.find((e) => root.ownerDocument.defaultView?.getComputedStyle(e).display !== "none") ?? variants[0] ?? root;
+}
+function atcoderStatement(doc) {
+	const root = doc.querySelector("#task-statement");
+	return root ? atcoderLanguageContent(root) : null;
+}
+function atcoderSamples(doc) {
+	const root = atcoderStatement(doc);
+	if (!root) return [];
+	const inputs = [];
+	const outputs = [];
+	for (const section of root.querySelectorAll("section")) {
+		const heading = section.querySelector("h3")?.textContent?.trim() ?? "";
+		const pre = section.querySelector("pre");
+		if (!pre) continue;
+		if (/^(Sample Input|入力例|样例输入)\s*\d+/.test(heading)) inputs.push(pre);
+		if (/^(Sample Output|出力例|样例输出)\s*\d+/.test(heading)) outputs.push(pre);
+	}
+	const samples = [];
+	for (let i = 0; i < Math.min(inputs.length, outputs.length); i++) samples.push({
+		input: inputs[i].textContent ?? "",
+		output: outputs[i].textContent ?? ""
+	});
+	return samples;
+}
+function parseAtcoderResult(data) {
+	if (!data.Result || data.Interval || [1, 2].includes(data.Result.Status)) return null;
+	const r = data.Result;
+	if (!r.Id) return null;
+	const output = (data.Stdout ?? "").replace(/\r\n/g, "\n");
+	const stderr = (data.Stderr ?? "").replace(/\r\n/g, "\n");
+	const failed = Number(r.ExitCode) !== 0 || r.Status !== 3;
+	return {
+		output,
+		...stderr ? { stderr } : {},
+		used: `${r.TimeConsumption}, ${r.MemoryConsumption}`,
+		verdict: failed ? "ERROR" : "OK",
+		...failed ? { error: `Exit code: ${r.ExitCode} (status ${r.Status})` } : {}
+	};
+}
+function languages(doc) {
+	return [...doc.querySelectorAll("select[name=\"data.LanguageId\"] option")].filter((o) => o.value).map((o) => ({
+		id: o.value,
+		name: o.text,
+		mode: atcoderLanguageMode(o.text)
+	})).sort((a, b) => Number(/^C\+\+.*GCC/.test(b.name)) - Number(/^C\+\+.*GCC/.test(a.name)));
+}
+function syncAce(code) {
+	const ace = (typeof unsafeWindow !== "undefined" ? unsafeWindow : window).ace;
+	if (ace && document.querySelector("#editor")) {
+		const editor = ace.edit("editor");
+		if (editor.getValue() !== code) editor.setValue(code, -1);
+	}
+}
+async function fetchChecked(url, init) {
+	const res = await fetch(url, {
+		credentials: "same-origin",
+		signal: AbortSignal.timeout(3e4),
+		...init
+	});
+	if (!res.ok) throw new Error(`AtCoder HTTP ${res.status}`);
+	if (new URL(res.url).pathname === "/login") throw new Error(t("atcoder.signIn"));
+	return res;
+}
+async function runTest(code, languageId, input) {
+	const contest = atcoderContest(location.pathname);
+	if (!contest) throw new Error("No AtCoder contest.");
+	const base = `/contests/${contest}/custom_test`;
+	const token = new DOMParser().parseFromString(await (await fetchChecked(base)).text(), "text/html").querySelector("input[name=\"csrf_token\"]")?.value;
+	if (!token) throw new Error(t("atcoder.signIn"));
+	const before = await (await fetchChecked(`${base}/json?reload=true`)).json();
+	if (before.Interval || [1, 2].includes(before.Result?.Status ?? 0)) throw new Error(t("atcoder.testBusy"));
+	const body = new URLSearchParams({
+		"data.LanguageId": languageId,
+		sourceCode: code,
+		input,
+		csrf_token: token
+	});
+	const reply = await (await fetchChecked(`${base}/submit/json`, {
+		method: "POST",
+		body
+	})).text();
+	if (reply.trim() && reply.trim() !== "\"\"") throw new Error(new DOMParser().parseFromString(reply, "text/html").body.textContent?.trim() || "Custom test rejected.");
+	const deadline = Date.now() + 12e4;
+	while (Date.now() < deadline) {
+		await new Promise((resolve) => setTimeout(resolve, 1e3));
+		const data = await (await fetchChecked(`${base}/json?reload=true`)).json();
+		if (data.Result?.Id === before.Result?.Id) continue;
+		const result = parseAtcoderResult(data);
+		if (result) return result;
+	}
+	throw new Error(t("atcoder.testTimeout"));
+}
+var testQueue = Promise.resolve();
+var atcoderEditor = {
+	editorMountPoint(doc) {
+		const root = doc.querySelector("#task-statement");
+		return root && languages(doc).length ? {
+			anchor: root,
+			position: "afterend"
+		} : null;
+	},
+	problemCode(doc) {
+		return /\/tasks\/([\w-]+)$/.exec(new URL(doc.URL).pathname)?.[1] ?? null;
+	},
+	get languages() {
+		return languages(document);
+	},
+	getSamples: atcoderSamples,
+	syncCode(code, languageId) {
+		const source = document.querySelector("#plain-textarea");
+		const language = document.querySelector("select[name=\"data.LanguageId\"]");
+		if (source) {
+			source.value = code;
+			source.dispatchEvent(new Event("input", { bubbles: true }));
+		}
+		if (language) language.value = languageId;
+		syncAce(code);
+	},
+	runCustomTest(code, languageId, input) {
+		const run = async () => navigator.locks ? await navigator.locks.request("ojpp-atcoder-custom-test", () => runTest(code, languageId, input)) : await runTest(code, languageId, input);
+		const result = testQueue.then(run);
+		testQueue = result.catch(() => void 0);
+		return result;
+	},
+	async submit(code, languageId, problemCode) {
+		const form = document.querySelector("form.form-code-submit");
+		if (!form || !/\/submit$/.test(new URL(form.action).pathname)) return {
+			ok: false,
+			error: t("atcoder.formUnavailable")
+		};
+		const source = form.querySelector("[name=\"sourceCode\"]");
+		const language = form.querySelector("[name=\"data.LanguageId\"]");
+		if (!source || !language) return {
+			ok: false,
+			error: t("atcoder.formUnavailable")
+		};
+		source.value = code;
+		language.value = languageId;
+		syncAce(code);
+		const body = new URLSearchParams();
+		for (const [key, value] of new FormData(form)) if (typeof value === "string") body.set(key, value);
+		body.set("data.TaskScreenName", problemCode);
+		body.set("sourceCode", code);
+		body.set("data.LanguageId", languageId);
+		const challenge = form.querySelector("[name=\"cf-turnstile-response\"]");
+		if (challenge && !challenge.value) {
+			form.scrollIntoView({ block: "center" });
+			return {
+				ok: false,
+				error: t("atcoder.verification")
+			};
+		}
+		const response = await fetchChecked(form.action, {
+			method: "POST",
+			body
+		});
+		if (/\/submissions(?:\/|$)/.test(new URL(response.url).pathname)) return {
+			ok: true,
+			url: response.url
+		};
+		return {
+			ok: false,
+			error: [...new DOMParser().parseFromString(await response.text(), "text/html").querySelectorAll(".alert-danger, .has-error .help-block")].map((e) => e.textContent?.trim()).filter(Boolean).join("; ") || t("atcoder.notConfirmed")
+		};
+	},
+	editorPage(doc) {
+		if (doc.querySelector("#task-statement")) return null;
+		const textarea = doc.querySelector("#plain-textarea");
+		const native = doc.querySelector("#editor");
+		if (!textarea || !native) return null;
+		return {
+			anchor: native,
+			position: "afterend",
+			hide: native,
+			textarea,
+			langSelect: doc.querySelector("select[name=\"data.LanguageId\"]") ?? void 0,
+			langMode: (id) => languages(doc).find((l) => l.id === id)?.mode ?? "text",
+			syncBack: syncAce
+		};
+	}
+};
+var zh = {
+	"Home": "首页",
+	"Top": "首页",
+	"Contests": "比赛",
+	"Contest": "比赛",
+	"Tasks": "题目",
+	"Submit": "提交",
+	"Results": "结果",
+	"Standings": "排行榜",
+	"Virtual Standings": "虚拟排行榜",
+	"Submissions": "提交记录",
+	"All Submissions": "全部提交",
+	"My Submissions": "我的提交",
+	"Custom Test": "自定义测试",
+	"Editorial": "题解",
+	"Virtual Participation": "虚拟参赛",
+	"バーチャル参加": "虚拟参赛",
+	"My Score": "我的得分",
+	"Clarifications": "提问",
+	"Rules": "规则",
+	"Rating": "积分",
+	"Rank": "排名",
+	"Rankings": "排行榜",
+	"User": "用户",
+	"Username": "用户名",
+	"Task": "题目",
+	"Language": "语言",
+	"Score": "分数",
+	"Status": "状态",
+	"Task:": "题目：",
+	"Language:": "语言：",
+	"Status:": "状态：",
+	"User:": "用户：",
+	"Username:": "用户名：",
+	"< Prev": "< 上一页",
+	"Next >": "下一页 >",
+	"Prev": "上一页",
+	"Next": "下一页",
+	"Elapsed": "用时",
+	"Code Size": "代码长度",
+	"Exec Time": "运行时间",
+	"Memory": "内存",
+	"Submission Time": "提交时间",
+	"Detail": "详情",
+	"Details": "详情",
+	"Source Code": "源代码",
+	"Source code": "源代码",
+	"Input": "输入",
+	"Output": "输出",
+	"Standard Input": "标准输入",
+	"Standard Output": "标准输出",
+	"Standard Error": "标准错误",
+	"Exit Code": "退出码",
+	"Problem Statement": "题目描述",
+	"Constraints": "约束条件",
+	"Copy": "复制",
+	"Run": "运行",
+	"Reset": "重置",
+	"Search": "搜索",
+	"Filter": "筛选",
+	"All": "全部",
+	"Duration": "时长",
+	"Start Time": "开始时间",
+	"Contest Duration": "比赛时长",
+	"Contest Type": "比赛类型",
+	"Rated Range": "计分范围",
+	"Upcoming Contests": "即将举行的比赛",
+	"Active Contests": "进行中的比赛",
+	"Recent Contests": "近期比赛",
+	"Permanent Contests": "长期比赛",
+	"Past Contests": "历史比赛",
+	"Contest Archive": "比赛归档",
+	"Sign In": "登录",
+	"Sign Out": "退出登录",
+	"Sign Up": "注册",
+	"Register": "报名",
+	"Unregister": "取消报名",
+	"My Profile": "我的主页",
+	"General Settings": "通用设置",
+	"Change Photo": "更换头像",
+	"Change Password": "修改密码",
+	"Manage Fav": "管理收藏",
+	"Settings": "设置",
+	"Help": "帮助",
+	"Terms of service": "服务条款",
+	"Privacy Policy": "隐私政策",
+	"Company": "公司",
+	"Contact": "联系",
+	"Search in Archive": "搜索历史比赛",
+	"Contest Name": "比赛名称",
+	"Daily Contests": "每日比赛",
+	"Rule": "规则",
+	"Terms of Use": "使用条款",
+	"Information Protection Policy": "信息保护政策",
+	"at most 512 KiB": "最多 512 KiB",
+	"A newline character is also at the end of the input data usually.": "输入数据的末尾通常也有换行符。",
+	"マイプロフィール": "我的主页",
+	"基本設定": "通用设置",
+	"アイコン設定": "头像设置",
+	"パスワードの変更": "修改密码",
+	"お気に入り管理": "管理收藏",
+	"トップ": "首页",
+	"バーチャル順位表": "虚拟排行榜",
+	"ランキング": "排行榜",
+	"コンテスト一覧": "比赛列表",
+	"開催中のコンテスト": "进行中的比赛",
+	"常設中のコンテスト": "长期比赛",
+	"予定されたコンテスト": "即将举行的比赛",
+	"過去のコンテスト": "历史比赛",
+	"開始時刻": "开始时间",
+	"コンテスト名": "比赛名称",
+	"時間": "时长",
+	"レーティング対象": "计分范围",
+	"更新": "更新",
+	"順位": "排名",
+	"ユーザ": "用户",
+	"最高": "最高",
+	"参加回数": "参赛次数",
+	"Highest Rating": "最高积分",
+	"Competitions": "参赛次数",
+	"Matches": "参赛次数",
+	"Country/Region": "国家或地区",
+	"Affiliation": "所属机构",
+	"Birth Year": "出生年份",
+	"Active Users": "活跃用户",
+	"All Users": "全部用户",
+	"Algorithm": "算法",
+	"Heuristic": "启发式",
+	"FAQ": "常见问题",
+	"Glossary": "术语表",
+	"Tutorial": "教程",
+	"About": "关于",
+	"Back to Home": "返回首页",
+	"Discuss": "讨论",
+	"For beginners": "初学者说明",
+	"Time Limit:": "时间限制：",
+	"Memory Limit:": "内存限制：",
+	"Contest Duration:": "比赛时长：",
+	"Editorial by": "题解作者",
+	"Editorials": "题解",
+	"Online Contests": "在线比赛",
+	"Contest has ended.": "比赛已结束。",
+	"Contest is over": "比赛已结束",
+	"Practice": "练习",
+	"Time limit exceeded": "超出时间限制",
+	"Memory limit exceeded": "超出内存限制",
+	"Open File": "打开文件",
+	"Toggle Editor": "切换编辑器",
+	"Auto Height": "自动高度",
+	"Customize": "自定义",
+	"Test Case": "测试点",
+	"Test Set": "测试集",
+	"Time Limit": "时间限制",
+	"Memory Limit": "内存限制",
+	"Official": "官方",
+	"User Editorial": "用户题解",
+	"Overall Editorial": "整体题解",
+	"Write an Editorial": "撰写题解",
+	"問題文": "题目描述",
+	"制約": "约束条件",
+	"入力": "输入",
+	"出力": "输出",
+	"解説": "题解",
+	"問題": "题目",
+	"提出": "提交",
+	"提出結果": "提交记录",
+	"順位表": "排行榜",
+	"質問": "提问",
+	"コードテスト": "自定义测试",
+	"コンテスト": "比赛",
+	"ホーム": "首页",
+	"参加登録": "报名",
+	"ログイン": "登录",
+	"ログアウト": "退出登录",
+	"新規登録": "注册",
+	"すべての提出": "全部提交",
+	"自分の提出": "我的提交",
+	"言語": "语言",
+	"得点": "分数",
+	"実行時間": "运行时间",
+	"メモリ": "内存",
+	"ソースコード": "源代码",
+	"標準入力": "标准输入",
+	"標準出力": "标准输出",
+	"標準エラー出力": "标准错误",
+	"実行": "运行",
+	"詳細": "详情",
+	"配点": "分数"
+};
+function localizeAtcoder(doc, locale) {
+	if (locale !== "zh") return;
+	applyPageI18n(doc, [{
+		scope: ".navbar, .header-inner, .header-sub_nav, .a-title_ttl, .a-btnarea, #contest-nav-tabs, #contest-tabs, #main-container h2, #main-container .h2, #main-container h3, #main-container h4, #main-container th, #main-container label, #main-container .btn, #main-container .panel-heading, #main-container .nav, #main-container .pager, #main-container summary, #main-container .label, footer, #footer",
+		map: zh,
+		replaceMap: {
+			"^Sample Input\\s+(\\d+)": "样例输入 $1",
+			"^Sample Output\\s+(\\d+)": "样例输出 $1",
+			"^入力例\\s*(\\d+)": "样例输入 $1",
+			"^出力例\\s*(\\d+)": "样例输出 $1"
+		}
+	}, {
+		scope: "input[type=\"submit\"], input[type=\"button\"]",
+		values: zh
+	}]);
+	if (/^\/contests\/[^/]+\/virtual\/?$/.test(new URL(doc.URL).pathname)) applyPageI18n(doc, [{
+		scope: "#main-container .lang-en, #main-container .lang-ja",
+		map: {
+			"Virtual participation does not change rating.": "虚拟参赛不会影响积分。",
+			"The following are prohibited while virtual participation.": "虚拟参赛期间禁止以下行为：",
+			"Submitting someone else's code.": "提交他人的代码。",
+			"Submitting code created before start your virtual participation.": "提交在本次虚拟参赛开始前编写的代码。",
+			"参加条件に制限はありませんが、以下の行為はお控えください。": "参加条件没有限制，但请勿进行以下行为：",
+			"他人の回答をコピーして提出する行為": "复制并提交他人的代码。",
+			"事前に作成した回答ソースコードを提出する行為": "提交在本次虚拟参赛开始前编写的代码。",
+			"バーチャル参加とは、コンテストに仮想的に参加できる機能です。": "虚拟参赛可以模拟参加比赛。",
+			"バーチャル参加を開始すると、": "开始虚拟参赛后，",
+			"バーチャル順位表": "虚拟排行榜",
+			"が経過時間に応じてリアルタイムに更新されていきます。": "会随比赛用时实时更新。",
+			"ただし、本番のコンテストとは異なり、レーティングの変動は起こりません。": "与正式比赛不同，虚拟参赛不会影响积分。"
+		}
+	}]);
+}
+var scope = "html[data-ojpp-theme=\"dark\"]";
+var atcoder = {
+	id: "atcoder",
+	name: "AtCoder",
+	hosts: ["atcoder.jp"],
+	editor: atcoderEditor,
+	styles: `
+    .navbar-right .ojpp-settings-btn { margin: 8px 6px; }
+    #task-statement .ojpp-toolbar { font-size: 14px; }
+    #task-statement .ojpp-result { white-space: normal; }
+    .ojpp-editor-page .cm-scroller { min-height: 240px; }
+    /* Keep the form fields and Cloudflare challenge, but remove duplicate task-page controls. */
+    body:has(.ojpp-editor) form.form-code-submit > .form-group:has(#select-lang, #sourceCode),
+    body:has(.ojpp-editor) form.form-code-submit button[type="submit"] { display: none !important; }
+    /* On native editor pages CM6 owns editing; retain the actual submission textarea. */
+    body:has(.ojpp-editor-page, .ojpp-editor) #editor, body:has(.ojpp-editor-page, .ojpp-editor) #plain-textarea,
+    body:has(.ojpp-editor-page, .ojpp-editor) .btn-toggle-editor, body:has(.ojpp-editor-page, .ojpp-editor) #btn-customize,
+    body:has(.ojpp-editor-page, .ojpp-editor) #btn-open-file { display: none !important; }
+  `,
+	darkStyles: `
+${scope} { color-scheme: dark; }
+${scope} body, ${scope} #main-container, ${scope} #main-div, ${scope} #main-container .container,
+${scope} #contest-nav-tabs {
+  background: #1c2128; color: #cdd9e5;
+}
+${scope} a:not([class*="user-"]):not(.btn) { color: #539bf5; }
+${scope} a:not([class*="user-"]):hover { color: #79b8ff; }
+${scope} .navbar, ${scope} .navbar-default, ${scope} .navbar-inverse,
+${scope} .panel, ${scope} .panel-default, ${scope} .well, ${scope} .modal-content,
+${scope} .dropdown-menu, ${scope} .popover, ${scope} .list-group-item,
+${scope} .select2-drop, ${scope} .select2-results { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${scope} .panel-heading, ${scope} .panel-footer, ${scope} .modal-header,
+${scope} .modal-footer, ${scope} .popover-title { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${scope} .navbar a, ${scope} .dropdown-menu>li>a { color: #cdd9e5; }
+${scope} .dropdown-menu>li>a:hover, ${scope} .dropdown-menu>li>a:focus,
+${scope} .navbar .open>a, ${scope} .nav>li>a:hover, ${scope} .nav>li>a:focus,
+${scope} .nav-tabs>li.active>a, ${scope} .nav-tabs>li.active>a:hover,
+${scope} .pagination>.active>a { background: #2d333b; color: #79b8ff; border-color: #373e47; }
+${scope} .nav-tabs, ${scope} hr, ${scope} .table>thead>tr>th,
+${scope} .table>tbody>tr>td, ${scope} .table>tbody>tr>th, ${scope} .table-bordered,
+${scope} .table-bordered>thead>tr>th, ${scope} .table-bordered>tbody>tr>td { border-color: #373e47; }
+${scope} .table-striped>tbody>tr:nth-of-type(odd), ${scope} .table-striped>tbody>tr:nth-child(odd)>td,
+${scope} .table-striped>tbody>tr:nth-child(odd)>th { background: #22272e; }
+${scope} .table-hover>tbody>tr:hover>td, ${scope} .table-hover>tbody>tr:hover>th { background: #2d333b; }
+${scope} .table>thead>tr.active>th, ${scope} .table>thead>tr.active>td,
+${scope} .table>tbody>tr.active>th, ${scope} .table>tbody>tr.active>td,
+${scope} .table>thead>tr>th.active, ${scope} .table>tbody>tr>td.active { background: #22272e; color: #cdd9e5; }
+${scope} .table-hover>tbody>tr.active:hover>th, ${scope} .table-hover>tbody>tr.active:hover>td,
+${scope} .table-hover>tbody>tr:hover>td.active { background: #2d333b; }
+${scope} .table .success, ${scope} .table .success>td { background: #22392b; }
+${scope} .table .warning, ${scope} .table .warning>td { background: #3c3424; }
+${scope} .table .danger, ${scope} .table .danger>td { background: #422c30; }
+${scope} input:not([type=checkbox]):not([type=radio]), ${scope} select, ${scope} textarea,
+${scope} .form-control, ${scope} .select2-container .select2-choice,
+${scope} .select2-container .select2-choice .select2-arrow, ${scope} .select2-search input {
+  background: #1c2128; background-image: none; color: #cdd9e5; border-color: #373e47;
+}
+${scope} .select2-results .select2-highlighted { background: #2d333b; color: #79b8ff; }
+${scope} .btn-default, ${scope} .btn-default:focus, ${scope} .pagination>li>a,
+${scope} .pagination>li>span { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${scope} .btn-default:hover { background: #2d333b; }
+${scope} pre, ${scope} code, ${scope} .source-code-for-copy { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${scope} #task-statement var, ${scope} .katex { color: inherit; background: transparent; }
+${scope} .alert-info { background: #203247; color: #9bc4ef; border-color: #354c66; }
+${scope} .alert-warning { background: #3c3424; color: #e5c07b; border-color: #665537; }
+${scope} .alert-danger { background: #422c30; color: #f3a6ac; border-color: #694047; }
+${scope} .alert-success { background: #22392b; color: #8bc89a; border-color: #365d40; }
+${scope} .text-muted, ${scope} .help-block, ${scope} small { color: #909dab; }
+${scope} blockquote { border-color: #536170; }
+${scope} .close { color: #cdd9e5; text-shadow: none; opacity: .8; }
+${scope} #main-div, ${scope} #main-container { box-shadow: none; }
+${scope} .insert-participant-box { background: #22272e; color: #cdd9e5; }
+${scope} .btn-copy.btn-pre {
+  background: #22272e; color: #cdd9e5; border-color: #373e47;
+}
+${scope} .btn-copy.btn-pre:hover, ${scope} .btn-copy.btn-pre:focus {
+  background: #2d333b; color: #79b8ff; border-color: #536170;
+}
+${scope} #fixed-server-timer { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${scope} .select2-container .select2-selection--single,
+${scope} .select2-dropdown, ${scope} .select2-search__field {
+  background: #1c2128; color: #cdd9e5; border-color: #373e47;
+}
+${scope} .select2-container .select2-selection--single .select2-selection__rendered { color: #cdd9e5; }
+${scope} .select2-container .select2-results__option[aria-selected=true] { background: #2d333b; }
+${scope} .select2-container .select2-results__option--highlighted[aria-selected] { background: #354961; color: #fff; }
+${scope} .table>tbody>tr.success>th, ${scope} .table>tbody>tr>th.success { background: #22392b; }
+${scope} .table>tbody>tr.danger>th, ${scope} .table>tbody>tr>th.danger { background: #422c30; }
+${scope} .table>tbody>tr.warning>th, ${scope} .table>tbody>tr>th.warning { background: #3c3424; }
+${scope} .pager>li>a, ${scope} .pager>li>span {
+  background: #22272e; color: #539bf5; border-color: #373e47;
+}
+${scope} .pager>li>a:hover, ${scope} .pager>li>a:focus { background: #2d333b; color: #79b8ff; }
+${scope} .pager>li.disabled>a, ${scope} .pager>li.disabled>a:hover,
+${scope} .pager>li.disabled>a:focus, ${scope} .pager>li.disabled>span {
+  background: #1c2128; color: #909dab; border-color: #373e47;
+}
+${scope} .user-unrated, ${scope} .glyphicon.black { color: #cdd9e5 !important; }
+${scope} .standings-score { color: #79b8ff; }
+${scope} .sort-th { background-image: none !important; position: relative; padding-right: 20px; }
+${scope} .sort-th::after {
+  content: '↕'; position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+  color: #909dab; font-size: 12px; pointer-events: none;
+}
+${scope} .sort-th.sort-asc::after { content: '▴'; color: #79b8ff; }
+${scope} .sort-th.sort-desc::after { content: '▾'; color: #79b8ff; }
+${scope} .user-gray { color: #a0a0a0 !important; }
+${scope} .user-brown { color: #b78b66 !important; }
+${scope} .user-green { color: #57ab5a !important; }
+${scope} .user-cyan { color: #56c7c7 !important; }
+${scope} .user-blue { color: #539bf5 !important; }
+${scope} .user-yellow { color: #d8cf55 !important; }
+${scope} .user-orange { color: #f0883e !important; }
+${scope} .user-red { color: #f85149 !important; }
+`,
+	collectSections(doc) {
+		const sections = [];
+		const root = atcoderStatement(doc);
+		if (root) {
+			for (const section of root.querySelectorAll("section")) {
+				const heading = section.querySelector("h3");
+				if (!heading || !section.textContent?.trim()) continue;
+				const label = [...heading.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim();
+				if (section.querySelector("pre[id^=\"pre-sample\"]") || /^(Sample (Input|Output)|入力例|出力例|样例输入|样例输出)\s*\d+/.test(label)) {
+					for (const paragraph of [...section.children].filter((e) => e instanceof HTMLElement && [
+						"P",
+						"UL",
+						"OL"
+					].includes(e.tagName))) sections.push({
+						kind: "output",
+						label: t("section.note"),
+						content: paragraph,
+						toolbar: {
+							anchor: paragraph,
+							position: "beforebegin",
+							align: "block-right"
+						},
+						result: {
+							anchor: paragraph,
+							position: "afterend"
+						}
+					});
+					continue;
+				}
+				const kind = /^(Input|入力|输入)$/.test(label) ? "input" : /^(Output|出力|输出)$/.test(label) ? "output" : "statement";
+				const localizedLabel = /^(Constraints|制約|约束条件)$/.test(label) ? t("section.constraints") : kind === "input" ? t("section.input") : kind === "output" ? t("section.output") : /^(Problem Statement|問題文|题目描述)$/.test(label) ? t("section.statement") : label;
+				sections.push({
+					kind,
+					label: localizedLabel,
+					content: section,
+					toolbar: {
+						anchor: heading,
+						position: "beforeend",
+						align: "right"
+					},
+					result: {
+						anchor: section,
+						position: "afterend"
+					}
+				});
+			}
+			if (!sections.length && !root.querySelector("section")) sections.push({
+				kind: "statement",
+				label: t("section.statement"),
+				content: root,
+				toolbar: {
+					anchor: root,
+					position: "beforebegin",
+					align: "block-right"
+				},
+				result: {
+					anchor: root,
+					position: "afterend"
+				}
+			});
+		}
+		const contest = doc.querySelector("#contest-statement");
+		if (contest) {
+			const content = atcoderLanguageContent(contest);
+			if (content.textContent?.trim()) sections.push({
+				kind: "article",
+				label: t("section.contest"),
+				content,
+				toolbar: {
+					anchor: content,
+					position: "beforebegin",
+					align: "block-right"
+				},
+				result: {
+					anchor: content,
+					position: "afterend"
+				}
+			});
+		}
+		const editorialSelector = /\/editorial\/\d+/.test(new URL(doc.URL).pathname) ? "#main-container h2 + hr + div:not(.clearfix)" : "#main-container .editorial";
+		for (const content of doc.querySelectorAll(editorialSelector)) {
+			if (!content.textContent?.trim()) continue;
+			sections.push({
+				kind: "solution",
+				label: t("section.solution"),
+				content,
+				toolbar: {
+					anchor: content,
+					position: "beforebegin",
+					align: "block-right"
+				},
+				result: {
+					anchor: content,
+					position: "afterend"
+				}
+			});
+		}
+		for (const content of doc.querySelectorAll(".blog-post")) {
+			if (!content.textContent?.trim()) continue;
+			const heading = content.parentElement?.querySelector(".post-heading h3");
+			sections.push({
+				kind: "article",
+				label: t("section.blog"),
+				content,
+				toolbar: {
+					anchor: heading ?? content,
+					position: heading ? "beforeend" : "beforebegin",
+					align: "right"
+				},
+				result: {
+					anchor: content,
+					position: "afterend"
+				}
+			});
+		}
+		return sections;
+	},
+	prepareContent(root) {
+		root.querySelectorAll(".btn-copy, .div-btn-copy, .ojpp-toolbar, .ojpp-result").forEach((e) => e.remove());
+		for (const math of root.querySelectorAll("var, .katex-display, .katex")) {
+			if (!root.contains(math)) continue;
+			const tex = math.querySelector("annotation[encoding=\"application/x-tex\"]")?.textContent ?? (math.tagName === "VAR" && !math.querySelector(".MathJax") ? math.textContent : null);
+			if (tex === null) continue;
+			const node = root.ownerDocument.createElement("span");
+			const display = math.classList.contains("katex-display");
+			node.setAttribute("data-ojpp-math", display ? "display" : "inline");
+			node.textContent = tex;
+			math.replaceWith(node);
+		}
+		for (const script of root.querySelectorAll("script[type^=\"math/tex\"]")) {
+			const display = script.type.includes("mode=display");
+			const span = root.ownerDocument.createElement("span");
+			span.setAttribute("data-ojpp-math", display ? "display" : "inline");
+			span.textContent = script.textContent;
+			script.replaceWith(span);
+		}
+		root.querySelectorAll(".MathJax, .MathJax_Display, .MathJax_Preview").forEach((e) => e.remove());
+	},
+	mountSettingsButton(button, doc) {
+		const nav = doc.querySelector(".navbar-right");
+		if (nav) {
+			const li = doc.createElement("li");
+			li.className = "ojpp-settings-entry";
+			li.append(button);
+			nav.querySelector(".ojpp-settings-entry")?.remove();
+			nav.insertBefore(li, nav.lastElementChild);
+		} else doc.body.append(button);
+	},
+	observe(doc, onChange) {
+		let timer;
+		const observer = new MutationObserver((records) => {
+			if (!records.some((record) => {
+				return !(record.target instanceof Element ? record.target : record.target.parentElement)?.closest("[class*=\"ojpp-\"], .ace_editor, .katex, .MathJax");
+			})) return;
+			clearTimeout(timer);
+			timer = setTimeout(onChange, 120);
+		});
+		observer.observe(doc.body, {
+			childList: true,
+			subtree: true,
+			attributes: true,
+			attributeFilter: ["style"]
+		});
+		return () => {
+			clearTimeout(timer);
+			observer.disconnect();
+		};
+	},
+	i18nPage: localizeAtcoder
+};
+var CF_SUBS_RULES = [
+	{
+		scope: ".datatable",
+		replaceMap: {
+			"Virtual participation »": "参加虚拟重现赛 »",
+			"Enter »": "进入 »",
+			"Current standings": "当前榜单",
+			"Final standings": "最终榜单",
+			"Preliminary results": "初步结果",
+			"open hacking:": "开放黑客攻击中",
+			"School/University/City/Region Championship": "学校/大学/城市/区域比赛",
+			"Official School Contest": "学校官方比赛",
+			"Training Contest": "训练赛",
+			"Training Camp Contest": "训练营比赛",
+			"Official ICPC Contest": "ICPC官方比赛",
+			"Official International Personal Contest": "官方国际个人赛",
+			"China": "中国",
+			"Statements": "题目描述",
+			"in Chinese": "中文",
+			"Trainings": "训练",
+			"Prepared by": "编写人",
+			"Current or upcoming contests": "当前或即将举行的比赛",
+			"Rating:\xA0users\xA0participated\xA0in\xA0recent\xA06\xA0months": "评级：最近 6 个月有参与的用户",
+			"Past contests": "过去的比赛",
+			"Exclusions": "排除",
+			"Before start": "距比赛开始还有",
+			"Before registration": "距报名开始还有",
+			"Until closing ": "距报名结束还有",
+			"Before extra registration": "额外报名还未开始",
+			"Register »": "报名 »",
+			"Registration completed": "已报名",
+			"Registration closed": "报名已结束",
+			"Problems\n": "问题集",
+			"My Submissions": "我的提交",
+			"Standings": "榜单",
+			"Questions about problems": "关于问题的提问",
+			"Contest status": "比赛状态",
+			"Invited users": "邀请的用户",
+			"Invitation links": "邀请链接",
+			"API keys": "API密钥"
+		}
+	},
+	{
+		scope: ".first-row, .datatable .top",
+		replaceMap: {
+			"When": "提交时间",
+			"Who": "提交者",
+			"Problem": "问题",
+			"Lang": "语言",
+			"Verdict": "判题状态",
+			"Time": "时间",
+			"Memory": "内存",
+			"Author": "提交者",
+			"Sent": "提交时间",
+			"Judged": "判题时间",
+			"Name": "比赛名称",
+			"Writers": "编写者",
+			"Start": "开始时间",
+			"Length": "持续时长"
+		}
+	},
+	{
+		scope: ".datatable .problems, .datatable .status-small",
+		replaceMap: {
+			"进入": "Enter",
+			"题目描述": "Statements",
+			"训练": "Trainings",
+			"问题集": "Problems",
+			"榜单": "Standings"
+		}
+	},
+	{
+		scope: ".menu-list.main-menu-list",
+		replaceMap: {
+			"Home": "主页",
+			"Top": "热门",
+			"Catalog": "指南目录",
+			"Contests": "比赛",
+			"Gym": "训练营",
+			"Problemset": "题库",
+			"Groups": "团体",
+			"Rating": "排行榜",
+			"Edu": "培训",
+			"Calendar": "日历",
+			"ICPC Challenge": "ICPC挑战赛",
+			"Help": "帮助"
+		}
+	},
+	{
+		scope: ".nav-links",
+		replaceMap: {
+			"Settings": "设置",
+			"Blog": "博客",
+			"Teams": "队伍",
+			"Submissions": "提交记录",
+			"Favourites": "收藏",
+			"Problemsetting": "参与编写的问题",
+			"Groups": "团体",
+			"Propose a contest/problems": "提议比赛/题目",
+			"Talks": "私信",
+			"Contests": "比赛"
+		}
+	},
+	{
+		scope: ".contest-state-phase",
+		replaceMap: {
+			"Before contest": "即将进行的比赛",
+			"Contest is running": "比赛进行中",
+			"Registration is running": "报名进行中"
+		}
+	},
+	{
+		scope: ".notice",
+		replaceMap: {
+			"has extra registration": "有额外的报名时期",
+			"If you are late to register in 5 minutes before the start, you can register later during the extra registration. Extra registration opens 10 minutes after the contest starts and lasts 25 minutes.": "如果您在比赛开始前5分钟前还未报名，您可以在额外的报名期间稍后报名。额外的报名将在比赛开始后10分钟开放，并持续25分钟。",
+			"in timezone ([^)]*)": "$1 时区",
+			"Contest will be available for virtual participation when over. Leave this field blank to allow virtual participation at any time": "比赛结束后将允许虚拟参赛。将此字段留空以允许随时进行虚拟参赛",
+			"Contest duration in minutes": "比赛持续时间（分钟）",
+			"or choose": "或选择",
+			"Standings freeze period in minutes": "榜单冻结时间（分钟）",
+			"Time when final results are available": "最终结果可用时间",
+			"Is it allowed to solve contest problems unofficially after the end": "比赛结束后是否允许非官方解决比赛问题",
+			"Is it allowed to run contest as virtual after the end": "比赛结束后是否允许虚拟参赛",
+			"Is it allowed participate in contest out of competition": "是否允许非竞赛参赛",
+			"Are participants allowed to register for the contest themselves": "是否允许参赛者自行报名",
+			"Can non-registered users and anonyms view contest standings, problems and other statistics": "是否允许未注册用户和匿名用户查看比赛榜单、问题和其他统计信息",
+			"If unchecked they will view only personal status": "如果未选中，他们将只能查看个人状态",
+			"To manage allowed program languages": "管理允许的编程语言",
+			"The system will automatically adjust time limits for some languages. Recommended for use only for educational purpose.": "系统将自动调整某些语言的时间限制。仅建议用于教育目的。",
+			"Check it if you want to allow contestants view statements": "如果允许参赛者查看题目描述，请勾选此项",
+			"Check it if contestants can view standings": "如果允许参赛者查看榜单，请勾选此项",
+			"Where the contest was held originally": "比赛原本举办的地点",
+			"Official contest site URL": "官方比赛网站URL",
+			"Enter a name for your new API key. It should describe what this key is used for.": "为您的新API密钥输入一个名称。它应该描述这个密钥的用途。",
+			"Enter your account password to confirm access. If you do not have password, logout and use password recovery feature.": "输入您的账户密码以确认访问。如果您没有密码，请注销并使用密码恢复功能。"
+		}
+	},
+	{
+		scope: ".propertyLinks",
+		replaceMap: {
+			"Rating": "等级分",
+			"Contribution": "贡献"
+		}
+	},
+	{
+		scope: ".contests-table",
+		replaceMap: { "Contest history": "比赛历史" }
+	},
+	{
+		scope: ".roundbox.sidebox.borderTopRound",
+		replaceMap: {
+			"Register now": "现在报名",
+			"No tag edit access": "没有标签编辑权限",
+			"Problem:": "问题:",
+			"Verdict:": "判题状态:",
+			"Language:": "语言:",
+			"Test:": "测试点数量:",
+			"Participant": "参赛者",
+			"Choose file:": "选择文件:",
+			"Want to solve the contest problems after the official contest ends\\? Just register for practice and you will be able to submit solutions.": "想在正式比赛结束后解决比赛问题吗？只需登录或注册账号，您就可以提交代码。",
+			"The package for this problem was not updated by the problem writer or Codeforces administration after we've upgraded the judging servers. To adjust the time limit constraint, a solution execution time will be multiplied by 2. For example, if your solution works for 400 ms on judging servers, then the value 800 ms will be displayed and used to determine the verdict.": "这个题目的数据包未在我们升级评测服务器后由出题人或Codeforces管理团队更新。为了调整时间限制的约束，一个解答的执行时间将被乘以2。例如，如果你的解答在评测服务器上运行了400毫秒，那么将显示并使用800毫秒的值来确定结果。",
+			"Virtual contest is a way to take part in past contest, as close as possible to participation on time. It is supported only ICPC mode for virtual contests.": "虚拟比赛是一种参加过去比赛的方式，尽可能接近实时参赛。目前只支持ICPC模式的虚拟赛事。",
+			"If you've seen these problems, a virtual contest is not for you - solve these problems in the archive.": "如果你已经看过这些题目，虚拟赛事就不适合你——应该在题库中解决这些题目。",
+			"If you just want to solve some problem from a contest, a virtual contest is not for you - solve this problem in the archive.": "如果你只是想解决比赛中的某个问题，虚拟赛事也不适合你——应该在题库中解决这个问题。",
+			"Never use someone else's code, read the tutorials or communicate with other person during a virtual contest.": "在虚拟比赛期间，切勿使用别人的代码，阅读题解或与他人交流。",
+			"You can clone this contest to a mashup.": "您可以将此比赛克隆到混搭比赛中。",
+			"Mashup is a special type of training contest, which consists of public problems from past Codeforces rounds. Also it is possible to add": "混搭是一种特殊类型的训练比赛，由过去Codeforces比赛的公开问题组成。还可以添加",
+			"problems to mashup contest.": "问题到混搭比赛。",
+			"Such contests can not be made public, they are only for personal training purpose. Also it is allowed to add mashups to groups. To specify additional information about mashup contest, use Gym contest edit form.": "这样的比赛不能公开，只用于个人训练目的。还可以将混搭添加到团体中。要指定有关混搭比赛的其他信息，请使用训练营比赛编辑表单。"
+		}
+	},
+	{
+		scope: ".roundbox.sidebox.virtual-contests.borderTopRound",
+		replaceMap: {
+			"Contest": "比赛名称",
+			"Time": "开始时间",
+			"Enter »": "进入 »"
+		}
+	},
+	{
+		scope: ".roundbox.sidebox.top-contributed.borderTopRound",
+		replaceMap: {
+			"User": "用户名",
+			"Rating": "等级分",
+			"Contrib.": "贡献"
+		}
+	},
+	{
+		scope: ".roundbox.sidebox.borderTopRound .rtable.smaller",
+		replaceMap: {
+			"Submission": "#",
+			"Time": "提交时间",
+			"Verdict": "判题状态",
+			"提交时间 limit exceeded": "Time limit exceeded"
+		}
+	},
+	{
+		scope: ".reset-status-filter",
+		replaceMap: {
+			"Status filter is used, click ": "状态筛选已启用，点击",
+			"here": "此处",
+			" to reset ": "重置"
+		}
+	},
+	{
+		scope: ".icon-eye-close.icon-large",
+		replaceMap: { "Add to exclusions": "添加到排除列表" }
+	},
+	{
+		scope: ".roundbox.sidebox.sidebar-menu.borderTopRound",
+		replaceMap: {
+			"Announcement": "公告",
+			"Statements": "题面陈述",
+			"Tutorial": "题解"
+		}
+	},
+	{
+		scope: ".second-level-menu",
+		replaceMap: {
+			"Problems": "问题",
+			"Submit Code": "提交代码",
+			"My Submissions": "我的提交",
+			"Status": "状态",
+			"Standings": "榜单",
+			"Adm.": "管理",
+			"Edit": "编辑",
+			"Custom Invocation": "自定义调试",
+			"Common standings": "全部排行",
+			"Friends standings": "只看关注",
+			"Rating Changes": "全部评级变化",
+			"Friends 全部评级变化": "关注评级变化",
+			"Submit": "提交",
+			"Hacks": "黑客",
+			"Room": "房间",
+			"Custom test": "自定义测试",
+			"Blog": "博客",
+			"Teams": "队伍",
+			"Submissions": "提交记录",
+			"Groups": "团体",
+			"Rating": "评级",
+			"Friends rating": "关注的评级",
+			"Favourites": "收藏",
+			"Contests": "比赛",
+			"Magic": "魔法",
+			"Handle": "账号",
+			"Members": "成员",
+			"问题etting": "参与编写的问题",
+			"Streams": "直播",
+			"Gym": "训练营",
+			"Mashups": "组合混搭",
+			"Posts": "帖子",
+			"Comments": "回复",
+			"Main": "主题库",
+			"Settings": "设置",
+			"Lists": "列表",
+			"General": "基本",
+			"Sidebar": "侧边栏",
+			"Social": "社会信息",
+			"Address": "地址",
+			"Wallets": "钱包"
+		}
+	},
+	{
+		scope: ".topic-toggle-collapse",
+		replaceMap: { "Expand": "展开" }
+	},
+	{
+		scope: ".topic-read-more",
+		replaceMap: { "Full text and comments": "阅读全文/评论" }
+	},
+	{
+		scope: ".toggleEditorCheckboxLabel",
+		replaceMap: { "Switch off editor": "关闭编辑器语法高亮" }
+	},
+	{
+		scope: ".submit",
+		replaceMap: { "Registration for the contest": "比赛报名" }
+	},
+	{
+		scope: "._FilterByTagsFrame_difficulty",
+		replaceMap: { "Difficulty:": "难度:" }
+	},
+	{
+		scope: "._FilterByTagsFrame_addTagLink",
+		replaceMap: { "Add\xA0tag": "添加标签" }
+	},
+	{
+		scope: ".alert",
+		replaceMap: {
+			"Rating changes for last rounds are temporarily rolled back. They will be returned soon.": "上一轮的评级变化暂时回滚。它们将很快恢复。",
+			"Reminder: in case of any technical issues, you can use the lightweight website": "提醒：如果出现任何技术问题，您可以使用轻量网站",
+			"Please subscribe to the official Codeforces channel in Telegram via the link": "请通过链接订阅Codeforces的官方Telegram频道",
+			"Thank you for your interest in Codeforces. You have been successfully registered.": "感谢您对Codeforces的关注。您已成功注册。",
+			"Now you need to confirm your email. A letter was sent to your email, follow the instructions to complete the registration.": "现在您需要确认您的电子邮件。一封信已发送到您的电子邮件，请按照说明完成注册。",
+			"If for any reason the letter did not come, it can be sent again": "如果由于任何原因信件未到达，可以再次发送",
+			"The user is disabled.": "该用户已被封禁。"
+		}
+	},
+	{
+		scope: ".lang-chooser",
+		replaceMap: {
+			"Enter": "登录",
+			"Register": "注册",
+			"Contest rating": "等级分",
+			"Logout": "退出登录"
+		}
+	},
+	{
+		scope: ".userbox",
+		replaceMap: {
+			"Change photo": "更换图片",
+			"Contest rating": "等级分",
+			"Contribution": "贡献",
+			"Friend of": "粉丝",
+			"My friends": "我的好友",
+			"Change settings": "改变设置",
+			"Last visit": "最后访问",
+			"not visible": "不可见的",
+			"Registered": "注册于",
+			"Blog entries": "博客条目",
+			"comments": "评论",
+			"Write new entry": "编写新条目",
+			"View my talks": "查看我的私信",
+			"Talks": "私信",
+			"Send message": "发送消息"
+		}
+	},
+	{
+		scope: "#vote-reset-filterDifficultyLowerBorder",
+		replaceMap: { "Reset": "重置" }
+	},
+	{
+		scope: "#vote-reset-filterDifficultyUpperBorder",
+		replaceMap: { "Reset": "重置" }
+	},
+	{
+		scope: ".alert.alert-info",
+		replaceMap: {
+			"The problem statement has recently been changed.": "题目描述最近已被更改。",
+			"View the changes.": "查看更改"
+		}
+	},
+	{
+		scope: ".enterPage",
+		replaceMap: {
+			"Fill in the form to login into Codeforces.": "填写表单以登录到Codeforces。",
+			"You can use": "你也可以使用",
+			"as an alternative way to enter.": "登录"
+		}
+	},
+	{
+		scope: ".notice.small",
+		replaceMap: { "\\* To view the complete list, click ": "* 要查看完整列表，请点击" }
+	},
+	{
+		scope: ".setting-name",
+		replaceMap: {
+			"Contest type:": "比赛类型：",
+			"Rated:": "已评级：",
+			"Tried:": "已尝试：",
+			"Substring:": "关键字："
+		}
+	},
+	{
+		scope: ".shiftUp",
+		replaceMap: { "In contest title and writers": "在比赛标题与编写者中搜索" }
+	},
+	{
+		scope: ".by-form",
+		replaceMap: {
+			"Sort by:": "排序依据：",
+			"relevance": "相关",
+			"popularity": "热度",
+			"time": "时间"
+		}
+	},
+	{
+		scope: ".roundbox.borderTopRound",
+		replaceMap: {
+			"If you invite users to this contest, the contest will become visible to them regardless of its visibility. You can share the contest using the link:": "如果您邀请用户参加此竞赛，则无论其可见性如何，该竞赛都将对用户可见。您可以使用以下链接分享比赛：",
+			"Generate link and share it with other users": "生成链接并与其他用户共享",
+			"Show Log »": "展示日志 »",
+			"Move all to practice\xA0»": "全部移至练习者 »",
+			"Remove All »": "移除全部 »",
+			"Add »": "添加 »",
+			"Set »": "设置 »",
+			"Download Archive »": "下载归档 »"
+		}
+	},
+	{
+		scope: ".caption.titled",
+		replaceMap: {
+			"Pay attention": "注意",
+			"Top rated": "评级排行",
+			"Top contributors": "贡献者排行",
+			"Find user": "查找用户",
+			"Recent actions": "最新动态",
+			"Training filter": "过滤筛选",
+			"Find training": "搜索比赛/问题",
+			"Virtual participation": "什么是虚拟参赛",
+			"Contest materials": "比赛相关资料",
+			"Settings": "设置",
+			"Create Mashup Contest": "创建混搭比赛",
+			"Clone Contest to Mashup": "克隆比赛到组合混搭",
+			"Invitations": "邀请",
+			"Status filter": "状态过滤器",
+			"Administration": "管理",
+			"Submit": "提交",
+			"Practice": "练习",
+			"Problem tags": "问题标签",
+			"Filter Problems": "过滤问题",
+			"Last unsolved": "上次未解决",
+			"Attention": "注意",
+			"Past contests filter": "筛选过去的比赛",
+			"Recent virt. contests": "过去的虚拟参赛",
+			"About Contest": "关于比赛",
+			"Last submissions": "提交历史",
+			"Streams": "直播",
+			"Coach rights": "教练权限",
+			"Advices to fill address": "填写地址的建议",
+			"Hacks filter": "黑客过滤器",
+			"Score table": "评分表",
+			"Contests": "比赛",
+			"History": "编辑历史",
+			"Login into Codeforces": "登录 Codeforces",
+			"Export the judgment log to DAT-file": "导出判题日志为 DAT 文件",
+			"Contest managers": "比赛管理员",
+			"Contest writers": "比赛编写者",
+			"Spectator ranklists": "观众排名列表",
+			"Ghosts:": "幽灵选手",
+			"Export Submissions": "导出提交",
+			"Register in Codeforces": "注册 Codeforces",
+			"Password recovery": "密码恢复"
+		}
+	},
+	{
+		scope: "#gym-filter-form div label, #gym-filter-form div",
+		replaceMap: {
+			"Contest type:": "比赛类型:",
+			"ICPC region:": "ICPC地区:",
+			"Contest format:": "比赛形式:",
+			"Order by:": "排序方式:",
+			"Secondary order by:": "次要排序方式:",
+			"Hide, if participated:": "隐藏我参加过的:",
+			"Hide excluded gyms": "隐藏已排除的:",
+			"Season:": "时间范围（年度）",
+			"Duration, hours:": "持续时间（小时）:",
+			"Difficulty:": "难度:"
+		}
+	},
+	{
+		scope: ".setting-value select option, .setting-last-value select option",
+		replaceMap: {
+			"Official ACM-ICPC Contest": "ICPC官方比赛",
+			"Official School Contest": "学校官方比赛",
+			"Opencup Contest": "Opencup比赛",
+			"School/University/City/Region Championship": "学校/大学/城市/地区锦标赛",
+			"Training Camp Contest": "训练营比赛",
+			"Official International Personal Contest": "官方国际个人赛",
+			"Training Contest": "训练比赛",
+			"ID_ASC": "创建时间（升序）",
+			"ID_DESC": "创建时间（降序）",
+			"RATING_ASC": "评分（升序）",
+			"RATING_DESC": "评分（降序）",
+			"DIFFICULTY_ASC": "难度（升序）",
+			"DIFFICULTY_DESC": "难度（降序）",
+			"START_TIME_ASC": "开始时间（升序）",
+			"START_TIME_DESC": "开始时间（降序）",
+			"DURATION_ASC": "持续时间（升序）",
+			"DURATION_DESC": "持续时间（降序）",
+			"POPULARITY_ASC": "热度（升序）",
+			"POPULARITY_DESC": "热度（降序）",
+			"UPDATE_TIME_ASC": "更新时间（升序）",
+			"UPDATE_TIME_DESC": "更新时间（降序）"
+		}
+	},
+	{
+		scope: ".options li label, .CaptionCont span",
+		replaceMap: {
+			"Educational": "教育性",
+			"Global": "全球",
+			"VK Cup": "VK杯",
+			"Long Rounds": "长期回合",
+			"April Fools": "愚人节",
+			"Team Contests": "团队比赛",
+			"ICPC Scoring": "ICPC计分",
+			"Doesn't matter": "----",
+			"Any": "所有",
+			"Yes$": "是",
+			"No$": "否",
+			"No submission(s)": "无提交",
+			"Have submission(s)": "有提交",
+			"No solved problem(s)": "无解决问题",
+			"Have solved problem(s)": "有解决问题"
+		}
+	},
+	{
+		scope: ".sidebox div label",
+		replaceMap: {
+			"Show tags for unsolved problems": "显示未解决问题的标签",
+			"Hide solved problems": "隐藏已解决的问题"
+		}
+	},
+	{
+		scope: "td.field-name label",
+		replaceMap: {
+			"Postal/zip code": "邮政编码/邮编",
+			"Country //(English//)": "国家（英文）",
+			"State //(English//)": "州/省份（英文）",
+			"City //(English//)": "城市（英文）",
+			"Address //(English//)": "地址（英文）",
+			"Recipient //(English//)": "收件人姓名（英文）",
+			"Country //(Native//)": "国家（本地语言）",
+			"State //(Native//)": "州/省份（本地语言）",
+			"City //(Native//)": "城市（本地语言）",
+			"Address //(Native//)": "地址（本地语言）",
+			"Recipient //(Native//)": "收件人姓名（本地语言）",
+			"Phone": "电话",
+			"TON Wallet:": "TON 钱包:",
+			"Secret Code:": "验证码:",
+			"Terms of agreement:": "协议条款:",
+			"Choose team:": "选择团队:"
+		}
+	},
+	{
+		scope: "._FilterByTagsFrame_addTagLabel select option, ._FilterByTagsFrame_tagBoxCaption, .notice, .tag-box",
+		replaceMap: {
+			"combine tags by OR": "按逻辑或组合我选择的标签",
+			"combine-tags-by-or": "按逻辑或组合我选择的标签（combine-tags-by-or）",
+			"2-sat": "2-SAT（2-sat）",
+			"binary search": "二分（binary search）",
+			"bitmasks": "状态压缩（bitmasks）",
+			"brute force": "暴力枚举（brute force）",
+			"chinese remainder theorem": "中国剩余定理（chinese remainder theorem）",
+			"combinatorics": "组合数学（combinatorics）",
+			"constructive algorithms": "构造（constructive algorithms）",
+			"data structures": "数据结构（data structures）",
+			"dfs and similar": "DFS及其变种（dfs and similar）",
+			"divide and conquer": "分治（divide and conquer）",
+			"dp": "动态规划（dp）",
+			"dsu": "并查集（dsu）",
+			"expression parsing": "表达式解析（expression parsing）",
+			"fft": "快速傅里叶变换（fft）",
+			"flows": "流（flows）",
+			"games": "博弈论（games）",
+			"geometry": "计算几何（geometry）",
+			"graph matchings": "图匹配（graph matchings）",
+			"graphs": "图论（graphs）",
+			"greedy": "贪心（greedy）",
+			"hashing": "哈希表（hashing）",
+			"implementation": "模拟（implementation）",
+			"interactive": "交互题（interactive）",
+			"math": "数学（math）",
+			"matrices": "矩阵（matrices）",
+			"meet-in-the-middle": "双向搜索（meet-in-the-middle）",
+			"number theory": "数论（number theory）",
+			"probabilities": "概率论（probabilities）",
+			"schedules": "调度算法（schedules）",
+			"shortest paths": "最短路（shortest paths）",
+			"sortings": "排序（sortings）",
+			"string suffix structures": "字符串后缀结构（string suffix structures）",
+			"strings": "字符串处理（strings）",
+			"ternary search": "三分（ternary search）",
+			"trees": "树形结构（trees）",
+			"two pointers": "双指针（two pointers）"
+		}
+	},
+	{
+		scope: ".field-name",
+		replaceMap: {
+			"Hide sidebar block \"Find user\"": "隐藏侧边栏块“查找用户”",
+			"Hide sidebar block \"Current user\"": "隐藏侧边栏块“当前用户”",
+			"Hide sidebar block \"Recent аctions\"": "隐藏侧边栏块“最新动态”",
+			"Hide sidebar block \"Favourite groups\"": "隐藏侧边栏块“收藏组”",
+			"Hide sidebar block \"Top contributors\"": "隐藏侧边栏块“贡献者排行”",
+			"Hide sidebar block \"Top rated\"": "隐藏侧边栏块“评级排行”",
+			"Hide sidebar block \"Streams\"": "隐藏侧边栏块“直播”",
+			"Old password": "旧密码",
+			"New password": "新密码",
+			"Confirm new password": "确认新密码",
+			"Contest email notification": "比赛邮件通知",
+			"Send email on new user talk": "在有新用户对话时发送电子邮件",
+			"Send email on new comment": "在有新评论时发送电子邮件",
+			"Hide contact information": "隐藏联系人信息",
+			"Remember me by Gmail, Facebook and etc": "通过 Gmail、Facebook 等记住我",
+			"Show tags for unsolved problems": "显示未解决问题的标签",
+			"Hide solved problems from problemset": "从问题集中隐藏已解决的问题",
+			"Hide low rated blogs": "隐藏评级较低的博客",
+			"Offer to publish great rating rises": "提供展示Rating显著提升的机会",
+			"Enforce https": "强制 HTTPS",
+			"Show private activity in the profile": "在个人资料中显示私人活动",
+			"Show diagnostics": "显示诊断信息"
+		}
+	},
+	{
+		scope: ".field-name",
+		replaceMap: {
+			"Problem:": "题目:",
+			"Question": "问题",
+			"Language:": "语言:",
+			"Source code:": "源代码:",
+			"Or choose file:": "或者选择文件:",
+			"Choose file:": "选择文件:",
+			"Notice:": "注意:",
+			"virtual participation:": "虚拟参与:",
+			"Registration for the contest:": "比赛报名:",
+			"Take part:": "参与:",
+			"as individual participant:": "作为个人参与者:",
+			"as a team member:": "作为团队成员:",
+			"Virtual start time:": "虚拟开始时间:",
+			"Complete problemset:": "完整的问题集:",
+			"First name \\(English\\)": "名字（英文）",
+			"Last name \\(English\\)": "姓氏（英文）",
+			"First name \\(Native\\)": "名字（本地语言）",
+			"Last name \\(Native\\)": "姓氏（本地语言）",
+			"Birth date": "出生日期",
+			"Country": "国家",
+			"City": "城市",
+			"Organization": "组织",
+			"Handle/Email": "账号/邮箱",
+			"Name": "名称",
+			"Handle": "账号",
+			"Email": "邮箱",
+			"Confirm": "确认",
+			"Password": "密码",
+			"New Rank": "新的Rank",
+			"Training name \\(English\\):": "训练名称（英文）:",
+			"Training name \\(Russian\\):": "训练名称（俄语）:",
+			"Contest format:": "比赛格式:",
+			"Start time:": "开始时间:",
+			"Duration:": "持续时间:",
+			"Visibility:": "可见性:",
+			"Attach parent contest\\?:": "关联父级比赛?",
+			"Participation type:": "参与类型:",
+			"Freeze period:": "冻结期间:",
+			"Unfreeze time:": "解冻时间:",
+			"Is practice allowed\\?:": "是否允许练习?",
+			"Is virtual allowed\\?:": "是否允许虚拟参赛?",
+			"Is out of competition allowed\\?:": "是否允许非竞赛参赛?",
+			"Is self-registration allowed\\?:": "是否允许自助注册?",
+			"Can non-registered view the contest\\?:": "未注册用户能否查看比赛?",
+			"Can participants view common status\\?:": "参赛选手能否查看共享状态?",
+			"Contest testdata policy:": "比赛测试数据策略:",
+			"Allow view other submissions to:": "允许查看其他提交给:",
+			"Manage program languages:": "管理编程语言:",
+			"Use time limits scaling policy\\?:": "使用时间限制缩放策略?",
+			"Allow statements\\?:": "允许查看题目描述?",
+			"Allow standings\\?:": "允许查看排名?",
+			"Season:": "季节:",
+			"Contest type:": "比赛类型:",
+			"ICPC region:": "ICPC 地区:",
+			"Country:": "国家:",
+			"City:": "城市:",
+			"Contest difficulty:": "比赛难度:",
+			"Website URL:": "网站链接:",
+			"Description \\(English\\):": "描述（英文）:",
+			"Description \\(Russian\\):": "描述（俄语）:",
+			"Registration confirmation text \\(English\\):": "注册确认文字（英文）:",
+			"Registration confirmation text \\(Russian\\):": "注册确认文字（俄语）:",
+			"Logo \\(English\\):": "徽标（英文）:",
+			"Logo \\(Russian\\):": "徽标（俄语）:",
+			"End time:": "结束时间:",
+			"Name:": "名称:",
+			"Contest\\(s\\):": "比赛:",
+			"Add contest:": "添加比赛:",
+			"Show Contestants:": "显示参赛选手:",
+			"Show Out of Competition Participants:": "显示非竞赛参与者:",
+			"Show Practices:": "显示练习:",
+			"Show Virtuals:": "显示虚拟选手:",
+			"Show Ghosts:": "显示幽灵选手:",
+			"Text:": "文本:",
+			"Rewrite Examples:": "重写样例:",
+			"Add images:": "添加图片:",
+			"Do not use:": "不使用:",
+			"Problem short name:": "题目简称:",
+			"Source problem:": "源问题:",
+			"Problem name \\(English\\):": "题目名称（英文）:",
+			"Input file name:": "输入文件名:",
+			"Output file name:": "输出文件名:",
+			"Time Limit:": "时间限制:",
+			"Memory Limit:": "内存限制:",
+			"Output only:": "仅输出:"
+		}
+	},
+	{
+		scope: ".ask-question-link",
+		replaceMap: { "Ask a question": "提一个问题" }
+	},
+	{
+		scope: ".add-announcement-link",
+		replaceMap: { "Add announcement": "添加公告" }
+	},
+	{
+		scope: "#pageContent > div:nth-child(7) > div",
+		replaceMap: { "You may double click into cells \\(or ctrl\\+click\\) to view the submissions(\\s)*history or hack the solution": "你可以双击单元格（或者按住Ctrl并点击）来查看提交历史或者对其他人的代码进行攻击。" }
+	},
+	{
+		scope: ".choose-order",
+		replaceMap: {
+			"Default order": "默认顺序",
+			"Submission time": "提交时间",
+			"Judging Time": "判题时间",
+			"Solution Size": "代码长度",
+			"Execution Time": "执行时间"
+		}
+	},
+	{
+		scope: ".error.for__password",
+		replaceMap: { "Please, confirm email before entering the website.": "在进入网站之前请先验证电子邮件。" }
+	},
+	{
+		scope: "#enterForm",
+		replaceMap: {
+			"Remember me for a month": "记住我一个月",
+			"Forgot your password": "忘记密码"
+		}
+	},
+	{
+		scope: ".centered-message",
+		replaceMap: { "Password recovery letter has been sent successfully": "密码恢复邮件已成功发送" }
+	},
+	{
+		scope: "button",
+		replaceMap: { "Compare": "比较" }
+	},
+	{
+		scope: ".click-to-view-tests-div",
+		replaceMap: {
+			"Click": "点击",
+			"to see test details": "查看测试详情"
+		}
+	},
+	{
+		scope: ".unrated-allowed",
+		replaceMap: { "Unrated allowed": "允许未评级报名" }
+	},
+	{
+		scope: ".contestRegistration",
+		replaceMap: {
+			"The registration confirms that you:": "报名即代表你：",
+			"\\* have read the contest rules  by the links http://codeforces.com/blog/entry/456 and http://codeforces.com/blog/entry/4088": "* 已阅读比赛规则，链接：http://codeforces.com/blog/entry/456、http://codeforces.com/blog/entry/4088",
+			"\\* will not violate the rules described on http://codeforces.com/blog/entry/456 and/or http://codeforces.com/blog/entry/4088": "* 不会违反规则，规则描述见：http://codeforces.com/blog/entry/456、http://codeforces.com/blog/entry/4088",
+			"\\* have read the regulations on AI assistants at the following link: https://codeforces.com/blog/entry/133941 and agree to comply with them": "* 已阅读以下链接中的 AI 使用规定并同意遵守：https://codeforces.com/blog/entry/133941",
+			"\\* will not communicate with other participants, share ideas of solutions and hacks": "* 不会与其他参赛者交流、分享解题和 hack 思路。",
+			"\\* will not use third-party code, except stated in http://codeforces.com/blog/entry/8790": "* 不会使用第三方代码，除非属于该规则中明确列出的允许情形：http://codeforces.com/blog/entry/8790",
+			"\\* will not attempt to deliberately destabilize the testing process and try to hack the contest system in any form": "* 不会故意干扰评测过程，也不会以任何形式试图攻击比赛系统。",
+			"\\* will not use multiple accounts and will take part in the contest using your personal and the single account\\.": "* 不会使用多个账号，仅使用你的个人且唯一账号参赛。",
+			"I want to register unrated": "我想非评级报名"
+		}
+	},
+	{
+		scope: "#jGrowl",
+		replaceMap: {
+			"Welcome": "欢迎",
+			"Goodbye, ": "再见，",
+			"Looking forward to seeing you at Codeforces.": "期待再次在Codeforces见到你。",
+			"You have been successfully registered": "您已成功报名",
+			"No such contests": "没有该比赛",
+			"The example input has been copied into the clipboard": "样例输入已复制到剪贴板",
+			"The example output has been copied into the clipboard": "样例输出已复制到剪贴板",
+			"The source code has been copied into the clipboard": "源代码已复制到剪贴板",
+			"Settings have been updated": "设置已更新",
+			"Solution to the problem": "问题",
+			"has been submitted successfully": "的解答已成功提交",
+			"Settings have been saved": "设置已保存",
+			"Contest is over": "比赛已结束",
+			"Illegal contest ID": "非法的比赛ID",
+			"No such contest": "没有该比赛",
+			"Can't find such user": "找不到此用户",
+			"No such blog entry": "没有该博客条目",
+			"Compilation error": "编译错误",
+			"No registration is opened now": "现在没有开放报名",
+			"Blog entry has been deleted": "博客条目已删除",
+			"Added to liked": "已点击喜欢",
+			"Hold Ctrl\\+Alt and click to hide column. Also, you can drag\\&drop columns to reorder them.": "按住Ctrl+Alt并点击一列可以隐藏该列。此外，您还可以通过拖放列来重新排序它们。"
+		}
+	},
+	{
+		scope: "input[type='submit']",
+		replaceValues: {
+			"Register for virtual participation": "报名虚拟参赛",
+			"Register for practice": "登录以开始练习",
+			"Apply": "应用",
+			"Register": "报名",
+			"Login": "登录",
+			"Run": "运行",
+			"Start virtual contest": "开始虚拟参赛",
+			"Manage invitations": "管理邀请",
+			"Disable manager mode": "临时关闭管理模式",
+			"Enable manager mode": "开启管理模式",
+			"Clone Contest": "克隆比赛",
+			"Submit": "提交",
+			"Save changes": "保存设置",
+			"Filter": "过滤",
+			"Find": "查找",
+			"Save": "保存",
+			"Create Mashup Contest": "创建混搭比赛",
+			"Delete problem": "删除问题",
+			"Restore problem": "恢复问题",
+			"Generate": "生成",
+			"Send": "发送",
+			"Recover": "恢复"
+		}
+	},
+	{
+		scope: "input[type='button']",
+		replaceValues: {
+			"Reset": "重置",
+			"Delete contest": "删除比赛",
+			"Preview": "预览",
+			"Delete": "删除",
+			"Save draft": "保存草稿",
+			"Post": "发布"
+		}
+	}
+];
+/**
+* Codeforces 的公式有两种完全不同的形态，取决于题目年代：
+*
+* 老题（约 2019 前）：服务端直接渲染成 HTML，页面里没有 LaTeX 源。
+*   形如 <span class="tex-span"><i>n</i> × <i>m</i></span>
+*   上下标是 <sup class="upper-index"> / <sub class="lower-index">。
+*   这类只能按结构还原成 LaTeX。
+*
+* 新题（约 2019 后）：服务器输出 $$$...$$$，由 MathJax 在浏览器里渲染。
+*   渲染后原始 TeX 保留在 <script type="math/tex"> 里（display 公式带 mode=display），
+*   渲染出来的节点（.MathJax*、.MJX*）是副本，必须丢弃，否则会和源重复。
+*
+* 所以适配器要同时处理：优先用 MathJax 源码，其次还原老的 .tex-span。
+*/
+/** MathJax 渲染出的节点，都是 script 源码的副本。 */
+var MATHJAX_RENDERED = [
+	".MathJax",
+	".MathJax_Display",
+	".MathJax_Preview",
+	".MathJax_CHTML",
+	".MathJax_SVG",
+	".MathJax_SVG_Display",
+	".mjx-chtml",
+	".MJXc-display",
+	".MJX_Assistive_MathML",
+	".MJXp-math"
+].join(", ");
+/** 老题 .tex-span 里用于排版的字符，转成 LaTeX 命令。 */
+var TEX_CHAR_MAP = {
+	"×": "\\times ",
+	"≤": "\\le ",
+	"≥": "\\ge ",
+	"≠": "\\ne ",
+	"±": "\\pm ",
+	"∞": "\\infty ",
+	"·": "\\cdot ",
+	"−": "-",
+	"–": "-",
+	"⌊": "\\lfloor ",
+	"⌋": "\\rfloor ",
+	"⌈": "\\lceil ",
+	"⌉": "\\rceil ",
+	"∑": "\\sum ",
+	"∏": "\\prod ",
+	"→": "\\to ",
+	"⋅": "\\cdot "
+};
+/**
+* 把老题的 .tex-span 结构还原成 LaTeX。
+*
+* 只认识 <i>（变量）、<sub>/<sup>（上下标）和少量排版字符。
+* 认不出来时保留原文，宁可少转换也不能丢内容。
+*/
+function texSpanToLatex(node) {
+	let out = "";
+	for (const child of node.childNodes) {
+		if (child.nodeType === 3) {
+			const text = child.textContent ?? "";
+			let mapped = "";
+			for (const ch of text) mapped += TEX_CHAR_MAP[ch] ?? ch;
+			out += mapped;
+			continue;
+		}
+		if (child.nodeType !== 1) continue;
+		const el = child;
+		const tag = el.tagName.toLowerCase();
+		const inner = texSpanToLatex(el);
+		if (tag === "i" || tag === "em") out += /^[a-zA-Z]$/.test(inner) ? inner : `\\mathrm{${inner}}`;
+		else if (tag === "sub") out += `_{${inner}}`;
+		else if (tag === "sup") out += `^{${inner}}`;
+		else out += inner;
+	}
+	return out.replace(/\u2009|\u00a0|\u2002|\u2003/g, " ").trim();
+}
+/** 老题独立成段的公式会被包在单独的 p 里，此时用 $$...$$ */
+function isStandaloneSpan(span) {
+	const parent = span.closest("p, div");
+	if (!parent) return false;
+	return (parent.textContent ?? "").trim() === (span.textContent ?? "").trim() && (parent.textContent ?? "").trim().length > 0;
+}
+var CF_LANGUAGES = [
+	{
+		id: "54",
+		name: "GNU G++17 7.3.0",
+		mode: "cpp"
+	},
+	{
+		id: "89",
+		name: "GNU G++20 13.2",
+		mode: "cpp"
+	},
+	{
+		id: "91",
+		name: "GNU G++23 14.2",
+		mode: "cpp"
+	},
+	{
+		id: "43",
+		name: "GNU GCC C11 5.1.0",
+		mode: "cpp"
+	},
+	{
+		id: "87",
+		name: "Java 21 64bit",
+		mode: "java"
+	},
+	{
+		id: "36",
+		name: "Java 8 32bit",
+		mode: "java"
+	},
+	{
+		id: "31",
+		name: "Python 3.13.2",
+		mode: "python"
+	},
+	{
+		id: "70",
+		name: "PyPy 3.10 (7.3.15)",
+		mode: "python"
+	},
+	{
+		id: "7",
+		name: "Python 2.7.18",
+		mode: "python"
+	},
+	{
+		id: "32",
+		name: "Go 1.22.2",
+		mode: "text"
+	},
+	{
+		id: "75",
+		name: "Rust 1.89.0",
+		mode: "text"
+	},
+	{
+		id: "83",
+		name: "Kotlin 1.7.20",
+		mode: "text"
+	},
+	{
+		id: "65",
+		name: "C# 8 (.NET Core 3.1)",
+		mode: "text"
+	}
+];
+var codeforces = {
+	id: "codeforces",
+	get name() {
+		return t("site.codeforces");
+	},
+	hosts: [
+		"codeforces.com",
+		"m1.codeforces.com",
+		"m2.codeforces.com",
+		"codeforces.ml"
+	],
+	styles: `
+    /* 齿轮放在登录区、用户名左边 */
+    .ojpp-codeforces-settings {
+      display: inline-flex; align-items: center;
+      margin-right: 6px; vertical-align: middle;
+    }
+    .ojpp-codeforces-settings .ojpp-icon-btn {
+      width: 22px; height: 22px; vertical-align: middle;
+    }
+  `,
+	/**
+	* Codeforces 自己只有浅色主题，这里为它补一套暗色。
+	*
+	* 站点用外部 CSS（style.css、problem-statement.css、roundbox.css 等），
+	* 这些规则的选择器都很具体，所以覆盖时要写同等或更高的优先级。
+	* 只处理阅读相关部分：正文、样例块、侧边栏、表格、二级菜单。
+	* 导航栏原本就是深色，不动。
+	*/
+	darkStyles: `
+    /* ---------- 页面骨架 ---------- */
+    html[data-ojpp-theme="dark"],
+    html[data-ojpp-theme="dark"] body,
+    html[data-ojpp-theme="dark"] #body,
+    html[data-ojpp-theme="dark"] #pageContent,
+    html[data-ojpp-theme="dark"] .content-with-sidebar {
+      background: #1c2128 !important;
+      color: #cdd9e5;
+    }
+
+    /* ---------- 题面 ---------- */
+    html[data-ojpp-theme="dark"] .ttypography,
+    html[data-ojpp-theme="dark"] .problem-statement {
+      color: #cdd9e5;
+    }
+    /* 题面容器自带背景：站点给 .ttypography 和 .problem-statement 都设过底色，
+       暗色下会与页面背景形成色差。全部置为透明，让它们统一继承页面背景。 */
+    html[data-ojpp-theme="dark"] .problem-statement,
+    html[data-ojpp-theme="dark"] .problemindexholder,
+    html[data-ojpp-theme="dark"] .problem-frames,
+    html[data-ojpp-theme="dark"] .ttypography {
+      background-color: transparent !important;
+    }
+    html[data-ojpp-theme="dark"] .problem-statement .header .title {
+      color: #e6edf3;
+    }
+    /* 时限、内存限制的标签是 #666，暗色下几乎看不见 */
+    html[data-ojpp-theme="dark"] .problem-statement .property-title,
+    html[data-ojpp-theme="dark"] .problem-statement .section-title {
+      color: #e6edf3;
+    }
+    html[data-ojpp-theme="dark"] .problem-statement .section-title {
+      border-bottom-color: #373e47;
+    }
+    html[data-ojpp-theme="dark"] .ttypography a:not(.rated-user):not([class*="user-"]),
+    html[data-ojpp-theme="dark"] .problem-statement a:not(.rated-user):not([class*="user-"]) {
+      color: #539bf5;
+    }
+
+    /* 样例的输入/输出：站点把 pre 设成 #efefef，必须显式覆盖 */
+    html[data-ojpp-theme="dark"] .problem-statement .sample-tests pre,
+    html[data-ojpp-theme="dark"] .problem-statement pre {
+      background-color: #22272e !important;
+      color: #cdd9e5;
+    }
+    /* 样例按行高亮：偶数行 #E0E0E0，奇数行白 */
+    html[data-ojpp-theme="dark"] .problem-statement .test-example-line-even {
+      background-color: #2d333b !important;
+    }
+    html[data-ojpp-theme="dark"] .problem-statement .test-example-line-odd {
+      background-color: #22272e !important;
+    }
+    /* 站点脚本会把高亮的测试行染成 #FFFDE7（内联样式），
+       以及配套的 .testCaseMarker 标记块。
+       这里只覆盖带内联高亮色的行，不要写成 .test-example-line，
+       否则会盖掉奇偶行的交替底色。 */
+    html[data-ojpp-theme="dark"] .problem-statement [style*="FFFDE7"],
+    html[data-ojpp-theme="dark"] .problem-statement [style*="fffde7"] {
+      background-color: #3a3320 !important;
+    }
+    html[data-ojpp-theme="dark"] .testCaseMarker {
+      border-color: #d9a441 !important;
+    }
+    html[data-ojpp-theme="dark"] .notice {
+      background: #2d333b;
+      color: #cdd9e5;
+      border-color: #444c56;
+    }
+    html[data-ojpp-theme="dark"] .problem-statement .sample-test,
+    html[data-ojpp-theme="dark"] .problem-statement .sample-test .input,
+    html[data-ojpp-theme="dark"] .problem-statement .sample-test .output {
+      border-color: #373e47;
+    }
+    html[data-ojpp-theme="dark"] .problem-statement .sample-test .title {
+      color: #909dab;
+    }
+    /* 样例块的输入输出标题栏（站点用 .input .title / .output .title） */
+    html[data-ojpp-theme="dark"] .problem-statement .input .title,
+    html[data-ojpp-theme="dark"] .problem-statement .output .title {
+      background: #2d333b;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .problem-statement .input-output-copier {
+      color: #909dab;
+      border-color: #444c56;
+    }
+    /* 悬停时站点把背景设成 #def，暗色下会闪一下亮蓝 */
+    html[data-ojpp-theme="dark"] .problem-statement .input-output-copier:hover,
+    html[data-ojpp-theme="dark"] .copier-small:hover {
+      background-color: #373e47 !important;
+      color: #cdd9e5 !important;
+    }
+
+    html[data-ojpp-theme="dark"] .problem-statement code,
+    html[data-ojpp-theme="dark"] .ttypography code {
+      background: rgba(99, 110, 123, .4);
+      color: #cdd9e5;
+    }
+    /* 站点把 .ttypography 里的 pre 设成深红（#800000），
+       暗色下像一块深红色字。统一改成正常文本色 */
+    html[data-ojpp-theme="dark"] .problem-statement pre,
+    html[data-ojpp-theme="dark"] .ttypography pre {
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .problem-statement table,
+    html[data-ojpp-theme="dark"] .ttypography table,
+    html[data-ojpp-theme="dark"] .problem-statement th,
+    html[data-ojpp-theme="dark"] .problem-statement td,
+    html[data-ojpp-theme="dark"] .ttypography th,
+    html[data-ojpp-theme="dark"] .ttypography td {
+      border-color: #373e47;
+    }
+    /* 题面里的引用与分隔线 */
+    html[data-ojpp-theme="dark"] .problem-statement blockquote,
+    html[data-ojpp-theme="dark"] .ttypography blockquote {
+      border-left-color: #373e47;
+      color: #adbac7;
+    }
+    html[data-ojpp-theme="dark"] .problem-statement hr,
+    html[data-ojpp-theme="dark"] .ttypography hr {
+      border-color: #373e47;
+    }
+
+    /* ---------- 折叠博客底部的渐隐 ---------- */
+    /* /top 折叠的博文在底部用 ::before 铺一条 rgba(255,255,255,0)→#fff
+       的渐隐遮罩，暗色下是一条浅蓝白带。改成渐隐到页面底色 */
+    html[data-ojpp-theme="dark"] .collapsible-topic.collapsed .content .collapsible-topic-options::before {
+      background-image: linear-gradient(rgba(28, 33, 40, 0), #1c2128) !important;
+    }
+
+    /* ---------- 公式 ---------- */
+    html[data-ojpp-theme="dark"] .MathJax,
+    html[data-ojpp-theme="dark"] .MathJax_Preview,
+    html[data-ojpp-theme="dark"] .MathJax_Display,
+    html[data-ojpp-theme="dark"] .MathJax_SVG,
+    html[data-ojpp-theme="dark"] .MathJax_SVG_Display,
+    html[data-ojpp-theme="dark"] .MJXp-math,
+    html[data-ojpp-theme="dark"] .mjx-chtml,
+    html[data-ojpp-theme="dark"] mjx-container,
+    html[data-ojpp-theme="dark"] .tex-span {
+      color: #cdd9e5 !important;
+    }
+    /* MathJax SVG 输出的颜色写在 fill/stroke 属性上，color 管不着；
+       只覆盖显式黑色的节点，保留 fill="none" 的透明区域 */
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [fill="black"],
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [fill="#000"],
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [fill="#000000"] {
+      fill: #cdd9e5 !important;
+    }
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [stroke="black"],
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [stroke="#000"],
+    html[data-ojpp-theme="dark"] .MathJax_SVG svg [stroke="#000000"] {
+      stroke: #cdd9e5 !important;
+    }
+    /* 老题用 espresso 渲染好的公式 PNG（黑字透明底），反色成白字；
+       译文面板里是 markdown 渲染出的 img，没有 tex-formula 类，按域名一起覆盖 */
+    html[data-ojpp-theme="dark"] img.tex-formula,
+    html[data-ojpp-theme="dark"] img[src*="espresso.codeforces.com"] { filter: invert(0.92); }
+
+    /* ---------- 侧边栏信息框 ---------- */
+    /* .roundbox 的圆角是四张 png 图片，暗色下会露出白角，直接去掉 */
+    html[data-ojpp-theme="dark"] .roundbox,
+    html[data-ojpp-theme="dark"] .sidebox {
+      background: #22272e !important;
+      border-color: #373e47;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .roundbox .roundbox-lt,
+    html[data-ojpp-theme="dark"] .roundbox .roundbox-rt,
+    html[data-ojpp-theme="dark"] .roundbox .roundbox-lb,
+    html[data-ojpp-theme="dark"] .roundbox .roundbox-rb {
+      background-image: none;
+    }
+    html[data-ojpp-theme="dark"] .roundbox .caption,
+    html[data-ojpp-theme="dark"] .sidebox .caption {
+      color: #e6edf3;
+      border-color: #373e47;
+    }
+    html[data-ojpp-theme="dark"] .roundbox .titled,
+    html[data-ojpp-theme="dark"] .roundbox .bottom-links {
+      border-color: #373e47;
+    }
+    html[data-ojpp-theme="dark"] .roundbox .bottom-links,
+    html[data-ojpp-theme="dark"] .roundbox .dark {
+      background-color: #2d333b;
+    }
+    /* 侧边栏里的“Practice”按钮：站点是白底，暗色下太刺眼 */
+    html[data-ojpp-theme="dark"] .sidebox .button,
+    html[data-ojpp-theme="dark"] .sidebox a.button,
+    html[data-ojpp-theme="dark"] .roundbox a.button {
+      background: #2d333b !important;
+      color: #cdd9e5 !important;
+      border-color: #444c56;
+    }
+    /* 收藏星星那一行 */
+    html[data-ojpp-theme="dark"] .sidebox .favourite,
+    html[data-ojpp-theme="dark"] .sidebox .star {
+      background: #2d333b;
+    }
+
+    /* ---------- 表格（最近提交、标签等） ---------- */
+    html[data-ojpp-theme="dark"] .datatable,
+    html[data-ojpp-theme="dark"] .datatable th,
+    html[data-ojpp-theme="dark"] .datatable td,
+    /* datatable 外面还有一层包装容器，站点给它设了 #e1e1e1 */
+    html[data-ojpp-theme="dark"] .datatable > div,
+    html[data-ojpp-theme="dark"] div.datatable > div {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    /* 分页信息那一行（“1-50 of 1234”） */
+    html[data-ojpp-theme="dark"] .datatable .pagination,
+    html[data-ojpp-theme="dark"] .datatable > div:last-child {
+      background: #22272e !important;
+      color: #909dab;
+    }
+    html[data-ojpp-theme="dark"] .datatable th {
+      background: #2d333b;
+    }
+    html[data-ojpp-theme="dark"] .datatable tr:hover td {
+      background: #2d333b;
+    }
+    html[data-ojpp-theme="dark"] .roundbox table.rtable td,
+    html[data-ojpp-theme="dark"] .roundbox table.rtable th {
+      border-color: #373e47;
+    }
+    /* 提交结果的颜色：按站点真实语义映射到暗色可读版——
+       CF 亮态是 accepted=#00aa00 绿、rejected(WA/TLE/RE)=#0000aa 深蓝、
+       failed/hacked=红、waiting=灰。暗色里换成对应的可读色 */
+    html[data-ojpp-theme="dark"] .verdict-accepted,
+    html[data-ojpp-theme="dark"] .verdict-accepted-challenged,
+    html[data-ojpp-theme="dark"] .verdict-successful-challenge {
+      color: #57ab5a !important;
+    }
+    /* rejected 在 CF 是深蓝色（WA/TLE/RE），暗色下提亮成可读蓝 */
+    html[data-ojpp-theme="dark"] .verdict-rejected,
+    html[data-ojpp-theme="dark"] .verdict-unsuccessful-challenge,
+    html[data-ojpp-theme="dark"] .verdict-format-judged {
+      color: #8ab4ff !important;
+    }
+    html[data-ojpp-theme="dark"] .verdict-failed,
+    html[data-ojpp-theme="dark"] .verdict-challenged,
+    html[data-ojpp-theme="dark"] .verdict-wrong-answer {
+      color: #f85149 !important;
+    }
+    html[data-ojpp-theme="dark"] .verdict-waiting,
+    html[data-ojpp-theme="dark"] .verdict-in-queue,
+    html[data-ojpp-theme="dark"] .verdict-judging {
+      color: #909dab !important;
+    }
+    /* 逐条测试的 verdict_type：welldone=OK 绿、error=失败红、pending 灰 */
+    html[data-ojpp-theme="dark"] .welldone,
+    html[data-ojpp-theme="dark"] .welldone .verdict {
+      color: #57ab5a !important;
+    }
+    html[data-ojpp-theme="dark"] .verdict_type.error,
+    html[data-ojpp-theme="dark"] .verdict_type.error .verdict {
+      color: #f85149 !important;
+    }
+    /* 未判定的 "Verdict: ?" 用灰，别用亮白 */
+    html[data-ojpp-theme="dark"] .verdict_type:not(.welldone):not(.error),
+    html[data-ojpp-theme="dark"] .verdict_type:not(.welldone):not(.error) .verdict {
+      color: #909dab !important;
+    }
+    /* 比赛状态（Finished / Running 等）：站点用 #3b5998 深蓝，深底上看不清 */
+    html[data-ojpp-theme="dark"] .contest-state-phase {
+      color: #79b8ff !important;
+    }
+    /* 页脚链接：站点用 #0000cc 深蓝 */
+    html[data-ojpp-theme="dark"] #footer,
+    html[data-ojpp-theme="dark"] #footer a:not(.rated-user):not([class*="user-"]),
+    html[data-ojpp-theme="dark"] .switchToMobile {
+      color: #768390 !important;
+    }
+    html[data-ojpp-theme="dark"] #footer a:hover {
+      color: #adbac7 !important;
+    }
+    /* 标签块：chip 底色贴平所在容器，只留描边 */
+    html[data-ojpp-theme="dark"] .tag-box,
+    html[data-ojpp-theme="dark"] .tag-box a,
+    html[data-ojpp-theme="dark"] .roundbox .tag-box {
+      background: transparent;
+      border-color: #444c56;
+      color: #cdd9e5;
+    }
+
+    /* ---------- 顶部导航 ---------- */
+    /* 站点给菜单项设了 color:#000（style.css 的 .menu-list li a），
+       背景被我们压暗后黑字就看不见了 */
+    html[data-ojpp-theme="dark"] .menu-list li a {
+      color: #cdd9e5 !important;
+    }
+    html[data-ojpp-theme="dark"] .menu-list li a:hover {
+      color: #e6edf3 !important;
+    }
+    html[data-ojpp-theme="dark"] .menu-list li.current {
+      border-bottom-color: #539bf5;
+    }
+
+    /* 顶部区域分两条：上面是 logo / 登录，下面是主导航。
+       站点本来就是这样分的（#header 与 .menu-box）。
+       上条与页面底色一致，不留色块；下条稍亮一点，把导航栏衬托出来。 */
+    html[data-ojpp-theme="dark"] #header {
+      background: #1c2128 !important;
+      border-color: transparent !important;
+    }
+    html[data-ojpp-theme="dark"] .menu-box,
+    html[data-ojpp-theme="dark"] .roundbox.menu-box,
+    html[data-ojpp-theme="dark"] .menu-list-container {
+      background: #2a313c !important;
+      border-color: transparent !important;
+    }
+    /* 两层之间加一条细线，让分隔看得出来 */
+    html[data-ojpp-theme="dark"] .menu-box {
+      border-top: 1px solid #3b434e !important;
+    }
+    /* 登录区与语言选择：站点用的是深蓝 #0000cc，在深底上几乎看不清 */
+    html[data-ojpp-theme="dark"] #header a,
+    html[data-ojpp-theme="dark"] .lang-chooser a {
+      color: #79b8ff !important;
+    }
+    html[data-ojpp-theme="dark"] #header a:hover,
+    html[data-ojpp-theme="dark"] .lang-chooser a:hover {
+      color: #a5d6ff !important;
+    }
+
+    /* Codeforces 的 logo 是白底深字的 PNG（无 alpha）。
+       invert 把白底变黑、深字变亮，再用 screen 混合让黑色消失，
+       于是白底透明、文字反色，不需要额外的图片资源。 */
+    html[data-ojpp-theme="dark"] #header img[alt="Codeforces"] {
+      filter: invert(1) hue-rotate(180deg) brightness(1.1);
+      mix-blend-mode: screen;
+    }
+
+    /* ---------- 二级菜单（题目页的 Problems / Submit code 那一排） ---------- */
+    /* 站点的当前项背景是两张 PNG 圆角图（backLava/leftLava）定位出来的，
+       暗色下会形成一条条横向色带。全部去掉图片，改成扁平的纯色。 */
+    html[data-ojpp-theme="dark"] .second-level-menu,
+    html[data-ojpp-theme="dark"] .second-level-menu-list {
+      background: transparent !important;
+    }
+    html[data-ojpp-theme="dark"] .second-level-menu-list li.backLava,
+    html[data-ojpp-theme="dark"] .second-level-menu-list li.backLava .leftLava,
+    html[data-ojpp-theme="dark"] .second-level-menu-list li.backLava .bottomLava,
+    html[data-ojpp-theme="dark"] .second-level-menu-list li.backLava .cornerLava {
+      background-image: none !important;
+      background-color: #373e47;
+    }
+    html[data-ojpp-theme="dark"] .second-level-menu-list li a {
+      background: transparent !important;
+      color: #adbac7 !important;
+      border: none;
+      border-radius: 4px;
+    }
+    html[data-ojpp-theme="dark"] .second-level-menu-list li a:hover {
+      color: #e6edf3 !important;
+    }
+    html[data-ojpp-theme="dark"] .second-level-menu-list li.current a {
+      color: #e6edf3 !important;
+    }
+
+    /* ---------- 全局链接 ---------- */
+    /* 站点几乎所有正文链接都是 #0000cc 这种深蓝，深底上对比不足。
+       这是提交记录、状态、博客、题面里最普遍的问题，所以放在最前面兜底。 */
+    html[data-ojpp-theme="dark"] a:not(.rated-user):not([class*="user-"]),
+    html[data-ojpp-theme="dark"] a:not(.rated-user):not([class*="user-"]):visited {
+      color: #539bf5;
+    }
+    html[data-ojpp-theme="dark"] a:not(.rated-user):not([class*="user-"]):hover,
+    html[data-ojpp-theme="dark"] a:not(.rated-user):not([class*="user-"]):active {
+      color: #79b8ff;
+    }
+    /* 已访问过的链接不要变成紫色，暗色下同样难读 */
+    html[data-ojpp-theme="dark"] a:not(.rated-user):not([class*="user-"]):visited {
+      color: #b083f0;
+    }
+
+    /* ---------- 评级颜色 ---------- */
+    /* 站点用 .user-* 类给用户名上色，色值是纯红/纯蓝/gray 这类，
+       在深底上要么刺眼要么看不清。这里换成同色系的亮版本，
+       保持“颜色代表段位”这个语义，只调整明度。 */
+    /* 用户名几乎总是 <a class="rated-user user-段位">。
+       段位色必须同时命中 a 和普通元素：站点自己的 a { color } 会跟
+       .user-* 抢，而 color: inherit 是错的——那会继承父元素（通常是
+       没有段位类的 td），段位色就整个丢了。
+       所以这里对两类元素都直接写死颜色，并且一律 !important。 */
+    html[data-ojpp-theme="dark"] .user-black,
+    html[data-ojpp-theme="dark"] a.user-black { color: #9aa4b2 !important; }
+    html[data-ojpp-theme="dark"] .user-gray,
+    html[data-ojpp-theme="dark"] a.user-gray { color: #9aa4b2 !important; }
+    html[data-ojpp-theme="dark"] .user-green,
+    html[data-ojpp-theme="dark"] a.user-green { color: #57ab5a !important; }
+    html[data-ojpp-theme="dark"] .user-cyan,
+    html[data-ojpp-theme="dark"] a.user-cyan { color: #39c5bb !important; }
+    html[data-ojpp-theme="dark"] .user-blue,
+    html[data-ojpp-theme="dark"] a.user-blue { color: #539bf5 !important; }
+    html[data-ojpp-theme="dark"] .user-violet,
+    html[data-ojpp-theme="dark"] a.user-violet { color: #c297ff !important; }
+    html[data-ojpp-theme="dark"] .user-orange,
+    html[data-ojpp-theme="dark"] a.user-orange { color: #f0883e !important; }
+    html[data-ojpp-theme="dark"] .user-red,
+    html[data-ojpp-theme="dark"] a.user-red { color: #f85149 !important; }
+    /* 站点还按具体分数给类名（user-1200 ~ user-4000），
+       这些也是段位色：>=4000 红，2400-3999 橙，2100-2399 紫，1600-2099 蓝，
+       1200-1599 青，<1200 灰。覆盖最常见的几档。 */
+    html[data-ojpp-theme="dark"] .user-4000,
+    html[data-ojpp-theme="dark"] a.user-4000,
+    html[data-ojpp-theme="dark"] [class*="user-4"] { color: #f85149 !important; }
+    html[data-ojpp-theme="dark"] [class*="user-3"],
+    html[data-ojpp-theme="dark"] [class*="user-2"],
+    html[data-ojpp-theme="dark"] [class*="user-24"],
+    html[data-ojpp-theme="dark"] [class*="user-25"],
+    html[data-ojpp-theme="dark"] [class*="user-26"],
+    html[data-ojpp-theme="dark"] [class*="user-27"],
+    html[data-ojpp-theme="dark"] [class*="user-28"],
+    html[data-ojpp-theme="dark"] [class*="user-29"],
+    html[data-ojpp-theme="dark"] [class*="user-30"],
+    html[data-ojpp-theme="dark"] [class*="user-31"],
+    html[data-ojpp-theme="dark"] [class*="user-32"],
+    html[data-ojpp-theme="dark"] [class*="user-33"],
+    html[data-ojpp-theme="dark"] [class*="user-34"],
+    html[data-ojpp-theme="dark"] [class*="user-35"],
+    html[data-ojpp-theme="dark"] [class*="user-36"],
+    html[data-ojpp-theme="dark"] [class*="user-37"],
+    html[data-ojpp-theme="dark"] [class*="user-38"],
+    html[data-ojpp-theme="dark"] [class*="user-39"] { color: #f0883e !important; }
+    html[data-ojpp-theme="dark"] [class*="user-21"],
+    html[data-ojpp-theme="dark"] [class*="user-22"],
+    html[data-ojpp-theme="dark"] [class*="user-23"] { color: #c297ff !important; }
+    html[data-ojpp-theme="dark"] [class*="user-16"],
+    html[data-ojpp-theme="dark"] [class*="user-17"],
+    html[data-ojpp-theme="dark"] [class*="user-18"],
+    html[data-ojpp-theme="dark"] [class*="user-19"],
+    html[data-ojpp-theme="dark"] [class*="user-20"] { color: #539bf5 !important; }
+    html[data-ojpp-theme="dark"] [class*="user-12"],
+    html[data-ojpp-theme="dark"] [class*="user-13"],
+    html[data-ojpp-theme="dark"] [class*="user-14"],
+    html[data-ojpp-theme="dark"] [class*="user-15"] { color: #39c5bb !important; }
+    html[data-ojpp-theme="dark"] [class*="user-1"],
+    html[data-ojpp-theme="dark"] [class*="user-0"] { color: #9aa4b2 !important; }
+    html[data-ojpp-theme="dark"] .user-legendary,
+    html[data-ojpp-theme="dark"] a.user-legendary { color: #f85149 !important; }
+    /* admin/头衔类没有段位色，给个中性亮色 */
+    html[data-ojpp-theme="dark"] .user-admin,
+    html[data-ojpp-theme="dark"] a.user-admin { color: #cdd9e5 !important; }
+    /* legendary 段位的首字母被站点强制成黑色（.user-legendary::first-letter），
+       深底上就变成“首字母看不见、其余红色”。改成白色首字母。
+       注意 ::first-letter 只能对块级容器生效，站点在 span 上也做了处理。 */
+    html[data-ojpp-theme="dark"] .user-legendary::first-letter,
+    html[data-ojpp-theme="dark"] a.user-legendary::first-letter,
+    html[data-ojpp-theme="dark"] .legendary-user-first-letter,
+    html[data-ojpp-theme="dark"] .legendary-user-first-letter::first-letter {
+      color: #ffffff !important;
+    }
+    /* 段位色写在里面的 span 上时（站点有这种结构），别被外层规则盖掉 */
+    html[data-ojpp-theme="dark"] .rated-user span[class*="user-"] {
+      color: inherit !important;
+    }
+
+    /* ---------- 表格（提交记录、状态、排行榜等） ---------- */
+    /* 站点给状态表用了浅色底与斑马纹，暗色下是整片亮块 */
+    html[data-ojpp-theme="dark"] table.status-frame-datatable,
+    html[data-ojpp-theme="dark"] .status-frame-datatable,
+    html[data-ojpp-theme="dark"] table.problems,
+    html[data-ojpp-theme="dark"] table.standings,
+    html[data-ojpp-theme="dark"] .datatable,
+    html[data-ojpp-theme="dark"] table {
+      background: #22272e;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .status-frame-datatable tr,
+    html[data-ojpp-theme="dark"] .datatable tr,
+    html[data-ojpp-theme="dark"] table tr {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+    }
+    /* 斑马纹：隔行稍亮一点，保留可读性 */
+    html[data-ojpp-theme="dark"] .status-frame-datatable tr:nth-child(even),
+    html[data-ojpp-theme="dark"] .datatable tr:nth-child(even),
+    html[data-ojpp-theme="dark"] table tr:nth-child(even) {
+      background: #272d36 !important;
+    }
+    html[data-ojpp-theme="dark"] .status-frame-datatable th,
+    html[data-ojpp-theme="dark"] .status-frame-datatable td,
+    html[data-ojpp-theme="dark"] .datatable th,
+    html[data-ojpp-theme="dark"] .datatable td,
+    html[data-ojpp-theme="dark"] table th,
+    html[data-ojpp-theme="dark"] table td {
+      background: transparent !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .status-frame-datatable th,
+    html[data-ojpp-theme="dark"] .datatable th,
+    html[data-ojpp-theme="dark"] table th {
+      background: #2d333b !important;
+      color: #e6edf3;
+    }
+    html[data-ojpp-theme="dark"] table tr:hover td,
+    html[data-ojpp-theme="dark"] .datatable tr:hover td {
+      background: #2d333b !important;
+    }
+    /* 表头里的排序箭头/小图标是深色 PNG */
+    html[data-ojpp-theme="dark"] table th img,
+    html[data-ojpp-theme="dark"] .datatable th img {
+      filter: invert(1) brightness(1.3);
+    }
+    /* 比赛报名/设置这类表单：.table-form 是表单布局表，不是数据表。
+       站点本来就让它透明贴页面，但上面 table 的全局斑马纹把它
+       染成了花花绿绿的隔行。统一还原透明，贴回 #1c2128 底色 */
+    html[data-ojpp-theme="dark"] .table-form,
+    html[data-ojpp-theme="dark"] .table-form tr,
+    html[data-ojpp-theme="dark"] .table-form tr:nth-child(even),
+    html[data-ojpp-theme="dark"] .table-form th,
+    html[data-ojpp-theme="dark"] .table-form td,
+    html[data-ojpp-theme="dark"] .table-form .field-name,
+    /* 协议条款的滚框（站点是 #ffffdd 高亮框）也统一回底色——
+       它仍留边框，能看出是个可滚动的框 */
+    html[data-ojpp-theme="dark"] .table-form textarea {
+      background: transparent !important;
+    }
+    /* 表格分页条 */
+    html[data-ojpp-theme="dark"] .pagination,
+    html[data-ojpp-theme="dark"] .pagination span,
+    html[data-ojpp-theme="dark"] .pagination a:not(.rated-user):not([class*="user-"]) {
+      background: transparent !important;
+      color: #adbac7;
+      border-color: #373e47;
+    }
+    html[data-ojpp-theme="dark"] .pagination span.active {
+      background: #2d333b !important;
+      color: #e6edf3;
+    }
+    html[data-ojpp-theme="dark"] .pagination a:hover {
+      background: #2d333b !important;
+    }
+
+    /* ---------- 表单（提交页、筛选面板） ---------- */
+    /* 站点大量使用原生 select / input，暗色下会是白底。
+       这里统一处理，并去掉 Chrome 的原生立体感。 */
+    html[data-ojpp-theme="dark"] select,
+    html[data-ojpp-theme="dark"] input[type="text"],
+    html[data-ojpp-theme="dark"] input[type="password"],
+    html[data-ojpp-theme="dark"] input[type="number"],
+    html[data-ojpp-theme="dark"] input[type="email"],
+    html[data-ojpp-theme="dark"] input:not([type]),
+    html[data-ojpp-theme="dark"] textarea {
+      background-color: #2d333b !important;
+      color: #cdd9e5 !important;
+      border: 1px solid #444c56 !important;
+      border-radius: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    /* select 被去掉原生外观后需要自己补一个下拉箭头 */
+    html[data-ojpp-theme="dark"] select {
+      background-image: linear-gradient(45deg, transparent 50%, #909dab 50%),
+                        linear-gradient(135deg, #909dab 50%, transparent 50%);
+      background-position: calc(100% - 14px) calc(50% - 2px), calc(100% - 9px) calc(50% - 2px);
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      padding-right: 24px;
+    }
+    html[data-ojpp-theme="dark"] input::placeholder,
+    html[data-ojpp-theme="dark"] textarea::placeholder {
+      color: #768390;
+    }
+    /* 提交页的代码编辑器（站点用 CodeMirror 或 textarea） */
+    html[data-ojpp-theme="dark"] .CodeMirror,
+    html[data-ojpp-theme="dark"] .CodeMirror-scroll,
+    html[data-ojpp-theme="dark"] .CodeMirror-gutters,
+    html[data-ojpp-theme="dark"] #editor,
+    html[data-ojpp-theme="dark"] .editor {
+      background: #22272e !important;
+      color: #cdd9e5 !important;
+      border-color: #373e47 !important;
+    }
+    html[data-ojpp-theme="dark"] .CodeMirror-gutters {
+      background: #1c2128 !important;
+      border-right-color: #373e47 !important;
+    }
+    html[data-ojpp-theme="dark"] .CodeMirror-linenumber { color: #768390; }
+    html[data-ojpp-theme="dark"] .CodeMirror-cursor { border-left-color: #cdd9e5; }
+    html[data-ojpp-theme="dark"] .CodeMirror-selected { background: #373e47 !important; }
+    html[data-ojpp-theme="dark"] .CodeMirror-activeline-background { background: #2d333b !important; }
+    /* 文件选择按钮 */
+    html[data-ojpp-theme="dark"] input[type="file"]::file-selector-button {
+      background: #2d333b;
+      color: #cdd9e5;
+      border: 1px solid #444c56;
+      border-radius: 4px;
+    }
+
+    /* ---------- 首页 / 公告 ---------- */
+    /* 首页公告里的标题与表格：站点用深色文字，暗色下看不见 */
+    html[data-ojpp-theme="dark"] .topic,
+    html[data-ojpp-theme="dark"] .topic h1,
+    html[data-ojpp-theme="dark"] .topic h2,
+    html[data-ojpp-theme="dark"] .topic h3,
+    html[data-ojpp-theme="dark"] .topic p,
+    html[data-ojpp-theme="dark"] .topic li,
+    html[data-ojpp-theme="dark"] .topic div,
+    html[data-ojpp-theme="dark"] .ttypography h1,
+    html[data-ojpp-theme="dark"] .ttypography h2,
+    html[data-ojpp-theme="dark"] .ttypography h3,
+    html[data-ojpp-theme="dark"] .ttypography h4,
+    html[data-ojpp-theme="dark"] .ttypography h5,
+    html[data-ojpp-theme="dark"] .ttypography h6 {
+      color: #e6edf3;
+    }
+    /* 首页的评分表：表头原本是深色底、正文是白底 */
+    html[data-ojpp-theme="dark"] .topic table,
+    html[data-ojpp-theme="dark"] .ttypography table {
+      border-color: #373e47 !important;
+    }
+    /* 公告里的引用块左侧竖线 */
+    html[data-ojpp-theme="dark"] .topic blockquote,
+    html[data-ojpp-theme="dark"] .ttypography blockquote {
+      border-left-color: #475060;
+      color: #adbac7;
+    }
+    /* 隐藏的公告标题（首页 “Hello, Codeforces!” 那种被压暗的标题） */
+    html[data-ojpp-theme="dark"] .topic .spoiler-title,
+    html[data-ojpp-theme="dark"] .spoiler-title {
+      color: #e6edf3;
+    }
+
+    /* ---------- 博客 / changelog ---------- */
+    html[data-ojpp-theme="dark"] .blog-entry,
+    html[data-ojpp-theme="dark"] .blog-entry .title,
+    html[data-ojpp-theme="dark"] .blog-entry .info,
+    html[data-ojpp-theme="dark"] .comment,
+    html[data-ojpp-theme="dark"] .comment .content {
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .blog-entry .title a:not(.rated-user):not([class*="user-"]),
+    html[data-ojpp-theme="dark"] .comment a:not(.rated-user):not([class*="user-"]) {
+      color: #539bf5 !important;
+    }
+    /* changelog 里的日期与作者信息 */
+    html[data-ojpp-theme="dark"] .blog-entry .info,
+    html[data-ojpp-theme="dark"] .comment .info {
+      color: #909dab;
+    }
+
+    /* ---------- 日历 ---------- */
+    html[data-ojpp-theme="dark"] .calendar,
+    html[data-ojpp-theme="dark"] .calendar-table,
+    html[data-ojpp-theme="dark"] table.calendar {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .calendar td,
+    html[data-ojpp-theme="dark"] .calendar th,
+    html[data-ojpp-theme="dark"] table.calendar td,
+    html[data-ojpp-theme="dark"] table.calendar th {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .calendar .day,
+    html[data-ojpp-theme="dark"] table.calendar td.day {
+      color: #cdd9e5;
+    }
+    /* 日历里表示“有比赛”的标记色块，原色在深底上过暗 */
+    html[data-ojpp-theme="dark"] .calendar .contest,
+    html[data-ojpp-theme="dark"] table.calendar .contest {
+      background: #2d333b !important;
+      color: #adbac7;
+    }
+
+    /* ---------- 搜索框与筛选表单 ---------- */
+    /* 状态页的筛选面板：站点用 fieldset 包裹，标题是蓝色 */
+    html[data-ojpp-theme="dark"] fieldset,
+    html[data-ojpp-theme="dark"] .filter-box {
+      border-color: #373e47 !important;
+    }
+    html[data-ojpp-theme="dark"] fieldset legend,
+    html[data-ojpp-theme="dark"] .filter-box label {
+      color: #adbac7;
+    }
+    /* 筛选面板里的蓝色标签（Problem: / Verdict: 等） */
+    html[data-ojpp-theme="dark"] .status-filter label,
+    html[data-ojpp-theme="dark"] .filter-box b,
+    html[data-ojpp-theme="dark"] .filter-box strong {
+      color: #79b8ff;
+    }
+
+    /* ---------- 首页列表 ---------- */
+    /* 公告与比赛的标题：站点用 #3b5998 深蓝（.topic .title 里的链接）。
+       这些链接里混着 .rated-user 用户名（Top rated 那栏就是链接列表），
+       不能把段位色一起刷掉，所以一律 :not(.rated-user)。 */
+    html[data-ojpp-theme="dark"] .topic .title a:not(.rated-user):not([class*="user-"]),
+    html[data-ojpp-theme="dark"] .topic .title,
+    html[data-ojpp-theme="dark"] .topic a:not(.rated-user):not([class*="user-"]),
+    /* 标题文字实际落在 a 里的 <p> 上，颜色设在那里而不是 a 上 */
+    html[data-ojpp-theme="dark"] .topic .title a p,
+    html[data-ojpp-theme="dark"] .topic a p,
+    html[data-ojpp-theme="dark"] .contestList .contestName a:not(.rated-user):not([class*="user-"]),
+    html[data-ojpp-theme="dark"] .recent-actions a:not(.rated-user):not([class*="user-"]),
+    html[data-ojpp-theme="dark"] .roundbox .caption a:not(.rated-user):not([class*="user-"]) {
+      color: #79b8ff !important;
+    }
+    /* 首页右栏的“Top rated”之类列表：默认文字色即可。
+       必须排除 .rated-user，否则会把段位色一起刷掉——
+       “Top rated”里全是红名/橙名，正是最需要保留颜色的地方。 */
+    html[data-ojpp-theme="dark"] .personal-sidebar a:not(.rated-user),
+    html[data-ojpp-theme="dark"] .sidebox a:not(.rated-user),
+    html[data-ojpp-theme="dark"] .roundbox a:not(.rated-user) {
+      color: #cdd9e5 !important;
+    }
+    /* 公告的 rating 变化：.topic-rating 是 #008000 深绿 */
+    html[data-ojpp-theme="dark"] .topic-rating,
+    html[data-ojpp-theme="dark"] .green,
+    html[data-ojpp-theme="dark"] .rating-up {
+      color: #57ab5a !important;
+    }
+    html[data-ojpp-theme="dark"] .red,
+    html[data-ojpp-theme="dark"] .rating-down {
+      color: #f85149 !important;
+    }
+
+    /* ---------- 博客与评论区 ---------- */
+    /* 博客标题：站点的结构是 h3 > a，没有稳定的 class，
+       所以直接按标签层级选，并排除页脚等区域 */
+    html[data-ojpp-theme="dark"] #pageContent h3 a,
+    html[data-ojpp-theme="dark"] #pageContent h3,
+    html[data-ojpp-theme="dark"] .blog-entry h3 a:not(.rated-user):not([class*="user-"]),
+    html[data-ojpp-theme="dark"] .blog-entry .title {
+      color: #79b8ff !important;
+    }
+    /* 评论的投票分数：正值 #008000、负值 #800000 */
+    html[data-ojpp-theme="dark"] .commentRating,
+    html[data-ojpp-theme="dark"] .commentRating span {
+      color: #57ab5a !important;
+    }
+    html[data-ojpp-theme="dark"] .commentRating.negative,
+    html[data-ojpp-theme="dark"] .commentRating.negative span {
+      color: #f85149 !important;
+    }
+    /* 代码高亮（Google prettify）：站点为浅色背景设计的配色，
+       深底上几乎全是深色，直接按语法类别换成亮色版本 */
+    html[data-ojpp-theme="dark"] .prettyprint,
+    html[data-ojpp-theme="dark"] code.prettyprint,
+    html[data-ojpp-theme="dark"] pre.prettyprint {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5 !important;
+    }
+    html[data-ojpp-theme="dark"] .prettyprint .pln,
+    html[data-ojpp-theme="dark"] .prettyprint .pun { color: #cdd9e5 !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .kwd,
+    html[data-ojpp-theme="dark"] .prettyprint .kwd span { color: #f47067 !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .typ,
+    html[data-ojpp-theme="dark"] .prettyprint .atn { color: #79b8ff !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .lit,
+    html[data-ojpp-theme="dark"] .prettyprint .str,
+    html[data-ojpp-theme="dark"] .prettyprint .atv { color: #8ddb8c !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .com { color: #768390 !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .tag { color: #f47067 !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .dec,
+    html[data-ojpp-theme="dark"] .prettyprint .var { color: #dcbdfb !important; }
+    html[data-ojpp-theme="dark"] .prettyprint .fun { color: #dcbdfb !important; }
+
+    /* ---------- 提交结果单元格 ---------- */
+    /* .cell-rejected（-1/被拒绝）、.cell-accepted（已解决）等
+       站点用的是浅灰/浅蓝，深底上都偏暗。按语义上色 */
+    html[data-ojpp-theme="dark"] .cell-rejected {
+      color: #f85149 !important;
+    }
+    html[data-ojpp-theme="dark"] .cell-accepted,
+    html[data-ojpp-theme="dark"] .cell-solved,
+    html[data-ojpp-theme="dark"] .cell-ok {
+      color: #57ab5a !important;
+    }
+    html[data-ojpp-theme="dark"] .cell-verdict,
+    html[data-ojpp-theme="dark"] .cell-time {
+      color: #909dab;
+    }
+    /* standings 里的得分与名次 */
+    html[data-ojpp-theme="dark"] .cell-rank,
+    html[data-ojpp-theme="dark"] .cell-points {
+      color: #cdd9e5;
+    }
+
+    /* ---------- 表单控件（筛选、提交等） ---------- */
+    /* SumoSelect 下拉框：站点给它设了白底，暗色下是个白块 */
+    html[data-ojpp-theme="dark"] .SumoSelect p.CaptionCont,
+    html[data-ojpp-theme="dark"] .SumoSelect .CaptionCont,
+    html[data-ojpp-theme="dark"] .SumoSelect select,
+    html[data-ojpp-theme="dark"] .SumoSelect .optWrapper {
+      background: #2d333b !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5 !important;
+    }
+    html[data-ojpp-theme="dark"] .SumoSelect .optWrapper ul li {
+      background: #2d333b !important;
+      color: #cdd9e5 !important;
+    }
+    html[data-ojpp-theme="dark"] .SumoSelect .optWrapper ul li:hover {
+      background: #373e47 !important;
+    }
+    /* 展开列表的底色也要深——展开才是用户常看的样子 */
+    html[data-ojpp-theme="dark"] .SumoSelect .optWrapper.multiple,
+    html[data-ojpp-theme="dark"] .SumoSelect.open .optWrapper,
+    html[data-ojpp-theme="dark"] .SumoSelect .MultiControls {
+      background: #2d333b !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5 !important;
+    }
+    /* 选项里的复选框 i：站点是白底小方框 */
+    html[data-ojpp-theme="dark"] .SumoSelect .optWrapper li.opt i,
+    html[data-ojpp-theme="dark"] .SumoSelect .select-all > span i {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+    }
+    html[data-ojpp-theme="dark"] .SumoSelect .select-all.partial > span i,
+    html[data-ojpp-theme="dark"] .SumoSelect .select-all.selected > span i {
+      background: #57ab5a !important;
+      border-color: transparent !important;
+    }
+    /* 下拉箭头：站点把一张黑色三角 PNG 放在 label>i 的 background-image，
+       直接改色没用——是图片。用 filter 反成亮色箭头。 */
+    html[data-ojpp-theme="dark"] .SumoSelect p.CaptionCont label i,
+    html[data-ojpp-theme="dark"] .SumoSelect .CaptionCont label i {
+      filter: invert(0.8) !important;
+    }
+    /* 展开时的底色 */
+    html[data-ojpp-theme="dark"] .SumoSelect.open > .CaptionCont,
+    html[data-ojpp-theme="dark"] .SumoSelect:focus > .CaptionCont {
+      background: #2d333b !important;
+      border-color: #539bf5 !important;
+    }
+    /* 筛选标签（“Gym”那类的蓝色） */
+    html[data-ojpp-theme="dark"] .setting-name label,
+    html[data-ojpp-theme="dark"] .setting-name,
+    html[data-ojpp-theme="dark"] .settings-form label {
+      color: #cdd9e5 !important;
+    }
+    /* 站点把部分 label 设成 #3b5998 深蓝，暗色下看不见 */
+    html[data-ojpp-theme="dark"] label {
+      color: #cdd9e5;
+    }
+
+    /* ---------- 星级评分控件（gym 筛选的 Difficulty） ---------- */
+    /* 站点用 rating.png 精灵图画“空星+白底”的整条，反转颜色
+       太突兀。改成纯 CSS 重绘：隐藏精灵图，用 ::before 画 5 颗
+       空星（深色实心星，视觉上像描边），已选中的那一条叠金色
+       实心星，靠 li 的宽度裁掉多余的部分——站点本来就是用
+       width 控制选几颗，所以 hover/选择都能自动工作。 */
+    html[data-ojpp-theme="dark"] ul[id^="vote-list-"],
+    html[data-ojpp-theme="dark"] ul.vote-list {
+      background-image: none !important;
+      filter: none !important;
+      position: relative;
+    }
+    /* 未选中的空星：深色实心星，读作“空/未选” */
+    html[data-ojpp-theme="dark"] ul[id^="vote-list-"]::before {
+      content: "★★★★★";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: 3px;
+      color: #3d434d;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    /* 已选中的那一条：同样 5 颗星，亮金色。li 用 overflow:hidden
+       + 站点设置的 width 来裁，所以选几颗就显示几颗。 */
+    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li[id^="vote-current-"],
+    html[data-ojpp-theme="dark"] ul.vote-list li[id^="vote-current-"] {
+      background-image: none !important;
+      overflow: hidden;
+      white-space: nowrap;
+      filter: none !important;
+    }
+    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li[id^="vote-current-"]::before,
+    html[data-ojpp-theme="dark"] ul.vote-list li[id^="vote-current-"]::before {
+      content: "★★★★★";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: 3px;
+      color: #f0883e;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    /* hover 预览：站点给 a.vote-item:hover 铺 rating.gif 下半截
+       （白底金星精灵，GIF 无 alpha），暗色下是一条白块。去精灵，
+       同样用 ::before 画金星，锚点 width 裁掉多余的星 */
+    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li a.vote-item,
+    html[data-ojpp-theme="dark"] ul.vote-list li a.vote-item,
+    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li a.vote-item:hover,
+    html[data-ojpp-theme="dark"] ul.vote-list li a.vote-item:hover {
+      background-image: none !important;
+      overflow: hidden;
+    }
+    html[data-ojpp-theme="dark"] ul[id^="vote-list-"] li a.vote-item:hover::before,
+    html[data-ojpp-theme="dark"] ul.vote-list li a.vote-item:hover::before {
+      content: "★★★★★";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: 3px;
+      color: #f0883e;
+      white-space: nowrap;
+      text-indent: 0;
+      pointer-events: none;
+    }
+
+    /* ---------- 题目副标签（standard input/output、时限） ---------- */
+    /* 站点给这些 .notice 设了浅灰底做“信息条”，暗色下是一块
+       和背景不一样的灰块。直接透明，只留文字色 */
+    html[data-ojpp-theme="dark"] .notice {
+      background: transparent !important;
+      border: none !important;
+      color: #909dab !important;
+    }
+    /* 但 .notice 里的文字要可读——站点给 td .notice 设过灰，优先级不够会输 */
+    html[data-ojpp-theme="dark"] .notice *,
+    html[data-ojpp-theme="dark"] td .notice,
+    html[data-ojpp-theme="dark"] .notice a {
+      color: #909dab !important;
+    }
+
+    /* ---------- 倒计时/截止标签 ---------- */
+    /* “Until closing X days” 里的时间是 span.countdown，站点给 #777 深灰。
+       按“截止”语义上色成琥珀色。注意别用 .irt——那其实是 datatable
+       的圆角精灵图 class，之前误认作倒计时元素 */
+    html[data-ojpp-theme="dark"] .countdown,
+    html[data-ojpp-theme="dark"] .countdown * {
+      color: #f0883e !important;
+      border-color: #f0883e !important;
+    }
+
+    /* ---------- datatable/roundbox 的角精灵图 ---------- */
+    /* CF 的圆角是靠 ilt/irt/ilb/irb 几个小 PNG 角落图拼出来的。
+       暗色下这些白色角落图会变成白块。全部去掉，容器自己给
+       border-radius 保持圆角 */
+    html[data-ojpp-theme="dark"] .ilt,
+    html[data-ojpp-theme="dark"] .irt,
+    html[data-ojpp-theme="dark"] .ilb,
+    html[data-ojpp-theme="dark"] .irb,
+    html[data-ojpp-theme="dark"] .lt,
+    html[data-ojpp-theme="dark"] .rt,
+    html[data-ojpp-theme="dark"] .lb,
+    html[data-ojpp-theme="dark"] .rb {
+      background-image: none !important;
+    }
+    html[data-ojpp-theme="dark"] .datatable,
+    html[data-ojpp-theme="dark"] .borderTopRound {
+      border-radius: 4px;
+    }
+
+    /* ---------- 个人资料与图表 ---------- */
+    /* 评分曲线图例的白底 */
+    html[data-ojpp-theme="dark"] .legend,
+    html[data-ojpp-theme="dark"] .legend div {
+      background: transparent !important;
+      color: #cdd9e5;
+    }
+    /* 评分曲线图本体是 canvas，不动它 */
+
+    /* ---------- 题号行的通过/未通过标记 ---------- */
+    /* 站点的做/未做标记分两处：① td.act（操作列图标格）上浅底色，
+       ② td.id 左侧 6px 彩色条（border-left）。两处都用同色。
+       之前写成 .accepted-problem td 把整行染绿——多了，且 td.id 的
+       6px 浅绿条在暗底下太刺眼。改成：td.act 给深色底，td.id 的左条
+       换成就感分明但不刺眼的色相 */
+    html[data-ojpp-theme="dark"] tr.accepted-problem td.act,
+    html[data-ojpp-theme="dark"] .accepted-problem td.act,
+    html[data-ojpp-theme="dark"] td.act.accepted-problem {
+      background: #1d2b1d !important;
+      color: #a6d189;
+    }
+    html[data-ojpp-theme="dark"] tr.accepted-problem td.id,
+    html[data-ojpp-theme="dark"] .accepted-problem td.id {
+      border-left-color: #57ab5a !important;
+    }
+    html[data-ojpp-theme="dark"] tr.rejected-problem td.act,
+    html[data-ojpp-theme="dark"] .rejected-problem td.act,
+    html[data-ojpp-theme="dark"] td.act.rejected-problem {
+      background: #451d1d !important;
+      color: #f85149;
+    }
+    html[data-ojpp-theme="dark"] tr.rejected-problem td.id,
+    html[data-ojpp-theme="dark"] .rejected-problem td.id {
+      border-left-color: #f85149 !important;
+    }
+    html[data-ojpp-theme="dark"] tr.submitted-verdict-problem td.act,
+    html[data-ojpp-theme="dark"] .submitted-verdict-problem td.act,
+    html[data-ojpp-theme="dark"] td.act.submitted-verdict-problem {
+      background: #1c2b3d !important;
+      color: #79b8ff;
+    }
+    html[data-ojpp-theme="dark"] tr.submitted-verdict-problem td.id,
+    html[data-ojpp-theme="dark"] .submitted-verdict-problem td.id {
+      border-left-color: #79b8ff !important;
+    }
+    /* 普通行的 td.act（尤其斑马行 td.act.dark）：站点是 #f8f8f8 白底，
+       暗色下是白块。改成透明让它跟行底色一致 */
+    html[data-ojpp-theme="dark"] td.act,
+    html[data-ojpp-theme="dark"] td.act.dark,
+    html[data-ojpp-theme="dark"] .act.dark {
+      background: transparent !important;
+    }
+
+    /* ---------- 排行榜标记 ---------- */
+    /* 站点用 #ff0000 纯红和 #008000 纯绿标“失败/成功”，
+       深底上要么刺眼要么太暗。换成亮版本，语义不变 */
+    html[data-ojpp-theme="dark"] .cell-failed-system-test,
+    html[data-ojpp-theme="dark"] .cell-challenged {
+      color: #f85149 !important;
+    }
+    html[data-ojpp-theme="dark"] .successfulChallengeCount,
+    html[data-ojpp-theme="dark"] .successful-submission,
+    html[data-ojpp-theme="dark"] .successful-test {
+      color: #57ab5a !important;
+    }
+
+    /* ---------- 提交详情的 I/O 对比块 ---------- */
+    /* .file .text 是 #ddd，test-for-popup pre #eee，sample-tests pre #efefef，
+       test-example-line-even #e0e0e0——全是浅块，暗色下是大片白 */
+    html[data-ojpp-theme="dark"] .file,
+    html[data-ojpp-theme="dark"] .file .text,
+    html[data-ojpp-theme="dark"] .file .name,
+    html[data-ojpp-theme="dark"] .test-for-popup pre,
+    html[data-ojpp-theme="dark"] .test-for-popup,
+    html[data-ojpp-theme="dark"] .sample-tests pre {
+      background: #22272e !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    /* 别碰 .test-example-line-even/odd——题面里靠它做奇偶交替，
+       前面已有专门规则（even #2d333b / odd #22272e），盖掉就分不清行了 */
+    html[data-ojpp-theme="dark"] .file pre,
+    html[data-ojpp-theme="dark"] .file .text pre,
+    html[data-ojpp-theme="dark"] .sample-tests pre * {
+      color: #cdd9e5 !important;
+    }
+    /* .file 的标题行（Input / Participant's output / Jury's answer） */
+    html[data-ojpp-theme="dark"] .file .name {
+      color: #909dab !important;
+    }
+
+    /* ---------- facebox 弹窗（view source / hack 等所有弹层） ---------- */
+    /* #facebox .content 站点给的是 #fff，a.close 也是白底，暗色下
+       整个弹窗是一块大白板。内部 .source-popup / pre 都是透明的，
+       把容器压成页面底色即可 */
+    html[data-ojpp-theme="dark"] #facebox .content,
+    html[data-ojpp-theme="dark"] #facebox .popup .content {
+      background-color: #1d2127 !important;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] #facebox a.close {
+      background-color: #1d2127 !important;
+    }
+    html[data-ojpp-theme="dark"] #facebox .source-popup pre,
+    html[data-ojpp-theme="dark"] #facebox pre {
+      background-color: #22272e;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] #facebox hr {
+      border-color: #373e47;
+      background-color: #373e47;
+    }
+    /* 高亮块：站点用 --highlighted-* 浅彩底，暗色下深底 */
+    html[data-ojpp-theme="dark"] [style*="background-color: rgb(221, 238, 255)"],
+    html[data-ojpp-theme="dark"] [style*="background-color: #ddeeff"],
+    html[data-ojpp-theme="dark"] [style*="background-color: rgb(239, 239, 239)"] {
+      background-color: #22272e !important;
+    }
+    /* 过滤框/代码预览的输入与预览区 */
+    html[data-ojpp-theme="dark"] .filter-box input,
+    html[data-ojpp-theme="dark"] .datatable .filter input,
+    html[data-ojpp-theme="dark"] .datatable input {
+      background: #2d333b !important;
+      border-color: #373e47 !important;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .markItUpPreviewFrame {
+      background: #22272e !important;
+      border-color: #373e47;
+    }
+    /* ---------- text-label-* 状态徽章 ---------- */
+    /* 站点用浅彩底+深字，暗色下要反成深底+亮字 */
+    html[data-ojpp-theme="dark"] .text-label-blue,
+    html[data-ojpp-theme="dark"] .text-label-info {
+      background: #1c3a5e !important;
+      color: #79b8ff !important;
+    }
+    html[data-ojpp-theme="dark"] .text-label-green,
+    html[data-ojpp-theme="dark"] .text-label-success {
+      background: #1d3a2c !important;
+      color: #57ab5a !important;
+    }
+    html[data-ojpp-theme="dark"] .text-label-yellow,
+    html[data-ojpp-theme="dark"] .text-label-warning {
+      background: #4a3a1a !important;
+      color: #f0883e !important;
+    }
+    html[data-ojpp-theme="dark"] .text-label-red,
+    html[data-ojpp-theme="dark"] .text-label-error {
+      background: #4a2323 !important;
+      color: #f85149 !important;
+    }
+    html[data-ojpp-theme="dark"] .text-label-gray,
+    html[data-ojpp-theme="dark"] .text-label-muted {
+      background: #373e47 !important;
+      color: #909dab !important;
+    }
+
+    /* ---------- 目录页（Catalog） ---------- */
+    /* 目录/更新历史里的深蓝字与黑色时间戳 */
+    html[data-ojpp-theme="dark"] ._catalogFolderName,
+    html[data-ojpp-theme="dark"] ._CatalogHistorySidebarFrame_name,
+    html[data-ojpp-theme="dark"] ._catalogNode ._nameBody,
+    html[data-ojpp-theme="dark"] .caption {
+      color: #cdd9e5 !important;
+    }
+    html[data-ojpp-theme="dark"] .format-humantime,
+    html[data-ojpp-theme="dark"] .humantime,
+    html[data-ojpp-theme="dark"] time {
+      color: #909dab !important;
+    }
+    /* 目录的增删记录：del 浅红、ins 浅绿 */
+    html[data-ojpp-theme="dark"] ._CatalogHistorySidebarFrame_value del,
+    html[data-ojpp-theme="dark"] del {
+      background: #3d2b2b !important;
+      color: #f85149 !important;
+      text-decoration-color: #f85149;
+    }
+    html[data-ojpp-theme="dark"] ._CatalogHistorySidebarFrame_value ins,
+    html[data-ojpp-theme="dark"] ins {
+      background: #1d2b1d !important;
+      color: #57ab5a !important;
+      text-decoration-color: #57ab5a;
+    }
+    /* 目录的文件/文件夹图标：站点用 icon-* 字体渲染，
+       还把颜色写进 style="color:black" 或站点 !important 规则里。
+       必须 !important + 覆盖 ::before 才能抢到。 */
+    html[data-ojpp-theme="dark"] [class*="icon-"],
+    html[data-ojpp-theme="dark"] [class*="icon-"]::before,
+    html[data-ojpp-theme="dark"] [class*="icon-"]::after,
+    html[data-ojpp-theme="dark"] .icon-file,
+    html[data-ojpp-theme="dark"] .icon-folder {
+      color: #cdd9e5 !important;
+    }
+    /* 站点对目录树里的 icon 用 black !important，点名覆盖 */
+    html[data-ojpp-theme="dark"] ._catalogBlogEntry ._name i[class*="icon-"],
+    html[data-ojpp-theme="dark"] ._catalogFolder ._name i[class*="icon-"],
+    html[data-ojpp-theme="dark"] ._catalogNode i[class*="icon-"],
+    html[data-ojpp-theme="dark"] ._name i[class*="icon-"],
+    html[data-ojpp-theme="dark"] ._nameContent i[class*="icon-"] {
+      color: #909dab !important;
+    }
+
+    /* ---------- 提示条与代码编辑器 ---------- */
+    html[data-ojpp-theme="dark"] div.alert-info,
+    html[data-ojpp-theme="dark"] div.alert-warning,
+    html[data-ojpp-theme="dark"] div.alert-error,
+    html[data-ojpp-theme="dark"] div.alert-success {
+      background: #2d333b;
+      border-color: #444c56;
+      color: #cdd9e5;
+    }
+    html[data-ojpp-theme="dark"] .highlight {
+      background: #3a3320 !important;
+    }
+    /* 顶部搜索框：站点给它设了 #f4f4f4 和放大镜背景图 */
+    html[data-ojpp-theme="dark"] input.search,
+    html[data-ojpp-theme="dark"] .search {
+      background-color: #232a33 !important;
+      color: #cdd9e5;
+      border-color: #475060;
+    }
+    /* 输入框、下拉框、按钮：站点默认白底，暗色下会刺眼 */
+    html[data-ojpp-theme="dark"] input:not([type="checkbox"]):not([type="radio"]),
+    html[data-ojpp-theme="dark"] select,
+    html[data-ojpp-theme="dark"] textarea {
+      background-color: #2d333b;
+      color: #cdd9e5;
+      border-color: #444c56;
+    }
+    /* 提交类按钮：站点用 border:2px outset 做立体感，
+       暗色下看起来像 90 年代的控件。改成扁平样式。 */
+    html[data-ojpp-theme="dark"] input[type="submit"],
+    html[data-ojpp-theme="dark"] input[type="button"],
+    html[data-ojpp-theme="dark"] button,
+    html[data-ojpp-theme="dark"] .button {
+      background-color: #2d333b !important;
+      color: #cdd9e5 !important;
+      border: 1px solid #444c56 !important;
+      border-radius: 4px;
+    }
+    html[data-ojpp-theme="dark"] input[type="submit"]:hover,
+    html[data-ojpp-theme="dark"] input[type="button"]:hover,
+    html[data-ojpp-theme="dark"] button:hover {
+      background-color: #373e47 !important;
+    }
+
+    /* ---------- 侧边栏里的链接 ---------- */
+    /* 站点给侧边栏链接设了黑色（a.not-decorated 等），
+       有些还写成内联 style="color: black"，所以要用 !important。
+       但必须排除 .rated-user：“Top rated”这类列表里全是
+       红名/橙名，笼统的 a 规则会把段位色一起刷掉。 */
+    html[data-ojpp-theme="dark"] .roundbox a:not(.rated-user):not([class*="user-"]),
+    html[data-ojpp-theme="dark"] .sidebox a:not(.rated-user):not([class*="user-"]),
+    html[data-ojpp-theme="dark"] .roundbox li,
+    html[data-ojpp-theme="dark"] .sidebox li {
+      color: #cdd9e5 !important;
+    }
+    html[data-ojpp-theme="dark"] .roundbox a:hover,
+    html[data-ojpp-theme="dark"] .sidebox a:hover {
+      color: #539bf5 !important;
+    }
+    /* 侧边栏列表项的圆点标记 */
+    html[data-ojpp-theme="dark"] .roundbox ul li::before,
+    html[data-ojpp-theme="dark"] .sidebox ul li::before {
+      color: #768390;
+    }
+    /* “Contest materials”这类列表：站点给 li 加了 1px 白边框，
+       暗色下每行都套一圈亮框。改成素色分隔线，鼠标悬停时再高亮。 */
+    html[data-ojpp-theme="dark"] .sidebar-menu ul li,
+    html[data-ojpp-theme="dark"] .sidebox ul li {
+      border: none !important;
+      border-bottom: 1px solid #2d333b !important;
+      border-radius: 0;
+      background: transparent;
+    }
+    html[data-ojpp-theme="dark"] .sidebar-menu ul li:last-child,
+    html[data-ojpp-theme="dark"] .sidebox ul li:last-child {
+      border-bottom: none !important;
+    }
+    html[data-ojpp-theme="dark"] .sidebar-menu ul li:hover,
+    html[data-ojpp-theme="dark"] .sidebox ul li:hover {
+      background: #2d333b !important;
+    }
+    /* 悬停时链接要变亮。站点没有给 hover 设颜色，
+       之前悬停后文字仍然很淡，看起来像被禁用。 */
+    html[data-ojpp-theme="dark"] .sidebar-menu ul li a:hover,
+    html[data-ojpp-theme="dark"] .sidebox ul li a:hover {
+      color: #e6edf3 !important;
+    }
+    /* 资源语言标记（如 (en)）：站点是 #666，深底上看不清 */
+    html[data-ojpp-theme="dark"] .resource-locale {
+      color: #768390 !important;
+    }
+    /* 删除资源的小叉：原图是 10x10 灰度 PNG（白底 + 深色叉），
+       深底上几乎看不见。invert 会把白底也变成深色方块，
+       所以用 mix-blend-mode: screen 让白色消失、只留叉的轮廓。 */
+    html[data-ojpp-theme="dark"] .delete-resource-link {
+      filter: invert(1);
+      mix-blend-mode: screen;
+      opacity: .75;
+    }
+    html[data-ojpp-theme="dark"] .delete-resource-link:hover {
+      opacity: 1;
+    }
+    /* 侧边栏顶部收起/展开的箭头图标（同样是深色小图） */
+    html[data-ojpp-theme="dark"] .sidebar-menu .caption .top-links img,
+    html[data-ojpp-theme="dark"] .sidebox .caption img {
+      filter: invert(1);
+      mix-blend-mode: screen;
+    }
+  `,
+	collectSections(doc) {
+		const sections = [];
+		const statement = doc.querySelector(".problem-statement");
+		if (!statement) {
+			const post = doc.querySelector(".topic > .content > .ttypography");
+			if (post?.textContent?.trim()) {
+				const title = doc.querySelector(".topic .title, .content .title");
+				sections.push({
+					kind: "article",
+					label: t("section.blog"),
+					content: post,
+					toolbar: {
+						anchor: title ?? post,
+						position: title ? "beforeend" : "beforebegin",
+						align: "right"
+					},
+					result: {
+						anchor: post,
+						position: "afterend"
+					}
+				});
+			}
+			let idx = 0;
+			for (const comment of doc.querySelectorAll(".comment:not(.comment-reply-prototype)")) {
+				const content = comment.querySelector(".ttypography");
+				if (!content?.textContent?.trim()) continue;
+				const info = comment.querySelector(".info, .comment-info, td.right .info");
+				idx++;
+				sections.push({
+					kind: "comment",
+					label: `${t("section.comment")} ${idx}`,
+					content,
+					toolbar: {
+						anchor: info ?? content,
+						position: "beforeend",
+						align: "right"
+					},
+					result: {
+						anchor: content,
+						position: "afterend"
+					}
+				});
+			}
+			return sections;
+		}
+		const add = (content, heading, kind, label, toolbarAnchor) => {
+			if (!content || !heading || !content.textContent?.trim()) return;
+			const blockLevel = !!toolbarAnchor;
+			const anchor = toolbarAnchor ?? heading;
+			sections.push({
+				kind,
+				label,
+				content,
+				toolbar: blockLevel ? {
+					anchor,
+					position: "afterend",
+					align: "block-right"
+				} : {
+					anchor,
+					position: "beforeend",
+					align: "right"
+				},
+				result: {
+					anchor: content,
+					position: "afterend"
+				}
+			});
+		};
+		const header = statement.querySelector(".header");
+		add([...statement.children].filter((node) => node instanceof HTMLElement).find((node) => node !== header && !node.classList.contains("ojpp-toolbar")) ?? null, statement.querySelector(".header .title"), "statement", t("section.statement"), header);
+		add(statement.querySelector(".input-specification"), statement.querySelector(".input-specification .section-title"), "input", t("section.input"));
+		add(statement.querySelector(".output-specification"), statement.querySelector(".output-specification .section-title"), "output", t("section.output"));
+		add(statement.querySelector(".note"), statement.querySelector(".note .section-title"), "output", t("section.note"));
+		return sections;
+	},
+	prepareContent(root) {
+		const doc = root.ownerDocument;
+		const hasScripts = !!root.querySelector("script[type^=\"math/tex\"]");
+		for (const rendered of root.querySelectorAll(MATHJAX_RENDERED)) {
+			if (rendered.querySelector("script[type^=\"math/tex\"]")) {
+				for (const child of [...rendered.children]) if (!child.matches("script[type^=\"math/tex\"]") && !child.querySelector("script[type^=\"math/tex\"]")) child.remove();
+				continue;
+			}
+			if (hasScripts) rendered.remove();
+		}
+		for (const script of root.querySelectorAll("script[type^=\"math/tex\"]")) {
+			const latex = (script.textContent ?? "").trim();
+			if (!latex) {
+				script.remove();
+				continue;
+			}
+			const math = doc.createElement("span");
+			math.setAttribute("data-ojpp-math", /mode\s*=\s*display/.test(script.type) ? "display" : "inline");
+			math.textContent = latex;
+			script.replaceWith(math);
+		}
+		for (const span of root.querySelectorAll(".tex-span")) {
+			if (span.parentElement?.closest(".tex-span")) continue;
+			const latex = texSpanToLatex(span);
+			if (!latex) {
+				span.remove();
+				continue;
+			}
+			const math = doc.createElement("span");
+			math.setAttribute("data-ojpp-math", isStandaloneSpan(span) ? "display" : "inline");
+			math.textContent = latex;
+			span.replaceWith(math);
+		}
+		for (const tt of root.querySelectorAll(".tex-font-style-tt, .text-verb")) {
+			const code = doc.createElement("code");
+			code.textContent = tt.textContent ?? "";
+			tt.replaceWith(code);
+		}
+		for (const [selector, open, close] of [
+			[
+				".tex-font-style-bf",
+				"**",
+				"**"
+			],
+			[
+				".tex-font-style-it",
+				"*",
+				"*"
+			],
+			[
+				".tex-font-style-sl",
+				"*",
+				"*"
+			],
+			[
+				".tex-font-style-striked",
+				"~~",
+				"~~"
+			]
+		]) for (const el of root.querySelectorAll(selector)) {
+			const text = el.textContent ?? "";
+			if (!text) continue;
+			el.replaceWith(doc.createTextNode(`${open}${text}${close}`));
+		}
+		for (const el of root.querySelectorAll(".section-title, .property-title")) {
+			const text = (el.textContent ?? "").trim();
+			if (!text) continue;
+			const bold = doc.createElement("strong");
+			bold.textContent = selectorEndsWithProperty(el) ? `${text}: ` : text;
+			el.replaceWith(bold);
+		}
+		for (const el of root.querySelectorAll(".input-output-copier")) el.remove();
+	},
+	mountSettingsButton(button, doc) {
+		const loginRow = doc.querySelector(".lang-chooser > div:last-child");
+		if (loginRow) {
+			const host = doc.createElement("span");
+			host.className = "ojpp-codeforces-settings";
+			host.append(button);
+			loginRow.prepend(host);
+			return;
+		}
+		const menu = doc.querySelector(".menu-list.main-menu-list") ?? doc.querySelector("#header");
+		if (menu) {
+			const host = doc.createElement("li");
+			host.className = "ojpp-codeforces-settings";
+			host.append(button);
+			menu.append(host);
+			return;
+		}
+		button.classList.add("ojpp-settings-floating");
+		doc.body.append(button);
+	},
+	observe(doc, onChange) {
+		let timer;
+		const schedule = () => {
+			if (timer !== void 0) return;
+			timer = setTimeout(() => {
+				timer = void 0;
+				onChange();
+			}, 150);
+		};
+		const observer = new MutationObserver(schedule);
+		observer.observe(doc.body, {
+			childList: true,
+			subtree: true
+		});
+		const onReady = () => schedule();
+		doc.addEventListener("DOMContentLoaded", onReady);
+		window.addEventListener("load", onReady);
+		return () => {
+			observer.disconnect();
+			clearTimeout(timer);
+			doc.removeEventListener("DOMContentLoaded", onReady);
+			window.removeEventListener("load", onReady);
+		};
+	},
+	editor: {
+		languages: CF_LANGUAGES,
+		editorMountPoint(doc) {
+			const statement = doc.querySelector(".problem-statement");
+			if (!statement) return null;
+			if (!statement.parentElement) return null;
+			return {
+				anchor: statement,
+				position: "afterend"
+			};
+		},
+		editorPage(doc) {
+			const ta = doc.querySelector("textarea#sourceCodeTextarea");
+			const ace = doc.querySelector("#editor");
+			if (!ta || !ace) return null;
+			return {
+				anchor: ace,
+				position: "afterend",
+				hide: ace,
+				textarea: ta,
+				langSelect: doc.querySelector("select[name=\"programTypeId\"]") ?? void 0,
+				offToggle: doc.querySelector("#toggleEditorCheckbox") ?? void 0,
+				langMode: (id) => CF_LANGUAGES.find((l) => l.id === id)?.mode ?? "text",
+				syncBack: (code) => {
+					try {
+						(globalThis.unsafeWindow ?? doc.defaultView).ace?.edit?.("editor")?.setValue?.(code);
+					} catch {}
+				}
+			};
+		},
+		problemCode(doc) {
+			const p = doc.location.pathname;
+			const m = /^\/problemset\/problem\/(\d+)\/([A-Z]\w*)/.exec(p) ?? /^\/(?:contest|gym)\/(\d+)\/problem\/([A-Z]\w*)/.exec(p);
+			return m ? `${m[1]}${m[2]}` : null;
+		},
+		getSamples(doc) {
+			const inputs = [...doc.querySelectorAll(".sample-tests .input pre, .sample-test .input pre")];
+			const outputs = [...doc.querySelectorAll(".sample-tests .output pre, .sample-test .output pre")];
+			const out = [];
+			for (let i = 0; i < inputs.length; i++) {
+				const input = inputs[i]?.innerText?.trim();
+				if (input !== void 0) out.push({
+					input,
+					output: outputs[i]?.innerText?.trim() ?? ""
+				});
+			}
+			return out;
+		},
+		async runCustomTest(code, languageId, input) {
+			const csrf = csrfToken();
+			const submitBody = new URLSearchParams({
+				csrf_token: csrf,
+				communityCode: "",
+				action: "submitSourceCode",
+				programTypeId: languageId,
+				sourceCode: code,
+				source: code,
+				input,
+				tabSize: "4",
+				output: "",
+				_tta: ttaValue()
+			});
+			const submitJson = await (await fetch("/data/customtest", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+					"X-Requested-With": "XMLHttpRequest"
+				},
+				body: submitBody.toString()
+			})).json();
+			if (!submitJson?.customTestSubmitId) return {
+				output: "",
+				error: submitJson?.error ?? "提交失败（customTestSubmitId 为空）"
+			};
+			const id = String(submitJson.customTestSubmitId);
+			const deadline = Date.now() + 6e4;
+			while (Date.now() < deadline) {
+				await new Promise((r) => setTimeout(r, 1500));
+				const vb = new URLSearchParams({
+					csrf_token: csrf,
+					communityCode: "",
+					action: "getVerdict",
+					customTestSubmitId: id
+				});
+				const vj = await (await fetch("/data/customtest", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+						"X-Requested-With": "XMLHttpRequest"
+					},
+					body: vb.toString()
+				})).json().catch(() => null);
+				if (vj?.verdict != null) {
+					const result = {
+						output: String(vj.output ?? ""),
+						used: [vj.verdict, vj.stat].filter(Boolean).join(", ") || void 0,
+						verdict: vj.verdict
+					};
+					if (vj.verdict !== "OK" && !result.output) result.error = result.used;
+					return result;
+				}
+			}
+			return {
+				output: "",
+				error: "等待判题结果超时"
+			};
+		},
+		async submit(code, languageId, problemCode) {
+			const csrf = csrfToken();
+			const contestMatch = /^\/(contest|gym)\/(\d+)\/problem\/([A-Z]\w*)/.exec(document.location.pathname);
+			const fields = {
+				csrf_token: csrf,
+				action: "submitSolutionFormSubmitted",
+				programTypeId: languageId,
+				source: code,
+				tabSize: "4",
+				ftaa: ftaaValue(),
+				bfaa: bfaaValue(),
+				_tta: ttaValue()
+			};
+			let pageUrl = "/problemset/submit";
+			if (contestMatch) {
+				pageUrl = `/${contestMatch[1]}/${contestMatch[2]}/submit`;
+				fields.submittedProblemIndex = contestMatch[3];
+			} else fields.submittedProblemCode = problemCode;
+			const doc = await postFormToIframe(pageUrl, fields);
+			const url = doc.URL;
+			const errors = [...doc.querySelectorAll(".error, .forbidden")].map((e) => e.textContent?.trim()).filter((t) => !!t);
+			const errorText = errors.length ? errors.join("; ") : void 0;
+			const ok = /\/(?:contest\/\d+|gym\/\d+)?\/?(my|status)/.test(url) || /status|contest\/\d+\/my/.test(url);
+			return {
+				ok: ok && !errorText,
+				url: ok ? url : void 0,
+				error: errorText ?? (ok ? void 0 : parseSubmitError(doc))
+			};
+		}
+	},
+	i18nPage(doc, locale) {
+		if (locale !== "zh") return;
+		applyPageI18n(doc, [{
+			scope: "body",
+			map: CF_I18N_ZH,
+			prefixMap: CF_I18N_ZH_PREFIX,
+			values: CF_I18N_ZH_VALUES,
+			replaceMap: {
+				"(\\d+)\\s+years?\\s+ago": "$1 年前",
+				"(\\d+)\\s+months?\\s+ago": "$1 个月前",
+				"(\\d+)\\s+days?\\s+ago": "$1 天前",
+				"(\\d+)\\s+hours?\\s+ago": "$1 小时前",
+				"(\\d+)\\s+minutes?\\s+ago": "$1 分钟前",
+				"(\\d+)\\s+seconds?\\s+ago": "$1 秒前",
+				"Rev\\.\\s*(\\d+)": "修订版 $1"
+			}
+		}, ...CF_SUBS_RULES]);
+	}
+};
+/** CF 全站界面文本 → 中文。精确匹配（trim 后整个文本节点）。 */
+var CF_I18N_ZH = {
+	"Home": "首页",
+	"Top": "主页",
+	"Catalog": "目录",
+	"Contests": "比赛",
+	"Gym": "Gym",
+	"Problemset": "题库",
+	"Groups": "群组",
+	"Rating": "排行榜",
+	"Edu": "Edu",
+	"Calendar": "日历",
+	"Help": "帮助",
+	"Enter": "登录",
+	"Register": "注册",
+	"Logout": "登出",
+	"Profile": "个人资料",
+	"Messages": "消息",
+	"Settings": "设置",
+	"Search": "搜索",
+	"Favourites": "收藏",
+	"My submissions": "我的提交",
+	"My status": "我的状态",
+	"Friends status": "好友状态",
+	"My blog": "我的博客",
+	"Input": "输入",
+	"Output": "输出",
+	"Examples": "样例",
+	"Note": "说明",
+	"Copy": "复制",
+	"input": "输入",
+	"output": "输出",
+	"interactive": "交互题",
+	"Submit?": "提交",
+	"Tutorial": "题解",
+	"Materials": "资料",
+	"Problem": "题目",
+	"time limit per test": "每组数据时限",
+	"memory limit per test": "每组数据内存限制",
+	"standard input": "标准输入",
+	"standard output": "标准输出",
+	"Problem Tags": "题目标签",
+	"Verdict": "判定",
+	"Status": "状态",
+	"Submissions": "提交",
+	"When": "提交时间",
+	"Who": "用户",
+	"Lang": "语言",
+	"Time": "用时",
+	"Memory": "内存",
+	"Score": "分数",
+	"Rank": "排名",
+	"Penalty": "罚时",
+	"Solved": "已通过",
+	"Points": "分数",
+	"Rating change": "Rating 变化",
+	"Contest": "比赛",
+	"Contestants": "参赛者",
+	"Standings": "排行榜",
+	"Problems": "题目",
+	"Submit": "提交",
+	"Save": "保存",
+	"Cancel": "取消",
+	"Compare": "对比",
+	"Source": "源码",
+	"Send": "发送",
+	"Back": "返回",
+	"Next": "下一个",
+	"Previous": "上一个",
+	"Filter": "筛选",
+	"Apply": "应用",
+	"Diagnostics": "诊断",
+	"Compile and Run": "编译并运行",
+	"Edit": "编辑",
+	"Delete": "删除",
+	"Reply": "回复",
+	"Like": "赞",
+	"Dislike": "踩",
+	"Comments": "评论",
+	"Views": "浏览",
+	"Tags": "标签",
+	"More": "更多",
+	"Less": "收起",
+	"Show": "显示",
+	"Hide": "隐藏",
+	"Loading": "加载中",
+	"Run": "运行",
+	"Read": "阅读",
+	"Difficulty": "难度",
+	"Choose problem": "选择题号",
+	"Before contest": "赛前",
+	"Attention": "注意",
+	"Source:": "源代码：",
+	"Source code:": "源代码：",
+	"Problem:": "题目：",
+	"Compiler:": "编译器：",
+	"Language:": "语言：",
+	"Input:": "输入：",
+	"Output:": "输出：",
+	"Tab size:": "缩进宽度：",
+	"Switch off editor": "关闭编辑器",
+	"Use custom test": "使用自定义测试",
+	"No more than 256 KB": "不超过 256 KB",
+	"First 255 bytes only": "只显示前 255 字节",
+	"Choose File": "选择文件",
+	"Choose file": "选择文件",
+	"choose file": "选择文件",
+	"Browse": "浏览",
+	"or click here": "或点这里",
+	"Official": "正式",
+	"Unofficial": "非正式",
+	"Register now": "立即报名",
+	"Virtual participation": "虚拟参赛",
+	"Start virtual": "开始虚拟赛",
+	"Friends only": "只看好友",
+	"All": "全部",
+	"Final": "终榜",
+	"Unofficial standings": "非正式榜单",
+	"Custom test": "自定义测试",
+	"Terms and Conditions": "服务条款",
+	"Privacy Policy": "隐私政策",
+	"Supported by": "由提供支持",
+	"No items": "暂无条目",
+	"Powered by": "由提供支持",
+	"View the change": "查看变更",
+	"View the changes.": "查看变更",
+	"View the changes": "查看变更",
+	"The problem statement has recently been changed.": "题面最近有改动。",
+	"Submit code": "提交代码",
+	"Hacks": "Hack",
+	"Room": "房间",
+	"Custom invocation": "自定义测试",
+	"Custom tests": "自定义测试",
+	"Start virtual contest": "开始虚拟赛",
+	"Show archived": "显示已归档",
+	"Write comment?": "发表评论？",
+	"hide": "收起",
+	"history": "历史版本",
+	"By": "作者",
+	"ago": "前",
+	"months ago": "个月前",
+	"years ago": "年前",
+	"days ago": "天前",
+	"hours ago": "小时前",
+	"minutes ago": "分钟前",
+	"seconds ago": "秒前",
+	"yesterday": "昨天",
+	"Finished": "已结束",
+	"Practice": "练习",
+	"Problem tags": "题目标签",
+	"Contest materials": "比赛资料",
+	"No tag edit access": "无标签编辑权限",
+	"Clone Contest to Mashup": "克隆比赛到 Mashup",
+	"You can clone this contest to a mashup.": "你可以把这场比赛克隆为 mashup。",
+	"Clone Contest": "克隆比赛",
+	"Last submissions": "最近提交",
+	"Choose file:": "选择文件：",
+	"Last visit:": "上次访问：",
+	"Last visit": "上次访问",
+	"Attention before contest": "赛前注意",
+	"Contest status": "比赛状态",
+	"Your position": "你的名次",
+	"My contests": "我的比赛",
+	"All contests": "全部比赛",
+	"Contests are running": "比赛进行中",
+	"implementation": "模拟",
+	"math": "数学",
+	"greedy": "贪心",
+	"dp": "动态规划",
+	"data structures": "数据结构",
+	"brute force": "暴力",
+	"constructive algorithms": "构造",
+	"graphs": "图论",
+	"sortings": "排序",
+	"binary search": "二分",
+	"dfs and similar": "DFS 类",
+	"trees": "树",
+	"strings": "字符串",
+	"number theory": "数论",
+	"combinatorics": "组合",
+	"geometry": "几何",
+	"bitmasks": "位运算",
+	"dsu": "并查集",
+	"two pointers": "双指针",
+	"hashing": "哈希",
+	"probabilities": "概率",
+	"shortest paths": "最短路",
+	"matrices": "矩阵",
+	"fft": "FFT",
+	"flows": "网络流",
+	"games": "博弈",
+	"schedules": "调度",
+	"expression parsing": "表达式解析",
+	"meet-in-the-middle": "中间相遇",
+	"ternary search": "三分",
+	"divide and conquer": "分治",
+	"string suffix structures": "后缀结构",
+	"graph matchings": "图匹配",
+	"chinese remainder theorem": "中国剩余定理",
+	"2-sat": "2-SAT"
+};
+/** verdict 前缀——只翻 TLE/MLE，AC/WA/RE/CE 等保留英文（圈内惯例）。 */
+var CF_I18N_ZH_PREFIX = {
+	"Time limit exceeded": "超出时间限制",
+	"Memory limit exceeded": "超出内存限制",
+	"Idleness limit exceeded": "超出空闲限制",
+	"Contest is running": "比赛进行中",
+	"Comments": "评论"
+};
+/** input/button 的 value → 中文。 */
+var CF_I18N_ZH_VALUES = {
+	"Run": "运行",
+	"Submit": "提交",
+	"Save": "保存",
+	"Cancel": "取消",
+	"Send": "发送",
+	"Apply": "应用",
+	"Reset": "重置",
+	"Search": "搜索",
+	"Compile and Run": "编译并运行",
+	"Clone Contest": "克隆比赛",
+	"Start virtual contest": "开始虚拟赛",
+	"Register for virtual participation": "报名虚拟参赛",
+	"Register for practice": "报名练习"
+};
+/** .property-title 后面要跟冒号（如 "time limit per test: "），.section-title 不要。 */
+function selectorEndsWithProperty(el) {
+	return el.classList.contains("property-title");
+}
+function csrfToken() {
+	return document.querySelector("input[name=\"csrf_token\"]")?.value ?? "";
+}
+function ttaValue() {
+	return document.querySelector("input[name=\"_tta\"]")?.value ?? "237";
+}
+function ftaaValue() {
+	return antiBotToken("ftaa");
+}
+function bfaaValue() {
+	return antiBotToken("bfaa");
+}
+/** ftaa/bfaa 是页面脚本注入的 window 全局（反自动化参数）。 */
+function antiBotToken(name) {
+	const win = window;
+	const direct = win[`_${name}`] ?? win[name];
+	if (typeof direct === "string" && direct) return direct;
+	for (const s of document.querySelectorAll("script:not([src])")) {
+		const m = new RegExp(`_${name}\\s*=\\s*"([^"]+)"`).exec(s.textContent ?? "") ?? new RegExp(`${name}\\s*:\\s*"([^"]+)"`).exec(s.textContent ?? "");
+		if (m) return m[1];
+	}
+	return "";
+}
+function parseSubmitError(doc) {
+	const t = doc.querySelector("[class*=\"error\"]")?.textContent?.trim();
+	if (t) return t.slice(0, 200);
+	const text = doc.body?.textContent ?? "";
+	return /(?:have|must|cannot|can't|empty|invalid|choose|select|required|denied)[^\n]{0,120}/i.exec(text)?.[0]?.trim();
+}
+/**
+* 两段式隐藏 iframe 表单提交：
+* 先 GET 目标页（customtest/submit），再在其文档内建表单 POST。
+* 这样 Referer 就是目标页自身，和用户在页面上点按钮完全一致——
+* fetch/跨页 iframe POST 都会被服务端退回表单页。
+*/
+function postFormToIframe(pageUrl, fields) {
+	return new Promise((resolve, reject) => {
+		const frame = document.createElement("iframe");
+		frame.setAttribute("sandbox", "allow-same-origin allow-forms");
+		frame.style.display = "none";
+		let submitted = false;
+		let prevDoc = null;
+		const done = () => {
+			clearInterval(poll);
+			clearTimeout(timeout);
+			setTimeout(() => frame.remove(), 200);
+		};
+		const timeout = setTimeout(() => {
+			done();
+			reject(/* @__PURE__ */ new Error("请求超时"));
+		}, 9e4);
+		const poll = setInterval(() => {
+			let doc = null;
+			try {
+				doc = frame.contentDocument;
+			} catch {
+				return;
+			}
+			if (!doc) return;
+			if (!submitted) {
+				if (!doc.URL.includes(pageUrl) || doc.readyState !== "complete") return;
+				prevDoc = doc;
+				const form = doc.createElement("form");
+				form.method = "POST";
+				form.action = "";
+				form.style.display = "none";
+				for (const [name, value] of Object.entries(fields)) {
+					const input = doc.createElement("input");
+					input.type = "hidden";
+					input.name = name;
+					input.value = value;
+					form.append(input);
+				}
+				doc.body.append(form);
+				submitted = true;
+				HTMLFormElement.prototype.submit.call(form);
+			} else {
+				if (doc === prevDoc) return;
+				if (doc.readyState !== "complete") return;
+				done();
+				resolve(doc);
+			}
+		}, 250);
+		document.body.append(frame);
+		frame.src = pageUrl;
+	});
+}
+var d = "html[data-ojpp-theme=\"dark\"]";
+var NOWCODER_DARK = `
+${d} { color-scheme: dark; }
+${d} body, ${d} .nk-container, ${d} .nk-main, ${d} .nk-content,
+${d} .nk-acm-container, ${d} .content-board, ${d} .nc-el-container,
+${d} .question-main, ${d} .question-content, ${d} .subject-box {
+  background: #1c2128; color: #cdd9e5;
+}
+${d} .module-box, ${d} .module-head, ${d} .module-body, ${d} .subject-main,
+${d} .subject-item-wrap, ${d} .subject-item, ${d} .question-intr, ${d} .question-oi-bd,
+${d} .question-oi-hd, ${d} .code-editor-header, ${d} .code-editor-header.theme-default,
+${d} .panel-header, ${d} .panel-body, ${d} .panel-footer, ${d} .code-editor-footer,
+${d} .nc-post-content, ${d} .menu-list, ${d} .dropdown-menu, ${d} .select-options,
+${d} .tooltip-inner, ${d} .pop-box, ${d} .pop-content, ${d} .pop-main {
+  background: #22272e; color: #cdd9e5; border-color: #373e47;
+}
+${d} .header-bar, ${d} .nk-header, ${d} .nk-footer, ${d} .acm-header,
+${d} .menu-box, ${d} .menu-line-box { background: #22272e; color: #cdd9e5; }
+${d} .acm-header a, ${d} .menu-box a { color: #cdd9e5; }
+${d} .menu-box .selected, ${d} .menu-box li:hover { background: #2d333b; }
+${d} .subject-question, ${d} .subject-describe, ${d} .subject-item-title,
+${d} .question-title, ${d} .question-oi-cont, ${d} .module-head h1,
+${d} .module-head h2, ${d} .module-head h3, ${d} .module-head h4,
+${d} .code-editor-header, ${d} .panel-header { color: #cdd9e5; }
+${d} a:not(.btn):not([class*="level-"]):not([class*="user-"]) { color: #539bf5; }
+${d} a:not(.btn):hover { color: #79b8ff; }
+${d} pre, ${d} .subject-describe pre, ${d} .question-oi-cont pre,
+${d} :not(pre)>code { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${d} input:not([type=checkbox]):not([type=radio]), ${d} select, ${d} textarea,
+${d} .input-txt, ${d} .input-box, ${d} .search-box, ${d} .search-input {
+  background: #1c2128; color: #cdd9e5; border-color: #373e47;
+}
+${d} .btn-default, ${d} .btn-white, ${d} .btn-copy, ${d} .copy,
+${d} .pagination a, ${d} .pagination li { background: #22272e; color: #cdd9e5; border-color: #373e47; }
+${d} table, ${d} th, ${d} td, ${d} .module-box, ${d} .subject-item,
+${d} .panel-header, ${d} .question-oi-bd, ${d} .question-oi-hd,
+${d} .code-editor-header, ${d} hr { border-color: #373e47; }
+${d} th, ${d} thead td, ${d} .table-tr-head { background: #22272e; color: #cdd9e5; }
+${d} tbody tr:nth-child(odd) { background: #22272e; }
+${d} tbody tr:hover { background: #2d333b; }
+${d} .CodeMirror, ${d} .CodeMirror-gutters { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
+${d} .CodeMirror-cursor { border-left-color: #cdd9e5; }
+${d} .CodeMirror-selected { background: #354961; }
+${d} .CodeMirror-activeline-background { background: #22272e; }
+${d} .CodeMirror-linenumber { color: #909dab; }
+${d} .result, ${d} .test-result, ${d} .result-panel, ${d} .test-panel { background: #1c2128; color: #cdd9e5; }
+${d} .code-editor-header.theme-default, ${d} .el-popover, ${d} .el-dialog,
+${d} .el-message-box, ${d} .el-select-dropdown, ${d} .el-dropdown-menu,
+${d} .el-popper { background: #22272e !important; color: #cdd9e5; border-color: #373e47; }
+${d} .el-select-dropdown__item, ${d} .el-dropdown-menu__item, ${d} .el-dialog__title,
+${d} .panel-header .tab-item, ${d} .el-popover__title { color: #cdd9e5; }
+${d} .el-select-dropdown__item.hover, ${d} .el-select-dropdown__item:hover,
+${d} .el-dropdown-menu__item:hover { background: #2d333b; }
+${d} .el-input__inner, ${d} .el-textarea__inner { background: #1c2128; color: #cdd9e5; border-color: #373e47; }
+${d} .el-popper[x-placement^=bottom] .popper__arrow::after { border-bottom-color: #22272e; }
+${d} .el-popper[x-placement^=top] .popper__arrow::after { border-top-color: #22272e; }
+${d} .gray, ${d} .color-gray, ${d} .text-muted, ${d} .subject-limit { color: #909dab; }
+${d} .katex { color: inherit; }
+`;
+function equationFromImg(img) {
+	const src = img.getAttribute("src") ?? "";
+	const alt = img.getAttribute("alt")?.trim();
+	if (alt && /equation|tex/i.test(src)) return alt;
+	const match = /[?&]tex=([^&]+)/.exec(src);
+	if (!match) return null;
+	try {
+		return decodeURIComponent(match[1]);
+	} catch {
+		return match[1];
+	}
+}
+/**
+* 牛客用公式做缩进（如 \hspace{15pt}），这些不是内容。
+* 不滤掉的话，它们会污染提示词，译文里也会冒出一堆空白公式。
+*/
+function isSpacingOnly(latex) {
+	return !latex.replace(/\\(hspace|hfill|quad|qquad|,|;|:|!)\s*(\{[^{}]*\})?/g, "").replace(/[\s~]/g, "");
+}
+/** 牛客用 \hspace{23pt}\bullet\, 模拟列表项，转成 Markdown 列表标记。 */
+function isBullet(latex) {
+	return /^\\(hspace\s*\{[^{}]*\})?\s*\\bullet\b/.test(latex.trim());
+}
+var nowcoder = {
+	id: "nowcoder",
+	get name() {
+		return t("site.nowcoder");
+	},
+	hosts: ["ac.nowcoder.com", "www.nowcoder.com"],
+	darkStyles: NOWCODER_DARK,
+	preserveInlineColors: true,
+	styles: `
+    .ojpp-nowcoder-settings {
+      display: inline-flex; align-items: center; margin-left: 8px;
+    }
+    .ojpp-nowcoder-settings .ojpp-icon-btn { color: #cfd3d8; }
+    .ojpp-nowcoder-settings .ojpp-icon-btn:hover {
+      background: rgba(255, 255, 255, .14); color: #fff;
+    }
+  `,
+	collectSections(doc) {
+		const sections = [];
+		const add = (content, heading, kind, label) => {
+			if (!content || !heading || !content.textContent?.trim()) return;
+			sections.push({
+				kind,
+				label,
+				content,
+				toolbar: {
+					anchor: heading,
+					position: "beforeend",
+					align: "right"
+				},
+				result: {
+					anchor: content,
+					position: "afterend"
+				}
+			});
+		};
+		add(doc.querySelector(".subject-question"), doc.querySelector(".subject-item-title"), "statement", t("section.statement"));
+		for (const heading of doc.querySelectorAll(".subject-describe > h2")) {
+			const label = heading.textContent ?? "";
+			if (!/描述/.test(label)) continue;
+			let sibling = heading.nextElementSibling;
+			while (sibling && sibling.tagName !== "PRE" && sibling.tagName !== "H2") sibling = sibling.nextElementSibling;
+			if (sibling?.tagName !== "PRE") continue;
+			const isInput = /输入/.test(label);
+			add(sibling, heading, isInput ? "input" : "output", isInput ? t("section.input") : t("section.output"));
+		}
+		for (const heading of doc.querySelectorAll("h2")) {
+			const label = (heading.textContent ?? "").trim();
+			if (!/^(说明|备注|提示|注意)/.test(label)) continue;
+			const body = heading.nextElementSibling;
+			if (!body || !body.textContent?.trim()) continue;
+			if (body.querySelector("textarea")) continue;
+			add(body, heading, "output", label.replace(/[:：]\s*$/, ""));
+		}
+		for (const content of doc.querySelectorAll("div.nc-post-content")) add(content, content, "solution", t("section.solution"));
+		return sections;
+	},
+	prepareContent(root) {
+		for (const katex of root.querySelectorAll(".katex")) {
+			const tex = katex.querySelector("annotation[encoding=\"application/x-tex\"]")?.textContent?.trim();
+			if (!tex) continue;
+			const wrapper = katex.parentElement;
+			const display = wrapper?.classList.contains("katex-display") ?? false;
+			const target = display && wrapper ? wrapper : katex;
+			if (isSpacingOnly(tex)) {
+				target.remove();
+				continue;
+			}
+			const math = root.ownerDocument.createElement("span");
+			if (isBullet(tex)) {
+				math.textContent = "• ";
+				target.replaceWith(math);
+				continue;
+			}
+			math.setAttribute("data-ojpp-math", display ? "display" : "inline");
+			math.textContent = tex;
+			target.replaceWith(math);
+		}
+		for (const img of root.querySelectorAll("img")) {
+			const latex = equationFromImg(img);
+			if (latex === null) continue;
+			const math = root.ownerDocument.createElement("span");
+			math.setAttribute("data-ojpp-math", "inline");
+			math.textContent = latex;
+			img.replaceWith(math);
+		}
+		if (root.tagName === "PRE" && !root.querySelector("code")) {
+			const paragraph = root.ownerDocument.createElement("div");
+			paragraph.innerHTML = root.innerHTML;
+			root.replaceChildren(paragraph);
+		}
+	},
+	mountSettingsButton(button, doc) {
+		const header = doc.querySelector(".header-right") ?? doc.querySelector(".header-bar");
+		if (header) {
+			const host = doc.createElement("span");
+			host.className = "ojpp-nowcoder-settings";
+			if (header.matches(".header-bar")) host.style.marginLeft = "auto";
+			host.append(button);
+			header.append(host);
+		} else {
+			button.classList.add("ojpp-settings-floating");
+			doc.body.append(button);
+		}
+	},
+	observe(doc, onChange) {
+		let timer;
+		const schedule = () => {
+			if (timer !== void 0) return;
+			timer = setTimeout(() => {
+				timer = void 0;
+				onChange();
+			}, 100);
+		};
+		const observer = new MutationObserver(schedule);
+		observer.observe(doc.body, {
+			childList: true,
+			subtree: true
+		});
+		const onClick = (event) => {
+			if (event.target instanceof Element && event.target.closest(".more-unfold, .js-full-question, .js-small-question")) schedule();
+		};
+		doc.addEventListener("click", onClick);
+		return () => {
+			observer.disconnect();
+			clearTimeout(timer);
+			doc.removeEventListener("click", onClick);
+		};
+	},
+	i18nPage(doc, locale) {
+		if (locale === "en") {
+			applyPageI18n(doc, [{
+				scope: "body",
+				map: NC_I18N_EN,
+				prefixMap: NC_I18N_EN_PREFIX,
+				values: NC_I18N_EN_VALUES
+			}]);
+			return;
+		}
+		if (locale !== "zh") return;
+		applyPageI18n(doc, [{
+			scope: ".question-ide, .submit-box, .nc-post-content",
+			map: {
+				"Run": "运行",
+				"Submit": "提交",
+				"Reset": "重置",
+				"Editor": "编辑器",
+				"Test": "自测",
+				"Sample": "样例"
+			},
+			values: {
+				"Run": "运行",
+				"Submit": "提交",
+				"Submit code": "提交代码"
+			}
+		}]);
+	}
+};
+/** 牛客界面文本 → 英文（目标语言=en 时）。 */
+var NC_I18N_EN = {
+	"输入": "Input",
+	"输出": "Output",
+	"输入描述:": "Input description:",
+	"输入描述：": "Input description:",
+	"输出描述:": "Output description:",
+	"输出描述：": "Output description:",
+	"说明": "Note",
+	"示例": "Example",
+	"示例1": "Example 1",
+	"复制": "Copy",
+	"题目描述": "Problem description",
+	"题目纠错": "Report error",
+	"返回全部题目": "All problems",
+	"比赛主页": "Contest home",
+	"我的提交": "My submissions",
+	"提交记录": "Submissions",
+	"题解": "Solutions",
+	"讨论": "Discussions",
+	"只看题目内容": "Problem only",
+	"做题遇到困难？": "Stuck?",
+	"查看编程常见问题": "FAQ",
+	"查看语言环境详情": "Environment details",
+	"在线IDE": "Online IDE",
+	"自测输入": "Test input",
+	"自测运行": "Test run",
+	"自测输入输出": "Test I/O",
+	"运行结果": "Result",
+	"提交": "Submit",
+	"保存并提交": "Save & Submit",
+	"运行": "Run",
+	"重置": "Reset",
+	"主题": "Theme",
+	"字体大小": "Font size",
+	"键位绑定": "Key bindings",
+	"编辑器快捷键": "Editor shortcuts",
+	"代码右缩进": "Indent right",
+	"代码左缩进": "Indent left",
+	"代码自动补全": "Auto complete",
+	"行注释": "Line comment",
+	"撤销": "Undo",
+	"通用": "General",
+	"快速加载复制代码": "Load template",
+	"快速加载最优代码": "Load best code",
+	"检测": "Check",
+	"函数方法参数文档提示": "Parameter hints",
+	"剪切": "Cut",
+	"2个空格": "2 spaces",
+	"4个空格": "4 spaces",
+	"8个空格": "8 spaces",
+	"已通过": "Accepted",
+	"答案错误": "Wrong Answer",
+	"编译错误": "Compile Error",
+	"运行错误": "Runtime Error",
+	"超出时间限制": "Time Limit Exceeded",
+	"超出内存限制": "Memory Limit Exceeded",
+	"等待评测": "Pending",
+	"评测中": "Judging",
+	"部分通过": "Partial",
+	"竞赛": "Contests",
+	"题库": "Problems",
+	"课程": "Courses",
+	"求职": "Jobs",
+	"登录": "Login",
+	"注册": "Register",
+	"登出": "Logout",
+	"搜索": "Search",
+	"设置": "Settings",
+	"难度": "Difficulty",
+	"通过率": "Acceptance",
+	"标签": "Tags",
+	"上一题": "Previous",
+	"下一题": "Next",
+	"收藏": "Favorite",
+	"分享": "Share",
+	"默认": "Default",
+	"牛客经典": "Nowcoder Classic",
+	"列表加载中...": "Loading...",
+	"列表加载中…": "Loading…",
+	"加大": "Bigger",
+	"更大": "Bigger",
+	"大": "Large",
+	"小": "Small",
+	"中": "Medium",
+	"编辑器设置": "Editor settings",
+	"牛客网": "Nowcoder",
+	"比赛": "Contest",
+	"练习": "Practice"
+};
+var NC_I18N_EN_PREFIX = {
+	"载入示例": "Load sample",
+	"加载中": "Loading",
+	"列表加载中": "Loading"
+};
+var NC_I18N_EN_VALUES = {
+	"提交": "Submit",
+	"运行": "Run",
+	"保存并提交": "Save & Submit",
+	"重置": "Reset"
+};
+var sites_exports = exports("n",/* @__PURE__ */ __exportAll({
+	resolveSite: () => resolveSite,
+	siteMatches: () => siteMatches,
+	sites: () => sites
+}));
+var sites = exports("t",[
+	nowcoder,
+	codeforces,
+	atcoder,
+	qoj,
+	luogu
+]);
+var siteMatches = sites.flatMap((site) => site.hosts.map((host) => `https://${host}/*`));
+function resolveSite(url) {
+	if (url.protocol !== "https:") return void 0;
+	return sites.find((site) => site.hosts.includes(url.hostname));
+}})}}));
+System.register("./i18n-D1L63o1m-DRxdwpYd.js", [],(function(exports){'use strict';return{execute:(function(){exports({g:getLocale,r:resolveLocale,s:setLocale,t:t});/**
+* 英文文案。由 AI 生成初稿后人工校对，键与 zh.ts 一一对应。
+*
+* 键集合必须与 zh.ts 完全一致：缺键会在界面漏出中文，
+* 多键说明 zh.ts 删了文案但没同步这里。
+*/
+var en = {
+	"common.copied": "Copied",
+	"common.copyFailed": "Copy failed",
+	"common.close": "Close",
+	"common.cancel": "Cancel",
+	"common.save": "Save",
+	"common.unnamed": "Unnamed",
+	"common.notFilled": "Not set",
+	"app.settingsTitle": "{name} Settings",
+	"app.settingsSaved": "Settings saved",
+	"toolbar.group": "{label} toolbar",
+	"toolbar.translate": "AI Translate",
+	"toolbar.retranslate": "Retranslate",
+	"toolbar.markdown": "Markdown view",
+	"toolbar.backToOriginal": "Back to original",
+	"toolbar.copyOriginal": "Copy original",
+	"toolbar.noContent": "Nothing to translate",
+	"toolbar.translating": "Translating — click to stop",
+	"toolbar.translateFailed": "Translation failed: {message}",
+	"toolbar.retry": "Retry: {message}",
+	"result.title": "AI Translate",
+	"result.copy": "Copy translation",
+	"result.collapse": "Collapse",
+	"result.expand": "Expand",
+	"settings.title": "Settings",
+	"settings.tab.general": "Translation",
+	"settings.tab.provider": "Providers",
+	"settings.tab.advanced": "Advanced",
+	"settings.general": "General",
+	"settings.basic": "Basic",
+	"settings.behavior": "Behavior",
+	"settings.providers": "Providers",
+	"settings.language": "Language",
+	"settings.name": "Name",
+	"settings.manage": "Manage",
+	"settings.edit": "Edit",
+	"settings.duplicate": "Duplicate",
+	"settings.delete": "Delete",
+	"settings.noProvider": "No providers",
+	"settings.noMatch": "No matches",
+	"settings.search": "Search...",
+	"settings.reset": "Reset to defaults",
+	"settings.resetConfirm": "Reset to default settings? Your current configuration will be cleared.",
+	"settings.saveFailed": "Save failed: {message}",
+	"settings.uiLanguage": "Interface language",
+	"settings.uiLanguageHint": "Language used for the settings panel and buttons. Follows the browser language by default.",
+	"settings.localeAuto": "Follow browser",
+	"settings.localeZh": "简体中文",
+	"settings.localeEn": "English",
+	"settings.targetLang": "Target language",
+	"settings.targetLangHint": "Language for translations, e.g. 简体中文 / English / 日本語.",
+	"settings.targetLangPlaceholder": "简体中文",
+	"settings.extraPrompt": "Extra prompt",
+	"settings.extraPromptPlaceholder": "e.g. Keep proper nouns in English; keep explanations brief.",
+	"settings.extraPromptHint": "Appended after the built-in translation prompt.",
+	"settings.wholeBlock": "Whole block",
+	"settings.wholeBlockHint": "Send the whole block to the model in one request for fuller context. When off, content is split by headings and paragraphs, which suits very long problem statements or models with smaller context windows.",
+	"settings.autoTranslate": "Auto-translate problem statement",
+	"settings.autoTranslateHint": "Per-site toggle; automatically translate the problem statement area when a problem page opens.",
+	"settings.streaming": "Streaming",
+	"settings.pdfAsImages": "Send statement images to vision models",
+	"settings.autoExtractSamples": "Auto-extract samples from PDF statements",
+	"settings.pdfPrompt": "Extra prompt for PDF statements",
+	"settings.pdfPromptPlaceholder": "Custom requirements appended after the built-in PDF prompt; leave empty to use the default",
+	"settings.streamingHint": "Render as it generates for a faster first paint. When off, the full translation appears at once. Falls back automatically if the Provider or script manager doesn't support it.",
+	"settings.theme": "Site theme",
+	"settings.themeHint": "Only affects styles the script adds for the site. If the site has its own dark mode, keep “Follow system”.",
+	"settings.themeAuto": "Follow system",
+	"settings.themeLight": "Light",
+	"settings.themeDark": "Dark",
+	"settings.timeout": "Timeout (ms)",
+	"settings.retries": "Retries",
+	"settings.retriesHint": "Only applies to network errors and 5xx responses.",
+	"settings.addProvider": "Add provider",
+	"settings.editProvider": "Edit provider",
+	"settings.backToList": "Back to list",
+	"settings.chooseProvider": "Choose a provider",
+	"settings.chooseProviderHint": "Start from a preset, or pick Custom and fill it in yourself.",
+	"settings.providerSearch": "Search providers…",
+	"settings.noProviderMatch": "No matching provider",
+	"settings.providerList": "Configured",
+	"settings.providerListEmpty": "No providers yet. Click “Add provider” above to start.",
+	"settings.enableProvider": "Enabled",
+	"settings.confirmAdd": "Add",
+	"settings.deleteConfirm": "Delete this provider?",
+	"settings.inUse": "In use",
+	"settings.addFromPreset": "Add from preset",
+	"settings.add": "Add",
+	"settings.providerActive": "Active: {name} · {model}",
+	"settings.manageProviders": "Manage providers",
+	"settings.providerConfig": "Basic configuration",
+	"settings.advancedOptions": "Advanced options",
+	"settings.actions": "Actions",
+	"settings.deleteProvider": "Delete",
+	"settings.providerName": "Label",
+	"settings.providerNamePlaceholder": "Name this configuration",
+	"settings.protocol": "Protocol",
+	"settings.protocolHint": "Determines the request body format and how responses are parsed.",
+	"settings.baseUrl": "Base URL",
+	"settings.baseUrlHint": "Up to /v1 is enough — the script appends /chat/completions, /responses, or /messages. You can also enter the full endpoint.",
+	"settings.model": "Model",
+	"settings.apiKeyPlaceholder": "Leave empty for local services",
+	"settings.apiKeyHint": "Stored in this platform's local storage and sent with requests to your configured endpoint. Leave empty for local inference services; no auth header is sent.",
+	"settings.reasoning": "Reasoning",
+	"settings.reasoningHint": "Maps to the thinking field; only some Providers support it.",
+	"settings.reasoningEffort": "Reasoning effort",
+	"settings.reasoningEffortHint": "Maps to reasoning_effort / reasoning.effort.",
+	"settings.effortDefault": "Model default",
+	"settings.effortEnabled": "On",
+	"settings.effortDisabled": "Off",
+	"settings.headers": "Extra headers",
+	"settings.headersPlaceholder": "X-Custom-Header: value\\nOne per line",
+	"settings.headersHint": "One Key: Value per line; overrides default headers with the same name.",
+	"settings.body": "Extra request body fields",
+	"settings.bodyHint": "A JSON object merged into the request body; can override any field, such as top_p or max_tokens.",
+	"settings.test": "Test connection",
+	"settings.testing": "Testing…",
+	"settings.testOk": "Connected. Model replied: {reply}",
+	"settings.testFail": "Connection failed: {message}",
+	"settings.copyProvider": "Duplicate configuration",
+	"settings.providerCopySuffix": "{name} copy",
+	"settings.keepOne": "At least one configuration is required.",
+	"settings.providerFooter": "Configurations are stored in this platform's local storage. Translation content and API Key are sent to your configured Provider; you can test the connection on the Providers tab.",
+	"settings.preview": "Configuration preview (Key hidden)",
+	"settings.importPlaceholder": "Paste exported JSON, then click Import",
+	"settings.import": "Import",
+	"settings.importMissing": "Missing providers array",
+	"settings.importOk": "Imported. Takes effect after saving.",
+	"settings.importFail": "Import failed: {message}",
+	"settings.importTitle": "Import configuration",
+	"translate.status": "Translating…",
+	"translate.statusChunk": "Translating chunk {index}/{total}…",
+	"translate.statusSamples": "Organizing samples…",
+	"toolbar.extractSamples": "Extract samples",
+	"editor.samplesExtracted": "Extracted {count} sample(s) into the editor",
+	"editor.noSamplesExtracted": "No samples extracted",
+	"translate.unknownProvider": "Not configured",
+	"error.noProvider": "No Provider configured yet. Open the settings panel and add one first.",
+	"error.noModel": "Model name is empty",
+	"error.requestFailed": "Translation request failed",
+	"error.emptyResponse": "The endpoint returned an empty response; the model may not support this or the prompt was rejected",
+	"error.emptyButOk": "(Empty response, but status code is OK)",
+	"error.network": "Network request failed. Check your connection or the endpoint URL.",
+	"error.timeout": "Request timed out",
+	"error.streamRead": "Failed to read the Streaming response",
+	"error.notUserscript": "Install OJ++ through Tampermonkey or Violentmonkey and grant the required permissions",
+	"error.baseUrlEmpty": "Base URL is empty. Please fill it in the settings.",
+	"site.nowcoder": "Nowcoder",
+	"site.codeforces": "Codeforces",
+	"atcoder.signIn": "Sign in to AtCoder before running tests or submitting code.",
+	"atcoder.testBusy": "An AtCoder custom test is already running. Try again after it finishes.",
+	"atcoder.testTimeout": "Custom test timed out. Check the AtCoder Custom Test page before retrying.",
+	"atcoder.formUnavailable": "AtCoder submission form is unavailable. Open a task page and sign in.",
+	"atcoder.verification": "Complete the verification in the AtCoder submission form below, then submit again.",
+	"atcoder.notConfirmed": "AtCoder did not confirm submission. Check the native submission form.",
+	"site.pdfText": "Extracted PDF text (check formulas and layout against the original)",
+	"settings.authorizing": "Checking provider access… Grant permission if the authorization tab opens.",
+	"settings.sites": "Site features",
+	"settings.sitesHint": "Configure each site independently. Auto-translation requires the toolbar; editors also follow the global editor setting.",
+	"settings.siteTranslation": "Translation, Markdown and copy toolbar",
+	"settings.siteI18n": "Localize website interface",
+	"settings.siteDark": "Website dark theme",
+	"settings.siteEditor": "Code editor",
+	"section.contest": "Contest overview",
+	"section.constraints": "Constraints",
+	"section.statement": "Problem statement",
+	"section.samples": "Samples",
+	"section.input": "Input",
+	"section.output": "Output",
+	"section.note": "Note",
+	"section.solution": "Solution",
+	"section.blog": "Blog",
+	"section.comment": "Comment",
+	"section.talk": "Message",
+	"preset.customOpenAI": "Custom (OpenAI Chat compatible)",
+	"editor.title": "Code",
+	"editor.run": "Test samples",
+	"editor.custom": "Custom test",
+	"editor.customPlaceholder": "Input data (stdin)",
+	"editor.runOne": "Run",
+	"editor.submit": "Submit",
+	"editor.submitting": "Submitting…",
+	"editor.submitted": "Submitted — view status →",
+	"editor.submitFailed": "Submit failed",
+	"editor.running": "Running…",
+	"editor.done": "Done",
+	"editor.match": "Output matches",
+	"editor.mismatch": "Output differs",
+	"editor.accepted": "Accepted",
+	"editor.wrongAnswer": "Wrong answer",
+	"editor.runError": "Run failed",
+	"editor.sample": "Sample",
+	"editor.siteRun": "Run on site",
+	"editor.localRun": "Local WASM",
+	"editor.localRuntime": "Local: Clang 8 (C11/C++17, libc++) or CPython 3.11.3. Results may differ from the site judge.",
+	"editor.localTimeout": "Time limit per local test (compilation has a separate limit)",
+	"editor.localUnsupported": "Local execution supports C, C++ and Python. Use site execution for this language.",
+	"editor.localUnavailable": "Local execution requires the OJ++ browser extension.",
+	"editor.cancelled": "Cancelled",
+	"editor.stderr": "Standard error (stderr)",
+	"editor.expected": "Expected output",
+	"editor.customRun": "Custom test",
+	"editor.noSamples": "No samples found — click \"+ Custom test\" to add one",
+	"editor.noProblem": "Cannot detect problem code on this page",
+	"editor.runAll": "Run all",
+	"editor.addTest": "Add custom test",
+	"editor.customN": "Custom",
+	"editor.delete": "Delete",
+	"editor.input": "Input",
+	"editor.enabled": "Problem page code editor",
+	"editor.enabledHint": "Show a code editor on supported sites’ problem pages — test samples, run custom input, and submit directly.",
+	"editor.lspUrl": "LSP address",
+	"editor.lspUrlPlaceholder": "ws://localhost:20876 (empty to disable)",
+	"editor.lspUrlHint": "Connect a local LSP WebSocket bridge (e.g. lsp-ws-proxy) for semantic completion; leave empty for keyword completion only."
+};
+/**
+* 中文文案，同时作为键的唯一定义来源。
+*
+* 新增文案时先在这里加键，再在 en.ts 补对应翻译。
+* 键按界面区域分组，用 `.` 分隔，便于查找。
+*/
+var zh = {
+	"common.copied": "已复制",
+	"common.copyFailed": "复制失败",
+	"common.close": "关闭",
+	"common.cancel": "取消",
+	"common.save": "保存",
+	"common.unnamed": "未命名",
+	"common.notFilled": "未填",
+	"app.settingsTitle": "{name} 设置",
+	"app.settingsSaved": "设置已保存",
+	"toolbar.group": "{label}工具栏",
+	"toolbar.translate": "AI 翻译",
+	"toolbar.retranslate": "重新翻译",
+	"toolbar.markdown": "Markdown 视图",
+	"toolbar.backToOriginal": "返回原始内容",
+	"toolbar.copyOriginal": "复制原文",
+	"toolbar.noContent": "没有可翻译的内容",
+	"toolbar.translating": "翻译中，点击中止",
+	"toolbar.translateFailed": "翻译失败：{message}",
+	"toolbar.retry": "重试：{message}",
+	"result.title": "AI 翻译",
+	"result.copy": "复制译文",
+	"result.collapse": "收起",
+	"result.expand": "展开",
+	"settings.title": "设置",
+	"settings.tab.general": "翻译设置",
+	"settings.tab.provider": "提供商",
+	"settings.tab.advanced": "高级",
+	"settings.general": "通用",
+	"settings.basic": "基础配置",
+	"settings.behavior": "翻译行为",
+	"settings.providers": "提供商",
+	"settings.language": "界面语言",
+	"settings.name": "名称",
+	"settings.manage": "管理",
+	"settings.edit": "编辑",
+	"settings.duplicate": "复制",
+	"settings.delete": "删除",
+	"settings.noProvider": "无提供商",
+	"settings.noMatch": "无匹配结果",
+	"settings.search": "搜索...",
+	"settings.reset": "恢复默认",
+	"settings.resetConfirm": "确定恢复默认设置？当前配置会被清空。",
+	"settings.saveFailed": "保存失败：{message}",
+	"settings.uiLanguage": "界面语言",
+	"settings.uiLanguageHint": "设置面板和按钮使用的语言。自动跟随浏览器语言。",
+	"settings.localeAuto": "跟随浏览器",
+	"settings.localeZh": "简体中文",
+	"settings.localeEn": "English",
+	"settings.targetLang": "目标语言",
+	"settings.targetLangHint": "译文使用的语言，例如 简体中文 / English / 日本語。",
+	"settings.targetLangPlaceholder": "简体中文",
+	"settings.extraPrompt": "追加提示词",
+	"settings.extraPromptPlaceholder": "例如：专有名词保留英文原文；解释尽量简短。",
+	"settings.extraPromptHint": "会拼接到内置翻译提示词之后。",
+	"settings.wholeBlock": "整段翻译",
+	"settings.wholeBlockHint": "开启后把整块内容一次性发给模型，上下文更完整；关闭则按标题和段落切块，适合超长题面或上下文窗口较小的模型。",
+	"settings.autoTranslate": "自动翻译题面",
+	"settings.autoTranslateHint": "按站点分别开关；打开题目页后自动翻译题目描述区域。",
+	"settings.streaming": "流式显示",
+	"settings.pdfAsImages": "题面图片发给视觉模型",
+	"settings.autoExtractSamples": "PDF 题面自动提取样例",
+	"settings.pdfPrompt": "PDF 翻译附加提示词",
+	"settings.pdfPromptPlaceholder": "追加在 PDF 专用提示词后面的自定义要求；留空用内置",
+	"settings.streamingHint": "边生成边渲染，首屏更快。关闭后等整段译完再一次性显示；服务商或脚本管理器不支持时会自动回退。",
+	"settings.theme": "站点配色",
+	"settings.themeHint": "只影响脚本为站点补的样式；站点自身有暗色模式时选「跟随系统」即可。",
+	"settings.themeAuto": "跟随系统",
+	"settings.themeLight": "浅色",
+	"settings.themeDark": "暗色",
+	"settings.timeout": "超时（毫秒）",
+	"settings.retries": "失败重试次数",
+	"settings.retriesHint": "仅对网络错误和 5xx 生效。",
+	"settings.addProvider": "添加提供商",
+	"settings.editProvider": "编辑提供商",
+	"settings.backToList": "返回列表",
+	"settings.chooseProvider": "选择提供商",
+	"settings.chooseProviderHint": "从预设开始，或选择自定义自己填。",
+	"settings.providerSearch": "查找提供商…",
+	"settings.noProviderMatch": "没有匹配的提供商",
+	"settings.providerList": "已配置",
+	"settings.providerListEmpty": "还没有提供商，点上面的「添加提供商」开始。",
+	"settings.enableProvider": "启用",
+	"settings.confirmAdd": "添加",
+	"settings.deleteConfirm": "删除这个提供商？",
+	"settings.inUse": "使用中",
+	"settings.addFromPreset": "从预设新增",
+	"settings.add": "新增",
+	"settings.providerActive": "当前使用：{name} · {model}",
+	"settings.manageProviders": "管理提供商",
+	"settings.providerConfig": "基础配置",
+	"settings.advancedOptions": "高级选项",
+	"settings.actions": "操作",
+	"settings.deleteProvider": "删除",
+	"settings.providerName": "备注名",
+	"settings.providerNamePlaceholder": "给这个配置起个名字",
+	"settings.protocol": "接口协议",
+	"settings.protocolHint": "决定请求体格式与响应解析方式。",
+	"settings.baseUrl": "接口地址",
+	"settings.baseUrlHint": "填到 /v1 即可，脚本会自动补 /chat/completions、/responses 或 /messages；也可直接填完整端点。",
+	"settings.model": "模型",
+	"settings.apiKeyPlaceholder": "本地服务可留空",
+	"settings.apiKeyHint": "保存在当前平台的本地存储中，随请求发送到你配置的接口。本地推理服务可以留空，此时不会发送认证头。",
+	"settings.reasoning": "推理开关",
+	"settings.reasoningHint": "对应 thinking 字段，部分服务商才支持。",
+	"settings.reasoningEffort": "推理强度",
+	"settings.reasoningEffortHint": "对应 reasoning_effort / reasoning.effort。",
+	"settings.effortDefault": "跟随模型默认",
+	"settings.effortEnabled": "开启",
+	"settings.effortDisabled": "关闭",
+	"settings.headers": "额外请求头",
+	"settings.headersPlaceholder": "X-Custom-Header: value\n每行一个",
+	"settings.headersHint": "每行 Key: Value，会覆盖同名默认请求头。",
+	"settings.body": "额外请求体字段",
+	"settings.bodyHint": "JSON 对象，会合并进请求体，可覆盖任意字段，例如 top_p、max_tokens。",
+	"settings.test": "测试连接",
+	"settings.testing": "正在测试…",
+	"settings.testOk": "连接成功，模型回复：{reply}",
+	"settings.testFail": "连接失败：{message}",
+	"settings.copyProvider": "复制配置",
+	"settings.providerCopySuffix": "{name} 副本",
+	"settings.keepOne": "至少保留一个配置。",
+	"settings.providerFooter": "配置保存在当前平台的本地存储中。翻译内容与 API Key 发往你配置的提供商；可在「提供商」页测试连接。",
+	"settings.preview": "配置预览（已隐藏 Key）",
+	"settings.importPlaceholder": "粘贴导出的 JSON 后点「导入」",
+	"settings.import": "导入",
+	"settings.importMissing": "缺少 providers 数组",
+	"settings.importOk": "导入成功，保存后生效。",
+	"settings.importFail": "导入失败：{message}",
+	"settings.importTitle": "导入配置",
+	"translate.status": "正在翻译…",
+	"translate.statusChunk": "正在翻译第 {index}/{total} 段…",
+	"translate.statusSamples": "正在整理样例…",
+	"toolbar.extractSamples": "提取样例",
+	"editor.samplesExtracted": "已提取 {count} 组样例进编辑器",
+	"editor.noSamplesExtracted": "没提取到样例",
+	"translate.unknownProvider": "未配置",
+	"error.noProvider": "还没有配置任何提供商，请先打开设置面板添加一个",
+	"error.noModel": "未填写模型名",
+	"error.requestFailed": "翻译请求失败",
+	"error.emptyResponse": "接口返回了空内容，可能是模型不支持或提示词被拒绝",
+	"error.emptyButOk": "(空响应，但状态码正常)",
+	"error.network": "网络请求失败，请检查网络或接口地址",
+	"error.timeout": "请求超时",
+	"error.streamRead": "读取流式响应失败",
+	"error.notUserscript": "请通过 Tampermonkey 或 Violentmonkey 安装 OJ++，并允许脚本所需权限",
+	"error.baseUrlEmpty": "接口地址为空，请在设置里填写",
+	"site.nowcoder": "牛客",
+	"site.codeforces": "Codeforces",
+	"atcoder.signIn": "请先登录 AtCoder，再运行测试或提交代码。",
+	"atcoder.testBusy": "AtCoder 正在运行另一个自定义测试，请等待完成后重试。",
+	"atcoder.testTimeout": "自定义测试超时，请先检查 AtCoder 自定义测试页的状态。",
+	"atcoder.formUnavailable": "找不到 AtCoder 提交表单，请打开题目页并确认已登录。",
+	"atcoder.verification": "请在下方 AtCoder 提交表单中完成人机验证，再重新提交。",
+	"atcoder.notConfirmed": "AtCoder 未确认提交成功，请检查原生提交表单。",
+	"site.pdfText": "PDF 提取文本（公式与排版请对照原件）",
+	"settings.authorizing": "正在检查服务权限；如打开授权页，请授权后返回…",
+	"settings.sites": "站点功能",
+	"settings.sitesHint": "独立控制每个站点。自动翻译需要开启翻译工具栏；编辑器还受总开关控制。",
+	"settings.siteTranslation": "翻译、Markdown 与复制工具栏",
+	"settings.siteI18n": "站点界面本地化",
+	"settings.siteDark": "站点暗色适配",
+	"settings.siteEditor": "代码编辑器",
+	"section.contest": "比赛介绍",
+	"section.constraints": "约束条件",
+	"section.statement": "题目描述",
+	"section.samples": "样例",
+	"section.input": "输入描述",
+	"section.output": "输出描述",
+	"section.note": "提示",
+	"section.solution": "题解",
+	"section.blog": "博文",
+	"section.comment": "评论",
+	"section.talk": "私信",
+	"preset.customOpenAI": "自定义（兼容 OpenAI Chat）",
+	"editor.title": "代码",
+	"editor.run": "测试样例",
+	"editor.custom": "自定义测试",
+	"editor.customPlaceholder": "输入数据（stdin）",
+	"editor.runOne": "运行",
+	"editor.submit": "提交",
+	"editor.submitting": "提交中…",
+	"editor.submitted": "已提交，查看提交记录 →",
+	"editor.submitFailed": "提交失败",
+	"editor.running": "运行中…",
+	"editor.done": "完成",
+	"editor.match": "输出一致",
+	"editor.mismatch": "输出不一致",
+	"editor.accepted": "Accepted",
+	"editor.wrongAnswer": "Wrong answer",
+	"editor.runError": "运行失败",
+	"editor.sample": "样例",
+	"editor.siteRun": "站点运行",
+	"editor.localRun": "本地 WASM",
+	"editor.localRuntime": "本地使用 Clang 8（C11/C++17、libc++）或 CPython 3.11.3；与站点评测环境可能不同。",
+	"editor.localTimeout": "每条本地测试的超时限制（编译单独计时）",
+	"editor.localUnsupported": "本地运行目前支持 C、C++ 和 Python；此语言请使用站点运行。",
+	"editor.localUnavailable": "当前平台没有本地运行器，请使用 OJ++ 扩展版。",
+	"editor.cancelled": "已取消",
+	"editor.stderr": "标准错误（stderr）",
+	"editor.expected": "期望输出",
+	"editor.customRun": "自定义测试",
+	"editor.noSamples": "页面里没找到样例，点「+自定义测试」手动添加",
+	"editor.noProblem": "当前页面识别不到题号，无法提交",
+	"editor.runAll": "运行全部",
+	"editor.addTest": "添加自定义测试",
+	"editor.customN": "自定义",
+	"editor.delete": "删除",
+	"editor.input": "输入",
+	"editor.enabled": "题目页代码编辑器",
+	"editor.enabledHint": "在支持的站点题目页显示代码编辑器，可测样例、自定义测试并直接提交。",
+	"editor.lspUrl": "LSP 地址",
+	"editor.lspUrlPlaceholder": "ws://localhost:20876（留空关闭）",
+	"editor.lspUrlHint": "连接本机 LSP WebSocket 桥（如 lsp-ws-proxy）做语义补全；留空只用关键字补全。"
+};
+var CATALOGS = {
+	zh,
+	en
+};
+/**
+* 浏览器语言 → 支持的语言。
+* 只有明确是中文时才用中文，其余一律回退英文，
+* 这样新增语言前不会出现半截中文。
+*/
+function resolveLocale(setting, languages) {
+	if (setting === "zh" || setting === "en") return setting;
+	const first = ((typeof navigator !== "undefined" ? navigator.languages ?? [] : []))[0] ?? "";
+	return /^zh\b/i.test(first) ? "zh" : "en";
+}
+var current = "zh";
+var listeners = /* @__PURE__ */ new Set();
+function getLocale() {
+	return current;
+}
+function setLocale(locale) {
+	if (locale === current) return;
+	current = locale;
+	for (const listener of listeners) listener(locale);
+}
+/**
+* 取文案并替换 {name} 形式的占位符。
+*
+* 找不到键时回退中文，再回退键名本身，方便在界面上一眼看出漏翻。
+*/
+function t(key, params) {
+	const template = CATALOGS[current][key] ?? zh[key] ?? key;
+	if (!params) return template;
+	return template.replace(/\{(\w+)\}/g, (match, name) => name in params ? String(params[name]) : match);
+}})}}));
+System.register("./toast-C52sDx5c-BTYeArBY.js", [],(function(exports){'use strict';return{execute:(function(){exports("toast",toast);var timer;
+var currentToast;
+function toast(message, kind = "info") {
+	if (currentToast) {
+		const old = currentToast;
+		old.style.animation = "none";
+		old.style.transition = "opacity var(--duration-dropdown) var(--ease-out), transform var(--duration-dropdown) var(--ease-out)";
+		old.style.opacity = "0";
+		old.style.transform = "translateY(100%) scale(0.9)";
+		setTimeout(() => old.remove(), 200);
+	}
+	clearTimeout(timer);
+	const node = document.createElement("div");
+	node.className = "ojpp-toast";
+	node.dataset.kind = kind;
+	node.setAttribute("role", kind === "error" ? "alert" : "status");
+	node.textContent = message;
+	document.body.append(node);
+	currentToast = node;
+	timer = setTimeout(() => {
+		if (node === currentToast) {
+			node.style.transition = "opacity var(--duration-dropdown) var(--ease-out), transform var(--duration-dropdown) var(--ease-out)";
+			node.style.opacity = "0";
+			node.style.transform = "translateY(100%) scale(0.9)";
+			setTimeout(() => {
+				node.remove();
+				if (currentToast === node) currentToast = void 0;
+			}, 200);
+		}
+	}, kind === "error" ? 6e3 : 3e3);
+}})}}));
+System.register("./samples-XG_buKCo-CH3PzmEc.js", ['./app-DDtjY2KX-B9tN-FLq.js','./sites-_SPfNL69-CxwJjhDI.js','./i18n-D1L63o1m-DRxdwpYd.js','./___monkey.entry.js','./toast-C52sDx5c-BTYeArBY.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.n;},null,null,null,null],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
+	"你是竞赛题样例的结构化提取器。用户给出从 PDF 提取的样例区文本（可能含两栏交错、残缺格式）。",
+	"请把每组样例整理为 JSON：{\"samples\":[{\"input\":\"...\",\"output\":\"...\",\"note\":\"可选注释\"}]}",
+	"硬性要求：",
+	"1. input/output/note 按 Markdown 表达：公式写 $...$（KaTeX）。",
+	"   每个样例只写一行：input 和 output 各自必须是单行字符串，行内换行一律用 <br> 标签，禁止使用 \\n。",
+	"2. 不要合并行、不要改写数据、不要翻译内容。",
+	"3. 输入输出配对错乱时按上下文合理配对；表头文字（standard input/output 等）不算样例内容。",
+	"4. 无法辨认的字段填空字符串。note 可写样例编号/说明，无可省略。",
+	"5. 只输出 JSON，不要代码块包裹、不要解释。"
+].join("\n");
+/**
+* 把 PDF 样例区文本提取为结构化样例列表。
+* 模型只负责把散文本整理成 JSON——比让它翻译样例可靠得多。
+*/
+async function extractSamples(request, settings, text, { signal, images } = {}) {
+	const system = images?.length ? SAMPLE_SYSTEM + "\n- 随文附带的图片是原始 PDF 页面，以图片内容为准。" : SAMPLE_SYSTEM;
+	const out = await ask(request, settings, text, system, {
+		signal,
+		images
+	});
+	const match = /\{[\s\S]*\}/.exec(out);
+	if (!match) return [];
+	try {
+		const data = JSON.parse(match[0]);
+		return Array.isArray(data.samples) ? data.samples : [];
+	} catch {
+		return [];
+	}
 }})}}));
 System.register("./pdf-text-DTzkcjZJ-DKIhPxIK.js", [],(function(exports,module){'use strict';return{execute:(function(){exports({extractPDFText:extractPDFText,renderPDFImages:renderPDFImages,splitPdfSamples:splitPdfSamples});var isNodeJS$1 = typeof process === "object" && process + "" === "[object process]" && !process.versions.nw && !(process.versions.electron && process.type && process.type !== "browser");
 var BBOX_INIT$1 = [
@@ -171588,36 +171718,6 @@ async function renderPDFImages(url, { maxPages = 6, maxDim = 1600 } = {}) {
 		return images;
 	} finally {
 		await task.destroy();
-	}
-}})}}));
-System.register("./samples-LSzs5N0n-cJ30xdwQ.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
-	"你是竞赛题样例的结构化提取器。用户给出从 PDF 提取的样例区文本（可能含两栏交错、残缺格式）。",
-	"请把每组样例整理为 JSON：{\"samples\":[{\"input\":\"...\",\"output\":\"...\",\"note\":\"可选注释\"}]}",
-	"硬性要求：",
-	"1. input/output/note 按 Markdown 表达：公式写 $...$（KaTeX）。",
-	"   每个样例只写一行：input 和 output 各自必须是单行字符串，行内换行一律用 <br> 标签，禁止使用 \\n。",
-	"2. 不要合并行、不要改写数据、不要翻译内容。",
-	"3. 输入输出配对错乱时按上下文合理配对；表头文字（standard input/output 等）不算样例内容。",
-	"4. 无法辨认的字段填空字符串。note 可写样例编号/说明，无可省略。",
-	"5. 只输出 JSON，不要代码块包裹、不要解释。"
-].join("\n");
-/**
-* 把 PDF 样例区文本提取为结构化样例列表。
-* 模型只负责把散文本整理成 JSON——比让它翻译样例可靠得多。
-*/
-async function extractSamples(request, settings, text, { signal, images } = {}) {
-	const system = images?.length ? SAMPLE_SYSTEM + "\n- 随文附带的图片是原始 PDF 页面，以图片内容为准。" : SAMPLE_SYSTEM;
-	const out = await ask(request, settings, text, system, {
-		signal,
-		images
-	});
-	const match = /\{[\s\S]*\}/.exec(out);
-	if (!match) return [];
-	try {
-		const data = JSON.parse(match[0]);
-		return Array.isArray(data.samples) ? data.samples : [];
-	} catch {
-		return [];
 	}
 }})}}));
 System.import("./___monkey.entry.js", "./");

@@ -5,7 +5,8 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { build } from 'vite';
-import { siteMatches } from '../src/sites/index.ts';
+import { sites, siteMatches } from '../src/sites/index.ts';
+import { EARLY_THEME_CSS } from '../src/ui/theme-start.ts';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const out = root + 'dist-extension';
@@ -25,6 +26,7 @@ for (const asset of assets) {
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
 for (const [name, source, format] of [
+  ['theme-start', 'src/entries/theme-start.ts', 'iife'],
   ['content', 'src/entries/extension.ts', 'iife'],
   ['main-world', 'src/extension/main-world.ts', 'iife'],
   ['background', 'src/extension/background.ts', 'es'],
@@ -34,7 +36,11 @@ for (const [name, source, format] of [
 ]) {
   await build({ configFile: false, root, logLevel: 'warn',
     // The browser bundle uses PDF.js' packaged main-thread worker, not import.meta asset resolution.
-    define: format === 'iife' ? { 'import.meta.url': 'undefined' } : {},
+    define: {
+      ...(format === 'iife' ? { 'import.meta.url': 'undefined' } : {}),
+      __OJPP_THEME_HOSTS__: JSON.stringify(Object.fromEntries(sites.filter(site => site.darkStyles)
+        .flatMap(site => site.hosts.map(host => [host, site.id])))),
+    },
     build: {
     outDir: out, emptyOutDir: false, target: 'es2022', minify: false,
     lib: { entry: root + source, formats: [format], name: 'OJPP', fileName: () => `${name}.js` },
@@ -46,6 +52,10 @@ for (const [name, source, format] of [
   const code = await readFile(script, 'utf8');
   await writeFile(script, code.replace(/[\uFDD0-\uFDEF\uFFFE\uFFFF]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0')));
 }
+// Browser-injected styles are available before the first content paint.
+for (const site of sites) {
+  if (site.darkStyles) await writeFile(`${out}/theme-${site.id}.css`, EARLY_THEME_CSS + site.darkStyles);
+}
 const pkg = JSON.parse(await readFile(root + 'package.json', 'utf8'));
 const manifest = {
   manifest_version: 3, name: 'OJ++', version: pkg.version, minimum_chrome_version: '120',
@@ -56,6 +66,10 @@ const manifest = {
   action: { default_title: 'OJ++ — provider permissions and local runtime' },
   options_page: 'options.html',
   content_scripts: [
+    ...sites.filter(site => site.darkStyles).map(site => ({
+      matches: site.hosts.map(host => `https://${host}/*`),
+      css: [`theme-${site.id}.css`], js: ['theme-start.js'], run_at: 'document_start',
+    })),
     { matches: siteMatches, js: ['main-world.js'], run_at: 'document_start', world: 'MAIN' },
     { matches: siteMatches, js: ['content.js'], run_at: 'document_idle' },
   ],

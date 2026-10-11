@@ -54,7 +54,8 @@ CF/AtCoder 的语言下拉仍用于正式提交。即使选中站点的 C++23/GC
 
 ## 实现边界
 
-- `src/platforms/extension.ts`：内容脚本通过 Port 访问配置、AI 请求和本地运行。
+- `src/entries/theme-start.ts`：在 `document_start` 读取主题偏好，配合浏览器预先注入的站点 CSS，先应用主题，再加载主界面。站点存储只缓存主题和暗色开关；首次读取设置时的绘制等待最多 1.2 秒。
+- `src/platforms/extension.ts`：主内容脚本通过 Port 访问配置、AI 请求和本地运行。
 - `src/extension/background.ts`：权限检查、消息路由、取消和 Offscreen 创建。
 - `src/extension/offscreen.ts`：全扩展单队列、编译缓存、Worker watchdog 与空闲回收。
 - `src/extension/runner.worker.ts`：Clang/LLD 编译链接、CPython、WASI 内存文件系统及字节级 stdin/stdout/stderr。
@@ -67,6 +68,8 @@ MV3 service worker 可被浏览器回收，因此用户程序不在那里执行�
 运行时二进制不入 Git，通过锁定地址和校验和重建。包内包含相应许可证与 [第三方说明](../THIRD_PARTY_NOTICES.md)。
 
 ## 验证
+
+`pnpm test:theme` 实际加载扩展，延迟页面的 `DOMContentLoaded`，检查最初可见帧的配色，覆盖暗色、浅色、跟随系统、站点关闭暗色和缓存后刷新；同时检查油猴版的提前初始化，以及洛谷创建题目页保留原生编辑器。
 
 `pnpm test:extension` 会创建临时 Chrome profile，实际加载构建出的扩展，执行包内 WASM，而非模拟测试结果：
 

@@ -12,28 +12,33 @@ import { mountSection } from './ui/section.ts';
 import { openSettingsPanel } from './ui/settings-panel.ts';
 import { CSS, DARK_CSS } from './ui/styles.ts';
 import { applyTheme, setSiteThemeEnabled, THEME_ATTR, watchInlineColors, watchSystemTheme } from './ui/theme.ts';
+import { EARLY_THEME_CSS, cacheThemePreference, whenDocumentElement } from './ui/theme-start.ts';
 import { toast } from './ui/toast.ts';
 
 /** 组合根：通用功能只接收站点与平台契约，不选择具体适配器。 */
 export async function startApp(platform: Platform, site: SiteAdapter): Promise<() => void> {
-  if (document.readyState === 'loading') {
-    await new Promise<void>((resolve) => document.addEventListener('DOMContentLoaded', () => resolve(), { once: true }));
-  }
-  let settings = await loadSettings(platform.storage);
+  // Resolve settings and install the theme while HTML is still parsing. Only UI mounting waits for DOMContentLoaded.
+  const settingsPromise = loadSettings(platform.storage);
+  await whenDocumentElement();
+  let settings = await settingsPromise;
   // 语言要在任何界面文字生成之前定下来，否则会出现一帧中文再切成英文
   setLocale(resolveLocale(settings.locale));
   const feature = (key: Parameters<typeof isSiteFeatureEnabled>[2]) => isSiteFeatureEnabled(settings, site.id, key);
   setSiteThemeEnabled(feature('darkMode') && !!site.darkStyles, !site.preserveInlineColors);
-  applyTheme(settings.theme);
+  cacheThemePreference(site.id, { theme: settings.theme, enabled: feature('darkMode') && !!site.darkStyles });
   const style = document.createElement('style');
-  style.textContent = CSS + (site.styles ?? '') + DARK_CSS;
+  style.textContent = EARLY_THEME_CSS + CSS + (site.styles ?? '') + DARK_CSS;
   const siteDarkStyle = document.createElement('style');
   siteDarkStyle.dataset.ojppSiteDark = site.id;
   siteDarkStyle.textContent = feature('darkMode') ? site.darkStyles ?? '' : '';
-  document.head.append(style, siteDarkStyle);
+  (document.head ?? document.documentElement).append(style, siteDarkStyle);
+  applyTheme(settings.theme);
   const stopThemeWatch = watchSystemTheme(() => applyTheme(settings.theme));
   // 站点有些元素把颜色写在内联样式里（还带 !important），只能靠 JS 清掉
   const stopInlineWatch = watchInlineColors();
+  if (document.readyState === 'loading') {
+    await new Promise<void>(resolve => document.addEventListener('DOMContentLoaded', () => resolve(), { once: true }));
+  }
   let closeSettings: (() => void) | undefined;
   const settingsButton = iconButton(ICON_SETTINGS, t('app.settingsTitle', { name: APP_NAME }), 'ojpp-settings-btn');
   settingsButton.addEventListener('click', () => {
@@ -57,6 +62,7 @@ export async function startApp(platform: Platform, site: SiteAdapter): Promise<(
         const darkCSS = feature('darkMode') ? site.darkStyles ?? '' : '';
         if (siteDarkStyle.textContent !== darkCSS) siteDarkStyle.textContent = darkCSS;
         setSiteThemeEnabled(feature('darkMode') && !!site.darkStyles, !site.preserveInlineColors);
+        cacheThemePreference(site.id, { theme: settings.theme, enabled: feature('darkMode') && !!site.darkStyles });
         setLocale(resolveLocale(updated.locale));
         applyTheme(settings.theme);
         toast(t('app.settingsSaved'));

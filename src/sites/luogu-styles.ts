@@ -73,6 +73,11 @@ ${d} .page-bar button.selected, ${d} .page-bar button.active {
   background: #539bf5; color: #fff; border-color: #539bf5;
 }
 
+/* 评测详情：通用 .info 灰字不能覆盖 AC 测试点的耗时/内存。 */
+${d} .test-case.lcolor-bg-green-3 { background: #214b31 !important; color: #dcfce7; }
+${d} .test-case.lcolor-bg-green-3 .content,
+${d} .test-case.lcolor-bg-green-3 .info { color: inherit !important; }
+
 /* 评测记录代码框（lfe-code 组件）与工具条 */
 ${d} lfe-code, ${d} .code-container, ${d} .code-toolbar,
 ${d} .code-toolbar button, ${d} .code-toolbar a, ${d} .code-toolbar span {
@@ -188,6 +193,16 @@ ${d} .training-card .card-desc { color: #909dab; }
 ${d} .training-card a { color: #539bf5; }
 ${d} .training-card a:hover { color: #79b8ff; }
 
+/* 团队各列表共用 inner-card；个人中心的页签栏和统计文字。 */
+${d} .l-card .inner-card { background: #2d333b; color: #cdd9e5; border-color: #373e47; }
+${d} .user-header-bottom, ${d} .cover-upload { background: #22272e !important; color: #cdd9e5; }
+${d} .user-header-bottom .stat-text { color: #cdd9e5 !important; }
+${d} .heat-map .heat-map-cell[style*="232, 232, 232"] { background: #30363d !important; }
+${d} .heat-map .heat-map-cell[style*="255, 237, 181"] { background: #4d3f28 !important; }
+${d} .heat-map .heat-map-cell[style*="255, 222, 140"] { background: #795820 !important; }
+${d} .heat-map .heat-map-cell[style*="255, 206, 99"] { background: #ad7a27 !important; }
+${d} .heat-map .heat-map-cell[style*="255, 186, 59"] { background: #d29922 !important; }
+
 /* ---------- 讨论/文章/图床/云剪贴板 ---------- */
 /* 通用黑字（name/time/content/meta/copyright 等） */
 ${d} .name, ${d} .content, ${d} .time, ${d} .meta,
@@ -207,6 +222,12 @@ ${d} .CodeMirror, ${d} .CodeMirror-lines, ${d} .cm-gutters,
 ${d} .cm-gutter, ${d} .cm-lineNumbers, ${d} .cm-foldGutter {
   background: #161b22; color: #cdd9e5; border-color: #373e47;
 }
+/* 原生 Markdown 编辑器保留站点功能，只调整当前行、行号和选区配色。 */
+${d} .v-codemirror .cm-editor { background: #161b22; color: #cdd9e5; }
+${d} .v-codemirror .cm-activeLine, ${d} .CodeMirror-activeline-background { background: #253341 !important; }
+${d} .v-codemirror .cm-activeLineGutter,
+${d} .CodeMirror-activeline-gutter .CodeMirror-linenumber { background: #253341 !important; color: #cdd9e5 !important; }
+${d} .v-codemirror .cm-selectionBackground, ${d} .CodeMirror-selected { background: #344f70 !important; }
 ${d} .cm-cursor { border-color: #cdd9e5; }
 ${d} .cm-line, ${d} .cm-line * { color: #cdd9e5; }
 ${d} .cm-selected, ${d} .CodeMirror-focused .cm-selected { background: rgba(83,155,245,.25); }
@@ -292,6 +313,31 @@ ${d} a[href*="/article/"]:hover { color: #539bf5 !important; }
 ${d} .wrap .name, ${d} .article-card .name { background: #30363d; color: #cdd9e5; }
 ${d} .article-card, ${d} .card { background: #22272e; border-color: #373e47; }
 
+/* 文章详情的外层白底是行内样式；只覆盖承载 article-content 的容器。 */
+${d} main > div:has(> .article-content) { background: #1c2128 !important; }
+${d} .article-banner .author { background: transparent !important; }
+${d} .article-banner .label,
+${d} .article-content .update-info, ${d} .article-content .update-info span,
+${d} .article-content .update-info time { color: #adbac7 !important; }
+${d} .article-content .admin-public-comment {
+  background: #35272b; color: #cdd9e5; border-left-color: #e78187 !important;
+}
+${d} .article-content > .actions {
+  background: #22272e !important; border-color: #373e47; box-shadow: 0 2px 8px #0004;
+}
+${d} .article-content .button-2line .text { color: #adbac7 !important; }
+${d} .article-content .button-2line:not(.active) .icon { color: #adbac7; }
+${d} .article-content .button-2line:hover .text,
+${d} .article-content .button-2line:hover .icon { color: #79b8ff !important; }
+${d} .article-content .toc { color: #adbac7; }
+${d} .article-content .toc li::before { background: #373e47; }
+${d} .article-content .toc li:hover { background: #30363d; color: #79b8ff !important; }
+${d} .article-comment .lfe-h4, ${d} .reply-editor .lfe-h4 { color: #cdd9e5; }
+${d} .cs-editor .cs-upload { background: #30363d; color: #cdd9e5; }
+${d} .article-comment .reply-item > .meta { background: #2d333b; border-color: #373e47; }
+${d} .main-container footer { background: #1c2128 !important; color: #909dab; }
+${d} .main-container footer p { color: #909dab; }
+
 /* ---------- Highcharts（主页通过数统计图，SVG 属性与行内 fill 均需覆盖） ---------- */
 ${d} #app-old .highcharts-root text,
 ${d} #app-old .highcharts-root tspan { fill: #cdd9e5 !important; color: #cdd9e5 !important; }
@@ -340,6 +386,12 @@ ${d} .block-item.category > ul.rmj > li:not(.selected):hover { background: #3036
 ${d} .contest-card .title-row a.name { background: transparent !important; }
 
 /* ---------- 通用按钮/链接对比 ---------- */
+${d} a.l-button.solid, ${d} button.solid { color: #fff !important; }
+${d} a.l-button.solid:not([class*="lcolor-var-"]), ${d} button.solid:not([class*="lcolor-var-"]) {
+  background: #245f99; border-color: #539bf5;
+}
+${d} a.l-button.solid:not([class*="lcolor-var-"]):hover,
+${d} button.solid:not([class*="lcolor-var-"]):hover { background: #2c70b1; }
 ${d} .lfe-button--primary, ${d} .l-button--primary, ${d} button.primary { color: #fff; }
 ${d} .punch, ${d} .checkin, ${d} [class*="check"][class*="btn"], ${d} [class*="punch"] { color: #cdd9e5; }
 `

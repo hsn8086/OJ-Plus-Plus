@@ -154,6 +154,8 @@ export const luogu: SiteAdapter = {
   editor: {
     languages: LUOGU_LANGUAGES,
     editorMountPoint(doc) {
+      // Creation/editing forms belong to Luogu; only problem-view pages may mount the solution editor.
+      if (!/^\/problem\/(?!new(?:\/|$))[^/]+\/?$/.test(new URL(doc.URL).pathname)) return null;
       // 优先接管提交卡（隐藏原生 CM6，我们的面板放进去）；没登录/没有就挂题目卡后面
       const submitBody = doc.querySelector<HTMLElement>('.l-card.burger .body');
       if (submitBody?.querySelector('.v-codemirror')) return { anchor: submitBody, position: 'beforeend' as const };
@@ -207,7 +209,7 @@ export const luogu: SiteAdapter = {
     // h2 里 float:right 的工具栏会压住 overflow:hidden 的 BFC 正文——clear 推下去
     + '.l-card.problem .lfe-marked-wrap, .l-card.problem .io-sample { clear: both; } '
     // 启用我们编辑器时，把提交卡 code 模式的原生 CM6 藏起来（文件模式没有 v-codemirror 自动露出）
-    + 'html:has(.ojpp-editor) .l-card.burger .body:has(.v-codemirror) > *:not(.ojpp-editor) { display: none !important; } '
+    + '.l-card.burger .body:has(> .ojpp-editor):has(.v-codemirror) > *:not(.ojpp-editor) { display: none !important; } '
     + '.l-card.burger .body:has(.v-codemirror) { padding-bottom: .3em; }',
   collectSections(doc) {
     const sections: ContentSection[] = [];

@@ -13,6 +13,7 @@
     "test:browser": "node test/browser.mjs",
     "test:atcoder": "node test/atcoder.browser.mjs",
     "test:sites": "node test/sites.browser.mjs",
+    "test:theme": "node test/theme-start.browser.mjs",
     "test:extension": "node test/extension.mjs",
     "build:extension": "node --experimental-strip-types tools/build-extension.mjs",
     "pack:extension": "node tools/pack-extension.mjs",
