@@ -11,6 +11,7 @@ The extension packages the following runtime components. Their licenses apply in
 | wasi-libc | https://github.com/WebAssembly/wasi-libc | `licenses/wasi-libc.txt` |
 | CPython 3.11.3 WASI binary and standard library | Same pinned Runno revision, `langs/python-3.11.3.wasm`, `langs/python-3.11.3.tar.gz`; https://github.com/python/cpython/tree/v3.11.3 | `licenses/python311.txt` |
 | PDF.js | https://github.com/mozilla/pdf.js | `licenses/pdfjs.txt` |
+| Highlight.js | https://github.com/highlightjs/highlight.js | `licenses/highlightjs.txt` |
 | KaTeX | https://github.com/KaTeX/KaTeX | `katex/LICENSE` |
 
 The exact downloadable artifacts and SHA-256 digests are recorded in `runtimes/asset-lock.json` in the generated extension and `tools/runtime-assets.json` in the source repository. Runtime assets are verified during the build and then loaded locally; the installed extension does not download executable code from a CDN.

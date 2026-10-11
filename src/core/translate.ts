@@ -32,7 +32,8 @@ export async function translateMarkdown(
   { settings, markdown, signal, onStatus, onPartial, stream, streaming, images, pdf }: TranslateOptions,
 ): Promise<TranslationResult> {
   const cfg = settings.providers.find((p) => p.id === settings.activeProviderId);
-  const system = pdf ? buildPdfSystemPrompt(settings) : buildSystemPrompt(settings);
+  const system = (pdf ? buildPdfSystemPrompt(settings) : buildSystemPrompt(settings))
+    + (images?.length ? '\n附图仅供理解题面，请保留正文中已有的图片引用；不要把这条说明输出到译文，也不要凭附图编造新的图片链接。' : '');
   const chunks = settings.translateWholeBlock ? [markdown] : chunkMarkdown(markdown);
   const started = Date.now();
   const out: string[] = [];
@@ -43,10 +44,7 @@ export async function translateMarkdown(
       ? t('translate.status')
       : t('translate.statusChunk', { index: index + 1, total: chunks.length }));
     const done = out.length;
-    const withImages = index === 0 && images?.length;
-    const translated = await ask(request, settings, withImages
-      ? `${chunk}\n\n（随文附带的图片是题面中的插图，请以图片内容为准确依据。）`
-      : chunk, system, {
+    const translated = await ask(request, settings, chunk, system, {
       signal,
       stream,
       images: index === 0 ? images : undefined,

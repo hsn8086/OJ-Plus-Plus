@@ -1,6 +1,7 @@
 import MarkdownIt from 'markdown-it';
 import katex from 'katex';
 import remend from 'remend';
+import { highlightCode } from './code-highlight.ts';
 import TurndownService from 'turndown';
 
 /**
@@ -272,7 +273,7 @@ function escapeHtml(text: string): string {
     .replace(/>/g, '&gt;');
 }
 
-const md = new MarkdownIt({ html: false, linkify: true, breaks: false });
+const md = new MarkdownIt({ html: false, linkify: true, breaks: false, highlight: highlightCode });
 md.use(mathPlugin);
 
 // 只放行 <br>：模型常在表格/样例里写 <br>，html:false 会把它原样漏出来。

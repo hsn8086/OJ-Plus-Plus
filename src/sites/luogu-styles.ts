@@ -73,10 +73,8 @@ ${d} .page-bar button.selected, ${d} .page-bar button.active {
   background: #539bf5; color: #fff; border-color: #539bf5;
 }
 
-/* 评测详情：通用 .info 灰字不能覆盖 AC 测试点的耗时/内存。 */
-${d} .test-case.lcolor-bg-green-3 { background: #214b31 !important; color: #dcfce7; }
-${d} .test-case.lcolor-bg-green-3 .content,
-${d} .test-case.lcolor-bg-green-3 .info { color: inherit !important; }
+/* 只提亮 AC 测试点的耗时/内存，背景和状态色沿用洛谷。 */
+${d} .test-case.lcolor-bg-green-3 .info { color: #fff !important; }
 
 /* 评测记录代码框（lfe-code 组件）与工具条 */
 ${d} lfe-code, ${d} .code-container, ${d} .code-toolbar,
@@ -229,6 +227,9 @@ ${d} .v-codemirror .cm-activeLineGutter,
 ${d} .CodeMirror-activeline-gutter .CodeMirror-linenumber { background: #253341 !important; color: #cdd9e5 !important; }
 ${d} .v-codemirror .cm-selectionBackground, ${d} .CodeMirror-selected { background: #344f70 !important; }
 ${d} .cm-cursor { border-color: #cdd9e5; }
+/* 原生光标是 border 绘制的，避免被通用深灰边框规则覆盖。 */
+${d} .v-codemirror .cm-cursor,
+${d} .CodeMirror .CodeMirror-cursor { border-left-color: #cdd9e5 !important; }
 ${d} .cm-line, ${d} .cm-line * { color: #cdd9e5; }
 ${d} .cm-selected, ${d} .CodeMirror-focused .cm-selected { background: rgba(83,155,245,.25); }
 ${d} .cm-m-luogu .cm-comment, ${d} .cm-comment { color: #8b949e; }

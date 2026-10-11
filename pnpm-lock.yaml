@@ -41,6 +41,9 @@ importers:
       '@runno/wasi':
         specifier: ^0.10.0
         version: 0.10.0
+      highlight.js:
+        specifier: ^11.12.0
+        version: 11.12.0
       katex:
         specifier: ^0.16.25
         version: 0.16.47
@@ -582,6 +585,10 @@ packages:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
+
+  highlight.js@11.12.0:
+    resolution: {integrity: sha512-nbfWpyRMcMrPMmDwJB+dhX/eiaPKtc2RB+0QZskqJ3WjRA/FDS0e9hZrx8EC/lbEv8gXy98FcDbNa/dspAaJMg==}
+    engines: {node: '>=12.0.0'}
 
   htmlparser2@12.0.0:
     resolution: {integrity: sha512-Tz7u1i95/g2x2jz81+x0FBVhBhY5aRTvD3tXXdFaljuNdzDLJ8UGNRrTcj2cgQvAg3iW/h77Fz15nLW0L0CrZw==}
@@ -1263,6 +1270,8 @@ snapshots:
 
   fsevents@2.3.3:
     optional: true
+
+  highlight.js@11.12.0: {}
 
   htmlparser2@12.0.0:
     dependencies:

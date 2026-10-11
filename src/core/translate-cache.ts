@@ -13,10 +13,12 @@ async function sha256(text: string): Promise<string> {
 }
 
 /** 缓存键：目标语言 + 提供商指纹 + 原文。换语言/提供商/模型/额外参数自动失效。 */
-export async function translationCacheKey(settings: Settings, markdown: string): Promise<string> {
+export async function translationCacheKey(settings: Settings, markdown: string, context = ''): Promise<string> {
   const p = settings.providers.find(x => x.id === settings.activeProviderId);
   const fingerprint = [
-    settings.targetLang,
+    'translation-v2-image-references',
+    settings.targetLang, settings.extraPrompt, settings.pdfPrompt ?? '',
+    String(!!settings.pdfAsImages), String(settings.translateWholeBlock), context,
     p?.protocol ?? '', p?.baseUrl ?? '', p?.model ?? '',
     JSON.stringify(p?.headers ?? {}), JSON.stringify(p?.body ?? {}),
     markdown,

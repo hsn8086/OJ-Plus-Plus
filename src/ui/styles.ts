@@ -255,10 +255,35 @@ export const CSS = `
   padding: 2px 5px;
   border-radius: 3px;
 }
-.ojpp-result-body pre code { 
-  background: none; 
-  padding: 0; 
+.ojpp-result .ojpp-result-body pre code {
+  background: transparent !important;
+  color: var(--color-text-primary) !important;
+  text-shadow: none;
+  padding: 0;
 }
+.ojpp-result {
+  --ojpp-code-keyword: #cf222e;
+  --ojpp-code-string: #0a3069;
+  --ojpp-code-number: #0550ae;
+  --ojpp-code-comment: #6e7781;
+  --ojpp-code-title: #8250df;
+  --ojpp-code-type: #116329;
+}
+html[data-ojpp-theme="dark"] .ojpp-result {
+  --ojpp-code-keyword: #ff7b72;
+  --ojpp-code-string: #a5d6ff;
+  --ojpp-code-number: #79c0ff;
+  --ojpp-code-comment: #909dab;
+  --ojpp-code-title: #d2a8ff;
+  --ojpp-code-type: #8ddb8c;
+}
+.ojpp-result-body .hljs-keyword, .ojpp-result-body .hljs-meta { color: var(--ojpp-code-keyword); }
+.ojpp-result-body .hljs-string, .ojpp-result-body .hljs-regexp { color: var(--ojpp-code-string); }
+.ojpp-result-body .hljs-number, .ojpp-result-body .hljs-literal { color: var(--ojpp-code-number); }
+.ojpp-result-body .hljs-comment { color: var(--ojpp-code-comment); font-style: italic; }
+.ojpp-result-body .hljs-title { color: var(--ojpp-code-title); }
+.ojpp-result-body .hljs-type, .ojpp-result-body .hljs-built_in { color: var(--ojpp-code-type); }
+.ojpp-result-body [class*="hljs-"] { background: transparent; text-shadow: none; }
 
 .ojpp-collapsed .ojpp-result-body { 
   display: none; 

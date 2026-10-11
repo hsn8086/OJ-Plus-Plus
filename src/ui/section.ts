@@ -1,4 +1,5 @@
 import { t } from '../i18n/index.ts';
+import { prepareImageReferences } from '../core/image-references.ts';
 import { translateMarkdown } from '../core/translate.ts';
 import { getCachedTranslation, setCachedTranslation, translationCacheKey } from '../core/translate-cache.ts';
 import type { Settings } from '../core/types.ts';
@@ -47,24 +48,12 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
     section.toolbar.anchor.insertAdjacentElement(section.toolbar.position, toolbar);
   }
 
-  const imageRefs = new Map<string, string>(Object.entries(section.imageRefs ?? {}));
-  const readMarkdown = () => {
-    const raw = section.markdown?.() ?? htmlToMarkdown(section.content, prepareContent);
-    // 图片换成可引用占位符：模型写“![图1]”，译文回来替换回真实 URL，
-    // 避免模型改写路径/相对链接拿不到图
-    let n = 0;
-    return raw.replace(/!\[[^\]]*\]\(([^)\s]+)\)/g, (_m, url: string) => {
-      const key = `![图${++n}]`;
-      imageRefs.set(key, url);
-      return key;
-    });
+  const readMarkdown = () => section.markdown?.() ?? htmlToMarkdown(section.content, prepareContent);
+  const prepareImages = () => prepareImageReferences(readMarkdown(), section.content.baseURI, section.imageRefs);
+  const readOriginal = () => {
+    const refs = prepareImages();
+    return refs.restore(refs.markdown);
   };
-  /** 译文里的 ![图N] 换回真实 ![](url)。 */
-  const restoreImages = (md: string) =>
-    md.replace(/!\[图(\d+)\](?:\([^)]*\))?/g, (_m, i) => {
-      const url = imageRefs.get(`![图${i}]`);
-      return url ? `![](${url})` : _m;
-    });
 
   /** 收集章节里的插图（data URL），随文发给视觉模型。 */
   const collectSectionImages = async (): Promise<string[]> => {
@@ -87,7 +76,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
     }
     return out;
   };
-  bindCopy(copy, () => restoreImages(readMarkdown()), platform.writeClipboard);
+  bindCopy(copy, readOriginal, platform.writeClipboard);
   let controller: AbortController | undefined;
   let result: ReturnType<typeof createResultPanel> | undefined;
   let source: HTMLElement | undefined;
@@ -114,7 +103,8 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
     if (translate.dataset.state === 'done') {
       state('idle', ICON_TRANSLATE, t('toolbar.retranslate'));
     }
-    const text = readMarkdown();
+    const imageRefs = prepareImages();
+    const text = imageRefs.markdown;
     if (!text.trim()) {
       state('error', ICON_CROSS, t('toolbar.noContent'));
       return;
@@ -132,7 +122,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
       const snapshot = structuredClone(getSettings());
       // 缓存：内容+提供商指纹做键，首次点击命中即秒出；
       // 本会话里已翻过的区域再点就是强制重翻，留刷新出口。
-      const cacheKey = await translationCacheKey(snapshot, text);
+      const cacheKey = await translationCacheKey(snapshot, text, `${!!section.pdf}\n${imageRefs.cacheIdentity}`);
       const cached = translatedOnce ? undefined : await getCachedTranslation(platform, cacheKey);
       let translated;
       if (cached !== undefined && !signal.aborted) {
@@ -145,7 +135,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
           stream: platform.stream,
           streaming: snapshot.streaming,
           onStatus: panel.setStatus,
-          onPartial: panel.update,
+          onPartial: text => panel.update(imageRefs.restore(text)),
           images: snapshot.pdfAsImages
             ? (section.images ? await section.images() : await collectSectionImages())
             : undefined,
@@ -153,7 +143,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
         });
         void setCachedTranslation(platform, cacheKey, translated);
       }
-      translated = { ...translated, markdown: restoreImages(translated.markdown) };
+      translated = { ...translated, markdown: imageRefs.restore(translated.markdown, true) };
       translatedOnce = true;
       signal.throwIfAborted();
       panel.finish(translated);
@@ -184,7 +174,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
     } else {
       source = document.createElement('pre');
       source.className = 'ojpp-md-source';
-      source.textContent = restoreImages(readMarkdown());
+      source.textContent = readOriginal();
       section.content.after(source);
       section.content.hidden = true;
       markdown.dataset.state = 'active';
