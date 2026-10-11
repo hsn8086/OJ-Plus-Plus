@@ -108,6 +108,7 @@ var en$2 = {
 	"settings.autoTranslate": "Auto-translate problem statement",
 	"settings.autoTranslateHint": "Per-site toggle; automatically translate the problem statement area when a problem page opens.",
 	"settings.streaming": "Streaming",
+	"settings.pdfAsImages": "Send PDF pages as images",
 	"settings.streamingHint": "Render as it generates for a faster first paint. When off, the full translation appears at once. Falls back automatically if the Provider or script manager doesn't support it.",
 	"settings.theme": "Site theme",
 	"settings.themeHint": "Only affects styles the script adds for the site. If the site has its own dark mode, keep “Follow system”.",
@@ -320,6 +321,7 @@ var zh$2 = {
 	"settings.autoTranslate": "自动翻译题面",
 	"settings.autoTranslateHint": "按站点分别开关；打开题目页后自动翻译题目描述区域。",
 	"settings.streaming": "流式显示",
+	"settings.pdfAsImages": "PDF 题面转图片发送",
 	"settings.streamingHint": "边生成边渲染，首屏更快。关闭后等整段译完再一次性显示；服务商或脚本管理器不支持时会自动回退。",
 	"settings.theme": "站点配色",
 	"settings.themeHint": "只影响脚本为站点补的样式；站点自身有暗色模式时选「跟随系统」即可。",
@@ -26471,6 +26473,54 @@ var anthropicStream = streamReader((payload) => {
 	if (data?.type === "content_block_delta" && typeof data.delta?.text === "string") return data.delta.text;
 	return null;
 });
+function contentParts(content) {
+	return typeof content === "string" ? [{
+		type: "text",
+		text: content
+	}] : content;
+}
+function imageMeta(dataUrl) {
+	const m = /^data:([^;,]+)(?:;base64)?,(.*)$/s.exec(dataUrl);
+	return {
+		mediaType: m?.[1] ?? "image/png",
+		data: m?.[2] ?? dataUrl
+	};
+}
+/** 不同协议的图片块格式。 */
+function mapContent(content, mode) {
+	return contentParts(content).map((part) => {
+		if (part.type === "text") return mode === "responses" ? {
+			type: "input_text",
+			text: part.text
+		} : {
+			type: "text",
+			text: part.text
+		};
+		if (mode === "chat") return {
+			type: "image_url",
+			image_url: { url: part.dataUrl }
+		};
+		if (mode === "responses") return {
+			type: "input_image",
+			image_url: part.dataUrl
+		};
+		const meta = imageMeta(part.dataUrl);
+		return {
+			type: "image",
+			source: {
+				type: "base64",
+				media_type: meta.mediaType,
+				data: meta.data
+			}
+		};
+	});
+}
+function mapMessages(req, mode) {
+	return req.messages.map((m) => ({
+		role: m.role,
+		content: typeof m.content === "string" ? m.content : mapContent(m.content, mode)
+	}));
+}
 var openaiChat = {
 	protocol: "openai-chat",
 	label: "OpenAI Chat Completions",
@@ -26480,7 +26530,7 @@ var openaiChat = {
 		const url = resolveUrl(cfg.baseUrl, this.defaultBaseUrl, "/chat/completions");
 		const body = compact({
 			model: cfg.model || this.defaultModel,
-			messages: req.messages,
+			messages: mapMessages(req, "chat"),
 			...req.stream ? { stream: true } : {},
 			...cfg.reasoning.enabled === null ? {} : { thinking: { type: cfg.reasoning.enabled ? "enabled" : "disabled" } },
 			...cfg.reasoning.effort && cfg.reasoning.enabled !== false ? { reasoning_effort: cfg.reasoning.effort } : {},
@@ -26515,10 +26565,7 @@ var openaiResponses = {
 		const url = resolveUrl(cfg.baseUrl, this.defaultBaseUrl, "/responses");
 		const body = compact({
 			model: cfg.model || this.defaultModel,
-			input: req.messages.map((m) => ({
-				role: m.role,
-				content: m.content
-			})),
+			input: mapMessages(req, "responses"),
 			...req.stream ? { stream: true } : {},
 			...cfg.reasoning.effort ? { reasoning: { effort: cfg.reasoning.effort } } : {},
 			...cfg.body
@@ -26556,10 +26603,7 @@ var anthropic = {
 	build(cfg, req) {
 		const url = resolveUrl(cfg.baseUrl, this.defaultBaseUrl, "/messages");
 		const system = req.messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
-		const messages = req.messages.filter((m) => m.role !== "system").map((m) => ({
-			role: m.role,
-			content: m.content
-		}));
+		const messages = mapMessages({ messages: req.messages.filter((m) => m.role !== "system") }, "anthropic");
 		const body = compact({
 			model: cfg.model || this.defaultModel,
 			max_tokens: 8192,
@@ -26669,7 +26713,13 @@ async function once(request, settings, cfg, prompt, systemPrompt, options) {
 		content: systemPrompt
 	}, {
 		role: "user",
-		content: prompt
+		content: options.images?.length ? [{
+			type: "text",
+			text: prompt
+		}, ...options.images.map((dataUrl) => ({
+			type: "image",
+			dataUrl
+		}))] : prompt
 	}];
 	const build = (stream) => {
 		const { url, headers, body } = adapter.build(cfg, {
@@ -26840,7 +26890,7 @@ function chunkMarkdown(source, maxChars = 3e3) {
 	}
 	return chunks.filter((c) => c.trim());
 }
-async function translateMarkdown(request, { settings, markdown, signal, onStatus, onPartial, stream, streaming }) {
+async function translateMarkdown(request, { settings, markdown, signal, onStatus, onPartial, stream, streaming, images }) {
 	const cfg = settings.providers.find((p) => p.id === settings.activeProviderId);
 	const system = buildSystemPrompt(settings);
 	const chunks = settings.translateWholeBlock ? [markdown] : chunkMarkdown(markdown);
@@ -26857,6 +26907,7 @@ async function translateMarkdown(request, { settings, markdown, signal, onStatus
 		const translated = await ask(request, settings, chunk, system, {
 			signal,
 			stream,
+			images: index === 0 ? images : void 0,
 			onDelta: useStream ? (text) => onPartial?.([...out, text].join("\n\n")) : void 0
 		});
 		out.push(translated.trim());
@@ -60752,7 +60803,8 @@ function mountSection(section, options) {
 					stream: platform.stream,
 					streaming: snapshot.streaming,
 					onStatus: panel.setStatus,
-					onPartial: panel.update
+					onPartial: panel.update,
+					images: snapshot.pdfAsImages && section.images ? await section.images() : void 0
 				});
 				setCachedTranslation(platform, cacheKey, translated);
 			}
@@ -61001,6 +61053,21 @@ ${d$2} .uoj-username-blue { color: #539bf5; }
 ${d$2} .uoj-username-green { color: #57ab5a; }
 ${d$2} .uoj-username-red { color: #f85149; }
 ${d$2} .uoj-username-purple { color: #b392f0; }
+${d$2} .unrated, ${d$2} .uoj-username-grey { color: #cdd9e5; }
+${d$2} .alert-success { background: #1e2f24; color: #a5d6a7; border-color: #2d4a33; }
+
+/* shjs 语法高亮（提交代码视图）：亮色系配色换深色 */
+${d$2} .sh_keyword, ${d$2} .sh_type, ${d$2} .sh_preproc, ${d$2} .sh_tag, ${d$2} .sh_link,
+${d$2} .sh_selector, ${d$2} .sh_reserved { color: #ff7b72; }
+${d$2} .sh_string, ${d$2} .sh_chardef, ${d$2} .sh_number, ${d$2} .sh_specialchar,
+${d$2} .sh_regexp, ${d$2} .sh_value { color: #a5d6ff; }
+${d$2} .sh_function, ${d$2} .sh_property, ${d$2} .sh_attribute, ${d$2} .sh_name,
+${d$2} .sh_variable, ${d$2} .sh_title { color: #d2a8ff; }
+${d$2} .sh_comment, ${d$2} .sh_documentation, ${d$2} .sh_comment_linetoscheme,
+${d$2} .sh_multicomment { color: #8b949e; }
+${d$2} .sh_operator, ${d$2} .sh_brackets, ${d$2} .sh_cbracket, ${d$2} .sh_symbol,
+${d$2} .sh_ip { color: #ff9e64; }
+${d$2} .sh_cbracket, ${d$2} .sh_label, ${d$2} .sh_import, ${d$2} .sh_package { color: #79b8ff; }
 `;
 var pdfJobs = /* @__PURE__ */ new WeakMap();
 var notify = /* @__PURE__ */ new WeakMap();
@@ -61014,7 +61081,7 @@ function pdfSection(doc) {
 		job = {};
 		jobs.set(frame.src, job);
 		const pending = job;
-		module.import('./pdf-text-BEhUnAmP-CDIlw-Q3.js').then((module) => module.extractPDFText(frame.src)).then((text) => {
+		module.import('./pdf-text-DEj9jKxS-KQ0mbNzx.js').then((module) => module.extractPDFText(frame.src)).then((text) => {
 			pending.text = text;
 			notify.get(doc)?.();
 		}).catch((error) => {
@@ -61047,6 +61114,7 @@ function pdfSection(doc) {
 		ownedContent: true,
 		identity: frame.src,
 		markdown: () => text,
+		images: () => module.import('./pdf-text-DEj9jKxS-KQ0mbNzx.js').then((m) => m.renderPDFImages(frame.src)),
 		toolbar: {
 			anchor: content,
 			position: "beforebegin",
@@ -65941,7 +66009,7 @@ function openSettingsPanel(options) {
 		secEditor.body.append(check(t$1("editor.enabled"), draft.editorEnabled, (v) => draft.editorEnabled = v), field(t$1("editor.lspUrl"), lspInput));
 		container.append(secEditor.container);
 		const sec2 = section(t$1("settings.behavior"));
-		sec2.body.append(check(t$1("settings.wholeBlock"), draft.translateWholeBlock, (v) => draft.translateWholeBlock = v), check(t$1("settings.streaming"), draft.streaming, (v) => draft.streaming = v));
+		sec2.body.append(check(t$1("settings.wholeBlock"), draft.translateWholeBlock, (v) => draft.translateWholeBlock = v), check(t$1("settings.streaming"), draft.streaming, (v) => draft.streaming = v), check(t$1("settings.pdfAsImages"), draft.pdfAsImages ?? false, (v) => draft.pdfAsImages = v));
 		const row2 = el("div", "ojpp-row");
 		const timeoutInput = input(String(draft.timeoutMs), "120000");
 		timeoutInput.type = "number";
@@ -68029,7 +68097,7 @@ if (site) try {
 	console.error("[OJ++]", error);
 	alert(error instanceof Error ? error.message : String(error));
 }})}}));
-System.register("./pdf-text-BEhUnAmP-CDIlw-Q3.js", [],(function(exports,module){'use strict';return{execute:(function(){exports("extractPDFText",extractPDFText);var isNodeJS$1 = typeof process === "object" && process + "" === "[object process]" && !process.versions.nw && !(process.versions.electron && process.type && process.type !== "browser");
+System.register("./pdf-text-DEj9jKxS-KQ0mbNzx.js", [],(function(exports,module){'use strict';return{execute:(function(){exports({extractPDFText:extractPDFText,renderPDFImages:renderPDFImages});var isNodeJS$1 = typeof process === "object" && process + "" === "[object process]" && !process.versions.nw && !(process.versions.electron && process.type && process.type !== "browser");
 var BBOX_INIT$1 = [
 	Infinity,
 	Infinity,
@@ -170925,8 +170993,58 @@ var WorkerMessageHandler = class {
 	}
 };
 globalThis.pdfjsWorker = { WorkerMessageHandler };
-/** Single-file userscripts cannot deploy a separate worker asset. */
-async function extractPDFText(url) {
+/**
+* 按坐标重建排版：同一 y（基线容差内）的文本块归一行，
+* 行间按 x 空档补空格——LaTeX 生成的 PDF 不打 hasEOL，
+* 直接用 item.str 拼会把整页糊成一行。
+*/
+function pageText(items) {
+	const runs = [];
+	for (const item of items) {
+		const it = item;
+		if (typeof it?.str !== "string" || !it.str.trim()) continue;
+		const tr = it.transform ?? [
+			1,
+			0,
+			0,
+			1,
+			0,
+			0
+		];
+		runs.push({
+			str: it.str,
+			x: tr[4] ?? 0,
+			y: tr[5] ?? 0,
+			w: it.width ?? 0,
+			h: it.height ?? 0
+		});
+	}
+	if (!runs.length) return "";
+	const sorted = [...runs].sort((a, b) => Math.abs(a.y - b.y) > .5 ? b.y - a.y : a.x - b.x);
+	const lines = [];
+	for (const run of sorted) {
+		const tol = Math.max(1.6, run.h * .35);
+		const line = lines.find((l) => Math.abs(l[0].y - run.y) <= tol);
+		if (line) line.push(run);
+		else lines.push([run]);
+	}
+	const out = [];
+	for (const line of lines) {
+		line.sort((a, b) => a.x - b.x);
+		let text = "";
+		let prevEnd = -Infinity;
+		let prevH = 0;
+		for (const item of line) {
+			if (item.x - prevEnd > Math.max(.5, prevH * .28)) text += " ";
+			text += item.str;
+			prevEnd = item.x + item.w;
+			prevH = item.h || prevH;
+		}
+		if (text.trim()) out.push(text.trimEnd());
+	}
+	return out.join("\n");
+}
+async function openPDF(url) {
 	const global = globalThis;
 	global.pdfjsWorker ??= { WorkerMessageHandler };
 	const response = await fetch(url, {
@@ -170934,26 +171052,55 @@ async function extractPDFText(url) {
 		signal: AbortSignal.timeout(45e3)
 	});
 	if (!response.ok) throw new Error(`PDF HTTP ${response.status}`);
-	const task = getDocument({
+	return getDocument({
 		data: new Uint8Array(await response.arrayBuffer()),
 		useSystemFonts: true,
 		disableFontFace: true,
 		useWorkerFetch: false
 	});
+}
+/** Single-file userscripts cannot deploy a separate worker asset. */
+async function extractPDFText(url) {
+	const task = await openPDF(url);
 	try {
 		const pdf = await task.promise;
 		const pages = [];
 		for (let n = 1; n <= pdf.numPages; n++) {
 			const page = await pdf.getPage(n);
 			const content = await page.getTextContent();
-			let text = "";
-			for (const item of content.items) if ("str" in item) text += item.str + (item.hasEOL ? "\n" : " ");
-			pages.push(text.trim());
+			pages.push(pageText(content.items).trim());
 			page.cleanup();
 		}
 		const text = pages.join("\n\n");
 		if (!text.trim()) throw new Error("PDF contains no extractable text.");
 		return text;
+	} finally {
+		await task.destroy();
+	}
+}
+/** 页面渲染成 PNG data URL——字体无 ToUnicode 时（公式/扫描件）图片是唯一完整来源。 */
+async function renderPDFImages(url, { maxPages = 6, maxDim = 1600 } = {}) {
+	const task = await openPDF(url);
+	try {
+		const pdf = await task.promise;
+		const images = [];
+		for (let n = 1; n <= Math.min(pdf.numPages, maxPages); n++) {
+			const page = await pdf.getPage(n);
+			const base = page.getViewport({ scale: 1 });
+			const scale = Math.min(2, maxDim / Math.max(base.width, base.height));
+			const viewport = page.getViewport({ scale });
+			const canvas = document.createElement("canvas");
+			canvas.width = Math.ceil(viewport.width);
+			canvas.height = Math.ceil(viewport.height);
+			await page.render({
+				canvas,
+				canvasContext: canvas.getContext("2d"),
+				viewport
+			}).promise;
+			images.push(canvas.toDataURL("image/png"));
+			page.cleanup();
+		}
+		return images;
 	} finally {
 		await task.destroy();
 	}

@@ -20,6 +20,8 @@ export interface ContentSection {
   identity?: string;
   /** PDF 等派生文本属于脚本，关闭功能时一并移除。 */
   ownedContent?: boolean;
+  /** 有视觉模型时随译文一起发的图片（data URL）。 */
+  images?: () => Promise<string[]>;
   toolbar: MountPoint;
   result: MountPoint;
 }

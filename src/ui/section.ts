@@ -100,6 +100,7 @@ export function mountSection(section: ContentSection, options: SectionOptions) {
           streaming: snapshot.streaming,
           onStatus: panel.setStatus,
           onPartial: panel.update,
+          images: snapshot.pdfAsImages && section.images ? await section.images() : undefined,
         });
         void setCachedTranslation(platform, cacheKey, translated);
       }

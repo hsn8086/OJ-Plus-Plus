@@ -185,6 +185,7 @@ export function openSettingsPanel(options: SettingsPanelOptions): () => void {
     sec2.body.append(
       check(t('settings.wholeBlock'), draft.translateWholeBlock, (v) => draft.translateWholeBlock = v),
       check(t('settings.streaming'), draft.streaming, (v) => draft.streaming = v),
+      check(t('settings.pdfAsImages'), draft.pdfAsImages ?? false, (v) => draft.pdfAsImages = v),
     );
 
     // 超时和重试

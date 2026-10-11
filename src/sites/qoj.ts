@@ -43,6 +43,7 @@ function pdfSection(doc: Document): ContentSection | null {
   const text = job.text;
   return { kind: 'statement', label: t('section.statement'), content, ownedContent: true,
     identity: frame.src, markdown: () => text,
+    images: () => import('./pdf-text.ts').then(m => m.renderPDFImages(frame.src)),
     toolbar: { anchor: content, position: 'beforebegin', align: 'block-right' },
     result: { anchor: content, position: 'afterend' } };
 }

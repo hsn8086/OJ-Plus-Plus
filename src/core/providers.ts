@@ -104,6 +104,32 @@ const anthropicStream = streamReader((payload) => {
   return null;
 });
 
+type ChatContent = ChatRequest['messages'][number]['content'];
+
+function contentParts(content: ChatContent): { type: 'text'; text: string }[] | { type: 'image'; dataUrl: string }[] {
+  return typeof content === 'string' ? [{ type: 'text', text: content }] : content as never;
+}
+
+function imageMeta(dataUrl: string): { mediaType: string; data: string } {
+  const m = /^data:([^;,]+)(?:;base64)?,(.*)$/s.exec(dataUrl);
+  return { mediaType: m?.[1] ?? 'image/png', data: m?.[2] ?? dataUrl };
+}
+
+/** 不同协议的图片块格式。 */
+function mapContent(content: ChatContent, mode: 'chat' | 'responses' | 'anthropic'): unknown {
+  return contentParts(content).map((part: any) => {
+    if (part.type === 'text') return mode === 'responses' ? { type: 'input_text', text: part.text } : { type: 'text', text: part.text };
+    if (mode === 'chat') return { type: 'image_url', image_url: { url: part.dataUrl } };
+    if (mode === 'responses') return { type: 'input_image', image_url: part.dataUrl };
+    const meta = imageMeta(part.dataUrl);
+    return { type: 'image', source: { type: 'base64', media_type: meta.mediaType, data: meta.data } };
+  });
+}
+
+function mapMessages(req: ChatRequest, mode: 'chat' | 'responses' | 'anthropic') {
+  return req.messages.map((m) => ({ role: m.role, content: typeof m.content === 'string' ? m.content : mapContent(m.content, mode) }));
+}
+
 const openaiChat: ProviderAdapter = {
   protocol: 'openai-chat',
   label: 'OpenAI Chat Completions',
@@ -114,7 +140,7 @@ const openaiChat: ProviderAdapter = {
     const url = resolveUrl(cfg.baseUrl, this.defaultBaseUrl, '/chat/completions');
     const body = compact({
       model: cfg.model || this.defaultModel,
-      messages: req.messages,
+      messages: mapMessages(req, 'chat'),
       ...(req.stream ? { stream: true } : {}),
       ...(cfg.reasoning.enabled === null
         ? {}
@@ -164,7 +190,7 @@ const openaiResponses: ProviderAdapter = {
     const url = resolveUrl(cfg.baseUrl, this.defaultBaseUrl, '/responses');
     const body = compact({
       model: cfg.model || this.defaultModel,
-      input: req.messages.map((m) => ({ role: m.role, content: m.content })),
+      input: mapMessages(req, 'responses'),
       ...(req.stream ? { stream: true } : {}),
       ...(cfg.reasoning.effort ? { reasoning: { effort: cfg.reasoning.effort } } : {}),
       ...cfg.body,
@@ -223,9 +249,7 @@ const anthropic: ProviderAdapter = {
       .filter((m) => m.role === 'system')
       .map((m) => m.content)
       .join('\n\n');
-    const messages = req.messages
-      .filter((m) => m.role !== 'system')
-      .map((m) => ({ role: m.role, content: m.content }));
+    const messages = mapMessages({ messages: req.messages.filter((m) => m.role !== 'system') }, 'anthropic');
     const body = compact({
       model: cfg.model || this.defaultModel,
       max_tokens: 8192,

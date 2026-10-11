@@ -48,6 +48,8 @@ export interface Settings {
   retries: number;
   /** 边收边渲染；关闭后等整段译完再显示 */
   streaming: boolean;
+  /** PDF 题面随文再发页面截图（需视觉模型） */
+  pdfAsImages?: boolean;
   /** 界面语言；auto 跟随浏览器 */
   locale: Locale;
   /** 站点配色；auto 跟随系统 */
@@ -68,9 +70,14 @@ export interface Settings {
   editorTests: Record<string, { input: string; expected: string }[]>;
 }
 
+export interface ChatTextPart { type: 'text'; text: string }
+/** data URL 图片（vision 模型；无视觉能力的提供商会报错）。 */
+export interface ChatImagePart { type: 'image'; dataUrl: string }
+export type ChatContentPart = ChatTextPart | ChatImagePart;
+
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
-  content: string;
+  content: string | ChatContentPart[];
 }
 
 export interface ChatRequest {

@@ -13,6 +13,8 @@ export interface TranslationResult {
 
 export interface TranslateOptions {
   settings: Settings;
+  /** data URL 图片，随原文一起发给视觉模型 */
+  images?: string[];
   markdown: string;
   signal?: AbortSignal;
   onStatus?: (text: string) => void;
@@ -25,7 +27,7 @@ export interface TranslateOptions {
 
 export async function translateMarkdown(
   request: HttpTransport,
-  { settings, markdown, signal, onStatus, onPartial, stream, streaming }: TranslateOptions,
+  { settings, markdown, signal, onStatus, onPartial, stream, streaming, images }: TranslateOptions,
 ): Promise<TranslationResult> {
   const cfg = settings.providers.find((p) => p.id === settings.activeProviderId);
   const system = buildSystemPrompt(settings);
@@ -42,6 +44,7 @@ export async function translateMarkdown(
     const translated = await ask(request, settings, chunk, system, {
       signal,
       stream,
+      images: index === 0 ? images : undefined,
       onDelta: useStream
         ? (text) => onPartial?.([...out, text].join('\n\n'))
         : undefined,

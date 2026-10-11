@@ -19,6 +19,8 @@ export interface AskOptions {
   onDelta?: (text: string) => void;
   /** 支持流式的传输；不传则退化为一次性请求 */
   stream?: HttpStreamTransport;
+  /** data URL 图片，附加在用户消息里（需视觉模型） */
+  images?: string[];
 }
 
 /**
@@ -73,7 +75,12 @@ async function once(
   const wantStream = !!(options.stream && options.onDelta && adapter.createStreamReader);
   const messages = [
     { role: 'system' as const, content: systemPrompt },
-    { role: 'user' as const, content: prompt },
+    {
+      role: 'user' as const,
+      content: options.images?.length
+        ? [{ type: 'text' as const, text: prompt }, ...options.images.map((dataUrl) => ({ type: 'image' as const, dataUrl }))]
+        : prompt,
+    },
   ];
   const build = (stream: boolean) => {
     const { url, headers, body } = adapter.build(cfg, { messages, stream });
