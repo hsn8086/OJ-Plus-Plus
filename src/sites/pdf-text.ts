@@ -23,40 +23,7 @@ function pageText(items: unknown[]): string {
     runs.push({ str: it.str, x: tr[4] ?? 0, y: tr[5] ?? 0, w: it.width ?? 0, h: it.height ?? 0 });
   }
   if (!runs.length) return '';
-  // 多栏版式：先切栏（栏缝 = 贯穿大半页高的空档），再逐栏按行排
-  const columns = splitColumns(runs);
-  return columns.map(col => columnText(col)).filter(Boolean).join('\n\n');
-}
-
-/** 双栏/多栏检测：找一条横贯中部的纵向空带，把文本切成栏。样例表就靠它分开输入/输出。 */
-function splitColumns(runs: TextItem[]): TextItem[][] {
-  const xs = runs.map(r => r.x).sort((a, b) => a - b);
-  const pageRight = Math.max(...runs.map(r => r.x + r.w));
-  let best = { x: -1, gap: 0 };
-  for (let i = 1; i < xs.length; i++) {
-    const gap = xs[i]! - xs[i - 1]!;
-    const cx = (xs[i]! + xs[i - 1]!) / 2;
-    // 缝必须在内容区中部（15%~85%），且宽于 20pt 或页宽 8%
-    if (gap > best.gap && cx > pageRight * 0.15 && cx < pageRight * 0.85) best = { x: cx, gap };
-  }
-  if (best.gap < Math.max(20, pageRight * 0.08)) return [runs];
-  // 栏缝必须贯穿大部分行带：有文字的 y 带里这条缝空着的占多数才算双栏——
-  // 局部小表格的窄缝会被普通段落文本跨过，贯穿度很低
-  const bands = new Map<number, { has: boolean; empty: boolean }>();
-  for (const r of runs) {
-    const key = Math.round(r.y / 4);
-    const band = bands.get(key) ?? { has: false, empty: true };
-    band.has = true;
-    if (r.x < best.x + 2 && r.x + r.w > best.x - 2) band.empty = false;
-    bands.set(key, band);
-  }
-  const occupied = [...bands.values()].filter(b => b.has);
-  const emptyCount = occupied.filter(b => b.empty).length;
-  if (occupied.length < 4 || emptyCount / occupied.length < 0.55) return [runs];
-  const left = runs.filter(r => r.x + r.w <= best.x + 0.5);
-  const right = runs.filter(r => r.x >= best.x - 0.5);
-  if (!left.length || !right.length) return [runs];
-  return [left, right];
+  return columnText(runs);
 }
 
 function columnText(runs: TextItem[]): string {

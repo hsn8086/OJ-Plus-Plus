@@ -61135,7 +61135,7 @@ function pdfSection(doc) {
 		job = {};
 		jobs.set(frame.src, job);
 		const pending = job;
-		module.import('./pdf-text-C1W2Ph9b-BTsZTlqj.js').then(async (module) => {
+		module.import('./pdf-text-Cv319Zf9-JL3os_2r.js').then(async (module) => {
 			const text = await module.extractPDFText(frame.src);
 			const { statement, samples } = module.splitPdfSamples(text);
 			pending.text = statement;
@@ -61174,7 +61174,7 @@ function pdfSection(doc) {
 		markdown: () => md,
 		pdf: true,
 		pdfSamples: samples,
-		images: () => module.import('./pdf-text-C1W2Ph9b-BTsZTlqj.js').then((m) => m.renderPDFImages(frame.src)),
+		images: () => module.import('./pdf-text-Cv319Zf9-JL3os_2r.js').then((m) => m.renderPDFImages(frame.src)),
 		toolbar: {
 			anchor: content,
 			position: "beforebegin",
@@ -67979,7 +67979,7 @@ async function startApp(platform, site) {
 	const extractPdfSamples = async (section) => {
 		if (!section.pdfSamples) return;
 		try {
-			const { extractSamples } = await module.import('./samples-BTUNk1_m-sc6MMRTw.js');
+			const { extractSamples } = await module.import('./samples-mIHm21Su-sc6MMRTw.js');
 			const samples = await extractSamples(platform.request, settings, section.pdfSamples);
 			if (!samples.length) {
 				toast(t$1("editor.noSamplesExtracted"), "error");
@@ -68193,7 +68193,7 @@ if (site) try {
 	console.error("[OJ++]", error);
 	alert(error instanceof Error ? error.message : String(error));
 }})}}));
-System.register("./pdf-text-C1W2Ph9b-BTsZTlqj.js", [],(function(exports,module){'use strict';return{execute:(function(){exports({extractPDFText:extractPDFText,renderPDFImages:renderPDFImages,splitPdfSamples:splitPdfSamples});var isNodeJS$1 = typeof process === "object" && process + "" === "[object process]" && !process.versions.nw && !(process.versions.electron && process.type && process.type !== "browser");
+System.register("./pdf-text-Cv319Zf9-JL3os_2r.js", [],(function(exports,module){'use strict';return{execute:(function(){exports({extractPDFText:extractPDFText,renderPDFImages:renderPDFImages,splitPdfSamples:splitPdfSamples});var isNodeJS$1 = typeof process === "object" && process + "" === "[object process]" && !process.versions.nw && !(process.versions.electron && process.type && process.type !== "browser");
 var BBOX_INIT$1 = [
 	Infinity,
 	Infinity,
@@ -171116,43 +171116,7 @@ function pageText(items) {
 		});
 	}
 	if (!runs.length) return "";
-	return splitColumns(runs).map((col) => columnText(col)).filter(Boolean).join("\n\n");
-}
-/** 双栏/多栏检测：找一条横贯中部的纵向空带，把文本切成栏。样例表就靠它分开输入/输出。 */
-function splitColumns(runs) {
-	const xs = runs.map((r) => r.x).sort((a, b) => a - b);
-	const pageRight = Math.max(...runs.map((r) => r.x + r.w));
-	let best = {
-		x: -1,
-		gap: 0
-	};
-	for (let i = 1; i < xs.length; i++) {
-		const gap = xs[i] - xs[i - 1];
-		const cx = (xs[i] + xs[i - 1]) / 2;
-		if (gap > best.gap && cx > pageRight * .15 && cx < pageRight * .85) best = {
-			x: cx,
-			gap
-		};
-	}
-	if (best.gap < Math.max(20, pageRight * .08)) return [runs];
-	const bands = /* @__PURE__ */ new Map();
-	for (const r of runs) {
-		const key = Math.round(r.y / 4);
-		const band = bands.get(key) ?? {
-			has: false,
-			empty: true
-		};
-		band.has = true;
-		if (r.x < best.x + 2 && r.x + r.w > best.x - 2) band.empty = false;
-		bands.set(key, band);
-	}
-	const occupied = [...bands.values()].filter((b) => b.has);
-	const emptyCount = occupied.filter((b) => b.empty).length;
-	if (occupied.length < 4 || emptyCount / occupied.length < .55) return [runs];
-	const left = runs.filter((r) => r.x + r.w <= best.x + .5);
-	const right = runs.filter((r) => r.x >= best.x - .5);
-	if (!left.length || !right.length) return [runs];
-	return [left, right];
+	return columnText(runs);
 }
 function columnText(runs) {
 	const sorted = [...runs].sort((a, b) => Math.abs(a.y - b.y) > .5 ? b.y - a.y : a.x - b.x);
@@ -171258,7 +171222,7 @@ async function renderPDFImages(url, { maxPages = 6, maxDim = 1600 } = {}) {
 		await task.destroy();
 	}
 }})}}));
-System.register("./samples-BTUNk1_m-sc6MMRTw.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
+System.register("./samples-mIHm21Su-sc6MMRTw.js", ['./___monkey.entry.js'],(function(exports){'use strict';var ask;return{setters:[function(module){ask=module.a;}],execute:(function(){exports("extractSamples",extractSamples);var SAMPLE_SYSTEM = [
 	"你是竞赛题样例的结构化提取器。用户给出从 PDF 提取的样例区文本（可能含两栏交错、残缺格式）。",
 	"请把每组样例整理为 JSON：{\"samples\":[{\"input\":\"...\",\"output\":\"...\",\"note\":\"可选注释\"}]}",
 	"硬性要求：",
